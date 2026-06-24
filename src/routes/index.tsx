@@ -181,21 +181,31 @@ function Home() {
           </Link>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {organizations.slice(0,6).map((o)=>(
-            <article key={o.id} className="group rounded-3xl border border-border bg-gradient-card p-6 shadow-md transition hover:-translate-y-1 hover:shadow-elegant">
-              <div className="flex items-center justify-between">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-2xl">{o.emoji}</div>
-                <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">{o.spotsLeft} laisvos vietos</span>
-              </div>
-              <h3 className="mt-5 text-lg font-bold leading-tight">{o.name}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{o.town} · {o.category}</p>
-              <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{o.description}</p>
-              <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning" fill="currentColor" /> {o.rating}</span>
-                <span>{o.totalVolunteers} savanorių</span>
-                <span className="font-semibold text-foreground">{o.hoursOffered} val.</span>
-              </div>
-            </article>
+          {organizations.slice(0,6).map((o, i)=>(
+            <motion.div
+              key={o.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+            >
+              <TiltCard>
+                <article className="group rounded-3xl border border-border bg-gradient-card p-6 shadow-md transition hover:shadow-elegant">
+                  <div className="flex items-center justify-between">
+                    <motion.div whileHover={{ rotate: [0, -8, 8, 0] }} transition={{ duration: 0.6 }} className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-2xl">{o.emoji}</motion.div>
+                    <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">{o.spotsLeft} laisvos vietos</span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-bold leading-tight">{o.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{o.town} · {o.category}</p>
+                  <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{o.description}</p>
+                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning" fill="currentColor" /> {o.rating}</span>
+                    <span>{o.totalVolunteers} savanorių</span>
+                    <span className="font-semibold text-foreground">{o.hoursOffered} val.</span>
+                  </div>
+                </article>
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </section>
