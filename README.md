@@ -25,7 +25,7 @@ cat > /mnt/user-data/outputs/README.md << 'READMEEOF'
 <!--  upload gif to a github issue → copy the url → paste below -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div align="center">
-<img src="[https://placehold.co/860x460/0f172a/3b82f6?text=▶+main+demo+goes+here+%28drop+ur+gif%29](https://github.com/Jumpsipidy/spark-hours/issues/1#issue-4736994448)" width="860" alt="main demo gif" />
+<img src="https://github.com/Jumpsipidy/spark-hours/issues/1#issue-4736994448" width="860" alt="main demo gif" />
 </div>
 
 ---
