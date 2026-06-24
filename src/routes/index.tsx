@@ -34,12 +34,16 @@ function Home() {
                 Vienoje vietoje rask patikimas organizacijas, rezervuok savanorystės laiką ir automatiškai sukauptas valandas pateik mokyklai.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90">
-                  Pradėti nemokamai <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link to="/organizations" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
-                  Naršyti organizacijas
-                </Link>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
+                    Pradėti nemokamai <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <Link to="/organizations" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
+                    Naršyti organizacijas
+                  </Link>
+                </motion.div>
               </div>
               <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex -space-x-2">
