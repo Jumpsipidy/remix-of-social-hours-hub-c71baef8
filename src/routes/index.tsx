@@ -114,14 +114,22 @@ function Home() {
             { icon: Building2, value: "320+", label: "Patikrintų organizacijų" },
             { icon: Clock, value: "184 200", label: "Atliktų valandų" },
             { icon: Award, value: "98 %", label: "Patenkintų mokyklų" },
-          ].map((s)=>(
-            <div key={s.label} className="text-center">
+          ].map((s, i)=>(
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -4 }}
+              className="text-center"
+            >
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
                 <s.icon className="h-5 w-5" />
               </div>
               <p className="mt-4 font-display text-3xl font-bold tracking-tight">{s.value}</p>
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
