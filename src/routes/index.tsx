@@ -147,14 +147,24 @@ function Home() {
             { icon: CalendarCheck, title: "Rezervuok laiką", desc: "Vienu paspaudimu rezervuok savanorystės vizitą tau patogiu metu." },
             { icon: Award, title: "Sukaupk valandas", desc: "Organizacija patvirtina dalyvavimą — valandos automatiškai įskaitomos mokyklai." },
           ].map((s,i)=>(
-            <div key={i} className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-8 shadow-md transition hover:-translate-y-1 hover:shadow-elegant">
-              <div className="absolute right-6 top-6 font-display text-6xl font-bold text-muted/30">0{i+1}</div>
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                <s.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-6 text-xl font-bold">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
-            </div>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <TiltCard>
+                <div className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-8 shadow-md transition hover:shadow-elegant">
+                  <div className="absolute right-6 top-6 font-display text-6xl font-bold text-muted/30">0{i+1}</div>
+                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-bold">{s.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
+                </div>
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </section>
