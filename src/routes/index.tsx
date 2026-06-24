@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
+import { TiltCard } from "../components/tilt-card";
 import { organizations } from "../lib/mock-data";
 import { Sparkles, Search, CalendarCheck, Award, ArrowRight, Star, Users, Clock, Building2 } from "lucide-react";
 
@@ -32,12 +34,16 @@ function Home() {
                 Vienoje vietoje rask patikimas organizacijas, rezervuok savanorystės laiką ir automatiškai sukauptas valandas pateik mokyklai.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90">
-                  Pradėti nemokamai <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link to="/organizations" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
-                  Naršyti organizacijas
-                </Link>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <Link to="/register" className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
+                    Pradėti nemokamai <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <Link to="/organizations" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
+                    Naršyti organizacijas
+                  </Link>
+                </motion.div>
               </div>
               <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex -space-x-2">
@@ -108,14 +114,22 @@ function Home() {
             { icon: Building2, value: "320+", label: "Patikrintų organizacijų" },
             { icon: Clock, value: "184 200", label: "Atliktų valandų" },
             { icon: Award, value: "98 %", label: "Patenkintų mokyklų" },
-          ].map((s)=>(
-            <div key={s.label} className="text-center">
+          ].map((s, i)=>(
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -4 }}
+              className="text-center"
+            >
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
                 <s.icon className="h-5 w-5" />
               </div>
               <p className="mt-4 font-display text-3xl font-bold tracking-tight">{s.value}</p>
               <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -133,14 +147,24 @@ function Home() {
             { icon: CalendarCheck, title: "Rezervuok laiką", desc: "Vienu paspaudimu rezervuok savanorystės vizitą tau patogiu metu." },
             { icon: Award, title: "Sukaupk valandas", desc: "Organizacija patvirtina dalyvavimą — valandos automatiškai įskaitomos mokyklai." },
           ].map((s,i)=>(
-            <div key={i} className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-8 shadow-md transition hover:-translate-y-1 hover:shadow-elegant">
-              <div className="absolute right-6 top-6 font-display text-6xl font-bold text-muted/30">0{i+1}</div>
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                <s.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-6 text-xl font-bold">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
-            </div>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+            >
+              <TiltCard>
+                <div className="group relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-8 shadow-md transition hover:shadow-elegant">
+                  <div className="absolute right-6 top-6 font-display text-6xl font-bold text-muted/30">0{i+1}</div>
+                  <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
+                    <s.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-6 text-xl font-bold">{s.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
+                </div>
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -157,21 +181,31 @@ function Home() {
           </Link>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {organizations.slice(0,6).map((o)=>(
-            <article key={o.id} className="group rounded-3xl border border-border bg-gradient-card p-6 shadow-md transition hover:-translate-y-1 hover:shadow-elegant">
-              <div className="flex items-center justify-between">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-2xl">{o.emoji}</div>
-                <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">{o.spotsLeft} laisvos vietos</span>
-              </div>
-              <h3 className="mt-5 text-lg font-bold leading-tight">{o.name}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">{o.town} · {o.category}</p>
-              <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{o.description}</p>
-              <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning" fill="currentColor" /> {o.rating}</span>
-                <span>{o.totalVolunteers} savanorių</span>
-                <span className="font-semibold text-foreground">{o.hoursOffered} val.</span>
-              </div>
-            </article>
+          {organizations.slice(0,6).map((o, i)=>(
+            <motion.div
+              key={o.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.06 }}
+            >
+              <TiltCard>
+                <article className="group rounded-3xl border border-border bg-gradient-card p-6 shadow-md transition hover:shadow-elegant">
+                  <div className="flex items-center justify-between">
+                    <motion.div whileHover={{ rotate: [0, -8, 8, 0] }} transition={{ duration: 0.6 }} className="grid h-14 w-14 place-items-center rounded-2xl bg-accent text-2xl">{o.emoji}</motion.div>
+                    <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-success">{o.spotsLeft} laisvos vietos</span>
+                  </div>
+                  <h3 className="mt-5 text-lg font-bold leading-tight">{o.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{o.town} · {o.category}</p>
+                  <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{o.description}</p>
+                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-warning" fill="currentColor" /> {o.rating}</span>
+                    <span>{o.totalVolunteers} savanorių</span>
+                    <span className="font-semibold text-foreground">{o.hoursOffered} val.</span>
+                  </div>
+                </article>
+              </TiltCard>
+            </motion.div>
           ))}
         </div>
       </section>
