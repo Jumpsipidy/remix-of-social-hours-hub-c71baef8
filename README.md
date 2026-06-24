@@ -27,7 +27,6 @@ cat > /mnt/user-data/outputs/README.md << 'READMEEOF'
 <div align="center">
 <img src="<img width="956" height="604" alt="Image" src="https://github.com/user-attachments/assets/6a1b981f-6ada-42ff-9f38-c204b77f3391" /> 
 
-https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExazc3cnI5MWJuYmVoYTV6bmFibmN5eGkzczQ2NDkzc3o2OWN3em9weiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xT77XWum9yH7zNkFW0/200.webp
 
 <img width="358" height="200" alt="Image" src="https://github.com/user-attachments/assets/0c42db81-92b8-42ca-84bf-34503dafd18d" /> 
 
