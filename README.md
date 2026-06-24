@@ -1,116 +1,200 @@
-# CivicLog — Social Hours Tracker
-
 <div align="center">
 
-**The anti-scam platform that makes mandatory community hours actually trustworthy.**
+<h1>⚡ CivicLog — Social Hours Tracker</h1>
 
-[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-ff6b6b?style=for-the-badge&logo=heart&logoColor=white)](https://lovable.dev)
+<p><strong>The zero-tolerance, anti-scam platform that makes mandatory community hours impossible to fake.</strong></p>
+
+[![Created by idiot](https://img.shields.io/badge/Created%20by-idiot-ff4d4d?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Jumpsipidy)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![React](https://img.shields.io/badge/UI-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Tooling-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+
+<br/>
+
+[**View Demo**](https://github.com/Jumpsipidy/spark-hours) · [**Report Bug**](https://github.com/Jumpsipidy/spark-hours/issues) · [**Request Feature**](https://github.com/Jumpsipidy/spark-hours/issues)
 
 </div>
 
 ---
 
-> CivicLog is a full-stack web platform designed to eliminate fraud in student community service programs. Students book slots, organizations confirm presence, and school admins audit everything — with zero room for fake hours.
+## 📋 Table of Contents
+
+- [About the Project](#-about-the-project)
+- [Visual Preview](#-visual-preview)
+  - [How to Add Your GIFs](#-how-to-add-your-gifs)
+- [Core Architecture & User Roles](#-core-architecture--user-roles)
+- [Key Technical Highlights](#-key-technical-highlights)
+  - [Row Level Security](#-row-level-security-rls)
+  - [12-Day Self-Purging Chat](#-12-day-self-purging-chat)
+  - [Interactive Booking System](#-interactive-booking-system)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Project Structure](#-project-structure)
+- [Tech Stack](#-tech-stack)
+- [Security Model](#-security-model)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## 📸 Visual Preview
+## 🧠 About the Project
+
+CivicLog is a **full-stack, multi-role web platform** that eliminates fraud in school community service programs. It connects Students, Organizations, and School Administrators in a cryptographically enforced trust chain — where every hour earned is independently verified, auditable, and tamper-proof.
+
+No self-reporting. No honor system. No fake hours.
+
+> Built from scratch by [idiot](https://github.com/Jumpsipidy) using Supabase + React.
+
+---
+
+## 🎬 Visual Preview
+
+> **Tip:** See [How to Add Your GIFs](#-how-to-add-your-gifs) below to replace the placeholders with your real recordings.
+
+<br/>
 
 <div align="center">
 
-### Student Dashboard & Slot Reservation
-
-<!-- Student Reservation Demo GIF -->
-<!-- Replace the block below with your demo GIF -->
-<img src="https://placehold.co/860x480/0f172a/94a3b8?text=Student+Reservation+Flow+GIF+Here" width="860" alt="Student reservation demo" />
-
-<br/><br/>
-
-### Organization Hour Verification
-
-<!-- Organization Verification Demo GIF -->
-<img src="https://placehold.co/860x480/0f172a/94a3b8?text=Organization+Verification+Flow+GIF+Here" width="860" alt="Organization verification demo" />
+### 🎓 Student Dashboard & Slot Reservation
+<!-- ============================================================ -->
+<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
+<!-- ============================================================ -->
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Student+Reservation+Flow" width="860" alt="Student reservation demo" />
 
 <br/><br/>
 
-### Admin Audit Dashboard
-
-<!-- Admin Audit Dashboard Demo GIF -->
-<img src="https://placehold.co/860x480/0f172a/94a3b8?text=Admin+Audit+Dashboard+GIF+Here" width="860" alt="Admin audit dashboard demo" />
+### 🏢 Organization Hour Verification
+<!-- ============================================================ -->
+<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
+<!-- ============================================================ -->
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Organization+Verification+Flow" width="860" alt="Organization verification demo" />
 
 <br/><br/>
 
-### Live Chat (Auto-Purge at 12 Days)
+### 🛡️ Admin Audit Dashboard
+<!-- ============================================================ -->
+<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
+<!-- ============================================================ -->
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Admin+Audit+Dashboard" width="860" alt="Admin audit dashboard demo" />
 
-<!-- Live Chat System Demo GIF -->
-<img src="https://placehold.co/860x480/0f172a/94a3b8?text=Live+Chat+Auto-Purge+Demo+GIF+Here" width="860" alt="Live chat system demo" />
+<br/><br/>
+
+### 💬 Live Chat — Auto-Purge at 12 Days
+<!-- ============================================================ -->
+<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
+<!-- ============================================================ -->
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Live+Chat+Auto-Purge+System" width="860" alt="Live chat demo" />
 
 </div>
+
+---
+
+### 🖼️ How to Add Your GIFs
+
+Follow these steps to swap in your real screen recordings:
+
+**Step 1 — Record your screen**
+
+Use any screen recorder that exports `.gif` or `.mp4`. Recommended free tools:
+- [LICEcap](https://www.cockos.com/licecap/) (Windows/Mac, exports `.gif` directly)
+- [ScreenToGif](https://www.screentogif.com/) (Windows, very clean output)
+- [Kap](https://getkap.co/) (Mac)
+
+Keep each recording under **5 MB** for fast loading on GitHub.
+
+**Step 2 — Upload to GitHub (the easy way)**
+
+1. Open any **Issue** in your repo: `https://github.com/Jumpsipidy/spark-hours/issues/new`
+2. Drag and drop your `.gif` file into the comment box
+3. GitHub will auto-upload it and give you a URL like:
+   ```
+   https://user-images.githubusercontent.com/YOUR_ID/your-file.gif
+   ```
+4. Copy that URL — you don't need to submit the issue
+
+**Step 3 — Replace the placeholder in this README**
+
+Find the placeholder `<img>` tag for the section you want to update, e.g.:
+
+```html
+<!-- Student Reservation Flow -->
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Student+Reservation+Flow" width="860" alt="Student reservation demo" />
+```
+
+Replace the `src` value with your GitHub-hosted GIF URL:
+
+```html
+<!-- Student Reservation Flow -->
+<img src="https://user-images.githubusercontent.com/YOUR_ID/reservation-demo.gif" width="860" alt="Student reservation demo" />
+```
+
+Repeat for each section. Push to `main` and your README will display live demos.
 
 ---
 
 ## 🏗️ Core Architecture & User Roles
 
-CivicLog is built around a **4-role trust model**. Every action in the system is scoped to a role, verified on the backend, and auditable by administrators — making it structurally resistant to fraud.
+CivicLog is built on a **4-role verified trust chain**. No role can elevate its own permissions. Every operation is scoped at the database level — the client is completely untrusted.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CivicLog Platform                        │
-│                                                                 │
-│  ┌──────────┐    books slot    ┌──────────────┐                │
-│  │ Student  │ ──────────────► │ Organization │                 │
-│  └──────────┘                 └──────┬───────┘                 │
-│       ▲                              │ confirms attendance      │
-│       │ hours credited               ▼                         │
-│       │                     ┌─────────────────┐                │
-│       └─────────────────── │  Hours Log (DB)  │                │
-│                             └────────┬────────┘                │
-│                                      │ audits                  │
-│                             ┌────────▼────────┐                │
-│                             │  School Admin   │                │
-│                             └─────────────────┘                │
-│                                                                 │
-│                          ┌─────────────┐                       │
-│                          │ Super Admin │ ◄── full oversight     │
-│                          └─────────────┘                       │
-└─────────────────────────────────────────────────────────────────┘
+╔═══════════════════════════════════════════════════════════════════╗
+║                       CivicLog Trust Chain                        ║
+╠═══════════════════════════════════════════════════════════════════╣
+║                                                                   ║
+║   ┌──────────┐   (1) books slot    ┌─────────────────┐           ║
+║   │ STUDENT  │ ──────────────────► │  ORGANIZATION   │           ║
+║   └──────────┘                     └────────┬────────┘           ║
+║        ▲                                    │                     ║
+║        │  (3) hours credited                │ (2) confirms        ║
+║        │                                    │     attendance      ║
+║        │                           ┌────────▼────────┐           ║
+║        └────────────────────────── │  Hours Log (DB) │           ║
+║                                    └────────┬────────┘           ║
+║                                             │                     ║
+║                                    ┌────────▼────────┐           ║
+║                                    │  SCHOOL ADMIN   │ (audits)  ║
+║                                    └─────────────────┘           ║
+║                                                                   ║
+║                              ┌──────────────┐                    ║
+║                              │  SUPER ADMIN │ ◄── god mode       ║
+║                              └──────────────┘                    ║
+╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-| Role | Access | Anti-Fraud Mechanism |
-|------|--------|----------------------|
-| **Student** | Browse & reserve available slots, view their confirmed hours log, message organizations via live chat | Cannot self-report hours; all credits require external confirmation |
-| **Organization** | Post available volunteer opportunities, confirm student attendance, dispute invalid claims | Cannot confirm hours for slots they didn't create; slot ownership is enforced by RLS |
-| **School Admin** | View all students' hours, audit confirmation history, flag anomalies, generate reports | Read-only audit access; cannot modify records, preserving data integrity |
-| **Super Admin** | Full platform access — manage users, organizations, settings, and system health | Separate credentials; actions are logged and immutable |
+| Role | What They Can Do | How Fraud Is Blocked |
+|------|-----------------|----------------------|
+| 🎓 **Student** | Browse & reserve open slots · View confirmed hour logs · Message orgs via live chat | Cannot self-report hours. All credits require external org confirmation |
+| 🏢 **Organization** | Post volunteer slots · Confirm student attendance · Flag disputes | RLS prevents confirming hours on slots they don't own |
+| 🛡️ **School Admin** | View all student hours · Audit confirmation history · Flag anomalies | Read-only access — cannot alter any records |
+| 👑 **Super Admin** | Full platform control — users, orgs, system health, settings | All actions immutably logged. Separate credential set |
 
-**Fraud is prevented structurally, not by policy.** Hours can only be credited when:
-1. A student holds a confirmed reservation for a specific slot
-2. The owning organization explicitly marks attendance
-3. The record passes Supabase RLS policy checks before being written
+**Hours can only be credited when all three conditions are true:**
 
-No step in this chain can be bypassed by the client.
+1. ✅ A student holds a valid reservation for a specific, real slot
+2. ✅ The owning organization explicitly marks attendance for that student
+3. ✅ The write passes Supabase RLS policy validation server-side
+
+**Zero of these checks happen in the frontend.** All of them happen in the database.
 
 ---
 
 ## ⚙️ Key Technical Highlights
 
-### 🔐 Row Level Security (RLS) via Supabase
+### 🔐 Row Level Security (RLS)
 
-Every table in CivicLog is protected by Supabase's PostgreSQL Row Level Security policies. Users can only read or write rows that belong to them — enforced at the database level, not the application layer.
+Every table is locked down with PostgreSQL Row Level Security — not middleware, not route guards, not frontend checks. The **database itself** enforces who can read and write what. Even a direct API call with a valid JWT cannot bypass it.
 
 ```sql
--- Example: Students can only read their own hour records
+-- Students can only read their own hour records
 CREATE POLICY "students_own_hours"
 ON public.hour_records
 FOR SELECT
 USING (auth.uid() = student_id);
 
--- Example: Organizations can only confirm hours for their own slots
+-- Organizations can only confirm hours on slots they own
 CREATE POLICY "org_confirms_own_slots"
 ON public.hour_records
 FOR UPDATE
@@ -119,22 +203,34 @@ USING (
     SELECT owner_id FROM slots WHERE id = hour_records.slot_id
   )
 );
+
+-- School admins get read-only access to all records
+CREATE POLICY "admin_read_all_hours"
+ON public.hour_records
+FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM user_roles
+    WHERE user_id = auth.uid()
+    AND role IN ('school_admin', 'super_admin')
+  )
+);
 ```
 
-Even if the frontend is compromised or a user crafts a raw API request, the database will reject unauthorized operations.
+If someone tampers with the frontend, constructs a raw request, or intercepts a JWT — the database rejects the operation. No exceptions.
 
 ---
 
-### 🗑️ 12-Day Self-Purging Chat System
+### 🗑️ 12-Day Self-Purging Chat
 
-The live chat feature is designed with storage efficiency and privacy in mind. Messages are **automatically and permanently deleted after 12 days** using a scheduled `pg_cron` job running directly inside Supabase.
+The live chat is built for **coordination, not archiving**. Messages are automatically and permanently deleted after 12 days using a `pg_cron` job scheduled inside Supabase — no Lambda, no third-party scheduler, no extra infrastructure.
 
-**Why 12 days?** It's long enough for coordination between students and organizations to complete, short enough to prevent unbounded storage growth.
+**Why 12 days?** Enough time to handle any booking coordination cycle. Short enough to keep storage costs near zero indefinitely.
 
 ```sql
--- Supabase pg_cron job: runs daily at 03:00 UTC
+-- Runs daily at 03:00 UTC — zero maintenance required
 SELECT cron.schedule(
-  'purge-old-chat-messages',
+  'purge-expired-chat-messages',
   '0 3 * * *',
   $$
     DELETE FROM public.chat_messages
@@ -143,15 +239,19 @@ SELECT cron.schedule(
 );
 ```
 
-This runs server-side on a schedule — no Lambda, no external cron service, no extra cost. Messages are permanently removed with no soft-delete or archive.
-
-> **Note:** Users are informed at the point of sending that messages are not permanently stored. The chat is designed for coordination, not record-keeping.
+Messages are **permanently removed** — no soft deletes, no archive table, no recoverable state. Users see a banner in the chat UI that informs them of this before they send anything.
 
 ---
 
-### 📅 Interactive Booking Popup System
+### 📅 Interactive Booking System
 
-Slot reservations are handled through a modal-based booking flow that fetches live availability, handles conflicts client-side, and writes to Supabase with optimistic UI updates. Conflicts (e.g., double-booking) are caught by a unique constraint at the database level as a final safeguard.
+Slot reservations use a **modal popup flow** that:
+- Fetches live slot availability on open (no stale data)
+- Handles double-booking conflicts client-side with instant feedback
+- Writes to Supabase with optimistic UI for snappy UX
+- Falls back to a **unique database constraint** as the final double-booking safeguard
+
+The booking popup is fully keyboard-accessible and closes gracefully on escape or outside-click.
 
 ---
 
@@ -159,132 +259,182 @@ Slot reservations are handled through a modal-based booking flow that fetches li
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or higher
-- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
-- A [Supabase](https://supabase.com) project (free tier works)
+Make sure you have the following installed before starting:
+
+| Tool | Version | Link |
+|------|---------|------|
+| Node.js | v18+ | [nodejs.org](https://nodejs.org/) |
+| npm | v9+ | Comes with Node |
+| Git | Any | [git-scm.com](https://git-scm.com/) |
+| Supabase account | Free tier OK | [supabase.com](https://supabase.com/) |
 
 ---
 
-### 1. Clone the Repository
+### Installation
+
+**1. Clone the repository**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/civiclog.git
-cd civiclog
+git clone https://github.com/Jumpsipidy/spark-hours.git
+cd spark-hours
 ```
 
-### 2. Install Dependencies
+**2. Install dependencies**
 
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-
-Copy the example environment file and fill in your Supabase credentials:
+**3. Set up your environment variables**
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set the following:
+Open `.env` in any text editor and fill in your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
 ```
 
-You can find both values in your Supabase project under:
-**Settings → API → Project URL & Project API Keys**
+> 📍 Find both values in your Supabase dashboard under **Settings → API → Project URL & Project API Keys**
 
-> ⚠️ Never commit your `.env` file. It is already listed in `.gitignore`.
+> ⚠️ `.env` is already in `.gitignore`. Never commit it.
 
-### 4. Apply Database Migrations
+**4. Apply database migrations**
 
-If you have the Supabase CLI installed:
-
+*Option A — Supabase CLI (recommended):*
 ```bash
-supabase db push
+npx supabase db push
 ```
 
-Or manually run the SQL files found in `/supabase/migrations` via the Supabase SQL editor in your dashboard.
+*Option B — Manual:*
+Open the Supabase SQL Editor in your dashboard and run each file from `/supabase/migrations/` in order.
 
-### 5. Run the Development Server
+**5. Enable `pg_cron` for the chat purge job**
+
+In your Supabase SQL Editor, run:
+
+```sql
+-- Enable the pg_cron extension (one-time setup)
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Schedule the 12-day message purge
+SELECT cron.schedule(
+  'purge-expired-chat-messages',
+  '0 3 * * *',
+  $$
+    DELETE FROM public.chat_messages
+    WHERE created_at < NOW() - INTERVAL '12 days';
+  $$
+);
+```
+
+**6. Start the development server**
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
-
----
-
-## 🧰 Tech Stack
-
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | [Lovable](https://lovable.dev) + React | UI scaffolding, component logic, routing |
-| **Build Tool** | [Vite](https://vitejs.dev) | Fast dev server & production bundler |
-| **Backend** | [Supabase](https://supabase.com) | Auth, realtime DB, storage, edge functions |
-| **Database** | PostgreSQL (via Supabase) | Relational data, RLS policies, constraints |
-| **Scheduling** | `pg_cron` (Supabase extension) | Automated 12-day chat message purge |
-| **Auth** | Supabase Auth (JWT) | Multi-role authentication & session management |
-| **Realtime** | Supabase Realtime | Live chat message delivery |
-| **Styling** | Tailwind CSS | Utility-first responsive design |
+Open [http://localhost:5173](http://localhost:5173) in your browser. Done.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-civiclog/
+spark-hours/
 ├── src/
-│   ├── components/        # Reusable UI components
-│   ├── pages/             # Route-level page components
-│   ├── hooks/             # Custom React hooks (auth, data fetching)
-│   ├── lib/               # Supabase client, utilities
-│   └── types/             # TypeScript type definitions
+│   ├── components/          # Reusable UI components
+│   │   ├── booking/         # Slot reservation popup system
+│   │   ├── chat/            # Live chat components
+│   │   └── dashboard/       # Role-based dashboard views
+│   ├── pages/               # Route-level page components
+│   ├── hooks/               # Custom React hooks
+│   │   ├── useAuth.ts       # Auth state + role detection
+│   │   └── useSlots.ts      # Slot fetching + booking logic
+│   ├── lib/
+│   │   └── supabase.ts      # Supabase client instance
+│   └── types/               # TypeScript interfaces & enums
 ├── supabase/
-│   ├── migrations/        # SQL migration files
-│   └── functions/         # Supabase Edge Functions (if any)
-├── public/                # Static assets
-├── .env.example           # Environment variable template
-└── vite.config.ts
+│   ├── migrations/          # SQL migration files (run in order)
+│   └── functions/           # Supabase Edge Functions
+├── public/                  # Static assets
+├── .env.example             # Template — copy to .env
+├── vite.config.ts
+└── README.md
 ```
 
 ---
 
-## 🛡️ Security Model Summary
+## 🧰 Tech Stack
 
-- **Authentication** is handled entirely by Supabase Auth — no custom auth logic
-- **Authorization** is enforced by PostgreSQL RLS — not middleware or application checks
-- **Role assignment** is stored in a protected `user_roles` table, writeable only by Super Admins
-- **Audit trail** is append-only for hour records — no deletes permitted by any non-super role
-- **Chat messages** are the only data that is scheduled for deletion, and only after 12 days
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| **Frontend** | React 18 | Component model, hooks, fast rendering |
+| **Build Tool** | Vite | Sub-second HMR, optimized production builds |
+| **Backend** | Supabase | Auth + Realtime DB + Storage in one platform |
+| **Database** | PostgreSQL | Relational integrity, RLS, pg_cron scheduling |
+| **Auth** | Supabase Auth (JWT) | Multi-role sessions, zero custom auth code |
+| **Realtime** | Supabase Realtime | Live chat message delivery via WebSocket |
+| **Scheduling** | pg_cron | Server-side cron — no external services needed |
+| **Styling** | Tailwind CSS | Utility-first, zero dead CSS in production |
+| **Language** | TypeScript | Full type safety across frontend and DB types |
+
+---
+
+## 🛡️ Security Model
+
+| Concern | How It's Handled |
+|---------|-----------------|
+| **Authentication** | Supabase Auth — JWT-based, no custom session logic |
+| **Authorization** | PostgreSQL RLS — enforced at the database layer, not the app layer |
+| **Role Assignment** | Stored in a protected `user_roles` table — writable only by Super Admins |
+| **Hour Records** | Append-only for all non-super roles — no update or delete permitted |
+| **Chat Privacy** | Messages permanently purged after 12 days via pg_cron |
+| **API Abuse** | RLS blocks all unauthorized writes even from valid JWT holders |
+
+The golden rule: **the client is completely untrusted.** Every sensitive operation is validated server-side before any data is read or written.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome. Please open an issue first to discuss what you'd like to change.
+Contributions are welcome. Open an issue first to discuss major changes.
 
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add some feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+```bash
+# 1. Fork the repo & clone your fork
+git clone https://github.com/YOUR_USERNAME/spark-hours.git
+
+# 2. Create a feature branch
+git checkout -b feature/your-feature-name
+
+# 3. Make your changes, then commit
+git commit -m "feat: add your feature description"
+
+# 4. Push and open a Pull Request
+git push origin feature/your-feature-name
+```
+
+Please follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for full details.
 
 ---
 
 <div align="center">
 
-Built with purpose. Designed to be trusted.
+**Built to be trusted. Engineered to be tamper-proof.**
 
-**[Live Demo](#)** · **[Report a Bug](../../issues)** · **[Request a Feature](../../issues)**
+Made with way too much coffee by [idiot](https://github.com/Jumpsipidy)
+
+<br/>
+
+[⬆ Back to top](#-civiclog--social-hours-tracker)
 
 </div>
