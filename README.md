@@ -1,8 +1,9 @@
+cat > /mnt/user-data/outputs/README.md << 'READMEEOF'
 <div align="center">
 
 <h1>⚡ CivicLog — Social Hours Tracker</h1>
 
-<p><strong>The zero-tolerance, anti-scam platform that makes mandatory community hours impossible to fake.</strong></p>
+<p><em>ok so basically this is the app that makes it actually impossible to lie about your community service hours. built by an idiot, works like a genius.</em></p>
 
 [![Created by idiot](https://img.shields.io/badge/Created%20by-idiot-ff4d4d?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Jumpsipidy)
 [![Supabase](https://img.shields.io/badge/Backend-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
@@ -13,143 +14,79 @@
 
 <br/>
 
-[**View Demo**](https://github.com/Jumpsipidy/spark-hours) · [**Report Bug**](https://github.com/Jumpsipidy/spark-hours/issues) · [**Request Feature**](https://github.com/Jumpsipidy/spark-hours/issues)
+[**see it live**](https://github.com/Jumpsipidy/spark-hours) · [**something broke lol**](https://github.com/Jumpsipidy/spark-hours/issues) · [**cool idea? drop it**](https://github.com/Jumpsipidy/spark-hours/issues)
 
+</div>
+
+---
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  GIF #1 — drop your main demo gif right here bestie        -->
+<!--  upload gif to a github issue → copy the url → paste below -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div align="center">
+<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+main+demo+goes+here+%28drop+ur+gif%29" width="860" alt="main demo gif" />
 </div>
 
 ---
 
 ## 📋 Table of Contents
 
-- [About the Project](#-about-the-project)
-- [Visual Preview](#-visual-preview)
-  - [How to Add Your GIFs](#-how-to-add-your-gifs)
-- [Core Architecture & User Roles](#-core-architecture--user-roles)
-- [Key Technical Highlights](#-key-technical-highlights)
-  - [Row Level Security](#-row-level-security-rls)
-  - [12-Day Self-Purging Chat](#-12-day-self-purging-chat)
-  - [Interactive Booking System](#-interactive-booking-system)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Project Structure](#-project-structure)
-- [Tech Stack](#-tech-stack)
-- [Security Model](#-security-model)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [what even is this](#-what-even-is-this)
+- [the roles & how they work](#-the-roles--how-they-work)
+- [the nerdy tech stuff](#-the-nerdy-tech-stuff)
+  - [database security (rls)](#-database-security-rls)
+  - [chat that deletes itself](#-chat-that-deletes-itself)
+  - [booking popup thing](#-booking-popup-thing)
+- [how to run it yourself](#-how-to-run-it-yourself)
+- [folder structure](#-folder-structure)
+- [tech stack](#-tech-stack)
+- [security stuff](#-security-stuff)
+- [wanna contribute?](#-wanna-contribute)
 
 ---
 
-## 🧠 About the Project
+## 🧠 what even is this
 
-CivicLog is a **full-stack, multi-role web platform** that eliminates fraud in school community service programs. It connects Students, Organizations, and School Administrators in a cryptographically enforced trust chain — where every hour earned is independently verified, auditable, and tamper-proof.
+yo so basically schools make students do mandatory community/volunteer hours right. and people lie about it. constantly. so i built this.
 
-No self-reporting. No honor system. No fake hours.
+CivicLog is a **full-stack multi-role web app** where:
+- 🎓 **students** book real slots at real orgs
+- 🏢 **organizations** confirm you actually showed up
+- 🛡️ **school admins** audit everything
+- 👑 **super admins** run the whole thing
 
-> Built from scratch by [idiot](https://github.com/Jumpsipidy) using Supabase + React.
+no self-reporting. no "trust me bro" hours. no faking it. the database literally won't let you.
 
----
+> built from scratch (by [idiot](https://github.com/Jumpsipidy)) using React + Supabase. it goes hard ngl
 
-## 🎬 Visual Preview
-
-> **Tip:** See [How to Add Your GIFs](#-how-to-add-your-gifs) below to replace the placeholders with your real recordings.
-
-<br/>
-
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  GIF #2 — put a gif here showing off the student dashboard  -->
+<!--  or like the main vibe of the app after the intro           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
 <div align="center">
-
-### 🎓 Student Dashboard & Slot Reservation
-<!-- ============================================================ -->
-<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
-<!-- ============================================================ -->
-<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Student+Reservation+Flow" width="860" alt="Student reservation demo" />
-
-<br/><br/>
-
-### 🏢 Organization Hour Verification
-<!-- ============================================================ -->
-<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
-<!-- ============================================================ -->
-<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Organization+Verification+Flow" width="860" alt="Organization verification demo" />
-
-<br/><br/>
-
-### 🛡️ Admin Audit Dashboard
-<!-- ============================================================ -->
-<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
-<!-- ============================================================ -->
-<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Admin+Audit+Dashboard" width="860" alt="Admin audit dashboard demo" />
-
-<br/><br/>
-
-### 💬 Live Chat — Auto-Purge at 12 Days
-<!-- ============================================================ -->
-<!--  REPLACE THIS IMAGE WITH YOUR GIF — see instructions below  -->
-<!-- ============================================================ -->
-<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Live+Chat+Auto-Purge+System" width="860" alt="Live chat demo" />
-
+<br/>
+<img src="https://placehold.co/860x460/0f172a/22c55e?text=▶+student+dashboard+vibe+gif+here" width="860" alt="student dashboard demo" />
+<br/>
 </div>
 
 ---
 
-### 🖼️ How to Add Your GIFs
+## 🏗️ the roles & how they work
 
-Follow these steps to swap in your real screen recordings:
-
-**Step 1 — Record your screen**
-
-Use any screen recorder that exports `.gif` or `.mp4`. Recommended free tools:
-- [LICEcap](https://www.cockos.com/licecap/) (Windows/Mac, exports `.gif` directly)
-- [ScreenToGif](https://www.screentogif.com/) (Windows, very clean output)
-- [Kap](https://getkap.co/) (Mac)
-
-Keep each recording under **5 MB** for fast loading on GitHub.
-
-**Step 2 — Upload to GitHub (the easy way)**
-
-1. Open any **Issue** in your repo: `https://github.com/Jumpsipidy/spark-hours/issues/new`
-2. Drag and drop your `.gif` file into the comment box
-3. GitHub will auto-upload it and give you a URL like:
-   ```
-   https://user-images.githubusercontent.com/YOUR_ID/your-file.gif
-   ```
-4. Copy that URL — you don't need to submit the issue
-
-**Step 3 — Replace the placeholder in this README**
-
-Find the placeholder `<img>` tag for the section you want to update, e.g.:
-
-```html
-<!-- Student Reservation Flow -->
-<img src="https://placehold.co/860x460/0f172a/3b82f6?text=▶+Student+Reservation+Flow" width="860" alt="Student reservation demo" />
-```
-
-Replace the `src` value with your GitHub-hosted GIF URL:
-
-```html
-<!-- Student Reservation Flow -->
-<img src="https://user-images.githubusercontent.com/YOUR_ID/reservation-demo.gif" width="860" alt="Student reservation demo" />
-```
-
-Repeat for each section. Push to `main` and your README will display live demos.
-
----
-
-## 🏗️ Core Architecture & User Roles
-
-CivicLog is built on a **4-role verified trust chain**. No role can elevate its own permissions. Every operation is scoped at the database level — the client is completely untrusted.
+ok so the whole thing runs on a **4-role trust chain** and no role can fake its way past the others. here's the flow:
 
 ```
 ╔═══════════════════════════════════════════════════════════════════╗
-║                       CivicLog Trust Chain                        ║
+║                     the CivicLog trust chain                      ║
 ╠═══════════════════════════════════════════════════════════════════╣
 ║                                                                   ║
 ║   ┌──────────┐   (1) books slot    ┌─────────────────┐           ║
 ║   │ STUDENT  │ ──────────────────► │  ORGANIZATION   │           ║
 ║   └──────────┘                     └────────┬────────┘           ║
 ║        ▲                                    │                     ║
-║        │  (3) hours credited                │ (2) confirms        ║
-║        │                                    │     attendance      ║
+║        │  (3) hours get credited            │ (2) confirms        ║
+║        │                                    │     u showed up     ║
 ║        │                           ┌────────▼────────┐           ║
 ║        └────────────────────────── │  Hours Log (DB) │           ║
 ║                                    └────────┬────────┘           ║
@@ -159,42 +96,42 @@ CivicLog is built on a **4-role verified trust chain**. No role can elevate its 
 ║                                    └─────────────────┘           ║
 ║                                                                   ║
 ║                              ┌──────────────┐                    ║
-║                              │  SUPER ADMIN │ ◄── god mode       ║
+║                              │  SUPER ADMIN │ ◄── god mode fr    ║
 ║                              └──────────────┘                    ║
 ╚═══════════════════════════════════════════════════════════════════╝
 ```
 
-| Role | What They Can Do | How Fraud Is Blocked |
-|------|-----------------|----------------------|
-| 🎓 **Student** | Browse & reserve open slots · View confirmed hour logs · Message orgs via live chat | Cannot self-report hours. All credits require external org confirmation |
-| 🏢 **Organization** | Post volunteer slots · Confirm student attendance · Flag disputes | RLS prevents confirming hours on slots they don't own |
-| 🛡️ **School Admin** | View all student hours · Audit confirmation history · Flag anomalies | Read-only access — cannot alter any records |
-| 👑 **Super Admin** | Full platform control — users, orgs, system health, settings | All actions immutably logged. Separate credential set |
+| role | what they can do | how scamming is blocked |
+|------|-----------------|------------------------|
+| 🎓 **student** | browse & reserve slots · check their hour logs · chat with orgs | literally cannot self-report hours. zero. needs org confirmation every time |
+| 🏢 **organization** | post volunteer slots · confirm attendance · flag disputes | RLS makes it impossible to confirm hours on someone else's slots |
+| 🛡️ **school admin** | see all student hours · audit everything · flag sus activity | read-only. can't touch any records. just watches 👀 |
+| 👑 **super admin** | full control — users, orgs, settings, everything | all actions get logged permanently. no sneaky stuff |
 
-**Hours can only be credited when all three conditions are true:**
+hours only get credited when **all 3 of these are true simultaneously:**
 
-1. ✅ A student holds a valid reservation for a specific, real slot
-2. ✅ The owning organization explicitly marks attendance for that student
-3. ✅ The write passes Supabase RLS policy validation server-side
+1. ✅ student has a valid reservation for that specific slot
+2. ✅ the org that owns the slot manually confirms attendance
+3. ✅ supabase RLS validates the write server-side before anything hits the db
 
-**Zero of these checks happen in the frontend.** All of them happen in the database.
+**none of this runs in the frontend btw.** all of it happens in the database. the ui is basically just a pretty wrapper.
 
 ---
 
-## ⚙️ Key Technical Highlights
+## ⚙️ the nerdy tech stuff
 
-### 🔐 Row Level Security (RLS)
+### 🔐 database security (rls)
 
-Every table is locked down with PostgreSQL Row Level Security — not middleware, not route guards, not frontend checks. The **database itself** enforces who can read and write what. Even a direct API call with a valid JWT cannot bypass it.
+every single table has PostgreSQL Row Level Security on it. not middleware. not route guards. not vibes. the **actual database** decides who gets to read and write what — and it does not care about your feelings.
 
 ```sql
--- Students can only read their own hour records
+-- students can only see their own hours. not others. just theirs.
 CREATE POLICY "students_own_hours"
 ON public.hour_records
 FOR SELECT
 USING (auth.uid() = student_id);
 
--- Organizations can only confirm hours on slots they own
+-- orgs can only confirm hours on slots they actually created
 CREATE POLICY "org_confirms_own_slots"
 ON public.hour_records
 FOR UPDATE
@@ -204,7 +141,7 @@ USING (
   )
 );
 
--- School admins get read-only access to all records
+-- admins get to see everything but can't touch anything
 CREATE POLICY "admin_read_all_hours"
 ON public.hour_records
 FOR SELECT
@@ -217,18 +154,18 @@ USING (
 );
 ```
 
-If someone tampers with the frontend, constructs a raw request, or intercepts a JWT — the database rejects the operation. No exceptions.
+someone hacks the frontend? cool, the db still says no. someone forges a JWT? still no. someone begs really nicely? also no.
 
 ---
 
-### 🗑️ 12-Day Self-Purging Chat
+### 🗑️ chat that deletes itself
 
-The live chat is built for **coordination, not archiving**. Messages are automatically and permanently deleted after 12 days using a `pg_cron` job scheduled inside Supabase — no Lambda, no third-party scheduler, no extra infrastructure.
+the live chat is for **coordination, not receipts.** messages auto-delete after 12 days using a `pg_cron` job that runs inside supabase itself. no lambda. no extra services. just a lil database cron that cleans up after itself every night.
 
-**Why 12 days?** Enough time to handle any booking coordination cycle. Short enough to keep storage costs near zero indefinitely.
+**why 12 days?** long enough to finish any booking conversation. short enough to keep storage costs at basically zero forever.
 
 ```sql
--- Runs daily at 03:00 UTC — zero maintenance required
+-- runs at 3am UTC every day. zero maintenance. just vibes.
 SELECT cron.schedule(
   'purge-expired-chat-messages',
   '0 3 * * *',
@@ -239,88 +176,83 @@ SELECT cron.schedule(
 );
 ```
 
-Messages are **permanently removed** — no soft deletes, no archive table, no recoverable state. Users see a banner in the chat UI that informs them of this before they send anything.
+gone means **gone** — no archive, no soft delete, no recovery. users see a little warning banner before they send anything so they know what's up.
 
 ---
 
-### 📅 Interactive Booking System
+### 📅 booking popup thing
 
-Slot reservations use a **modal popup flow** that:
-- Fetches live slot availability on open (no stale data)
-- Handles double-booking conflicts client-side with instant feedback
-- Writes to Supabase with optimistic UI for snappy UX
-- Falls back to a **unique database constraint** as the final double-booking safeguard
+the slot reservation uses a modal popup flow that:
+- grabs **live availability** every time you open it (no stale data, no lies)
+- catches double-booking conflicts on the client before even hitting the db
+- writes to supabase with **optimistic UI** so it feels instant
+- has a database unique constraint as the final backup in case anything slips through
 
-The booking popup is fully keyboard-accessible and closes gracefully on escape or outside-click.
+fully keyboard accessible too bc accessibility matters even when you're a one-person dev team 🫡
 
 ---
 
-## 🚀 Getting Started
+## 🚀 how to run it yourself
 
-### Prerequisites
+### prerequisites
 
-Make sure you have the following installed before starting:
-
-| Tool | Version | Link |
-|------|---------|------|
+| thing you need | version | where to get it |
+|---------------|---------|----------------|
 | Node.js | v18+ | [nodejs.org](https://nodejs.org/) |
-| npm | v9+ | Comes with Node |
-| Git | Any | [git-scm.com](https://git-scm.com/) |
-| Supabase account | Free tier OK | [supabase.com](https://supabase.com/) |
+| npm | v9+ | comes with node |
+| Git | anything | [git-scm.com](https://git-scm.com/) |
+| Supabase account | free tier works | [supabase.com](https://supabase.com/) |
 
 ---
 
-### Installation
+### installation
 
-**1. Clone the repository**
+**step 1 — clone it**
 
 ```bash
 git clone https://github.com/Jumpsipidy/spark-hours.git
 cd spark-hours
 ```
 
-**2. Install dependencies**
+**step 2 — install the stuff**
 
 ```bash
 npm install
 ```
 
-**3. Set up your environment variables**
+**step 3 — set up your env vars**
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` in any text editor and fill in your Supabase credentials:
+open `.env` and paste your supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-public-key-here
 ```
 
-> 📍 Find both values in your Supabase dashboard under **Settings → API → Project URL & Project API Keys**
+> 📍 both of these live in your supabase dashboard under **Settings → API → Project URL & API Keys**
 
-> ⚠️ `.env` is already in `.gitignore`. Never commit it.
+> ⚠️ `.env` is already gitignored. do not commit it. please.
 
-**4. Apply database migrations**
+**step 4 — run the migrations**
 
-*Option A — Supabase CLI (recommended):*
+if you have supabase CLI:
 ```bash
 npx supabase db push
 ```
 
-*Option B — Manual:*
-Open the Supabase SQL Editor in your dashboard and run each file from `/supabase/migrations/` in order.
+or go to your supabase SQL editor and run the files in `/supabase/migrations/` one by one in order.
 
-**5. Enable `pg_cron` for the chat purge job**
+**step 5 — turn on the chat cleanup (one time thing)**
 
-In your Supabase SQL Editor, run:
+paste this in your supabase SQL editor:
 
 ```sql
--- Enable the pg_cron extension (one-time setup)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- Schedule the 12-day message purge
 SELECT cron.schedule(
   'purge-expired-chat-messages',
   '0 3 * * *',
@@ -331,110 +263,111 @@ SELECT cron.schedule(
 );
 ```
 
-**6. Start the development server**
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  GIF #3 — show the install/setup flow or the app booting   -->
+<!--  up locally. shows people it actually works lol             -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div align="center">
+<br/>
+<img src="https://placehold.co/860x460/0f172a/a855f7?text=▶+local+dev+server+booting+up+gif+here" width="860" alt="local setup demo" />
+<br/>
+</div>
+
+**step 6 — actually run it**
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser. Done.
+go to [http://localhost:5173](http://localhost:5173) and you're in. that's it. that's literally it.
 
 ---
 
-## 📁 Project Structure
+## 📁 folder structure
 
 ```
 spark-hours/
 ├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── booking/         # Slot reservation popup system
-│   │   ├── chat/            # Live chat components
-│   │   └── dashboard/       # Role-based dashboard views
-│   ├── pages/               # Route-level page components
-│   ├── hooks/               # Custom React hooks
-│   │   ├── useAuth.ts       # Auth state + role detection
-│   │   └── useSlots.ts      # Slot fetching + booking logic
+│   ├── components/          # all the ui pieces
+│   │   ├── booking/         # the reservation popup system
+│   │   ├── chat/            # live chat stuff
+│   │   └── dashboard/       # the different role dashboards
+│   ├── pages/               # actual routes/pages
+│   ├── hooks/               # custom hooks
+│   │   ├── useAuth.ts       # auth + role detection
+│   │   └── useSlots.ts      # slot fetching + booking logic
 │   ├── lib/
-│   │   └── supabase.ts      # Supabase client instance
-│   └── types/               # TypeScript interfaces & enums
+│   │   └── supabase.ts      # supabase client
+│   └── types/               # typescript types & enums
 ├── supabase/
-│   ├── migrations/          # SQL migration files (run in order)
-│   └── functions/           # Supabase Edge Functions
-├── public/                  # Static assets
-├── .env.example             # Template — copy to .env
+│   ├── migrations/          # sql files — run these in order
+│   └── functions/           # edge functions if any
+├── public/                  # static assets
+├── .env.example             # copy this → rename to .env
 ├── vite.config.ts
-└── README.md
+└── README.md                # ur reading it rn
 ```
 
 ---
 
-## 🧰 Tech Stack
+## 🧰 tech stack
 
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| **Frontend** | React 18 | Component model, hooks, fast rendering |
-| **Build Tool** | Vite | Sub-second HMR, optimized production builds |
-| **Backend** | Supabase | Auth + Realtime DB + Storage in one platform |
-| **Database** | PostgreSQL | Relational integrity, RLS, pg_cron scheduling |
-| **Auth** | Supabase Auth (JWT) | Multi-role sessions, zero custom auth code |
-| **Realtime** | Supabase Realtime | Live chat message delivery via WebSocket |
-| **Scheduling** | pg_cron | Server-side cron — no external services needed |
-| **Styling** | Tailwind CSS | Utility-first, zero dead CSS in production |
-| **Language** | TypeScript | Full type safety across frontend and DB types |
+| layer | tech | why tho |
+|-------|------|---------|
+| **frontend** | React 18 | goated. component model hits different |
+| **build** | Vite | so fast it's actually insane |
+| **backend** | Supabase | auth + db + realtime all in one, no cap |
+| **database** | PostgreSQL | relational, reliable, has pg_cron built in |
+| **auth** | Supabase Auth (JWT) | multi-role sessions, zero custom auth code written by me |
+| **realtime** | Supabase Realtime | live chat via websocket, just works |
+| **scheduling** | pg_cron | server-side cron. no lambda. no aws. just sql. |
+| **styling** | Tailwind CSS | utility classes go brrrr |
+| **language** | TypeScript | catches my dumb mistakes before runtime does |
 
 ---
 
-## 🛡️ Security Model
+## 🛡️ security stuff
 
-| Concern | How It's Handled |
+| concern | how it's handled |
 |---------|-----------------|
-| **Authentication** | Supabase Auth — JWT-based, no custom session logic |
-| **Authorization** | PostgreSQL RLS — enforced at the database layer, not the app layer |
-| **Role Assignment** | Stored in a protected `user_roles` table — writable only by Super Admins |
-| **Hour Records** | Append-only for all non-super roles — no update or delete permitted |
-| **Chat Privacy** | Messages permanently purged after 12 days via pg_cron |
-| **API Abuse** | RLS blocks all unauthorized writes even from valid JWT holders |
+| **auth** | supabase auth — JWTs, no custom session code, not my problem |
+| **authorization** | PostgreSQL RLS — database level, not app level, cannot be bypassed |
+| **role assignment** | protected `user_roles` table — only super admins can write to it |
+| **hour records** | append-only for everyone except super admins — no deletes, no edits |
+| **chat privacy** | hard deleted after 12 days via pg_cron, no recovery |
+| **api abuse** | RLS blocks unauthorized writes even if you have a valid JWT lmaooo |
 
-The golden rule: **the client is completely untrusted.** Every sensitive operation is validated server-side before any data is read or written.
+the vibe is: **trust nobody, verify everything at the db level.**
 
 ---
 
-## 🤝 Contributing
+## 🤝 wanna contribute?
 
-Contributions are welcome. Open an issue first to discuss major changes.
+yeah go ahead, pr's welcome. open an issue first if it's something big tho so we can talk about it before you spend 3 hours coding something
 
 ```bash
-# 1. Fork the repo & clone your fork
+# fork the repo then:
 git clone https://github.com/YOUR_USERNAME/spark-hours.git
-
-# 2. Create a feature branch
-git checkout -b feature/your-feature-name
-
-# 3. Make your changes, then commit
-git commit -m "feat: add your feature description"
-
-# 4. Push and open a Pull Request
-git push origin feature/your-feature-name
+git checkout -b feature/ur-cool-idea
+git commit -m "feat: describe what u did"
+git push origin feature/ur-cool-idea
+# then open a pr and i'll look at it
 ```
 
-Please follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
-
----
-
-## 📄 License
-
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for full details.
+try to use [conventional commits](https://www.conventionalcommits.org/) format for commit messages. makes the history actually readable.
 
 ---
 
 <div align="center">
 
-**Built to be trusted. Engineered to be tamper-proof.**
+built so nobody can fake their community hours ever again
 
-Made with way too much coffee by [idiot](https://github.com/Jumpsipidy)
+by [idiot](https://github.com/Jumpsipidy) 🫡
 
 <br/>
 
-[⬆ Back to top](#-civiclog--social-hours-tracker)
+[⬆ back to top](#-civiclog--social-hours-tracker)
 
 </div>
+READMEEOF
+echo "done bestie"
