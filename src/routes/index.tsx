@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
+import { TiltCard } from "../components/tilt-card";
 import { organizations } from "../lib/mock-data";
 import { Sparkles, Search, CalendarCheck, Award, ArrowRight, Star, Users, Clock, Building2 } from "lucide-react";
 
