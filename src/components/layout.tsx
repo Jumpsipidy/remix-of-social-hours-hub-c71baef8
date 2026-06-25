@@ -145,6 +145,8 @@ export function Navbar() {
 }
 
 export function Footer() {
+  const { isAuthenticated, profile } = useAuth();
+  const dash = isAuthenticated && profile ? DASHBOARD_BY_ROLE[profile.role] : null;
   return (
     <footer className="mt-24 border-t border-border bg-card/50">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
@@ -163,15 +165,16 @@ export function Footer() {
           <h4 className="text-sm font-semibold">Platforma</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
             <li><Link to="/organizations" className="hover:text-foreground">Organizacijos</Link></li>
-            <li><Link to="/student" className="hover:text-foreground">Mokinio sritis</Link></li>
-            <li><Link to="/organization" className="hover:text-foreground">Organizacijos sritis</Link></li>
+            {dash && (
+              <li><Link to={dash.to} className="hover:text-foreground">{dash.label}</Link></li>
+            )}
           </ul>
         </div>
         <div>
           <h4 className="text-sm font-semibold">Paskyra</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/login" className="hover:text-foreground">Prisijungti</Link></li>
-            <li><Link to="/register" className="hover:text-foreground">Registruotis</Link></li>
+            {!isAuthenticated && <li><Link to="/login" className="hover:text-foreground">Prisijungti</Link></li>}
+            {!isAuthenticated && <li><Link to="/register" className="hover:text-foreground">Registruotis</Link></li>}
             <li><a href="#" className="hover:text-foreground">Pagalba</a></li>
           </ul>
         </div>
