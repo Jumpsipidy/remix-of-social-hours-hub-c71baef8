@@ -166,12 +166,12 @@ function OrganizationsPage() {
                             exit={{ opacity: 0 }}
                             className="mt-5 rounded-2xl border border-success/30 bg-success/10 p-3 text-xs"
                           >
-                            <p className="font-semibold text-success">✓ Rezervuota</p>
+                            <p className="font-semibold text-success">✓ Užklausa išsiųsta</p>
                             <p className="mt-1 flex items-center gap-2 text-muted-foreground">
-                              <Clock className="h-3 w-3" /> {r.date} · {r.time} · {r.spots} v.
+                              <Clock className="h-3 w-3" /> {r.date} · {r.start_time}–{r.end_time} · {r.hours} val.
                             </p>
                             <button
-                              onClick={() => setActiveOrg(o)}
+                              onClick={() => handleReserveClick(o)}
                               className="mt-2 text-xs font-semibold text-primary hover:underline"
                             >
                               Keisti detales
@@ -182,7 +182,7 @@ function OrganizationsPage() {
                             key="reserve"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() => setActiveOrg(o)}
+                            onClick={() => handleReserveClick(o)}
                             className="mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
                           >
                             Rezervuoti
