@@ -1,6 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Heart, Menu, X } from "lucide-react";
+import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
+import { useAuth, type AppRole } from "@/hooks/use-auth";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -28,14 +29,33 @@ function ThemeToggle() {
   );
 }
 
+const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> = {
+  student: { to: "/student", label: "Mokinio sritis" },
+  organization: { to: "/organization", label: "Organizacijos sritis" },
+  school_admin: { to: "/student", label: "Mokyklos sritis" },
+  admin: { to: "/organization", label: "Administracija" },
+};
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const links = [
+  const { isAuthenticated, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const links: { to: string; label: string }[] = [
     { to: "/", label: "Pradžia" },
     { to: "/organizations", label: "Organizacijos" },
-    { to: "/student", label: "Mokinio sritis" },
-    { to: "/organization", label: "Organizacijos sritis" },
   ];
+  if (isAuthenticated && profile) {
+    const dash = DASHBOARD_BY_ROLE[profile.role];
+    if (dash) links.push(dash);
+  }
+
+  const handleSignOut = async () => {
+    await signOut();
+    setOpen(false);
+    navigate({ to: "/" });
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -62,18 +82,29 @@ export function Navbar() {
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link
-            to="/login"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:inline-flex"
-          >
-            Prisijungti
-          </Link>
-          <Link
-            to="/register"
-            className="hidden rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 sm:inline-flex"
-          >
-            Registruotis
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={handleSignOut}
+              className="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground sm:inline-flex"
+            >
+              <LogOut className="h-4 w-4" /> Atsijungti
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:inline-flex"
+              >
+                Prisijungti
+              </Link>
+              <Link
+                to="/register"
+                className="hidden rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 sm:inline-flex"
+              >
+                Registruotis
+              </Link>
+            </>
+          )}
           <button
             className="grid h-10 w-10 place-items-center rounded-full border border-border md:hidden"
             onClick={() => setOpen(!open)}
@@ -97,8 +128,14 @@ export function Navbar() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2">
-              <Link to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium">Prisijungti</Link>
-              <Link to="/register" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-gradient-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">Registruotis</Link>
+              {isAuthenticated ? (
+                <button onClick={handleSignOut} className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium">Atsijungti</button>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium">Prisijungti</Link>
+                  <Link to="/register" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-gradient-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">Registruotis</Link>
+                </>
+              )}
             </div>
           </div>
         </div>
