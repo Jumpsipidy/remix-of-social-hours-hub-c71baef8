@@ -12,15 +12,15 @@ export type Organization = {
 };
 
 export const organizations: Organization[] = [
-  { id: 'o1', name: 'Vilniaus gyvūnų globos namai', category: 'Gyvūnai', town: 'Vilnius', description: 'Pagalba prižiūrint benamius gyvūnus, pasivaikščiojimai ir socializacija.', spotsLeft: 8, totalVolunteers: 142, rating: 4.9, hoursOffered: 4, emoji: '🐾' },
-  { id: 'o2', name: 'Maisto bankas', category: 'Socialinė pagalba', town: 'Kaunas', description: 'Maisto rūšiavimas, pakavimas ir dalinimas šeimoms.', spotsLeft: 12, totalVolunteers: 320, rating: 4.8, hoursOffered: 6, emoji: '🥫' },
-  { id: 'o3', name: 'Senjorų dienos centras Viltis', category: 'Senjorai', town: 'Klaipėda', description: 'Bendravimas su senjorais, knygų skaitymas, pagalba kasdienėje veikloje.', spotsLeft: 3, totalVolunteers: 84, rating: 5.0, hoursOffered: 3, emoji: '👵' },
-  { id: 'o4', name: 'Žaliasis Vilnius', category: 'Aplinkosauga', town: 'Vilnius', description: 'Parkų tvarkymo akcijos, medžių sodinimas ir aplinkos švietimas.', spotsLeft: 25, totalVolunteers: 510, rating: 4.7, hoursOffered: 5, emoji: '🌳' },
-  { id: 'o5', name: 'Vaikų svajonės', category: 'Vaikai', town: 'Šiauliai', description: 'Užsiėmimų organizavimas vaikų globos namuose, kūrybinės dirbtuvės.', spotsLeft: 6, totalVolunteers: 96, rating: 4.9, hoursOffered: 4, emoji: '🎨' },
-  { id: 'o6', name: 'Raudonojo Kryžiaus skyrius', category: 'Sveikata', town: 'Panevėžys', description: 'Pirmosios pagalbos mokymai, kraujo donorystės akcijos.', spotsLeft: 10, totalVolunteers: 230, rating: 4.8, hoursOffered: 5, emoji: '❤️' },
-  { id: 'o7', name: 'Biblioteka Knygnešys', category: 'Kultūra', town: 'Kaunas', description: 'Pagalba bibliotekoje: knygų katalogavimas, skaitymo vakarai vaikams.', spotsLeft: 4, totalVolunteers: 58, rating: 4.6, hoursOffered: 3, emoji: '📚' },
-  { id: 'o8', name: 'Sporto klubas Atletas', category: 'Sportas', town: 'Vilnius', description: 'Pagalba organizuojant vaikų sporto varžybas ir treniruotes.', spotsLeft: 15, totalVolunteers: 175, rating: 4.7, hoursOffered: 4, emoji: '⚽' },
-  { id: 'o9', name: 'Pajūrio švara', category: 'Aplinkosauga', town: 'Klaipėda', description: 'Paplūdimių valymo akcijos ir jūros ekosistemos švietimas.', spotsLeft: 30, totalVolunteers: 412, rating: 4.9, hoursOffered: 6, emoji: '🌊' },
+  { id: '11111111-1111-1111-1111-000000000001', name: 'Vilniaus gyvūnų globos namai', category: 'Gyvūnai', town: 'Vilnius', description: 'Pagalba prižiūrint benamius gyvūnus, pasivaikščiojimai ir socializacija.', spotsLeft: 8, totalVolunteers: 142, rating: 4.9, hoursOffered: 4, emoji: '🐾' },
+  { id: '11111111-1111-1111-1111-000000000002', name: 'Maisto bankas', category: 'Socialinė pagalba', town: 'Kaunas', description: 'Maisto rūšiavimas, pakavimas ir dalinimas šeimoms.', spotsLeft: 12, totalVolunteers: 320, rating: 4.8, hoursOffered: 6, emoji: '🥫' },
+  { id: '11111111-1111-1111-1111-000000000003', name: 'Senjorų dienos centras Viltis', category: 'Senjorai', town: 'Klaipėda', description: 'Bendravimas su senjorais, knygų skaitymas, pagalba kasdienėje veikloje.', spotsLeft: 3, totalVolunteers: 84, rating: 5.0, hoursOffered: 3, emoji: '👵' },
+  { id: '11111111-1111-1111-1111-000000000004', name: 'Žaliasis Vilnius', category: 'Aplinkosauga', town: 'Vilnius', description: 'Parkų tvarkymo akcijos, medžių sodinimas ir aplinkos švietimas.', spotsLeft: 25, totalVolunteers: 510, rating: 4.7, hoursOffered: 5, emoji: '🌳' },
+  { id: '11111111-1111-1111-1111-000000000005', name: 'Vaikų svajonės', category: 'Vaikai', town: 'Šiauliai', description: 'Užsiėmimų organizavimas vaikų globos namuose, kūrybinės dirbtuvės.', spotsLeft: 6, totalVolunteers: 96, rating: 4.9, hoursOffered: 4, emoji: '🎨' },
+  { id: '11111111-1111-1111-1111-000000000006', name: 'Raudonojo Kryžiaus skyrius', category: 'Sveikata', town: 'Panevėžys', description: 'Pirmosios pagalbos mokymai, kraujo donorystės akcijos.', spotsLeft: 10, totalVolunteers: 230, rating: 4.8, hoursOffered: 5, emoji: '❤️' },
+  { id: '11111111-1111-1111-1111-000000000007', name: 'Biblioteka Knygnešys', category: 'Kultūra', town: 'Kaunas', description: 'Pagalba bibliotekoje: knygų katalogavimas, skaitymo vakarai vaikams.', spotsLeft: 4, totalVolunteers: 58, rating: 4.6, hoursOffered: 3, emoji: '📚' },
+  { id: '11111111-1111-1111-1111-000000000008', name: 'Sporto klubas Atletas', category: 'Sportas', town: 'Vilnius', description: 'Pagalba organizuojant vaikų sporto varžybas ir treniruotes.', spotsLeft: 15, totalVolunteers: 175, rating: 4.7, hoursOffered: 4, emoji: '⚽' },
+  { id: '11111111-1111-1111-1111-000000000009', name: 'Pajūrio švara', category: 'Aplinkosauga', town: 'Klaipėda', description: 'Paplūdimių valymo akcijos ir jūros ekosistemos švietimas.', spotsLeft: 30, totalVolunteers: 412, rating: 4.9, hoursOffered: 6, emoji: '🌊' },
 ];
 
 export const towns = ['Visi miestai', 'Vilnius', 'Kaunas', 'Klaipėda', 'Šiauliai', 'Panevėžys'];
