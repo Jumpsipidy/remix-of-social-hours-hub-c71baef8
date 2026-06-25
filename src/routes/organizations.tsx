@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { organizations, towns, type Organization } from "../lib/mock-data";
 import { Search, MapPin, Star, Users, Clock } from "lucide-react";
 import { TiltCard } from "../components/tilt-card";
-import { ReservationDialog } from "../components/reservation-dialog";
+import { ReservationDialog, type ReservationSubmit } from "../components/reservation-dialog";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/organizations")({
   head: () => ({
@@ -17,14 +20,15 @@ export const Route = createFileRoute("/organizations")({
   component: OrganizationsPage,
 });
 
-type Reservation = { date: string; time: string; spots: number };
+type LocalReservation = { date: string; start_time: string; end_time: string; hours: number };
 
 function OrganizationsPage() {
   const [q, setQ] = useState("");
   const [town, setTown] = useState("Visi miestai");
-  const [reservations, setReservations] = useState<Record<string, Reservation>>({});
+  const [reservations, setReservations] = useState<Record<string, LocalReservation>>({});
   const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   const filtered = useMemo(() => {
     return organizations.filter((o) => {
@@ -34,12 +38,41 @@ function OrganizationsPage() {
     });
   }, [q, town]);
 
-  const handleConfirm = (details: { date: string; time: string; spots: number; note: string }) => {
-    if (!activeOrg) return;
-    setReservations((p) => ({ ...p, [activeOrg.id]: details }));
-    setToast(`Rezervacija patvirtinta: ${activeOrg.name}`);
+  const handleReserveClick = (o: Organization) => {
+    if (!user) {
+      toast.error("Prisijunk, kad galėtum rezervuoti");
+      navigate({ to: "/login" });
+      return;
+    }
+    if (profile && profile.role !== "student") {
+      toast.error("Tik moksleiviai gali rezervuoti");
+      return;
+    }
+    setActiveOrg(o);
+  };
+
+  const handleConfirm = async (details: ReservationSubmit) => {
+    if (!activeOrg || !user) return;
+    const { error } = await supabase.from("reservations").insert({
+      student_id: user.id,
+      organization_id: activeOrg.id,
+      reservation_date: details.date,
+      start_time: details.start_time,
+      end_time: details.end_time,
+      hours_to_earn: details.hours,
+      status: "pending",
+      note: details.note || null,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setReservations((p) => ({
+      ...p,
+      [activeOrg.id]: { date: details.date, start_time: details.start_time, end_time: details.end_time, hours: details.hours },
+    }));
+    toast.success(`Užklausa išsiųsta: ${activeOrg.name}`);
     setActiveOrg(null);
-    setTimeout(() => setToast(null), 3000);
   };
 
   return (
@@ -133,12 +166,12 @@ function OrganizationsPage() {
                             exit={{ opacity: 0 }}
                             className="mt-5 rounded-2xl border border-success/30 bg-success/10 p-3 text-xs"
                           >
-                            <p className="font-semibold text-success">✓ Rezervuota</p>
+                            <p className="font-semibold text-success">✓ Užklausa išsiųsta</p>
                             <p className="mt-1 flex items-center gap-2 text-muted-foreground">
-                              <Clock className="h-3 w-3" /> {r.date} · {r.time} · {r.spots} v.
+                              <Clock className="h-3 w-3" /> {r.date} · {r.start_time}–{r.end_time} · {r.hours} val.
                             </p>
                             <button
-                              onClick={() => setActiveOrg(o)}
+                              onClick={() => handleReserveClick(o)}
                               className="mt-2 text-xs font-semibold text-primary hover:underline"
                             >
                               Keisti detales
@@ -149,7 +182,7 @@ function OrganizationsPage() {
                             key="reserve"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.97 }}
-                            onClick={() => setActiveOrg(o)}
+                            onClick={() => handleReserveClick(o)}
                             className="mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
                           >
                             Rezervuoti
@@ -178,19 +211,6 @@ function OrganizationsPage() {
 
       <ReservationDialog org={activeOrg} onClose={() => setActiveOrg(null)} onConfirm={handleConfirm} />
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: 20, x: "-50%" }}
-            className="fixed bottom-6 left-1/2 z-50 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold shadow-elegant"
-          >
-            ✓ {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </PageShell>
   );
 }
