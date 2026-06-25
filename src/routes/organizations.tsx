@@ -211,19 +211,6 @@ function OrganizationsPage() {
 
       <ReservationDialog org={activeOrg} onClose={() => setActiveOrg(null)} onConfirm={handleConfirm} />
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: 20, x: "-50%" }}
-            className="fixed bottom-6 left-1/2 z-50 rounded-full border border-border bg-card px-5 py-3 text-sm font-semibold shadow-elegant"
-          >
-            ✓ {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </PageShell>
   );
 }
