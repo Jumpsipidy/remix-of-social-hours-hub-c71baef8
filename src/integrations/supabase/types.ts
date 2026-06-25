@@ -14,16 +14,217 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          reservation_id: string
+          school_admin_id: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          reservation_id: string
+          school_admin_id?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          reservation_id?: string
+          school_admin_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_school_admin_id_fkey"
+            columns: ["school_admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rooms_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          chat_room_id: string
+          content: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          chat_room_id: string
+          content: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          chat_room_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_room_id_fkey"
+            columns: ["chat_room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          associated_school_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          hours_earned: number
+          hours_needed: number
+          id: string
+          organization_name: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          associated_school_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          hours_earned?: number
+          hours_needed?: number
+          id: string
+          organization_name?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          associated_school_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          hours_earned?: number
+          hours_needed?: number
+          id?: string
+          organization_name?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reservations: {
+        Row: {
+          created_at: string
+          end_time: string
+          hours_to_earn: number
+          id: string
+          note: string | null
+          organization_id: string
+          reservation_date: string
+          start_time: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          hours_to_earn?: number
+          id?: string
+          note?: string | null
+          organization_id: string
+          reservation_date: string
+          start_time: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          hours_to_earn?: number
+          id?: string
+          note?: string | null
+          organization_id?: string
+          reservation_date?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_chat_room_member: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "school_admin" | "organization" | "admin"
+      reservation_status: "pending" | "confirmed" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +351,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "school_admin", "organization", "admin"],
+      reservation_status: ["pending", "confirmed", "declined"],
+    },
   },
 } as const
