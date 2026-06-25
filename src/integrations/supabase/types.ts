@@ -190,13 +190,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "reservations_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "reservations_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
