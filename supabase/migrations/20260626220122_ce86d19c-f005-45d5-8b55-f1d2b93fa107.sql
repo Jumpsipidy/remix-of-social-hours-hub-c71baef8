@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.purge_old_messages() FROM PUBLIC, anon, authenticated;
