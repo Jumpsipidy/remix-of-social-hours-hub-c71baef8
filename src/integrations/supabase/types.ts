@@ -41,13 +41,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "chat_rooms_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "chat_rooms_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: true
@@ -76,21 +69,21 @@ export type Database = {
           content: string
           created_at: string
           id: string
-          sender_id: string
+          sender_id: string | null
         }
         Insert: {
           chat_room_id: string
           content: string
           created_at?: string
           id?: string
-          sender_id: string
+          sender_id?: string | null
         }
         Update: {
           chat_room_id?: string
           content?: string
           created_at?: string
           id?: string
-          sender_id?: string
+          sender_id?: string | null
         }
         Relationships: [
           {
@@ -98,13 +91,6 @@ export type Database = {
             columns: ["chat_room_id"]
             isOneToOne: false
             referencedRelation: "chat_rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -214,6 +200,7 @@ export type Database = {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
+      purge_old_messages: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "student" | "school_admin" | "organization" | "admin"

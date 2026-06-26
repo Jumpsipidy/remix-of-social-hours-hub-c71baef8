@@ -32,7 +32,7 @@ function ThemeToggle() {
 const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> = {
   student: { to: "/student", label: "Mokinio sritis" },
   organization: { to: "/organization", label: "Organizacijos sritis" },
-  school_admin: { to: "/student", label: "Mokyklos sritis" },
+  school_admin: { to: "/school", label: "Mokyklos sritis" },
   admin: { to: "/organization", label: "Administracija" },
 };
 
