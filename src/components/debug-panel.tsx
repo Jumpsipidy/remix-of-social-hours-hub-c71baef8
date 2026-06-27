@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Wrench, X, Sparkles, RefreshCw, LogIn, EyeOff } from "lucide-react";
+import { Wrench, X, Sparkles, RefreshCw, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DEV_ACCOUNTS, seedDevEcosystem, resetDevData } from "@/lib/dev-tools.functions";
