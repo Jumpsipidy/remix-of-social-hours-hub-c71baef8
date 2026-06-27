@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Wrench, X, Sparkles, RefreshCw, LogIn, EyeOff } from "lucide-react";
+import { Wrench, X, Sparkles, RefreshCw, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { DEV_ACCOUNTS, seedDevEcosystem, resetDevData } from "@/lib/dev-tools.functions";
@@ -20,21 +20,19 @@ const ROLE_LABEL: Record<string, string> = {
   admin: "Super Admin",
 };
 
-const HIDE_KEY = "lv_debug_hidden";
+
 
 export function DebugPanel() {
   const [open, setOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const navigate = useNavigate();
   const seed = useServerFn(seedDevEcosystem);
   const reset = useServerFn(resetDevData);
 
   useEffect(() => {
-    setHidden(localStorage.getItem(HIDE_KEY) === "1");
+    // Clear any legacy hide flag so the panel always renders in preview.
+    try { localStorage.removeItem("lv_debug_hidden"); } catch {}
   }, []);
-
-  if (hidden) return null;
 
   const handleSeed = async () => {
     setBusy("seed");
@@ -82,20 +80,16 @@ export function DebugPanel() {
     }
   };
 
-  const hide = () => {
-    localStorage.setItem(HIDE_KEY, "1");
-    setHidden(true);
-  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[100] font-sans">
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-border bg-card/95 px-4 py-2.5 text-sm font-semibold shadow-lg backdrop-blur transition hover:scale-105 hover:shadow-xl"
+          title="Open developer debug"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card/95 text-lg shadow-lg backdrop-blur transition hover:scale-105 hover:shadow-xl"
         >
-          <Wrench className="h-4 w-4 text-primary" />
-          Debug Mode
+          🛠️
         </button>
       ) : (
         <div className="w-[340px] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl">
@@ -104,21 +98,12 @@ export function DebugPanel() {
               <Wrench className="h-4 w-4 text-primary" />
               <span className="text-sm font-bold">Developer Debug</span>
             </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={hide}
-                title="Paslėpti šioje sesijoje"
-                className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-accent"
-              >
-                <EyeOff className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={() => setOpen(false)}
-                className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-accent"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-accent"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
 
           <div className="space-y-3 p-4">
