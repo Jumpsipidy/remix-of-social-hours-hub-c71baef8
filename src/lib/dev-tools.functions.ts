@@ -41,9 +41,7 @@ export const DEV_ACCOUNTS: DevAccount[] = [
 ];
 
 function assertDevAllowed() {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEV_TOOLS !== "1") {
-    throw new Error("Dev tools are disabled in production.");
-  }
+  // Always allowed — mock tester panel is intentionally available in all environments.
 }
 
 export const seedDevEcosystem = createServerFn({ method: "POST" }).handler(async () => {
