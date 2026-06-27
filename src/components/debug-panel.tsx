@@ -80,10 +80,6 @@ export function DebugPanel() {
     }
   };
 
-  const hide = () => {
-    localStorage.setItem(HIDE_KEY, "1");
-    setHidden(true);
-  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[100] font-sans">
