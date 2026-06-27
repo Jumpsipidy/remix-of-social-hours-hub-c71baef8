@@ -20,7 +20,7 @@ const ROLE_LABEL: Record<string, string> = {
   admin: "Super Admin",
 };
 
-const HIDE_KEY = "lv_debug_hidden";
+
 
 export function DebugPanel() {
   const [open, setOpen] = useState(false);
