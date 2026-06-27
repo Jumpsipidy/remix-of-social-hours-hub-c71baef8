@@ -22,7 +22,7 @@ const ROLE_LABEL: Record<string, string> = {
 
 
 
-export function DebugPanel() {
+export function MockTesterPanel() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -86,7 +86,7 @@ export function DebugPanel() {
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          title="Open developer debug"
+          title="Open mock tester"
           className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card/95 text-lg shadow-lg backdrop-blur transition hover:scale-105 hover:shadow-xl"
         >
           🛠️
@@ -96,7 +96,7 @@ export function DebugPanel() {
           <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-primary/10 to-transparent px-4 py-3">
             <div className="flex items-center gap-2">
               <Wrench className="h-4 w-4 text-primary" />
-              <span className="text-sm font-bold">Developer Debug</span>
+              <span className="text-sm font-bold">Mock Tester</span>
             </div>
             <button
               onClick={() => setOpen(false)}
