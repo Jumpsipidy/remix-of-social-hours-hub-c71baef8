@@ -115,9 +115,9 @@ export const resetDevData = createServerFn({ method: "POST" }).handler(async () 
     // Delete reservations created by dev students -> cascades chat_rooms/messages via FK? chat_rooms cascade on student delete only.
     // Reservations have student_id; delete them. Then chat_rooms by student or org id, then messages.
     await supabaseAdmin.from("messages").delete().in("sender_id", ids);
-    await supabaseAdmin.from("chat_rooms").delete().or(
-      ids.map((id) => `student_id.eq.${id},organization_id.eq.${id},school_admin_id.eq.${id}`).join(","),
-    );
+    await supabaseAdmin.from("chat_rooms").delete().in("student_id", ids);
+    await supabaseAdmin.from("chat_rooms").delete().in("organization_id", ids);
+    await supabaseAdmin.from("chat_rooms").delete().in("school_admin_id", ids);
     await supabaseAdmin.from("reservations").delete().in("student_id", ids);
 
     // Reset student hours to original
