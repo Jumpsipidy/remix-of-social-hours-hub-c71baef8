@@ -24,17 +24,15 @@ const HIDE_KEY = "lv_debug_hidden";
 
 export function DebugPanel() {
   const [open, setOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const navigate = useNavigate();
   const seed = useServerFn(seedDevEcosystem);
   const reset = useServerFn(resetDevData);
 
   useEffect(() => {
-    setHidden(localStorage.getItem(HIDE_KEY) === "1");
+    // Clear any legacy hide flag so the panel always renders in preview.
+    try { localStorage.removeItem("lv_debug_hidden"); } catch {}
   }, []);
-
-  if (hidden) return null;
 
   const handleSeed = async () => {
     setBusy("seed");
