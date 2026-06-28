@@ -238,7 +238,16 @@ function OrgDashboard() {
                     <p className="truncate text-sm font-medium">{s?.full_name ?? "Mokinys"}</p>
                     <p className="text-xs text-muted-foreground">{r.reservation_date} · {Number(r.hours_to_earn)} val.</p>
                   </div>
-                  <Icon className={`h-4 w-4 ${tone}`} />
+                  <div className="flex items-center gap-1.5">
+                    <Icon className={`h-4 w-4 ${tone}`} />
+                    <button
+                      onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id })}
+                      className="grid h-8 w-8 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                      title="Pokalbis"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}
