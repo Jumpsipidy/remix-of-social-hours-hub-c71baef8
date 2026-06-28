@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
+import { CreateTaskPanel } from "@/components/create-task-panel";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
