@@ -116,6 +116,8 @@ function StudentDashboard() {
         </div>
       </section>
 
+      <OpenTasksFeed />
+
       <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
           <h2 className="text-lg font-bold">Mano rezervacijos</h2>
