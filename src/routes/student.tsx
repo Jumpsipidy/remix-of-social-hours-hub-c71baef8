@@ -74,7 +74,7 @@ function StudentDashboard() {
             <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">Sveika, {profile.full_name ?? "moksleivi"} 👋</h1>
             <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
           </div>
-          <Link to="/organizations" className="shrink-0 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Rezervuoti</Link>
+          <Link to="/tasks" className="shrink-0 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
         </div>
       </section>
 
