@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2 } from "lucide-react";
-import type { Organization } from "@/lib/mock-data";
 
 export type ReservationSubmit = {
   date: string;
@@ -11,8 +10,20 @@ export type ReservationSubmit = {
   note: string;
 };
 
+export type ReserveTarget = {
+  id: string;
+  name: string;
+  emoji?: string;
+  town?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  presetDate?: string;
+  presetStart?: string;
+  presetEnd?: string;
+};
+
 type Props = {
-  org: Organization | null;
+  target: ReserveTarget | null;
   onClose: () => void;
   onConfirm: (details: ReservationSubmit) => Promise<void> | void;
 };
