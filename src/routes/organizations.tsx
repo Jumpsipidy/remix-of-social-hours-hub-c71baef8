@@ -209,7 +209,7 @@ function OrganizationsPage() {
         )}
       </section>
 
-      <ReservationDialog org={activeOrg} onClose={() => setActiveOrg(null)} onConfirm={handleConfirm} />
+      <ReservationDialog target={activeOrg ? { id: activeOrg.id, name: activeOrg.name, emoji: activeOrg.emoji, town: activeOrg.town, category: activeOrg.category, rating: activeOrg.rating } : null} onClose={() => setActiveOrg(null)} onConfirm={handleConfirm} />
 
     </PageShell>
   );

@@ -74,7 +74,7 @@ function StudentDashboard() {
             <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">Sveika, {profile.full_name ?? "moksleivi"} 👋</h1>
             <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
           </div>
-          <Link to="/organizations" className="shrink-0 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Rezervuoti</Link>
+          <Link to="/tasks" className="shrink-0 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
         </div>
       </section>
 
@@ -116,6 +116,8 @@ function StudentDashboard() {
         </div>
       </section>
 
+      <OpenTasksFeed />
+
       <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
           <h2 className="text-lg font-bold">Mano rezervacijos</h2>
@@ -156,5 +158,59 @@ function StudentDashboard() {
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
     </PageShell>
+  );
+}
+
+function OpenTasksFeed() {
+  const [tasks, setTasks] = useState<Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>>([]);
+  const [orgs, setOrgs] = useState<Record<string, { organization_name: string | null; full_name: string | null }>>({});
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("tasks")
+        .select("id, title, task_date, available_hours, location, organization_id")
+        .eq("is_open", true)
+        .order("task_date", { ascending: true })
+        .limit(4);
+      const list = (data as any[]) ?? [];
+      setTasks(list);
+      const ids = Array.from(new Set(list.map((t) => t.organization_id)));
+      if (ids.length) {
+        const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
+        const map: Record<string, any> = {};
+        (ps ?? []).forEach((p: any) => (map[p.id] = p));
+        setOrgs(map);
+      }
+    })();
+  }, []);
+
+  if (tasks.length === 0) return null;
+  return (
+    <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+      <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">Naujausios atviros užduotys</h2>
+            <p className="text-xs text-muted-foreground">Realios užduotys, paskelbtos organizacijų.</p>
+          </div>
+          <Link to="/tasks" className="text-xs font-semibold text-primary hover:underline">Visos →</Link>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {tasks.map((t) => {
+            const orgLabel = orgs[t.organization_id]?.organization_name ?? orgs[t.organization_id]?.full_name ?? "Organizacija";
+            return (
+              <Link key={t.id} to="/tasks" className="group rounded-2xl border border-border bg-background/60 p-4 transition hover:border-primary/40 hover:shadow-md">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="truncate text-sm font-semibold group-hover:text-primary">{t.title}</p>
+                  <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">{Number(t.available_hours)} val.</span>
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{orgLabel} · {t.task_date}{t.location ? ` · ${t.location}` : ""}</p>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </section>
   );
 }

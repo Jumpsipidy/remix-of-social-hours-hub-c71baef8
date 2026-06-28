@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
+import { CreateTaskPanel } from "@/components/create-task-panel";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
@@ -159,6 +160,10 @@ function OrgDashboard() {
         </div>
       </section>
 
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <CreateTaskPanel organizationId={user.id} />
+      </section>
+
       <section className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-5">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">
           <div className="flex items-center justify-between">
@@ -233,7 +238,16 @@ function OrgDashboard() {
                     <p className="truncate text-sm font-medium">{s?.full_name ?? "Mokinys"}</p>
                     <p className="text-xs text-muted-foreground">{r.reservation_date} · {Number(r.hours_to_earn)} val.</p>
                   </div>
-                  <Icon className={`h-4 w-4 ${tone}`} />
+                  <div className="flex items-center gap-1.5">
+                    <Icon className={`h-4 w-4 ${tone}`} />
+                    <button
+                      onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id })}
+                      className="grid h-8 w-8 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                      title="Pokalbis"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               );
             })}

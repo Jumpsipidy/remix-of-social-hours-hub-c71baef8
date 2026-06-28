@@ -1,7 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2 } from "lucide-react";
-import type { Organization } from "@/lib/mock-data";
 
 export type ReservationSubmit = {
   date: string;
@@ -11,8 +10,20 @@ export type ReservationSubmit = {
   note: string;
 };
 
+export type ReserveTarget = {
+  id: string;
+  name: string;
+  emoji?: string;
+  town?: string | null;
+  category?: string | null;
+  rating?: number | null;
+  presetDate?: string;
+  presetStart?: string;
+  presetEnd?: string;
+};
+
 type Props = {
-  org: Organization | null;
+  target: ReserveTarget | null;
   onClose: () => void;
   onConfirm: (details: ReservationSubmit) => Promise<void> | void;
 };
@@ -32,12 +43,19 @@ function calcHours(start: string, end: string): number {
   return Math.round((mins / 60) * 100) / 100;
 }
 
-export function ReservationDialog({ org, onClose, onConfirm }: Props) {
+export function ReservationDialog({ target, onClose, onConfirm }: Props) {
   const [date, setDate] = useState(todayISO());
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!target) return;
+    if (target.presetDate) setDate(target.presetDate);
+    if (target.presetStart) setStart(target.presetStart);
+    if (target.presetEnd) setEnd(target.presetEnd);
+  }, [target?.id]);
 
   const hours = useMemo(() => calcHours(start, end), [start, end]);
   const valid = hours > 0 && !!date;
@@ -54,7 +72,7 @@ export function ReservationDialog({ org, onClose, onConfirm }: Props) {
 
   return (
     <AnimatePresence>
-      {org && (
+      {target && (
         <motion.div
           className="fixed inset-0 z-50 grid place-items-center p-4"
           initial={{ opacity: 0 }}
@@ -90,15 +108,15 @@ export function ReservationDialog({ org, onClose, onConfirm }: Props) {
               </button>
               <div className="relative flex items-center gap-4">
                 <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/20 text-3xl shadow-inner backdrop-blur">
-                  {org.emoji}
+                  {target.emoji ?? "🤝"}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Nauja rezervacija</p>
-                  <h2 className="mt-0.5 truncate text-[22px] font-bold leading-tight">{org.name}</h2>
+                  <h2 className="mt-0.5 truncate text-[22px] font-bold leading-tight">{target.name}</h2>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/85">
-                    <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {org.town}</span>
-                    <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" fill="currentColor" /> {org.rating}</span>
-                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">{org.category}</span>
+                    {target.town && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {target.town}</span>}
+                    {target.rating != null && <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" fill="currentColor" /> {target.rating}</span>}
+                    {target.category && <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">{target.category}</span>}
                   </div>
                 </div>
               </div>

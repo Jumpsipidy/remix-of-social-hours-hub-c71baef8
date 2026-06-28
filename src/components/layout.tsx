@@ -43,6 +43,7 @@ export function Navbar() {
 
   const links: { to: string; label: string }[] = [
     { to: "/", label: "Pradžia" },
+    { to: "/tasks", label: "Užduotys" },
     { to: "/organizations", label: "Organizacijos" },
   ];
   if (isAuthenticated && profile) {
