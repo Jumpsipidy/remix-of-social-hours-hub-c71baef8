@@ -160,6 +160,10 @@ function OrgDashboard() {
         </div>
       </section>
 
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <CreateTaskPanel organizationId={user.id} />
+      </section>
+
       <section className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-5">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">
           <div className="flex items-center justify-between">
