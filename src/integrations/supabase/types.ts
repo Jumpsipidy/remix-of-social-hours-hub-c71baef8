@@ -146,6 +146,7 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["reservation_status"]
           student_id: string
+          task_id: string | null
           updated_at: string
         }
         Insert: {
@@ -159,6 +160,7 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id: string
+          task_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id?: string
+          task_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -182,7 +185,62 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reservations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      tasks: {
+        Row: {
+          available_hours: number
+          created_at: string
+          description: string
+          end_time: string | null
+          id: string
+          is_open: boolean
+          location: string
+          organization_id: string
+          spots_total: number
+          start_time: string | null
+          task_date: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          available_hours?: number
+          created_at?: string
+          description?: string
+          end_time?: string | null
+          id?: string
+          is_open?: boolean
+          location?: string
+          organization_id: string
+          spots_total?: number
+          start_time?: string | null
+          task_date: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          available_hours?: number
+          created_at?: string
+          description?: string
+          end_time?: string | null
+          id?: string
+          is_open?: boolean
+          location?: string
+          organization_id?: string
+          spots_total?: number
+          start_time?: string | null
+          task_date?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
