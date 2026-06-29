@@ -172,6 +172,11 @@ function StudentDashboard() {
       </section>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
+      <CustomReservationDialog
+        open={customOpen}
+        onClose={() => setCustomOpen(false)}
+        onCreated={() => loadReservations(user.id)}
+      />
     </PageShell>
   );
 }
