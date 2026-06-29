@@ -5,6 +5,7 @@ import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
+import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
