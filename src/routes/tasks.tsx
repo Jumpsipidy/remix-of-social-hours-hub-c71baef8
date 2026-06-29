@@ -214,6 +214,7 @@ function TasksPage() {
       </section>
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
+      <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />
     </PageShell>
   );
 }
