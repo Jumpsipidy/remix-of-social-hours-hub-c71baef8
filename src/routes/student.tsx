@@ -38,15 +38,20 @@ function StudentDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
+  const loadReservations = (uid: string) => {
     supabase
       .from("reservations")
       .select("*")
-      .eq("student_id", user.id)
+      .eq("student_id", uid)
       .order("reservation_date", { ascending: false })
       .then(({ data }) => setReservations((data as Reservation[]) ?? []));
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    loadReservations(user.id);
   }, [user]);
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
