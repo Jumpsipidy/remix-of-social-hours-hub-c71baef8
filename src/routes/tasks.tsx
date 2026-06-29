@@ -42,6 +42,7 @@ function TasksPage() {
   const [orgs, setOrgs] = useState<Record<string, OrgProfile>>({});
   const [q, setQ] = useState("");
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
