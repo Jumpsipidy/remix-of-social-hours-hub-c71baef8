@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { organizations } from "@/lib/mock-data";
 import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
+import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/student")({
   head: () => ({
@@ -36,15 +38,20 @@ function StudentDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
+  const loadReservations = (uid: string) => {
     supabase
       .from("reservations")
       .select("*")
-      .eq("student_id", user.id)
+      .eq("student_id", uid)
       .order("reservation_date", { ascending: false })
       .then(({ data }) => setReservations((data as Reservation[]) ?? []));
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    loadReservations(user.id);
   }, [user]);
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
@@ -74,7 +81,15 @@ function StudentDashboard() {
             <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">Sveika, {profile.full_name ?? "moksleivi"} 👋</h1>
             <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
           </div>
-          <Link to="/tasks" className="shrink-0 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <button
+              onClick={() => setCustomOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40 hover:shadow-md"
+            >
+              <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
+            </button>
+            <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
+          </div>
         </div>
       </section>
 
@@ -157,6 +172,11 @@ function StudentDashboard() {
       </section>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
+      <CustomReservationDialog
+        open={customOpen}
+        onClose={() => setCustomOpen(false)}
+        onCreated={() => loadReservations(user.id)}
+      />
     </PageShell>
   );
 }

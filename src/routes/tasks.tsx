@@ -5,6 +5,7 @@ import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
+import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ function TasksPage() {
   const [orgs, setOrgs] = useState<Record<string, OrgProfile>>({});
   const [q, setQ] = useState("");
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -130,14 +132,26 @@ function TasksPage() {
           <p className="mt-3 max-w-2xl text-muted-foreground">
             {tasks.length} realių užduočių, paskelbtų organizacijų. Užrezervuok laiką ir kaupk socialines valandas.
           </p>
-          <div className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card/80 px-4 py-2 backdrop-blur">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Ieškoti pagal pavadinimą, vietą ar organizaciją..."
-              className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="flex flex-1 min-w-[260px] items-center gap-3 rounded-2xl border border-border bg-card/80 px-4 py-2 backdrop-blur">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Ieškoti pagal pavadinimą, vietą ar organizaciją..."
+                className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (!user) { toast.error("Prisijunk, kad galėtum rezervuoti"); navigate({ to: "/login" }); return; }
+                if (profile && profile.role !== "student") { toast.error("Tik moksleiviai gali rezervuoti"); return; }
+                setCustomOpen(true);
+              }}
+              className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow"
+            >
+              <Sparkles className="h-4 w-4" /> Pasiūlyk savo rezervaciją
+            </button>
           </div>
         </div>
       </section>
@@ -200,6 +214,7 @@ function TasksPage() {
       </section>
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
+      <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />
     </PageShell>
   );
 }
