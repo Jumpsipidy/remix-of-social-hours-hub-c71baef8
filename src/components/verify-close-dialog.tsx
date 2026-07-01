@@ -100,7 +100,7 @@ export function VerifyCloseDialog({
                 className="inline-flex items-center gap-1.5 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {submitting ? "Tvirtinama…" : "Confirm & credit hours"}
+                {submitting ? "Tvirtinama…" : "Patvirtinti ir įrašyti valandas"}
               </motion.button>
             </div>
           </motion.div>
