@@ -323,6 +323,13 @@ function OrgDashboard() {
       </section>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
+      <VerifyCloseDialog
+        open={!!verifyRes}
+        hours={Number(verifyRes?.hours_to_earn ?? 0)}
+        studentName={verifyRes ? (students[verifyRes.student_id]?.full_name ?? "Mokinys") : ""}
+        onCancel={() => setVerifyRes(null)}
+        onConfirm={() => verifyRes && finalizeCompleted(verifyRes)}
+      />
     </PageShell>
   );
 }
