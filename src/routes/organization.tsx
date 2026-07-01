@@ -159,7 +159,7 @@ function OrgDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length },
-            { icon: CheckCircle2, label: "Patvirtintos", value: confirmed.length },
+            { icon: PlayCircle, label: "Vykdomos (On Work)", value: approved.length },
             { icon: Clock, label: "Suteikta valandų", value: hoursDelivered },
             { icon: Users, label: "Skirtingų savanorių", value: new Set(reservations.map((r) => r.student_id)).size },
           ].map((s) => (
