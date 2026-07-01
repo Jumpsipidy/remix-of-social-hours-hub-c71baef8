@@ -59,7 +59,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" }).handler(async
   assertDevAllowed();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const results: Array<{ email: string; role: string; created: boolean }> = [];
+  const results: Array<{ email: string; role: string; created: boolean; id: string }> = [];
 
   for (const acc of DEV_ACCOUNTS) {
     // Check if user exists by listing — admin API doesn't have getUserByEmail
