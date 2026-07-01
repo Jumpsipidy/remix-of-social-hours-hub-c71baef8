@@ -44,8 +44,7 @@ export function Navbar() {
 
   const links: { to: string; label: string }[] = [
     { to: "/", label: "Pradžia" },
-    { to: "/tasks", label: "Užduotys" },
-    { to: "/organizations", label: "Organizacijos" },
+    { to: "/tasks", label: "Užduotys ir organizacijos" },
   ];
   if (isAuthenticated && profile) {
     const dash = DASHBOARD_BY_ROLE[profile.role];
