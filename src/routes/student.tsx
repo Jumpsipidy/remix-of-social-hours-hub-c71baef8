@@ -28,7 +28,7 @@ type Reservation = {
   start_time: string;
   end_time: string;
   hours_to_earn: number;
-  status: "pending" | "confirmed" | "declined";
+  status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
 const orgName = (id: string) => organizations.find((o) => o.id === id)?.name ?? "Organizacija";
