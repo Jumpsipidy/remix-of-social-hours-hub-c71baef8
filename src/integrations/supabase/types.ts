@@ -19,7 +19,7 @@ export type Database = {
           created_at: string
           id: string
           organization_id: string
-          reservation_id: string
+          reservation_id: string | null
           school_admin_id: string | null
           student_id: string
         }
@@ -27,7 +27,7 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id: string
-          reservation_id: string
+          reservation_id?: string | null
           school_admin_id?: string | null
           student_id: string
         }
@@ -35,7 +35,7 @@ export type Database = {
           created_at?: string
           id?: string
           organization_id?: string
-          reservation_id?: string
+          reservation_id?: string | null
           school_admin_id?: string | null
           student_id?: string
         }
@@ -43,7 +43,7 @@ export type Database = {
           {
             foreignKeyName: "chat_rooms_reservation_id_fkey"
             columns: ["reservation_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -140,6 +140,7 @@ export type Database = {
           end_time: string
           hours_to_earn: number
           id: string
+          legal_disclosure: string | null
           note: string | null
           organization_id: string
           reservation_date: string
@@ -154,6 +155,7 @@ export type Database = {
           end_time: string
           hours_to_earn?: number
           id?: string
+          legal_disclosure?: string | null
           note?: string | null
           organization_id: string
           reservation_date: string
@@ -168,6 +170,7 @@ export type Database = {
           end_time?: string
           hours_to_earn?: number
           id?: string
+          legal_disclosure?: string | null
           note?: string | null
           organization_id?: string
           reservation_date?: string
