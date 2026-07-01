@@ -217,13 +217,13 @@ function OrgDashboard() {
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button
-                      onClick={() => handle(r, "confirm")}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-success px-4 py-2 text-sm font-semibold text-success-foreground transition hover:opacity-90"
+                      onClick={() => approveInitial(r)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                     >
-                      <Check className="h-4 w-4" /> Patvirtinti užduotį
+                      <Check className="h-4 w-4" /> Approve · Start work
                     </button>
                     <button
-                      onClick={() => handle(r, "decline")}
+                      onClick={() => decline(r)}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                     >
                       <X className="h-4 w-4" /> Atmesti
@@ -233,6 +233,55 @@ function OrgDashboard() {
               );
             })}
           </div>
+
+          {/* On Work list */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">On Work · In Progress</h3>
+                <p className="text-xs text-muted-foreground">Patvirtinta — laukiama darbo užbaigimo. Valandos dar NĖRA įskaitytos.</p>
+              </div>
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{approved.length}</span>
+            </div>
+            <div className="mt-3 space-y-3">
+              {approved.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Nėra vykdomų užduočių.</div>
+              )}
+              {approved.map((r) => {
+                const s = students[r.student_id];
+                return (
+                  <div key={r.id} className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-primary text-sm font-bold text-primary-foreground">
+                          {(s?.full_name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
+                          <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id })}
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent"
+                      >
+                        <MessageSquare className="h-3 w-3" /> Pokalbis
+                      </button>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setVerifyRes(r)}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
+                      >
+                        <ShieldCheck className="h-4 w-4" /> Verify & Close Task
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
 
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-2">
