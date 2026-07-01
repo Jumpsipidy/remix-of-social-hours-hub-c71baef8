@@ -27,7 +27,7 @@ type Reservation = {
   start_time: string;
   end_time: string;
   hours_to_earn: number;
-  status: "pending" | "confirmed" | "declined";
+  status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
 type StudentLite = { id: string; full_name: string | null; email: string | null; hours_earned: number };
