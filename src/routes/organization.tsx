@@ -238,7 +238,7 @@ function OrgDashboard() {
           <div className="mt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">On Work · In Progress</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">Vykdomos užduotys</h3>
                 <p className="text-xs text-muted-foreground">Patvirtinta — laukiama darbo užbaigimo. Valandos dar NĖRA įskaitytos.</p>
               </div>
               <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{approved.length}</span>
