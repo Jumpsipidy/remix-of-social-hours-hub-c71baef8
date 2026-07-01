@@ -68,11 +68,11 @@ export function VerifyCloseDialog({
 
             <div className="space-y-4 p-5">
               <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-foreground">
-                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-destructive">Critical Legal Disclosure</p>
-                By clicking confirm, you legally certify under institutional policy that the student has successfully
-                completed the stated hours. You acknowledge that this record is immediately dispatched to school boards
-                for final academic grading. Any fraudulent verification or misrepresentation will result in immediate
-                organizational blacklisting and direct institutional liability enforced by the school network.
+                <p className="mb-1 text-xs font-bold uppercase tracking-wider text-destructive">Kritinis teisinis įspėjimas</p>
+                Spausdami „Patvirtinti“, jūs teisiškai patvirtinate pagal institucinę politiką, kad mokinys sėkmingai
+                atliko nurodytas valandas. Sutinkate, kad šis įrašas nedelsiant perduodamas mokyklos administracijai
+                galutiniam akademiniam vertinimui. Bet koks melagingas patvirtinimas ar iškraipymas užtrauks nedelsiamą
+                organizacijos įtraukimą į juodąjį sąrašą ir tiesioginę institucinę atsakomybę, kurią užtikrina mokyklų tinklas.
               </div>
 
               <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-3 text-sm hover:border-primary/40">
@@ -82,7 +82,7 @@ export function VerifyCloseDialog({
                   onChange={(e) => setAccepted(e.target.checked)}
                   className="mt-0.5 h-4 w-4 accent-primary"
                 />
-                <span>I accept these terms and certify the work</span>
+                <span>Sutinku su šiomis sąlygomis ir patvirtinu atliktą darbą</span>
               </label>
             </div>
 
