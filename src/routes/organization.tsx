@@ -220,7 +220,7 @@ function OrgDashboard() {
                       onClick={() => approveInitial(r)}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                     >
-                      <Check className="h-4 w-4" /> Approve · Start work
+                      <Check className="h-4 w-4" /> Patvirtinti ir pradėti darbą
                     </button>
                     <button
                       onClick={() => decline(r)}
