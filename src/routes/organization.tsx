@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle } from "lucide-react";
+import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle, PlayCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateTaskPanel } from "@/components/create-task-panel";
+import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
@@ -26,7 +27,7 @@ type Reservation = {
   start_time: string;
   end_time: string;
   hours_to_earn: number;
-  status: "pending" | "confirmed" | "declined";
+  status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
 type StudentLite = { id: string; full_name: string | null; email: string | null; hours_earned: number };
@@ -59,6 +60,7 @@ function OrgDashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [students, setStudents] = useState<Record<string, StudentLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
 
   const refresh = async (uid: string) => {
     const { data } = await supabase
@@ -97,33 +99,48 @@ function OrgDashboard() {
   }
 
   const pending = reservations.filter((r) => r.status === "pending");
-  const confirmed = reservations.filter((r) => r.status === "confirmed");
-  const hoursDelivered = confirmed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
+  const approved = reservations.filter((r) => r.status === "approved");
+  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
+  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
 
-  const handle = async (r: Reservation, action: "confirm" | "decline") => {
-    const status = action === "confirm" ? "confirmed" : "declined";
-    const { error } = await supabase.from("reservations").update({ status }).eq("id", r.id);
+  const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
+
+  const approveInitial = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
     if (error) { toast.error(error.message); return; }
-
-    let earnedNote = "";
-    if (action === "confirm") {
-      const { data: stu } = await supabase.from("profiles").select("hours_earned").eq("id", r.student_id).maybeSingle();
-      const next = Number(stu?.hours_earned ?? 0) + Number(r.hours_to_earn);
-      await supabase.from("profiles").update({ hours_earned: next }).eq("id", r.student_id);
-      earnedNote = ` ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį.`;
-    }
-
-    const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
-    const verb = action === "confirm" ? "PATVIRTINO" : "ATMETĖ";
     await ensureRoomAndNotify(
       r,
-      `🤖 Sistema: ${orgLabel} ${verb} šią rezervaciją.${earnedNote}`,
+      `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`,
       user.id,
     );
-
-    toast.success(action === "confirm" ? "Patvirtinta — žinutė nusiųsta į pokalbį" : "Atmesta — žinutė nusiųsta į pokalbį");
+    toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
     refresh(user.id);
   };
+
+  const decline = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "declined" }).eq("id", r.id);
+    if (error) { toast.error(error.message); return; }
+    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
+    toast.success("Atmesta — žinutė nusiųsta į pokalbį");
+    refresh(user.id);
+  };
+
+  const finalizeCompleted = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "completed" }).eq("id", r.id);
+    if (error) { toast.error(error.message); return; }
+    const { data: stu } = await supabase.from("profiles").select("hours_earned").eq("id", r.student_id).maybeSingle();
+    const next = Number(stu?.hours_earned ?? 0) + Number(r.hours_to_earn);
+    await supabase.from("profiles").update({ hours_earned: next }).eq("id", r.student_id);
+    await ensureRoomAndNotify(
+      r,
+      `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`,
+      user.id,
+    );
+    toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
+    setVerifyRes(null);
+    refresh(user.id);
+  };
+
 
   return (
     <PageShell>
@@ -142,7 +159,7 @@ function OrgDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length },
-            { icon: CheckCircle2, label: "Patvirtintos", value: confirmed.length },
+            { icon: PlayCircle, label: "Vykdomos (On Work)", value: approved.length },
             { icon: Clock, label: "Suteikta valandų", value: hoursDelivered },
             { icon: Users, label: "Skirtingų savanorių", value: new Set(reservations.map((r) => r.student_id)).size },
           ].map((s) => (
@@ -200,13 +217,13 @@ function OrgDashboard() {
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button
-                      onClick={() => handle(r, "confirm")}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-success px-4 py-2 text-sm font-semibold text-success-foreground transition hover:opacity-90"
+                      onClick={() => approveInitial(r)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                     >
-                      <Check className="h-4 w-4" /> Patvirtinti užduotį
+                      <Check className="h-4 w-4" /> Approve · Start work
                     </button>
                     <button
-                      onClick={() => handle(r, "decline")}
+                      onClick={() => decline(r)}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                     >
                       <X className="h-4 w-4" /> Atmesti
@@ -216,19 +233,69 @@ function OrgDashboard() {
               );
             })}
           </div>
+
+          {/* On Work list */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">On Work · In Progress</h3>
+                <p className="text-xs text-muted-foreground">Patvirtinta — laukiama darbo užbaigimo. Valandos dar NĖRA įskaitytos.</p>
+              </div>
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{approved.length}</span>
+            </div>
+            <div className="mt-3 space-y-3">
+              {approved.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Nėra vykdomų užduočių.</div>
+              )}
+              {approved.map((r) => {
+                const s = students[r.student_id];
+                return (
+                  <div key={r.id} className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-primary text-sm font-bold text-primary-foreground">
+                          {(s?.full_name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
+                          <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id })}
+                        className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent"
+                      >
+                        <MessageSquare className="h-3 w-3" /> Pokalbis
+                      </button>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setVerifyRes(r)}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
+                      >
+                        <ShieldCheck className="h-4 w-4" /> Verify & Close Task
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
 
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-2">
           <h2 className="text-lg font-bold">Istorija</h2>
           <p className="text-xs text-muted-foreground">Patvirtintos ir atmestos rezervacijos</p>
           <div className="mt-5 space-y-2">
-            {reservations.filter((r) => r.status !== "pending").length === 0 && (
+            {reservations.filter((r) => r.status !== "pending" && r.status !== "approved").length === 0 && (
               <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Dar tuščia.</div>
             )}
-            {reservations.filter((r) => r.status !== "pending").map((r) => {
+            {reservations.filter((r) => r.status !== "pending" && r.status !== "approved").map((r) => {
               const s = students[r.student_id];
-              const Icon = r.status === "confirmed" ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
-              const tone = r.status === "confirmed" ? "text-success" : "text-destructive";
+              const isDone = r.status === "completed" || r.status === "confirmed";
+              const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
+              const tone = isDone ? "text-success" : "text-destructive";
               return (
                 <div key={r.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-background/60 p-3">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold">
@@ -256,6 +323,13 @@ function OrgDashboard() {
       </section>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
+      <VerifyCloseDialog
+        open={!!verifyRes}
+        hours={Number(verifyRes?.hours_to_earn ?? 0)}
+        studentName={verifyRes ? (students[verifyRes.student_id]?.full_name ?? "Mokinys") : ""}
+        onCancel={() => setVerifyRes(null)}
+        onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
+      />
     </PageShell>
   );
 }

@@ -5,7 +5,7 @@ import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { organizations } from "@/lib/mock-data";
-import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle } from "lucide-react";
+import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { Sparkles } from "lucide-react";
@@ -28,7 +28,7 @@ type Reservation = {
   start_time: string;
   end_time: string;
   hours_to_earn: number;
-  status: "pending" | "confirmed" | "declined";
+  status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
 const orgName = (id: string) => organizations.find((o) => o.id === id)?.name ?? "Organizacija";
@@ -144,10 +144,13 @@ function StudentDashboard() {
               </div>
             )}
             {reservations.map((r) => {
-              const tone = r.status === "confirmed" ? "bg-success/15 text-success" : r.status === "declined" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning-foreground";
-              const Icon = r.status === "confirmed" ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
+              const isDone = r.status === "completed" || r.status === "confirmed";
+              const isApproved = r.status === "approved";
+              const tone = isDone ? "bg-success/15 text-success" : r.status === "declined" ? "bg-destructive/15 text-destructive" : isApproved ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning-foreground";
+              const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : isApproved ? PlayCircle : AlarmClock;
+              const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "On Work · In Progress" : "Laukia";
               return (
-                <div key={r.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-border bg-background/60 p-4">
+                <div key={r.id} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
                   <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-xl">{orgEmoji(r.organization_id)}</div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
@@ -155,7 +158,7 @@ function StudentDashboard() {
                   </div>
                   <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
-                      <Icon className="h-3 w-3" /> {r.status === "confirmed" ? "Patvirtinta" : r.status === "declined" ? "Atmesta" : "Laukia"}
+                      <Icon className="h-3 w-3" /> {label}
                     </span>
                     <button
                       onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
