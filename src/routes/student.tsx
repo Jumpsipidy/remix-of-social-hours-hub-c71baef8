@@ -148,7 +148,7 @@ function StudentDashboard() {
               const isApproved = r.status === "approved";
               const tone = isDone ? "bg-success/15 text-success" : r.status === "declined" ? "bg-destructive/15 text-destructive" : isApproved ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning-foreground";
               const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : isApproved ? PlayCircle : AlarmClock;
-              const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "On Work · In Progress" : "Laukia";
+              const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "Vykdoma" : "Laukia patvirtinimo";
               return (
                 <div key={r.id} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
                   <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-xl">{orgEmoji(r.organization_id)}</div>
