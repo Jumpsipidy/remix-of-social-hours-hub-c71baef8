@@ -54,7 +54,7 @@ export function VerifyCloseDialog({
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-destructive">Institucinis patvirtinimas</p>
-                  <h3 className="mt-1 font-display text-xl font-bold">Verify & Close Task</h3>
+                  <h3 className="mt-1 font-display text-xl font-bold">Patvirtinti ir uždaryti užduotį</h3>
                   <p className="mt-1 text-xs text-muted-foreground">{studentName} · {hours} val.</p>
                 </div>
               </div>
