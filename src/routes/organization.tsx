@@ -293,8 +293,9 @@ function OrgDashboard() {
             )}
             {reservations.filter((r) => r.status !== "pending").map((r) => {
               const s = students[r.student_id];
-              const Icon = r.status === "confirmed" ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
-              const tone = r.status === "confirmed" ? "text-success" : "text-destructive";
+              const isDone = r.status === "completed" || r.status === "confirmed";
+              const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
+              const tone = isDone ? "text-success" : "text-destructive";
               return (
                 <div key={r.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-background/60 p-3">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold">
