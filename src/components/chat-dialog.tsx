@@ -236,6 +236,14 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
 
           {/* Composer */}
           <div className="border-t border-border bg-card/60 p-3">
+            <div className="mb-2 flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
+              <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" />
+              <span>
+                <b>Notice:</b> You agree that this chat channel can be actively monitored by authorized School
+                Administrators for quality assurance. All messages in this room are permanently destroyed after
+                12 days to minimize data overhead.
+              </span>
+            </div>
             <form
               onSubmit={(e) => { e.preventDefault(); send(); }}
               className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary/30"
