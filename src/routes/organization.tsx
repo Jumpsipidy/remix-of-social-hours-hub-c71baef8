@@ -328,7 +328,7 @@ function OrgDashboard() {
         hours={Number(verifyRes?.hours_to_earn ?? 0)}
         studentName={verifyRes ? (students[verifyRes.student_id]?.full_name ?? "Mokinys") : ""}
         onCancel={() => setVerifyRes(null)}
-        onConfirm={() => verifyRes && finalizeCompleted(verifyRes)}
+        onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
       />
     </PageShell>
   );
