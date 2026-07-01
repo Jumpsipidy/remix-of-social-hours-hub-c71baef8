@@ -44,11 +44,22 @@ function assertDevAllowed() {
   // Always allowed — mock tester panel is intentionally available in all environments.
 }
 
+export const listDevProfiles = createServerFn({ method: "GET" }).handler(async () => {
+  assertDevAllowed();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const emails = DEV_ACCOUNTS.map((a) => a.email);
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, full_name, email, role, hours_needed, hours_earned, organization_name")
+    .in("email", emails);
+  return { profiles: data ?? [] };
+});
+
 export const seedDevEcosystem = createServerFn({ method: "POST" }).handler(async () => {
   assertDevAllowed();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const results: Array<{ email: string; role: string; created: boolean }> = [];
+  const results: Array<{ email: string; role: string; created: boolean; id: string }> = [];
 
   for (const acc of DEV_ACCOUNTS) {
     // Check if user exists by listing — admin API doesn't have getUserByEmail
@@ -91,7 +102,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" }).handler(async
     );
     if (upErr) throw new Error(`Profile ${acc.email}: ${upErr.message}`);
 
-    results.push({ email: acc.email, role: acc.role, created });
+    results.push({ email: acc.email, role: acc.role, created, id: userId });
   }
 
   return { ok: true, accounts: results };

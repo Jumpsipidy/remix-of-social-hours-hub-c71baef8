@@ -159,7 +159,7 @@ function OrgDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length },
-            { icon: PlayCircle, label: "Vykdomos (On Work)", value: approved.length },
+            { icon: PlayCircle, label: "Vykdomos", value: approved.length },
             { icon: Clock, label: "Suteikta valandų", value: hoursDelivered },
             { icon: Users, label: "Skirtingų savanorių", value: new Set(reservations.map((r) => r.student_id)).size },
           ].map((s) => (
@@ -220,7 +220,7 @@ function OrgDashboard() {
                       onClick={() => approveInitial(r)}
                       className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
                     >
-                      <Check className="h-4 w-4" /> Approve · Start work
+                      <Check className="h-4 w-4" /> Patvirtinti ir pradėti darbą
                     </button>
                     <button
                       onClick={() => decline(r)}
@@ -238,7 +238,7 @@ function OrgDashboard() {
           <div className="mt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">On Work · In Progress</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-primary">Vykdomos užduotys</h3>
                 <p className="text-xs text-muted-foreground">Patvirtinta — laukiama darbo užbaigimo. Valandos dar NĖRA įskaitytos.</p>
               </div>
               <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{approved.length}</span>
@@ -273,7 +273,7 @@ function OrgDashboard() {
                         onClick={() => setVerifyRes(r)}
                         className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
                       >
-                        <ShieldCheck className="h-4 w-4" /> Verify & Close Task
+                        <ShieldCheck className="h-4 w-4" /> Patvirtinti ir uždaryti užduotį
                       </button>
                     </div>
                   </div>

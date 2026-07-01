@@ -40,7 +40,7 @@ function Home() {
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
-                  <Link to="/organizations" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
+                  <Link to="/tasks" className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent">
                     Naršyti organizacijas
                   </Link>
                 </motion.div>
@@ -176,7 +176,7 @@ function Home() {
             <span className="text-xs font-semibold uppercase tracking-wider text-primary">Populiariausios</span>
             <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Organizacijos, kurioms reikia tavęs</h2>
           </div>
-          <Link to="/organizations" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
+          <Link to="/tasks" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
             Visos organizacijos <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -219,7 +219,7 @@ function Home() {
           <p className="relative mx-auto mt-3 max-w-xl text-white/80">Prisijunk prie 12 000+ moksleivių, kurie jau atlieka socialines valandas paprastai ir prasmingai.</p>
           <div className="relative mt-8 flex flex-wrap justify-center gap-3">
             <Link to="/register" className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-white/90">Sukurti paskyrą</Link>
-            <Link to="/organizations" className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">Naršyti organizacijas</Link>
+            <Link to="/tasks" className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20">Naršyti organizacijas</Link>
           </div>
         </div>
       </section>

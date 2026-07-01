@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { NotificationBell } from "@/components/notification-bell";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -33,7 +34,7 @@ const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> =
   student: { to: "/student", label: "Mokinio sritis" },
   organization: { to: "/organization", label: "Organizacijos sritis" },
   school_admin: { to: "/school", label: "Mokyklos sritis" },
-  admin: { to: "/organization", label: "Administracija" },
+  admin: { to: "/admin", label: "Sistemos administracija" },
 };
 
 export function Navbar() {
@@ -43,8 +44,7 @@ export function Navbar() {
 
   const links: { to: string; label: string }[] = [
     { to: "/", label: "Pradžia" },
-    { to: "/tasks", label: "Užduotys" },
-    { to: "/organizations", label: "Organizacijos" },
+    { to: "/tasks", label: "Užduotys ir organizacijos" },
   ];
   if (isAuthenticated && profile) {
     const dash = DASHBOARD_BY_ROLE[profile.role];
@@ -82,6 +82,7 @@ export function Navbar() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <NotificationBell />
           <ThemeToggle />
           {isAuthenticated ? (
             <button
@@ -165,7 +166,7 @@ export function Footer() {
         <div>
           <h4 className="text-sm font-semibold">Platforma</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/organizations" className="hover:text-foreground">Organizacijos</Link></li>
+            <li><Link to="/tasks" className="hover:text-foreground">Užduotys ir organizacijos</Link></li>
             {dash && (
               <li><Link to={dash.to} className="hover:text-foreground">{dash.label}</Link></li>
             )}
