@@ -163,7 +163,7 @@ function TasksPage() {
             <p className="mt-3 text-lg font-semibold">Kol kas nėra atvirų užduočių</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Organizacijos netrukus paskelbs naujų galimybių. Tuo tarpu apžiūrėk{" "}
-              <Link to="/organizations" className="font-semibold text-primary hover:underline">organizacijų katalogą</Link>.
+              <Link to="/tasks" className="font-semibold text-primary hover:underline">organizacijų katalogą</Link>.
             </p>
           </div>
         )}

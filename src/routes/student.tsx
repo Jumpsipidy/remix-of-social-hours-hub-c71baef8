@@ -140,7 +140,7 @@ function StudentDashboard() {
           <div className="mt-5 space-y-3">
             {reservations.length === 0 && (
               <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                Dar nėra rezervacijų. <Link to="/organizations" className="font-semibold text-primary hover:underline">Pasirink organizaciją</Link>
+                Dar nėra rezervacijų. <Link to="/tasks" className="font-semibold text-primary hover:underline">Pasirink organizaciją</Link>
               </div>
             )}
             {reservations.map((r) => {
