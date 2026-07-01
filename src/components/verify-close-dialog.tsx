@@ -91,7 +91,7 @@ export function VerifyCloseDialog({
                 onClick={onCancel}
                 className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-accent"
               >
-                Cancel
+                Atšaukti
               </button>
               <motion.button
                 whileTap={{ scale: accepted ? 0.97 : 1 }}
