@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { NotificationBell } from "@/components/notification-bell";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
