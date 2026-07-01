@@ -166,7 +166,7 @@ export function Footer() {
         <div>
           <h4 className="text-sm font-semibold">Platforma</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/organizations" className="hover:text-foreground">Organizacijos</Link></li>
+            <li><Link to="/tasks" className="hover:text-foreground">Užduotys ir organizacijos</Link></li>
             {dash && (
               <li><Link to={dash.to} className="hover:text-foreground">{dash.label}</Link></li>
             )}
