@@ -288,10 +288,10 @@ function OrgDashboard() {
           <h2 className="text-lg font-bold">Istorija</h2>
           <p className="text-xs text-muted-foreground">Patvirtintos ir atmestos rezervacijos</p>
           <div className="mt-5 space-y-2">
-            {reservations.filter((r) => r.status !== "pending").length === 0 && (
+            {reservations.filter((r) => r.status !== "pending" && r.status !== "approved").length === 0 && (
               <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Dar tuščia.</div>
             )}
-            {reservations.filter((r) => r.status !== "pending").map((r) => {
+            {reservations.filter((r) => r.status !== "pending" && r.status !== "approved").map((r) => {
               const s = students[r.student_id];
               const isDone = r.status === "completed" || r.status === "confirmed";
               const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : AlarmClock;
