@@ -99,33 +99,48 @@ function OrgDashboard() {
   }
 
   const pending = reservations.filter((r) => r.status === "pending");
-  const confirmed = reservations.filter((r) => r.status === "confirmed");
-  const hoursDelivered = confirmed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
+  const approved = reservations.filter((r) => r.status === "approved");
+  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
+  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
 
-  const handle = async (r: Reservation, action: "confirm" | "decline") => {
-    const status = action === "confirm" ? "confirmed" : "declined";
-    const { error } = await supabase.from("reservations").update({ status }).eq("id", r.id);
+  const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
+
+  const approveInitial = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
     if (error) { toast.error(error.message); return; }
-
-    let earnedNote = "";
-    if (action === "confirm") {
-      const { data: stu } = await supabase.from("profiles").select("hours_earned").eq("id", r.student_id).maybeSingle();
-      const next = Number(stu?.hours_earned ?? 0) + Number(r.hours_to_earn);
-      await supabase.from("profiles").update({ hours_earned: next }).eq("id", r.student_id);
-      earnedNote = ` ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį.`;
-    }
-
-    const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
-    const verb = action === "confirm" ? "PATVIRTINO" : "ATMETĖ";
     await ensureRoomAndNotify(
       r,
-      `🤖 Sistema: ${orgLabel} ${verb} šią rezervaciją.${earnedNote}`,
+      `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`,
       user.id,
     );
-
-    toast.success(action === "confirm" ? "Patvirtinta — žinutė nusiųsta į pokalbį" : "Atmesta — žinutė nusiųsta į pokalbį");
+    toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
     refresh(user.id);
   };
+
+  const decline = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "declined" }).eq("id", r.id);
+    if (error) { toast.error(error.message); return; }
+    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
+    toast.success("Atmesta — žinutė nusiųsta į pokalbį");
+    refresh(user.id);
+  };
+
+  const finalizeCompleted = async (r: Reservation) => {
+    const { error } = await supabase.from("reservations").update({ status: "completed" }).eq("id", r.id);
+    if (error) { toast.error(error.message); return; }
+    const { data: stu } = await supabase.from("profiles").select("hours_earned").eq("id", r.student_id).maybeSingle();
+    const next = Number(stu?.hours_earned ?? 0) + Number(r.hours_to_earn);
+    await supabase.from("profiles").update({ hours_earned: next }).eq("id", r.student_id);
+    await ensureRoomAndNotify(
+      r,
+      `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`,
+      user.id,
+    );
+    toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
+    setVerifyRes(null);
+    refresh(user.id);
+  };
+
 
   return (
     <PageShell>
