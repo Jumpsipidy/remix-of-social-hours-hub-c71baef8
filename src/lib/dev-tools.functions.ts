@@ -102,7 +102,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" }).handler(async
     );
     if (upErr) throw new Error(`Profile ${acc.email}: ${upErr.message}`);
 
-    results.push({ email: acc.email, role: acc.role, created });
+    results.push({ email: acc.email, role: acc.role, created, id: userId });
   }
 
   return { ok: true, accounts: results };
