@@ -273,7 +273,7 @@ function OrgDashboard() {
                         onClick={() => setVerifyRes(r)}
                         className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
                       >
-                        <ShieldCheck className="h-4 w-4" /> Verify & Close Task
+                        <ShieldCheck className="h-4 w-4" /> Patvirtinti ir uždaryti užduotį
                       </button>
                     </div>
                   </div>
