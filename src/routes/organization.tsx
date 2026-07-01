@@ -60,6 +60,7 @@ function OrgDashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [students, setStudents] = useState<Record<string, StudentLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
 
   const refresh = async (uid: string) => {
     const { data } = await supabase
