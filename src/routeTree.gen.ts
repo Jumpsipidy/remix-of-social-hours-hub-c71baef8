@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StudentRouteImport } from './routes/student'
@@ -20,6 +21,11 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
+const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
+  id: '/update-password',
+  path: '/update-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
+  '/update-password': typeof UpdatePasswordRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
+  '/update-password': typeof UpdatePasswordRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
+  '/update-password': typeof UpdatePasswordRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/tasks'
     | '/terms'
+    | '/update-password'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/tasks'
     | '/terms'
+    | '/update-password'
   id:
     | '__root__'
     | '/'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/student'
     | '/tasks'
     | '/terms'
+    | '/update-password'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,10 +170,18 @@ export interface RootRouteChildren {
   StudentRoute: typeof StudentRoute
   TasksRoute: typeof TasksRoute
   TermsRoute: typeof TermsRoute
+  UpdatePasswordRoute: typeof UpdatePasswordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/update-password': {
+      id: '/update-password'
+      path: '/update-password'
+      fullPath: '/update-password'
+      preLoaderRoute: typeof UpdatePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -246,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRoute: StudentRoute,
   TasksRoute: TasksRoute,
   TermsRoute: TermsRoute,
+  UpdatePasswordRoute: UpdatePasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
