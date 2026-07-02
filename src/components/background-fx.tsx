@@ -17,8 +17,8 @@ import * as THREE from "three";
  *
  * Interaction:
  *  - Cursor tilts the whole ring stack.
- *  - Scroll rotates rings on a different axis and swings the light angle.
- *    NO camera zoom.
+ *  - Scroll rotates rings on a different axis, swings the light angle, and
+ *    gently zooms the camera so the 3D scene feels like it moves through space.
  *
  * Perf: adaptive DPR / counts on mobile, RAF paused when tab hidden,
  *       static gradient fallback for reduced-motion / no-WebGL.
@@ -171,10 +171,11 @@ export function BackgroundFX() {
 
       const s = Math.min(scrollY / (window.innerHeight * 2.5), 1);
 
-      // Camera: gentle lean only, NO zoom
+      // Camera: cursor lean + scroll zoom-in. The zoom is smoothed so text never jumps.
+      const targetZ = 18 - s * (isMobile ? 3.2 : 5.4);
       camera.position.x = mouse.x * 1.4;
       camera.position.y = -mouse.y * 1.0;
-      camera.position.z = 18;
+      camera.position.z += (targetZ - camera.position.z) * 0.055;
       camera.lookAt(0, 0, 0);
 
       // Rings: independent slow rotation + scroll-driven tilt + cursor lean
@@ -183,6 +184,8 @@ export function BackgroundFX() {
         r.mesh.rotation.x = r.base.x + t * r.speed * sign + s * 0.6 * sign + mouse.y * 0.15;
         r.mesh.rotation.y = r.base.y + t * r.speed * 0.7 + mouse.x * 0.2;
         r.mesh.rotation.z = r.base.z + Math.sin(t * 0.15 + i) * 0.08 + s * 0.3 * sign;
+        const targetScale = 1 + s * (0.1 + i * 0.035);
+        r.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.04);
       });
 
       // Lights drift — this is what makes the glass rings feel alive
@@ -223,26 +226,22 @@ export function BackgroundFX() {
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* Base dark gradient */}
+      {/* Base gradient — light and dark now look intentionally different */}
       <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, oklch(0.14 0.03 285) 0%, oklch(0.10 0.03 290) 100%)",
-        }}
+        className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.985_0.018_255)_0%,oklch(0.955_0.035_285)_52%,oklch(0.94_0.035_195)_100%)] dark:bg-[linear-gradient(180deg,oklch(0.13_0.04_285)_0%,oklch(0.08_0.035_290)_100%)]"
       />
 
       {/* Aurora blobs — soft, blurred, pushed to corners */}
       <div
-        className="absolute -left-32 -top-32 h-[36rem] w-[36rem] rounded-full opacity-60 blur-3xl"
+        className="absolute -left-32 -top-32 h-[36rem] w-[36rem] rounded-full opacity-35 blur-3xl dark:opacity-60"
         style={{ background: "radial-gradient(circle, oklch(0.55 0.20 300 / 0.55), transparent 65%)" }}
       />
       <div
-        className="absolute -right-32 top-40 h-[32rem] w-[32rem] rounded-full opacity-50 blur-3xl"
+        className="absolute -right-32 top-40 h-[32rem] w-[32rem] rounded-full opacity-30 blur-3xl dark:opacity-50"
         style={{ background: "radial-gradient(circle, oklch(0.55 0.18 195 / 0.50), transparent 65%)" }}
       />
       <div
-        className="absolute -bottom-40 left-1/3 h-[36rem] w-[36rem] rounded-full opacity-40 blur-3xl"
+        className="absolute -bottom-40 left-1/3 h-[36rem] w-[36rem] rounded-full opacity-25 blur-3xl dark:opacity-40"
         style={{ background: "radial-gradient(circle, oklch(0.55 0.16 155 / 0.40), transparent 65%)" }}
       />
 
@@ -250,17 +249,13 @@ export function BackgroundFX() {
       {!fallback && (
         <div
           ref={mountRef}
-          className="absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)]"
+          className="absolute inset-0 opacity-35 dark:opacity-70 [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)]"
         />
       )}
 
       {/* Central legibility veil — keeps text crisp */}
       <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 55% at center, oklch(0.10 0.03 290 / 0.55) 0%, transparent 70%)",
-        }}
+        className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_center,oklch(0.99_0.01_255/0.74)_0%,transparent_70%)] dark:bg-[radial-gradient(ellipse_70%_55%_at_center,oklch(0.09_0.03_290/0.68)_0%,transparent_70%)]"
       />
 
       {/* Fine noise / grain via subtle dots */}
