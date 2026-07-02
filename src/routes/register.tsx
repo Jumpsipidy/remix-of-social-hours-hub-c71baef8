@@ -17,9 +17,10 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
+type Role = "student" | "school_admin";
+
 const ROLES: { id: Role; label: string; icon: typeof GraduationCap; hint: string }[] = [
   { id: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk socialines valandas" },
-  { id: "organization", label: "Organizacija", icon: Building2, hint: "Priimk savanorius" },
   { id: "school_admin", label: "Mokyklos administracija", icon: School, hint: "Stebėk klasės progresą" },
 ];
 
