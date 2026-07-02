@@ -231,40 +231,44 @@ function TasksPage() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <AnimatePresence mode="popLayout">
                 {filteredTasks.map((t, i) => (
-                  <motion.article key={t.id} layout
-                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3, delay: i * 0.03 }}
-                    whileHover={{ y: -4 }}
-                    className="group flex flex-col rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur transition hover:shadow-xl"
+                  <motion.div key={t.id} layout
+                    initial={{ opacity: 0, y: 30, rotateX: -12 }} animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4, delay: (i % 6) * 0.04, type: "spring", stiffness: 120, damping: 18 }}
+                    style={{ perspective: 1200 }}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
-                        <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
-                      </div>
-                      <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
-                        {Number(t.available_hours)} val.
-                      </span>
-                    </div>
-                    <h3 className="mt-4 font-display text-lg font-bold leading-tight">{t.title}</h3>
-                    <span className="mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      {CATEGORY_LABELS[guessCategory(t)]}
-                    </span>
-                    {t.description && (
-                      <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
-                    )}
-                    <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-                      <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}</p>
-                      {t.start_time && t.end_time && (
-                        <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
-                      )}
-                      {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
-                    </div>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => handleReserve(t)}
-                      className="mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
-                      Rezervuoti
-                    </motion.button>
-                  </motion.article>
+                    <TiltCard intensity={10}>
+                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
+                        <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
+                            <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
+                          </div>
+                          <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
+                            {Number(t.available_hours)} val.
+                          </span>
+                        </div>
+                        <h3 className="relative mt-4 font-display text-lg font-bold leading-tight">{t.title}</h3>
+                        <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                          {CATEGORY_LABELS[guessCategory(t)]}
+                        </span>
+                        {t.description && (
+                          <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
+                        )}
+                        <div className="relative mt-4 space-y-1.5 text-xs text-muted-foreground">
+                          <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}</p>
+                          {t.start_time && t.end_time && (
+                            <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
+                          )}
+                          {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
+                        </div>
+                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
+                          onClick={() => handleReserve(t)}
+                          className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
+                          Rezervuoti
+                        </motion.button>
+                      </article>
+                    </TiltCard>
+                  </motion.div>
                 ))}
               </AnimatePresence>
             </div>
