@@ -64,7 +64,7 @@ function LoginPage() {
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/admin` },
+      options: { redirectTo: `${window.location.origin}/student` },
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
@@ -134,6 +134,11 @@ function LoginPage() {
                     required placeholder="••••••••"
                     className="h-11 w-full bg-transparent text-sm outline-none" />
                 </div>
+              </div>
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">
+                  Pamiršai slaptažodį?
+                </Link>
               </div>
               <button type="submit" disabled={busy}
                 className="mt-2 w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60">
