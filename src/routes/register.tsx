@@ -118,7 +118,7 @@ function RegisterPage() {
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/student` },
+      options: { redirectTo: `${window.location.origin}/admin` },
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
