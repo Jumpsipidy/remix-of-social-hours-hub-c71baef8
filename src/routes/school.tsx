@@ -154,6 +154,10 @@ function SchoolDashboard() {
                 className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                 Organizacijos partneriai
               </button>
+              <button onClick={() => setTab("events")}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "events" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                Vienkartiniai renginiai
+              </button>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
               <Search className="h-4 w-4 text-muted-foreground" />
