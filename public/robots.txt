@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://socialines-valandos.lt/sitemap.xml
