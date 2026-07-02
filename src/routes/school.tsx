@@ -167,7 +167,7 @@ function SchoolDashboard() {
             </div>
           </div>
 
-          {tab === "students" ? (
+          {tab === "students" && (
             <div className="mt-6 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
