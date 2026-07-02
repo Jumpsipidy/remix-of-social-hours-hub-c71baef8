@@ -34,22 +34,34 @@ type OrgLite = { id: string; organization_name: string | null; full_name: string
 function StudentDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [orgMap, setOrgMap] = useState<Record<string, OrgLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
 
-  const loadReservations = (uid: string) => {
-    supabase
+  const loadReservations = async (uid: string) => {
+    const { data } = await supabase
       .from("reservations")
       .select("*")
       .eq("student_id", uid)
-      .order("reservation_date", { ascending: false })
-      .then(({ data }) => setReservations((data as Reservation[]) ?? []));
+      .order("reservation_date", { ascending: false });
+    const rs = (data as Reservation[]) ?? [];
+    setReservations(rs);
+    const ids = Array.from(new Set(rs.map((r) => r.organization_id)));
+    if (ids.length) {
+      const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
+      const m: Record<string, OrgLite> = {};
+      (ps as OrgLite[] | null)?.forEach((p) => (m[p.id] = p));
+      setOrgMap(m);
+    }
   };
 
   useEffect(() => {
     if (!user) return;
     loadReservations(user.id);
   }, [user]);
+
+  const orgName = (id: string) => orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
+  const orgInitial = (id: string) => (orgName(id) || "?").trim().charAt(0).toUpperCase();
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
