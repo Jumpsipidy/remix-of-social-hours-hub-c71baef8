@@ -321,8 +321,8 @@ export function BackgroundFX() {
         // Assemble factor: nodes drift closer to the ring circle
         const ringAngle = Math.atan2(n.home.y, n.home.x);
         const ringTarget = new THREE.Vector3(
-          Math.cos(ringAngle) * (3.2 + (i => 0)(0)),
-          Math.sin(ringAngle) * (3.2),
+          Math.cos(ringAngle) * 3.2,
+          Math.sin(ringAngle) * 3.2,
           0
         );
         // Base target: interpolate home -> ringTarget by s
