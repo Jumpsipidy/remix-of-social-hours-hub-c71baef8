@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 
-type Role = "student" | "school_admin" | "organization";
+
 
 export const Route = createFileRoute("/register")({
   head: () => ({
