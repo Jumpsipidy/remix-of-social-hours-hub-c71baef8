@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles } from "lucide-react";
+import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 
@@ -30,6 +30,9 @@ type Reservation = {
 };
 
 type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
+type SchoolRow = { id: string; name: string; city: string | null };
+
+const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
 
 function StudentDashboard() {
   const { user, profile, loading } = useAuth();
@@ -73,6 +76,10 @@ function StudentDashboard() {
         </div>
       </PageShell>
     );
+  }
+
+  if (profile.role === "student" && (!profile.school_id || !profile.class_year || !profile.hours_needed)) {
+    return <StudentProfileSetup userId={user.id} />;
   }
 
   const completed = Number(profile.hours_earned ?? 0);
@@ -189,6 +196,75 @@ function StudentDashboard() {
         onClose={() => setCustomOpen(false)}
         onCreated={() => loadReservations(user.id)}
       />
+    </PageShell>
+  );
+}
+
+function StudentProfileSetup({ userId }: { userId: string }) {
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
+  const [schoolId, setSchoolId] = useState("");
+  const [classYear, setClassYear] = useState("");
+  const [hoursNeeded, setHoursNeeded] = useState(20);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    supabase.from("schools").select("id, name, city").eq("is_active", true).order("name")
+      .then(({ data }) => {
+        const rows = (data as SchoolRow[]) ?? [];
+        setSchools(rows);
+        if (rows[0]?.id) setSchoolId(rows[0].id);
+      });
+  }, []);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!schoolId || !classYear) return;
+    setBusy(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ school_id: schoolId, class_year: classYear, hours_needed: hoursNeeded, role: "student" })
+      .eq("id", userId);
+    setBusy(false);
+    if (error) return;
+    window.location.reload();
+  };
+
+  return (
+    <PageShell>
+      <section className="mx-auto max-w-xl px-4 py-16 sm:px-6">
+        <div className="rounded-3xl border border-border bg-gradient-card p-7 shadow-elegant backdrop-blur-xl">
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
+            <School className="h-5 w-5" />
+          </div>
+          <h1 className="mt-5 text-2xl font-bold">Užbaik mokinio profilį</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Google prisijungimas veikia — dabar pasirink mokyklą, klasę ir valandų tikslą.
+          </p>
+          <form onSubmit={submit} className="mt-6 space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Mokykla</span>
+              <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary">
+                {schools.length === 0 && <option value="">Kraunama…</option>}
+                {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Klasė</span>
+              <select value={classYear} onChange={(e) => setClassYear(e.target.value)} required className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary">
+                <option value="">Pasirink…</option>
+                {CLASS_YEARS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas</span>
+              <input type="number" min={1} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(1, Number(e.target.value)))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
+            </label>
+            <button disabled={busy} className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
+              {busy ? "Saugoma…" : "Išsaugoti ir tęsti"}
+            </button>
+          </form>
+        </div>
+      </section>
     </PageShell>
   );
 }
