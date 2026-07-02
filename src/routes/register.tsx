@@ -85,7 +85,7 @@ function RegisterPage() {
           <h1 className="text-2xl font-bold">Sukurk paskyrą</h1>
           <p className="mt-1 text-sm text-muted-foreground">Pasirink savo rolę ir užtruks mažiau nei minutę</p>
 
-          <div className="mt-6 grid gap-2 sm:grid-cols-3">
+          <div className="mt-6 grid gap-2 sm:grid-cols-2">
             {ROLES.map((opt) => {
               const active = role === opt.id;
               return (
@@ -107,15 +107,20 @@ function RegisterPage() {
             })}
           </div>
 
+          <div className="mt-4 rounded-2xl border border-border bg-background/50 p-3 text-xs text-muted-foreground">
+            <Building2 className="mb-1 inline h-4 w-4 text-primary" /> Organizacijos paskyras kuria sistemos administratorius — susisiek su platformos komanda.
+          </div>
+
           <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <Field
-              label={role === "organization" ? "Organizacijos pavadinimas" : "Vardas Pavardė"}
-              icon={role === "organization" ? Building2 : User}
-              value={role === "organization" ? orgName : fullName}
-              onChange={(v) => (role === "organization" ? setOrgName(v) : setFullName(v))}
-              placeholder={role === "organization" ? "Žaliasis Vilnius" : "Emilija Kazlauskaitė"}
+              label="Vardas Pavardė"
+              icon={User}
+              value={fullName}
+              onChange={setFullName}
+              placeholder="Emilija Kazlauskaitė"
               required
             />
+
 
             {role === "student" && (
               <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
