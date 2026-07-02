@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [mock, setMock] = useState<MockSession | null>(null);
   const bootstrapAdmin = useServerFn(bootstrapFirstAdmin);
+  const bootstrapAdminRef = useRef(bootstrapAdmin);
+
+  useEffect(() => {
+    bootstrapAdminRef.current = bootstrapAdmin;
+  }, [bootstrapAdmin]);
 
   useEffect(() => {
     // Load mock from storage
@@ -81,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If the database was wiped and no super-admin exists, make the first signed-in user the owner.
       if (!nextProfile || nextProfile.role !== "admin") {
         try {
-          const result = await bootstrapAdmin();
+          const result = await bootstrapAdminRef.current();
           if (result.bootstrapped) nextProfile = await fetchProfile();
         } catch {
           // Normal case after setup: an admin already exists, so nothing changes.
@@ -94,8 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      if (u) setTimeout(() => loadProfile(u.id), 0);
-      else setProfile(null);
+      if (u) {
+        setLoading(true);
+        setTimeout(async () => {
+          await loadProfile(u.id);
+          if (mounted) setLoading(false);
+        }, 0);
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -109,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, [bootstrapAdmin]);
+  }, []);
 
   const value = useMemo<AuthState>(() => {
     const active = mock ?? (user ? { user, profile } : null);
