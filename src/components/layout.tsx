@@ -175,18 +175,18 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="text-sm font-semibold">Paskyra</h4>
+          <h4 className="text-sm font-semibold">Paskyra ir teisė</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
             {!isAuthenticated && <li><Link to="/login" className="hover:text-foreground">Prisijungti</Link></li>}
             {!isAuthenticated && <li><Link to="/register" className="hover:text-foreground">Registruotis</Link></li>}
-            <li><a href="#" className="hover:text-foreground">Pagalba</a></li>
+            <li><Link to="/terms" className="hover:text-foreground font-semibold text-foreground">📜 Naudojimosi taisyklės</Link></li>
           </ul>
         </div>
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <span>© 2026 Socialinės Valandos. Visos teisės saugomos.</span>
-          <span>Sukurta su 💜 Lietuvos moksleiviams</span>
+          <Link to="/terms" className="hover:text-foreground font-semibold underline underline-offset-4">Teisės ir taisyklės →</Link>
         </div>
       </div>
     </footer>

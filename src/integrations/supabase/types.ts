@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      bug_reports: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          page_url: string | null
+          reporter_email: string | null
+          reporter_user_id: string | null
+          severity: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          page_url?: string | null
+          reporter_email?: string | null
+          reporter_user_id?: string | null
+          severity?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          page_url?: string | null
+          reporter_email?: string | null
+          reporter_user_id?: string | null
+          severity?: string
+          status?: string
+        }
+        Relationships: []
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -95,9 +128,55 @@ export type Database = {
           },
         ]
       }
+      organization_access_requests: {
+        Row: {
+          admin_notes: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string
+          id: string
+          legal_code: string | null
+          organization_name: string
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          legal_code?: string | null
+          organization_name: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          legal_code?: string | null
+          organization_name?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           associated_school_id: string | null
+          class_year: string | null
           created_at: string
           email: string | null
           full_name: string | null
@@ -106,10 +185,12 @@ export type Database = {
           id: string
           organization_name: string | null
           role: Database["public"]["Enums"]["app_role"]
+          school_id: string | null
           updated_at: string
         }
         Insert: {
           associated_school_id?: string | null
+          class_year?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -118,10 +199,12 @@ export type Database = {
           id: string
           organization_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          school_id?: string | null
           updated_at?: string
         }
         Update: {
           associated_school_id?: string | null
+          class_year?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -130,9 +213,18 @@ export type Database = {
           id?: string
           organization_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          school_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reservations: {
         Row: {
@@ -196,6 +288,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      schools: {
+        Row: {
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
       }
       tasks: {
         Row: {

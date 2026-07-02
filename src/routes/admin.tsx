@@ -353,14 +353,7 @@ function CreateAccountPanel() {
         </button>
       </form>
 
-      <div className="rounded-2xl border border-dashed border-border bg-background/40 p-5 text-sm">
-        <h4 className="font-display text-base font-bold">Ką atsiųsti naujam vartotojui</h4>
-        <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
-          <li>Prisijungimo nuoroda: <span className="rounded bg-card px-1.5 py-0.5 text-foreground">{typeof window !== "undefined" ? window.location.origin : ""}/login</span></li>
-          <li>El. paštas ir tavo sukurtas slaptažodis.</li>
-          <li>Vartotojas turėtų prisijungti ir pakeisti slaptažodį profilio nustatymuose.</li>
-        </ol>
-      </div>
+      <AccessRequestsPanel />
     </div>
   );
 }
