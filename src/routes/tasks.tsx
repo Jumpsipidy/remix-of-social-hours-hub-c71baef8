@@ -158,9 +158,11 @@ function TasksPage() {
 
   return (
     <PageShell>
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-mesh opacity-60" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
+      <div className="relative">
+        <TasksBackgroundFX />
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
+          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <span className="text-xs font-semibold uppercase tracking-wider text-primary">Atraskite galimybes</span>
           <h1 className="mt-2 font-display text-4xl font-bold tracking-tight sm:text-5xl">Užduotys ir organizacijos</h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
