@@ -129,6 +129,7 @@
 @utility bg-gradient-hero { background-image: var(--gradient-hero); }
 @utility bg-gradient-primary { background-image: var(--gradient-primary); }
 @utility bg-gradient-card { background-image: var(--gradient-card); }
+@utility bg-gradient-accent { background-image: var(--gradient-accent); }
 @utility bg-gradient-mesh { background-image: var(--gradient-mesh); }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 @utility shadow-elegant { box-shadow: var(--shadow-lg); }
