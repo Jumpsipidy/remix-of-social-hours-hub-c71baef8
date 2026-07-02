@@ -70,6 +70,8 @@ function RegisterPage() {
             role: mode,
             full_name: fullName,
             hours_needed: mode === "student" ? hoursNeeded : 0,
+            school_id: mode === "student" ? schoolId : null,
+            class_year: mode === "student" ? classYear : null,
           },
         },
       });
