@@ -2,26 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 /**
- * Friendly community-themed WebGL background.
+ * Premium dark-glassmorphism WebGL background.
  *
  * Scene:
- *  - A soft cloud of "community nodes" (rounded orbs) linked by thin lines
- *    that gently pulse — a stylized social network.
- *  - A central 3D "progress ring" (torus) that fills / rotates as the user
- *    scrolls, simulating volunteer hours being completed.
- *  - Floating pill/heart-like rounded shapes drift slowly around the scene.
- *  - Soft warm lighting (peach + violet) with MeshStandardMaterial for a
- *    tactile, high-end look — no wireframes, no matrix vibes.
+ *  - A constellation of glowing "glass" nodes (translucent, physically-lit
+ *    spheres) linked by thin neon strands — a stylized social network.
+ *  - Two floating 3D neon rings (torus) that orbit the scene, catching light.
+ *  - Ambient particle dust for depth.
+ *  - Two colored point-lights (electric purple + teal) that drift slowly and
+ *    react to the cursor for a "lit-from-within" glass feel.
  *
  * Interaction:
- *  - Nodes gently spring toward the cursor with playful physics.
- *  - Scroll drives progress ring fill, camera dolly, and node assembly
- *    toward the ring (community coming together).
+ *  - Scene leans/rotates toward the cursor. Nodes gently attract to the pointer.
+ *  - Scroll rotates and repositions rings + shifts key light angle. NO zoom.
  *
- * Perf:
- *  - Adaptive counts + DPR for mobile.
- *  - Static gradient fallback for reduced-motion or WebGL failure.
- *  - RAF paused when tab hidden.
+ * Perf: adaptive counts + DPR for mobile, RAF paused on hidden tabs,
+ *       static CSS fallback for reduced-motion / no-WebGL.
  */
 export function BackgroundFX() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -57,40 +53,41 @@ export function BackgroundFX() {
     renderer.setPixelRatio(dpr);
     renderer.setSize(width(), height(), false);
     renderer.setClearColor(0x000000, 0);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;display:block";
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width() / height(), 0.1, 200);
+    const camera = new THREE.PerspectiveCamera(52, width() / height(), 0.1, 200);
     camera.position.set(0, 0, 16);
 
-    const isDark = document.documentElement.classList.contains("dark");
+    // Premium dark palette — electric purple, teal, soft mint
+    const cPurple = new THREE.Color("#a880ff");
+    const cTeal = new THREE.Color("#5eead4");
+    const cMint = new THREE.Color("#86efac");
+    const cPink = new THREE.Color("#f0abfc");
+    const palette = [cPurple, cTeal, cMint, cPink];
 
-    // Warm friendly palette
-    const cCoral = new THREE.Color(isDark ? "#ff9a7a" : "#ff8a65");
-    const cPeach = new THREE.Color(isDark ? "#ffc48a" : "#ffb27a");
-    const cViolet = new THREE.Color(isDark ? "#c8a8ff" : "#a888ff");
-    const cMint = new THREE.Color(isDark ? "#8fe3c4" : "#7ed7b1");
-    const cSky = new THREE.Color(isDark ? "#8fc7ff" : "#7fb4ff");
-    const palette = [cCoral, cPeach, cViolet, cMint, cSky];
+    // --- Lighting: dark ambient + two roaming colored point lights ---
+    scene.add(new THREE.AmbientLight(0x1a1330, 0.55));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.35);
+    keyLight.position.set(6, 8, 10);
+    scene.add(keyLight);
+    const purpleLight = new THREE.PointLight(0xa880ff, 2.4, 40, 1.6);
+    purpleLight.position.set(-6, 3, 6);
+    scene.add(purpleLight);
+    const tealLight = new THREE.PointLight(0x5eead4, 2.0, 40, 1.6);
+    tealLight.position.set(6, -3, 4);
+    scene.add(tealLight);
 
-    // --- Lighting: soft, warm ---
-    scene.add(new THREE.AmbientLight(0xffffff, isDark ? 0.55 : 0.85));
-    const key = new THREE.DirectionalLight(0xffd8b8, isDark ? 0.9 : 1.1);
-    key.position.set(6, 8, 10);
-    scene.add(key);
-    const rim = new THREE.DirectionalLight(0xc9b0ff, 0.6);
-    rim.position.set(-8, -4, 4);
-    scene.add(rim);
-
-    // --- Community nodes (rounded orbs linked by lines) ---
-    const nodeCount = isMobile ? 18 : 34;
-    const nodeGeom = new THREE.SphereGeometry(1, 24, 24);
+    // --- Glass nodes ---
+    const nodeCount = isMobile ? 20 : 36;
+    const nodeGeom = new THREE.SphereGeometry(1, 32, 32);
     const nodes: {
       mesh: THREE.Mesh;
       home: THREE.Vector3;
-      target: THREE.Vector3;
       current: THREE.Vector3;
       vel: THREE.Vector3;
       scale: number;
@@ -104,23 +101,29 @@ export function BackgroundFX() {
 
     for (let i = 0; i < nodeCount; i++) {
       const color = palette[i % palette.length];
-      const mat = new THREE.MeshStandardMaterial({
-        color,
-        roughness: 0.35,
-        metalness: 0.15,
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: 0x2a2340,
+        roughness: 0.15,
+        metalness: 0.0,
+        transmission: 0.85, // glass
+        thickness: 0.6,
+        ior: 1.35,
+        clearcoat: 1,
+        clearcoatRoughness: 0.15,
         emissive: color,
-        emissiveIntensity: isDark ? 0.35 : 0.12,
+        emissiveIntensity: 0.55,
+        transparent: true,
+        opacity: 0.95,
       });
       const mesh = new THREE.Mesh(nodeGeom, mat);
-      const scale = 0.22 + Math.random() * 0.45;
+      const scale = 0.22 + Math.random() * 0.5;
       mesh.scale.setScalar(scale);
-      // Distribute on a loose sphere so they read as a "network cloud"
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 6 + Math.random() * 4;
+      const r = 5.5 + Math.random() * 4.5;
       const home = new THREE.Vector3(
         Math.sin(phi) * Math.cos(theta) * r,
-        Math.sin(phi) * Math.sin(theta) * r * 0.7,
+        Math.sin(phi) * Math.sin(theta) * r * 0.75,
         Math.cos(phi) * r - 2
       );
       mesh.position.copy(home);
@@ -128,22 +131,21 @@ export function BackgroundFX() {
       nodes.push({
         mesh,
         home,
-        target: home.clone(),
         current: home.clone(),
         vel: new THREE.Vector3(),
         scale,
-        speed: 0.4 + Math.random() * 0.8,
+        speed: 0.35 + Math.random() * 0.7,
         phase: Math.random() * Math.PI * 2,
         color,
       });
     }
 
-    // --- Connection lines between nearby nodes ---
-    const maxLinks = isMobile ? 40 : 90;
+    // --- Neon connection strands ---
+    const maxLinks = isMobile ? 45 : 100;
     const linkPairs: [number, number][] = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        if (nodes[i].home.distanceTo(nodes[j].home) < 4.2) {
+        if (nodes[i].home.distanceTo(nodes[j].home) < 4.5) {
           linkPairs.push([i, j]);
           if (linkPairs.length >= maxLinks) break;
         }
@@ -165,102 +167,61 @@ export function BackgroundFX() {
     const linkMat = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: isDark ? 0.35 : 0.22,
+      opacity: 0.5,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
     const links = new THREE.LineSegments(linkGeom, linkMat);
     nodeGroup.add(links);
 
-    // --- Central 3D progress ring (torus) ---
-    const ringGroup = new THREE.Group();
-    scene.add(ringGroup);
-
-    // Track (dim full ring)
-    const trackGeom = new THREE.TorusGeometry(3, 0.18, 16, 128);
-    const trackMat = new THREE.MeshStandardMaterial({
-      color: isDark ? 0x3a2f4a : 0xf1e3d3,
-      roughness: 0.7,
-      metalness: 0.05,
-      transparent: true,
-      opacity: 0.55,
-    });
-    const track = new THREE.Mesh(trackGeom, trackMat);
-    ringGroup.add(track);
-
-    // Progress arc — a tube along a partial circle whose length grows with scroll
-    let progressMesh: THREE.Mesh | null = null;
-    const buildProgress = (fill: number) => {
-      if (progressMesh) {
-        progressMesh.geometry.dispose();
-        ringGroup.remove(progressMesh);
-      }
-      const segs = Math.max(2, Math.floor(128 * fill));
-      const pts: THREE.Vector3[] = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / 128) * Math.PI * 2 - Math.PI / 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * 3, Math.sin(a) * 3, 0));
-      }
-      const curve = new THREE.CatmullRomCurve3(pts);
-      const geom = new THREE.TubeGeometry(curve, Math.max(8, segs * 2), 0.24, 16, false);
-      const mat = new THREE.MeshStandardMaterial({
-        color: cCoral,
-        emissive: cPeach,
-        emissiveIntensity: isDark ? 0.55 : 0.25,
-        roughness: 0.3,
-        metalness: 0.25,
-      });
-      progressMesh = new THREE.Mesh(geom, mat);
-      ringGroup.add(progressMesh);
-    };
-    buildProgress(0.02);
-
-    // Little "star" marker that rides the progress tip
-    const starGeom = new THREE.IcosahedronGeometry(0.32, 0);
-    const starMat = new THREE.MeshStandardMaterial({
-      color: cPeach,
-      emissive: cCoral,
-      emissiveIntensity: 0.7,
-      roughness: 0.25,
-      metalness: 0.4,
-    });
-    const star = new THREE.Mesh(starGeom, starMat);
-    ringGroup.add(star);
-
-    ringGroup.position.set(0, 0, -1);
-    ringGroup.rotation.x = -0.25;
-
-    // --- Floating pill shapes (torusKnots for playful geometry) ---
-    const pillCount = isMobile ? 4 : 8;
-    const pills: { mesh: THREE.Mesh; base: THREE.Vector3; spin: THREE.Vector3 }[] = [];
-    for (let i = 0; i < pillCount; i++) {
-      const g = new THREE.TorusKnotGeometry(0.5 + Math.random() * 0.3, 0.16, 64, 8, 2, 3);
-      const c = palette[i % palette.length];
+    // --- Two floating neon rings ---
+    const rings: { mesh: THREE.Mesh; baseRot: THREE.Euler; drift: number }[] = [];
+    const ringConfigs: { r: number; c: THREE.Color; pos: THREE.Vector3; rot: THREE.Euler }[] = [
+      { r: 4.2, c: cPurple, pos: new THREE.Vector3(0, 0.5, 0), rot: new THREE.Euler(-0.35, 0.25, 0.1) },
+      { r: 5.4, c: cTeal, pos: new THREE.Vector3(0.2, -0.6, -1), rot: new THREE.Euler(0.45, -0.3, -0.15) },
+    ];
+    for (const cfg of ringConfigs) {
+      const g = new THREE.TorusGeometry(cfg.r, 0.06, 20, 180);
       const m = new THREE.MeshStandardMaterial({
-        color: c,
-        emissive: c,
-        emissiveIntensity: isDark ? 0.25 : 0.08,
-        roughness: 0.4,
-        metalness: 0.2,
+        color: cfg.c,
+        emissive: cfg.c,
+        emissiveIntensity: 1.4,
+        roughness: 0.25,
+        metalness: 0.6,
+        transparent: true,
+        opacity: 0.9,
       });
       const mesh = new THREE.Mesh(g, m);
-      const base = new THREE.Vector3(
-        (Math.random() - 0.5) * 22,
-        (Math.random() - 0.5) * 14,
-        -6 - Math.random() * 8
-      );
-      mesh.position.copy(base);
+      mesh.position.copy(cfg.pos);
+      mesh.rotation.copy(cfg.rot);
       scene.add(mesh);
-      pills.push({
-        mesh,
-        base,
-        spin: new THREE.Vector3(
-          0.2 + Math.random() * 0.4,
-          0.2 + Math.random() * 0.4,
-          0.1 + Math.random() * 0.2
-        ),
-      });
+      rings.push({ mesh, baseRot: cfg.rot.clone(), drift: Math.random() });
     }
+
+    // --- Ambient dust particles ---
+    const dustCount = isMobile ? 500 : 1200;
+    const dustPos = new Float32Array(dustCount * 3);
+    const dustCol = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPos[i * 3] = (Math.random() - 0.5) * 60;
+      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 40;
+      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 30 - 5;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      dustCol.set([c.r, c.g, c.b], i * 3);
+    }
+    const dustGeom = new THREE.BufferGeometry();
+    dustGeom.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
+    dustGeom.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
+    const dustMat = new THREE.PointsMaterial({
+      size: isMobile ? 0.04 : 0.05,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const dust = new THREE.Points(dustGeom, dustMat);
+    scene.add(dust);
 
     // --- Interaction ---
     const mouse = { x: 0, y: 0, tx: 0, ty: 0, worldX: 0, worldY: 0 };
@@ -290,8 +251,6 @@ export function BackgroundFX() {
 
     const clock = new THREE.Clock();
     const linkPos = linkGeom.getAttribute("position") as THREE.BufferAttribute;
-    let currentFill = 0.02;
-    let lastRebuild = 0;
 
     let raf = 0;
     const tick = () => {
@@ -302,60 +261,50 @@ export function BackgroundFX() {
 
       mouse.x += (mouse.tx - mouse.x) * 0.06;
       mouse.y += (mouse.ty - mouse.y) * 0.06;
-      // Approximate mouse position in world space at z=0
       mouse.worldX = mouse.x * 9;
       mouse.worldY = -mouse.y * 6;
 
-      // Scroll progress 0..1 across ~3 viewport heights
+      // Scroll factor (0..1 across ~3vh)
       const s = Math.min(scrollY / (window.innerHeight * 2.5), 1);
 
-      // Camera: subtle, no dramatic zoom — friendly parallax
-      camera.position.x = mouse.x * 1.4;
-      camera.position.y = -mouse.y * 1.0;
-      camera.position.z = 16 - s * 2.5;
-      camera.lookAt(0, s * -0.4, 0);
+      // Camera: gentle lean, NO zoom on scroll — position stays at z=16
+      camera.position.x = mouse.x * 1.6;
+      camera.position.y = -mouse.y * 1.2;
+      camera.position.z = 16;
+      camera.lookAt(0, 0, 0);
 
-      // --- Nodes: spring toward home, gently pulled by cursor,
-      //     and gradually pulled toward the ring as scroll increases ---
+      // Scene rotation reacts to scroll (not zoom) + cursor
+      nodeGroup.rotation.y = t * 0.04 + mouse.x * 0.35 + s * 0.9;
+      nodeGroup.rotation.x = mouse.y * 0.25 + s * 0.35;
+
+      // Nodes: gentle spring toward home + cursor attraction
       for (const n of nodes) {
-        // Assemble factor: nodes drift closer to the ring circle
-        const ringAngle = Math.atan2(n.home.y, n.home.x);
-        const ringTarget = new THREE.Vector3(
-          Math.cos(ringAngle) * 3.2,
-          Math.sin(ringAngle) * 3.2,
-          0
-        );
-        // Base target: interpolate home -> ringTarget by s
-        n.target.copy(n.home).lerp(ringTarget, s * 0.55);
-        // Add gentle float
-        n.target.y += Math.sin(t * n.speed + n.phase) * 0.35;
-        n.target.x += Math.cos(t * n.speed * 0.7 + n.phase) * 0.25;
+        const targetX = n.home.x + Math.cos(t * n.speed * 0.7 + n.phase) * 0.35;
+        const targetY = n.home.y + Math.sin(t * n.speed + n.phase) * 0.4;
+        const targetZ = n.home.z;
 
-        // Cursor attraction (playful bounce)
+        // Cursor attraction in world space
         const dx = mouse.worldX - n.current.x;
         const dy = mouse.worldY - n.current.y;
-        const dist2 = dx * dx + dy * dy;
-        if (dist2 < 25) {
-          const f = (1 - dist2 / 25) * 0.6;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 20) {
+          const f = (1 - d2 / 20) * 0.5;
           n.vel.x += dx * f * dt;
           n.vel.y += dy * f * dt;
         }
 
-        // Spring toward target
-        n.vel.x += (n.target.x - n.current.x) * 4 * dt;
-        n.vel.y += (n.target.y - n.current.y) * 4 * dt;
-        n.vel.z += (n.target.z - n.current.z) * 4 * dt;
-        // Damping
+        n.vel.x += (targetX - n.current.x) * 3.5 * dt;
+        n.vel.y += (targetY - n.current.y) * 3.5 * dt;
+        n.vel.z += (targetZ - n.current.z) * 3.5 * dt;
         n.vel.multiplyScalar(0.88);
         n.current.addScaledVector(n.vel, dt * 4);
 
         n.mesh.position.copy(n.current);
-        // Subtle breathing scale
-        const pulse = 1 + Math.sin(t * 1.2 + n.phase) * 0.06;
+        const pulse = 1 + Math.sin(t * 1.1 + n.phase) * 0.07;
         n.mesh.scale.setScalar(n.scale * pulse);
       }
 
-      // Update link line positions from live node positions
+      // Update link segments
       for (let k = 0; k < linkPairs.length; k++) {
         const [a, b] = linkPairs[k];
         const pa = nodes[a].current;
@@ -365,30 +314,29 @@ export function BackgroundFX() {
       }
       linkPos.needsUpdate = true;
 
-      // --- Ring: fill grows with scroll, gentle idle rotation ---
-      const targetFill = 0.05 + s * 0.9;
-      currentFill += (targetFill - currentFill) * 0.08;
-      // Rebuild tube only when change is meaningful (perf)
-      if (Math.abs(currentFill - lastRebuild) > 0.02) {
-        buildProgress(currentFill);
-        lastRebuild = currentFill;
-      }
-      ringGroup.rotation.z = t * 0.08 + mouse.x * 0.15;
-      ringGroup.rotation.x = -0.25 + mouse.y * 0.12;
-      // Star marker rides the progress tip
-      const tipAngle = (currentFill) * Math.PI * 2 - Math.PI / 2;
-      star.position.set(Math.cos(tipAngle) * 3, Math.sin(tipAngle) * 3, 0);
-      star.rotation.y = t * 1.2;
-      star.rotation.x = t * 0.9;
+      // Rings: rotate + shift position with scroll (no zoom)
+      rings.forEach((r, i) => {
+        const sign = i === 0 ? 1 : -1;
+        r.mesh.rotation.x = r.baseRot.x + t * 0.12 * sign + s * 1.2 * sign;
+        r.mesh.rotation.y = r.baseRot.y + t * 0.09 * sign + s * 0.8 * sign;
+        r.mesh.rotation.z = r.baseRot.z + Math.sin(t * 0.3 + r.drift) * 0.15;
+        r.mesh.position.x = (i === 0 ? 0 : 0.2) + Math.sin(t * 0.25 + r.drift) * 0.6 + mouse.x * 0.4;
+        r.mesh.position.y = (i === 0 ? 0.5 : -0.6) + Math.cos(t * 0.3 + r.drift) * 0.4 - mouse.y * 0.3 + s * (i === 0 ? -0.8 : 0.9);
+      });
 
-      // Pills: slow drift + spin
-      for (const p of pills) {
-        p.mesh.rotation.x += p.spin.x * dt;
-        p.mesh.rotation.y += p.spin.y * dt;
-        p.mesh.rotation.z += p.spin.z * dt;
-        p.mesh.position.y = p.base.y + Math.sin(t * 0.4 + p.base.x) * 0.5;
-        p.mesh.position.x = p.base.x + Math.cos(t * 0.35 + p.base.y) * 0.4;
-      }
+      // Lights drift + shift with scroll for lighting-angle changes
+      purpleLight.position.x = Math.sin(t * 0.4) * 7 + mouse.x * 2;
+      purpleLight.position.y = Math.cos(t * 0.3) * 4 + 2 - s * 3;
+      purpleLight.position.z = 5 + Math.sin(t * 0.2) * 2;
+      tealLight.position.x = Math.cos(t * 0.35) * 7 - mouse.x * 2;
+      tealLight.position.y = Math.sin(t * 0.28) * 4 - 2 + s * 3;
+      tealLight.position.z = 4 + Math.cos(t * 0.22) * 2;
+      keyLight.position.x = Math.sin(s * Math.PI) * 8;
+      keyLight.position.y = 8 - s * 6;
+
+      // Dust drifts
+      dust.rotation.y = t * 0.015;
+      dust.rotation.x = -s * 0.15;
 
       renderer.render(scene, camera);
     };
@@ -404,14 +352,11 @@ export function BackgroundFX() {
       nodeGeom.dispose();
       linkGeom.dispose();
       linkMat.dispose();
-      trackGeom.dispose();
-      trackMat.dispose();
-      starGeom.dispose();
-      starMat.dispose();
-      if (progressMesh) progressMesh.geometry.dispose();
-      pills.forEach((p) => {
-        p.mesh.geometry.dispose();
-        (p.mesh.material as THREE.Material).dispose();
+      dustGeom.dispose();
+      dustMat.dispose();
+      rings.forEach((r) => {
+        r.mesh.geometry.dispose();
+        (r.mesh.material as THREE.Material).dispose();
       });
       nodes.forEach((n) => (n.mesh.material as THREE.Material).dispose());
       if (renderer.domElement.parentNode) {
@@ -426,30 +371,27 @@ export function BackgroundFX() {
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
       style={{
         background:
-          "radial-gradient(ellipse at 15% 10%, oklch(0.92 0.10 30 / 0.55), transparent 55%), radial-gradient(ellipse at 85% 15%, oklch(0.92 0.09 55 / 0.45), transparent 55%), radial-gradient(ellipse at 50% 100%, oklch(0.90 0.10 305 / 0.35), transparent 60%), linear-gradient(180deg, oklch(0.985 0.012 75) 0%, oklch(0.965 0.018 60) 100%)",
+          "radial-gradient(ellipse at 20% 10%, oklch(0.35 0.18 300 / 0.55), transparent 55%), radial-gradient(ellipse at 85% 15%, oklch(0.35 0.15 195 / 0.45), transparent 55%), radial-gradient(ellipse at 50% 100%, oklch(0.30 0.14 155 / 0.35), transparent 60%), linear-gradient(180deg, oklch(0.14 0.03 285) 0%, oklch(0.10 0.03 290) 100%)",
       }}
     >
       {/* WebGL canvas */}
       {!fallback && <div ref={mountRef} className="absolute inset-0" />}
 
-      {/* Subtle dotted texture for depth (not a matrix grid) */}
+      {/* Subtle dotted texture */}
       <div
-        className="absolute inset-0 opacity-[0.35] dark:opacity-25"
+        className="absolute inset-0 opacity-30"
         style={{
           backgroundImage:
-            "radial-gradient(oklch(0.68 0.19 25 / 0.14) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
+            "radial-gradient(oklch(0.85 0.15 300 / 0.10) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
           maskImage: "radial-gradient(ellipse at center, black 25%, transparent 75%)",
           WebkitMaskImage:
             "radial-gradient(ellipse at center, black 25%, transparent 75%)",
         }}
       />
 
-      {/* Dark-mode ambient wash */}
-      <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(ellipse_at_20%_10%,oklch(0.35_0.12_25/0.35),transparent_55%),radial-gradient(ellipse_at_80%_15%,oklch(0.35_0.12_305/0.30),transparent_55%),linear-gradient(180deg,oklch(0.19_0.03_285)_0%,oklch(0.15_0.03_285)_100%)]" />
-
-      {/* Soft light-mode veil so UI stays legible */}
-      <div className="absolute inset-0 bg-background/40 dark:bg-transparent" />
+      {/* Vignette for depth */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,oklch(0_0_0/0.55))]" />
     </div>
   );
 }
