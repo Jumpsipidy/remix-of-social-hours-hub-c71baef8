@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity } from "lucide-react";
+import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
@@ -18,37 +18,95 @@ type Stats = {
   reservations: number;
   completed: number;
   hours_total: number;
+  tasks_open: number;
+  messages_24h: number;
+};
+
+type Profile = { id: string; role: string; full_name: string | null; organization_name: string | null; email: string | null; hours_earned: number; hours_needed: number };
+type Reservation = { id: string; status: string; hours_to_earn: number; reservation_date: string; organization_id: string; student_id: string; created_at: string };
+
+const STATUS_TONE: Record<string, string> = {
+  pending: "bg-warning/15 text-warning-foreground",
+  approved: "bg-primary/15 text-primary",
+  completed: "bg-success/15 text-success",
+  confirmed: "bg-success/15 text-success",
+  declined: "bg-destructive/15 text-destructive",
+};
+const STATUS_LT: Record<string, string> = {
+  pending: "Laukia",
+  approved: "Vykdoma",
+  completed: "Užbaigta",
+  confirmed: "Užbaigta",
+  declined: "Atmesta",
+};
+const STATUS_ICON: Record<string, any> = {
+  pending: AlarmClock,
+  approved: PlayCircle,
+  completed: CheckCircle2,
+  confirmed: CheckCircle2,
+  declined: XCircle,
 };
 
 function AdminDashboard() {
   const { user, profile, loading } = useAuth();
-  const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0 });
-  const [recent, setRecent] = useState<any[]>([]);
+  const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0, tasks_open: 0, messages_24h: 0 });
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [tab, setTab] = useState<"overview" | "organizations" | "activity">("overview");
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     if (!user || profile?.role !== "admin") return;
     (async () => {
-      const [pRes, rRes] = await Promise.all([
-        supabase.from("profiles").select("role, hours_earned"),
-        supabase.from("reservations").select("id, status, hours_to_earn, reservation_date, organization_id").order("reservation_date", { ascending: false }).limit(10),
+      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+      const [pRes, rRes, tRes, mRes] = await Promise.all([
+        supabase.from("profiles").select("id, role, full_name, organization_name, email, hours_earned, hours_needed"),
+        supabase.from("reservations").select("id, status, hours_to_earn, reservation_date, organization_id, student_id, created_at").order("created_at", { ascending: false }),
+        supabase.from("tasks").select("id", { count: "exact", head: true }).eq("is_open", true),
+        supabase.from("messages").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
       ]);
-      const profs = (pRes.data as { role: string; hours_earned: number }[]) ?? [];
-      const s: Stats = {
+      const profs = (pRes.data as Profile[]) ?? [];
+      const res = (rRes.data as Reservation[]) ?? [];
+      setProfiles(profs);
+      setReservations(res);
+      setStats({
         students: profs.filter((p) => p.role === "student").length,
         organizations: profs.filter((p) => p.role === "organization").length,
         school_admins: profs.filter((p) => p.role === "school_admin").length,
-        reservations: 0,
-        completed: 0,
+        reservations: res.length,
+        completed: res.filter((r) => r.status === "completed" || r.status === "confirmed").length,
         hours_total: profs.reduce((a, p) => a + Number(p.hours_earned ?? 0), 0),
-      };
-      const { data: allRes } = await supabase.from("reservations").select("id, status");
-      const all = (allRes as { status: string }[]) ?? [];
-      s.reservations = all.length;
-      s.completed = all.filter((r) => r.status === "completed" || r.status === "confirmed").length;
-      setStats(s);
-      setRecent(rRes.data ?? []);
+        tasks_open: tRes.count ?? 0,
+        messages_24h: mRes.count ?? 0,
+      });
     })();
   }, [user, profile]);
+
+  const orgMap = useMemo(() => {
+    const m: Record<string, Profile> = {};
+    profiles.filter((p) => p.role === "organization").forEach((p) => (m[p.id] = p));
+    return m;
+  }, [profiles]);
+  const studentMap = useMemo(() => {
+    const m: Record<string, Profile> = {};
+    profiles.filter((p) => p.role === "student").forEach((p) => (m[p.id] = p));
+    return m;
+  }, [profiles]);
+
+  const orgAgg = useMemo(() => {
+    const rows = Object.values(orgMap).map((o) => {
+      const rs = reservations.filter((r) => r.organization_id === o.id);
+      const done = rs.filter((r) => r.status === "completed" || r.status === "confirmed");
+      return {
+        org: o,
+        total: rs.length,
+        pending: rs.filter((r) => r.status === "pending").length,
+        completed: done.length,
+        hours: done.reduce((a, r) => a + Number(r.hours_to_earn), 0),
+      };
+    });
+    return rows.sort((a, b) => b.hours - a.hours);
+  }, [orgMap, reservations]);
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "admin") {
@@ -65,49 +123,159 @@ function AdminDashboard() {
   }
 
   const cards = [
-    { icon: GraduationCap, label: "Mokiniai", value: stats.students },
-    { icon: Building2, label: "Organizacijos", value: stats.organizations },
-    { icon: Users, label: "Mokyklos administratoriai", value: stats.school_admins },
-    { icon: ClipboardList, label: "Rezervacijos", value: stats.reservations },
-    { icon: Activity, label: "Užbaigtos", value: stats.completed },
-    { icon: Shield, label: "Visos surinktos valandos", value: stats.hours_total },
+    { icon: GraduationCap, label: "Mokiniai", value: stats.students, tone: "from-primary/20 to-primary/5" },
+    { icon: Building2, label: "Organizacijos", value: stats.organizations, tone: "from-warning/20 to-warning/5" },
+    { icon: Users, label: "Mokyklos adm.", value: stats.school_admins, tone: "from-success/20 to-success/5" },
+    { icon: ClipboardList, label: "Rezervacijos", value: stats.reservations, tone: "from-primary/20 to-primary/5" },
+    { icon: Activity, label: "Užbaigtos", value: stats.completed, tone: "from-success/20 to-success/5" },
+    { icon: Shield, label: "Iš viso valandų", value: stats.hours_total, tone: "from-primary/20 to-primary/5" },
+    { icon: ListTodo, label: "Atviros užduotys", value: stats.tasks_open, tone: "from-warning/20 to-warning/5" },
+    { icon: MessageSquare, label: "Žinutės (24 val.)", value: stats.messages_24h, tone: "from-primary/20 to-primary/5" },
   ];
+
+  const filteredOrgAgg = orgAgg.filter((r) => !q || (r.org.organization_name ?? r.org.full_name ?? "").toLowerCase().includes(q.toLowerCase()));
 
   return (
     <PageShell>
       <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">Sistemos savininko sritis</p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">Super Admin skydas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Bendra platformos apžvalga ir realaus laiko statistika.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Realaus laiko platformos apžvalga.</p>
       </section>
 
-      <section className="mx-auto mt-8 grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
+      <section className="mx-auto mt-8 grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         {cards.map((c) => (
-          <motion.div key={c.label} whileHover={{ y: -3 }} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-              <c.icon className="h-5 w-5" />
+          <motion.div key={c.label} whileHover={{ y: -3 }} className={`rounded-3xl border border-border bg-gradient-to-br ${c.tone} p-5 shadow-md backdrop-blur`}>
+            <div className="flex items-center justify-between">
+              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
+                <c.icon className="h-5 w-5" />
+              </div>
+              <TrendingUp className="h-4 w-4 text-success" />
             </div>
-            <p className="mt-5 font-display text-3xl font-bold">{c.value}</p>
-            <p className="text-sm text-muted-foreground">{c.label}</p>
+            <p className="mt-4 font-display text-3xl font-bold">{c.value}</p>
+            <p className="text-xs text-muted-foreground">{c.label}</p>
           </motion.div>
         ))}
       </section>
 
       <section className="mx-auto mt-8 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur">
-          <h2 className="font-display text-lg font-bold">Naujausios rezervacijos</h2>
-          <div className="mt-4 divide-y divide-border">
-            {recent.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Kol kas nėra rezervacijų.</p>}
-            {recent.map((r) => (
-              <div key={r.id} className="flex items-center justify-between py-3 text-sm">
-                <div>
-                  <p className="font-semibold">Rezervacija · {r.reservation_date}</p>
-                  <p className="text-xs text-muted-foreground">{Number(r.hours_to_earn)} val.</p>
-                </div>
-                <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-semibold">{r.status}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
+              {[
+                { k: "overview", label: "Apžvalga" },
+                { k: "organizations", label: "Organizacijų reitingas" },
+                { k: "activity", label: "Aktyvumo istorija" },
+              ].map((t) => (
+                <button key={t.k} onClick={() => setTab(t.k as any)}
+                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            {tab === "organizations" && (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti organizacijos…" className="h-10 w-56 bg-transparent text-sm outline-none" />
               </div>
-            ))}
+            )}
           </div>
+
+          {tab === "overview" && (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-background/60 p-5">
+                <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Būsenų suvestinė</h3>
+                <div className="mt-4 space-y-2">
+                  {["pending", "approved", "completed", "declined"].map((k) => {
+                    const n = reservations.filter((r) => r.status === k || (k === "completed" && r.status === "confirmed")).length;
+                    const pct = stats.reservations ? Math.round((n / stats.reservations) * 100) : 0;
+                    const Icon = STATUS_ICON[k];
+                    return (
+                      <div key={k}>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5 font-semibold"><Icon className="h-3.5 w-3.5" /> {STATUS_LT[k]}</span>
+                          <span className="tabular-nums text-muted-foreground">{n} · {pct}%</span>
+                        </div>
+                        <div className="mt-1 h-2 overflow-hidden rounded-full bg-accent">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} className="h-full bg-gradient-primary" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-background/60 p-5">
+                <h3 className="font-display text-lg font-bold">Top 5 organizacijos pagal valandas</h3>
+                <ul className="mt-4 space-y-2">
+                  {orgAgg.slice(0, 5).map((r, i) => (
+                    <li key={r.org.id} className="flex items-center gap-3 rounded-xl bg-card/60 p-3">
+                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{r.org.organization_name ?? r.org.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{r.completed} užbaigtos · {r.total} iš viso</p>
+                      </div>
+                      <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-bold text-success">{r.hours} val.</span>
+                    </li>
+                  ))}
+                  {orgAgg.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Nėra duomenų.</p>}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {tab === "organizations" && (
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+                    <th className="py-3 pr-3">Organizacija</th>
+                    <th className="hidden py-3 pr-3 md:table-cell">El. paštas</th>
+                    <th className="py-3 pr-3 text-right">Rezervacijos</th>
+                    <th className="py-3 pr-3 text-right">Laukia</th>
+                    <th className="py-3 pr-3 text-right">Užbaigta</th>
+                    <th className="py-3 pr-3 text-right">Valandos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrgAgg.map((r) => (
+                    <tr key={r.org.id} className="border-b border-border/60 transition hover:bg-accent/40">
+                      <td className="py-3 pr-3 font-medium">{r.org.organization_name ?? r.org.full_name}</td>
+                      <td className="hidden py-3 pr-3 text-muted-foreground md:table-cell">{r.org.email}</td>
+                      <td className="py-3 pr-3 text-right tabular-nums">{r.total}</td>
+                      <td className="py-3 pr-3 text-right tabular-nums text-warning-foreground">{r.pending}</td>
+                      <td className="py-3 pr-3 text-right tabular-nums text-success">{r.completed}</td>
+                      <td className="py-3 pr-3 text-right font-bold tabular-nums">{r.hours}</td>
+                    </tr>
+                  ))}
+                  {filteredOrgAgg.length === 0 && <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Nieko nerasta.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {tab === "activity" && (
+            <div className="mt-6 divide-y divide-border">
+              {reservations.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Kol kas nėra rezervacijų.</p>}
+              {reservations.slice(0, 20).map((r) => {
+                const Icon = STATUS_ICON[r.status] ?? AlarmClock;
+                const tone = STATUS_TONE[r.status] ?? "";
+                const orgN = orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "—";
+                const stN = studentMap[r.student_id]?.full_name ?? "Mokinys";
+                return (
+                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{stN} → {orgN}</p>
+                      <p className="text-xs text-muted-foreground">{r.reservation_date} · {Number(r.hours_to_earn)} val. · sukurta {new Date(r.created_at).toLocaleString("lt-LT")}</p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
+                      <Icon className="h-3 w-3" /> {STATUS_LT[r.status] ?? r.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
     </PageShell>
