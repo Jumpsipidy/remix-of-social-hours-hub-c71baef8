@@ -339,7 +339,7 @@ function Home() {
             aria-hidden
           />
           <h2 className="relative text-3xl font-bold text-white sm:text-5xl">Pasiruošę pradėti savanorystę?</h2>
-          <p className="relative mx-auto mt-3 max-w-xl text-white/80">Prisijunk prie 12 000+ moksleivių, kurie jau atlieka socialines valandas paprastai ir prasmingai.</p>
+          <p className="relative mx-auto mt-3 max-w-xl text-white/80">Prisijunk prie moksleivių bendruomenės, kuri atlieka socialines valandas paprastai ir prasmingai.</p>
           <div className="relative mt-8 flex flex-wrap justify-center gap-3">
             <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Link to="/register" className="inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-white/90">Sukurti paskyrą</Link>
