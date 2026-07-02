@@ -83,7 +83,18 @@ function generateEcosystem(): DevAccount[] {
 
 async function requireAdmin(supabase: any, userId: string) {
   const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (!data) throw new Error("Reikia sistemos administratoriaus teisių");
+  if (data) return;
+  // Bootstrap: if there is no admin in the system yet, promote the current caller.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { count } = await supabaseAdmin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("role", "admin");
+  if ((count ?? 0) === 0) {
+    await supabaseAdmin.from("profiles").upsert({ id: userId, role: "admin" }, { onConflict: "id" });
+    return;
+  }
+  throw new Error("Reikia sistemos administratoriaus teisių");
 }
 
 export const listDevProfiles = createServerFn({ method: "GET" })
