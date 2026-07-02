@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { TiltCard } from "@/components/tilt-card";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X } from "lucide-react";
+import { TasksBackgroundFX } from "@/components/tasks-background";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tasks")({
