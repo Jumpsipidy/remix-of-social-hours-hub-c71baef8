@@ -26,8 +26,18 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
       throw new Error("Netinkama rolė");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    // Supabase Admin API has no direct "get user by email" call, so we scan the
+    // small admin-managed user list and update an existing invite if the email
+    // was already created. This prevents "already registered" from breaking
+    // real onboarding when you recreate credentials for an organization.
+    const { data: usersPage, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (listError) throw new Error(listError.message);
+    const existing = usersPage.users.find((u) => u.email?.toLowerCase() === normalizedEmail);
+
+    const payload = {
+      email: normalizedEmail,
       password: data.password,
       email_confirm: true,
       user_metadata: {
@@ -36,14 +46,19 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
         hours_needed: 0,
       },
-    });
+    };
+
+    const { data: created, error } = existing
+      ? await supabaseAdmin.auth.admin.updateUserById(existing.id, payload)
+      : await supabaseAdmin.auth.admin.createUser(payload);
+
     if (error || !created.user) throw new Error(error?.message ?? "Nepavyko sukurti paskyros");
 
     // Ensure profile row matches (trigger should handle, but upsert to be safe)
     await supabaseAdmin.from("profiles").upsert(
       {
         id: created.user.id,
-        email: data.email,
+        email: normalizedEmail,
         full_name: data.full_name,
         role: data.role,
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
@@ -53,5 +68,5 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
       { onConflict: "id" },
     );
 
-    return { ok: true, id: created.user.id };
+    return { ok: true, id: created.user.id, updated: !!existing };
   });
