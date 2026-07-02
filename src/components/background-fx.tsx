@@ -2,22 +2,26 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 /**
- * Premium dark-glassmorphism WebGL background.
+ * Calm, premium 3D background.
+ *
+ * Goals:
+ *  - Still visibly 3D and alive, but never fights the foreground text.
+ *  - Big, slow-moving glass rings + soft aurora — not a busy particle field.
+ *  - Content stays perfectly legible thanks to a central vignette + veil.
  *
  * Scene:
- *  - A constellation of glowing "glass" nodes (translucent, physically-lit
- *    spheres) linked by thin neon strands — a stylized social network.
- *  - Two floating 3D neon rings (torus) that orbit the scene, catching light.
- *  - Ambient particle dust for depth.
- *  - Two colored point-lights (electric purple + teal) that drift slowly and
- *    react to the cursor for a "lit-from-within" glass feel.
+ *  - 3 large concentric glass torus rings (subtle iridescent tint), slowly
+ *    rotating and tilting toward the cursor.
+ *  - A sparse layer of ambient glow dots for depth (no busy network).
+ *  - Two roaming point-lights (violet + teal) give the glass a lit look.
  *
  * Interaction:
- *  - Scene leans/rotates toward the cursor. Nodes gently attract to the pointer.
- *  - Scroll rotates and repositions rings + shifts key light angle. NO zoom.
+ *  - Cursor tilts the whole ring stack.
+ *  - Scroll rotates rings on a different axis and swings the light angle.
+ *    NO camera zoom.
  *
- * Perf: adaptive counts + DPR for mobile, RAF paused on hidden tabs,
- *       static CSS fallback for reduced-motion / no-WebGL.
+ * Perf: adaptive DPR / counts on mobile, RAF paused when tab hidden,
+ *       static gradient fallback for reduced-motion / no-WebGL.
  */
 export function BackgroundFX() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -45,7 +49,7 @@ export function BackgroundFX() {
     }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.75);
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.15 : 1.6);
 
     const width = () => mount.clientWidth;
     const height = () => mount.clientHeight;
@@ -54,158 +58,64 @@ export function BackgroundFX() {
     renderer.setSize(width(), height(), false);
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.0;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.cssText =
       "position:absolute;inset:0;width:100%;height:100%;display:block";
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(52, width() / height(), 0.1, 200);
-    camera.position.set(0, 0, 16);
+    const camera = new THREE.PerspectiveCamera(50, width() / height(), 0.1, 200);
+    camera.position.set(0, 0, 18);
 
-    // Premium dark palette — electric purple, teal, soft mint
     const cPurple = new THREE.Color("#a880ff");
     const cTeal = new THREE.Color("#5eead4");
     const cMint = new THREE.Color("#86efac");
-    const cPink = new THREE.Color("#f0abfc");
-    const palette = [cPurple, cTeal, cMint, cPink];
 
-    // --- Lighting: dark ambient + two roaming colored point lights ---
-    scene.add(new THREE.AmbientLight(0x1a1330, 0.55));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.35);
-    keyLight.position.set(6, 8, 10);
-    scene.add(keyLight);
-    const purpleLight = new THREE.PointLight(0xa880ff, 2.4, 40, 1.6);
-    purpleLight.position.set(-6, 3, 6);
+    // Lighting
+    scene.add(new THREE.AmbientLight(0x1a1330, 0.6));
+    const purpleLight = new THREE.PointLight(0xa880ff, 2.2, 60, 1.5);
+    purpleLight.position.set(-8, 4, 8);
     scene.add(purpleLight);
-    const tealLight = new THREE.PointLight(0x5eead4, 2.0, 40, 1.6);
-    tealLight.position.set(6, -3, 4);
+    const tealLight = new THREE.PointLight(0x5eead4, 1.8, 60, 1.5);
+    tealLight.position.set(8, -4, 6);
     scene.add(tealLight);
 
-    // --- Glass nodes ---
-    const nodeCount = isMobile ? 20 : 36;
-    const nodeGeom = new THREE.SphereGeometry(1, 32, 32);
-    const nodes: {
-      mesh: THREE.Mesh;
-      home: THREE.Vector3;
-      current: THREE.Vector3;
-      vel: THREE.Vector3;
-      scale: number;
-      speed: number;
-      phase: number;
-      color: THREE.Color;
-    }[] = [];
-
-    const nodeGroup = new THREE.Group();
-    scene.add(nodeGroup);
-
-    for (let i = 0; i < nodeCount; i++) {
-      const color = palette[i % palette.length];
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0x2a2340,
-        roughness: 0.15,
-        metalness: 0.0,
-        transmission: 0.85, // glass
-        thickness: 0.6,
-        ior: 1.35,
-        clearcoat: 1,
-        clearcoatRoughness: 0.15,
-        emissive: color,
-        emissiveIntensity: 0.55,
-        transparent: true,
-        opacity: 0.95,
-      });
-      const mesh = new THREE.Mesh(nodeGeom, mat);
-      const scale = 0.22 + Math.random() * 0.5;
-      mesh.scale.setScalar(scale);
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 5.5 + Math.random() * 4.5;
-      const home = new THREE.Vector3(
-        Math.sin(phi) * Math.cos(theta) * r,
-        Math.sin(phi) * Math.sin(theta) * r * 0.75,
-        Math.cos(phi) * r - 2
-      );
-      mesh.position.copy(home);
-      nodeGroup.add(mesh);
-      nodes.push({
-        mesh,
-        home,
-        current: home.clone(),
-        vel: new THREE.Vector3(),
-        scale,
-        speed: 0.35 + Math.random() * 0.7,
-        phase: Math.random() * Math.PI * 2,
-        color,
-      });
-    }
-
-    // --- Neon connection strands ---
-    const maxLinks = isMobile ? 45 : 100;
-    const linkPairs: [number, number][] = [];
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        if (nodes[i].home.distanceTo(nodes[j].home) < 4.5) {
-          linkPairs.push([i, j]);
-          if (linkPairs.length >= maxLinks) break;
-        }
-      }
-      if (linkPairs.length >= maxLinks) break;
-    }
-    const linkPositions = new Float32Array(linkPairs.length * 2 * 3);
-    const linkColors = new Float32Array(linkPairs.length * 2 * 3);
-    for (let k = 0; k < linkPairs.length; k++) {
-      const [a, b] = linkPairs[k];
-      const ca = nodes[a].color;
-      const cb = nodes[b].color;
-      linkColors.set([ca.r, ca.g, ca.b], k * 6);
-      linkColors.set([cb.r, cb.g, cb.b], k * 6 + 3);
-    }
-    const linkGeom = new THREE.BufferGeometry();
-    linkGeom.setAttribute("position", new THREE.BufferAttribute(linkPositions, 3));
-    linkGeom.setAttribute("color", new THREE.BufferAttribute(linkColors, 3));
-    const linkMat = new THREE.LineBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.5,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const links = new THREE.LineSegments(linkGeom, linkMat);
-    nodeGroup.add(links);
-
-    // --- Two floating neon rings ---
-    const rings: { mesh: THREE.Mesh; baseRot: THREE.Euler; drift: number }[] = [];
-    const ringConfigs: { r: number; c: THREE.Color; pos: THREE.Vector3; rot: THREE.Euler }[] = [
-      { r: 4.2, c: cPurple, pos: new THREE.Vector3(0, 0.5, 0), rot: new THREE.Euler(-0.35, 0.25, 0.1) },
-      { r: 5.4, c: cTeal, pos: new THREE.Vector3(0.2, -0.6, -1), rot: new THREE.Euler(0.45, -0.3, -0.15) },
+    // --- Big glass rings (the hero geometry) ---
+    const ringConfigs = [
+      { r: 6.5, tube: 0.10, c: cPurple, rot: new THREE.Euler(-0.4, 0.3, 0.1), speed: 0.06 },
+      { r: 8.5, tube: 0.08, c: cTeal, rot: new THREE.Euler(0.5, -0.3, -0.15), speed: 0.04 },
+      { r: 10.5, tube: 0.06, c: cMint, rot: new THREE.Euler(0.2, 0.5, 0.25), speed: 0.03 },
     ];
-    for (const cfg of ringConfigs) {
-      const g = new THREE.TorusGeometry(cfg.r, 0.06, 20, 180);
+    const rings = ringConfigs.map((cfg) => {
+      const g = new THREE.TorusGeometry(cfg.r, cfg.tube, 20, 220);
       const m = new THREE.MeshStandardMaterial({
         color: cfg.c,
         emissive: cfg.c,
-        emissiveIntensity: 1.4,
-        roughness: 0.25,
+        emissiveIntensity: 0.8,
+        roughness: 0.3,
         metalness: 0.6,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.55,
       });
       const mesh = new THREE.Mesh(g, m);
-      mesh.position.copy(cfg.pos);
       mesh.rotation.copy(cfg.rot);
+      mesh.position.z = -2;
       scene.add(mesh);
-      rings.push({ mesh, baseRot: cfg.rot.clone(), drift: Math.random() });
-    }
+      return { mesh, base: cfg.rot.clone(), speed: cfg.speed, geom: g, mat: m };
+    });
 
-    // --- Ambient dust particles ---
-    const dustCount = isMobile ? 500 : 1200;
+    // --- Sparse ambient dots (much fewer than before, edges only) ---
+    const dustCount = isMobile ? 180 : 380;
     const dustPos = new Float32Array(dustCount * 3);
     const dustCol = new Float32Array(dustCount * 3);
+    const palette = [cPurple, cTeal, cMint];
     for (let i = 0; i < dustCount; i++) {
-      dustPos[i * 3] = (Math.random() - 0.5) * 60;
-      dustPos[i * 3 + 1] = (Math.random() - 0.5) * 40;
-      dustPos[i * 3 + 2] = (Math.random() - 0.5) * 30 - 5;
+      // Bias to the outer ring — push them away from center so text stays clean
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 8 + Math.random() * 18;
+      dustPos[i * 3] = Math.cos(angle) * radius;
+      dustPos[i * 3 + 1] = Math.sin(angle) * radius * 0.6;
+      dustPos[i * 3 + 2] = -6 - Math.random() * 12;
       const c = palette[Math.floor(Math.random() * palette.length)];
       dustCol.set([c.r, c.g, c.b], i * 3);
     }
@@ -213,10 +123,10 @@ export function BackgroundFX() {
     dustGeom.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
     dustGeom.setAttribute("color", new THREE.BufferAttribute(dustCol, 3));
     const dustMat = new THREE.PointsMaterial({
-      size: isMobile ? 0.04 : 0.05,
+      size: isMobile ? 0.05 : 0.06,
       vertexColors: true,
       transparent: true,
-      opacity: 0.75,
+      opacity: 0.55,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
@@ -224,7 +134,7 @@ export function BackgroundFX() {
     scene.add(dust);
 
     // --- Interaction ---
-    const mouse = { x: 0, y: 0, tx: 0, ty: 0, worldX: 0, worldY: 0 };
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
     let scrollY = 0;
 
     const onMove = (e: PointerEvent) => {
@@ -250,93 +160,40 @@ export function BackgroundFX() {
     document.addEventListener("visibilitychange", onVis);
 
     const clock = new THREE.Clock();
-    const linkPos = linkGeom.getAttribute("position") as THREE.BufferAttribute;
-
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
       const t = clock.getElapsedTime();
-      const dt = Math.min(clock.getDelta(), 0.05);
 
-      mouse.x += (mouse.tx - mouse.x) * 0.06;
-      mouse.y += (mouse.ty - mouse.y) * 0.06;
-      mouse.worldX = mouse.x * 9;
-      mouse.worldY = -mouse.y * 6;
+      mouse.x += (mouse.tx - mouse.x) * 0.05;
+      mouse.y += (mouse.ty - mouse.y) * 0.05;
 
-      // Scroll factor (0..1 across ~3vh)
       const s = Math.min(scrollY / (window.innerHeight * 2.5), 1);
 
-      // Camera: gentle lean, NO zoom on scroll — position stays at z=16
-      camera.position.x = mouse.x * 1.6;
-      camera.position.y = -mouse.y * 1.2;
-      camera.position.z = 16;
+      // Camera: gentle lean only, NO zoom
+      camera.position.x = mouse.x * 1.4;
+      camera.position.y = -mouse.y * 1.0;
+      camera.position.z = 18;
       camera.lookAt(0, 0, 0);
 
-      // Scene rotation reacts to scroll (not zoom) + cursor
-      nodeGroup.rotation.y = t * 0.04 + mouse.x * 0.35 + s * 0.9;
-      nodeGroup.rotation.x = mouse.y * 0.25 + s * 0.35;
-
-      // Nodes: gentle spring toward home + cursor attraction
-      for (const n of nodes) {
-        const targetX = n.home.x + Math.cos(t * n.speed * 0.7 + n.phase) * 0.35;
-        const targetY = n.home.y + Math.sin(t * n.speed + n.phase) * 0.4;
-        const targetZ = n.home.z;
-
-        // Cursor attraction in world space
-        const dx = mouse.worldX - n.current.x;
-        const dy = mouse.worldY - n.current.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < 20) {
-          const f = (1 - d2 / 20) * 0.5;
-          n.vel.x += dx * f * dt;
-          n.vel.y += dy * f * dt;
-        }
-
-        n.vel.x += (targetX - n.current.x) * 3.5 * dt;
-        n.vel.y += (targetY - n.current.y) * 3.5 * dt;
-        n.vel.z += (targetZ - n.current.z) * 3.5 * dt;
-        n.vel.multiplyScalar(0.88);
-        n.current.addScaledVector(n.vel, dt * 4);
-
-        n.mesh.position.copy(n.current);
-        const pulse = 1 + Math.sin(t * 1.1 + n.phase) * 0.07;
-        n.mesh.scale.setScalar(n.scale * pulse);
-      }
-
-      // Update link segments
-      for (let k = 0; k < linkPairs.length; k++) {
-        const [a, b] = linkPairs[k];
-        const pa = nodes[a].current;
-        const pb = nodes[b].current;
-        linkPos.setXYZ(k * 2, pa.x, pa.y, pa.z);
-        linkPos.setXYZ(k * 2 + 1, pb.x, pb.y, pb.z);
-      }
-      linkPos.needsUpdate = true;
-
-      // Rings: rotate + shift position with scroll (no zoom)
+      // Rings: independent slow rotation + scroll-driven tilt + cursor lean
       rings.forEach((r, i) => {
-        const sign = i === 0 ? 1 : -1;
-        r.mesh.rotation.x = r.baseRot.x + t * 0.12 * sign + s * 1.2 * sign;
-        r.mesh.rotation.y = r.baseRot.y + t * 0.09 * sign + s * 0.8 * sign;
-        r.mesh.rotation.z = r.baseRot.z + Math.sin(t * 0.3 + r.drift) * 0.15;
-        r.mesh.position.x = (i === 0 ? 0 : 0.2) + Math.sin(t * 0.25 + r.drift) * 0.6 + mouse.x * 0.4;
-        r.mesh.position.y = (i === 0 ? 0.5 : -0.6) + Math.cos(t * 0.3 + r.drift) * 0.4 - mouse.y * 0.3 + s * (i === 0 ? -0.8 : 0.9);
+        const sign = i % 2 === 0 ? 1 : -1;
+        r.mesh.rotation.x = r.base.x + t * r.speed * sign + s * 0.6 * sign + mouse.y * 0.15;
+        r.mesh.rotation.y = r.base.y + t * r.speed * 0.7 + mouse.x * 0.2;
+        r.mesh.rotation.z = r.base.z + Math.sin(t * 0.15 + i) * 0.08 + s * 0.3 * sign;
       });
 
-      // Lights drift + shift with scroll for lighting-angle changes
-      purpleLight.position.x = Math.sin(t * 0.4) * 7 + mouse.x * 2;
-      purpleLight.position.y = Math.cos(t * 0.3) * 4 + 2 - s * 3;
-      purpleLight.position.z = 5 + Math.sin(t * 0.2) * 2;
-      tealLight.position.x = Math.cos(t * 0.35) * 7 - mouse.x * 2;
-      tealLight.position.y = Math.sin(t * 0.28) * 4 - 2 + s * 3;
-      tealLight.position.z = 4 + Math.cos(t * 0.22) * 2;
-      keyLight.position.x = Math.sin(s * Math.PI) * 8;
-      keyLight.position.y = 8 - s * 6;
+      // Lights drift — this is what makes the glass rings feel alive
+      purpleLight.position.x = Math.sin(t * 0.3) * 9 + mouse.x * 3;
+      purpleLight.position.y = Math.cos(t * 0.25) * 5 + 2 - s * 3;
+      tealLight.position.x = Math.cos(t * 0.28) * 9 - mouse.x * 3;
+      tealLight.position.y = Math.sin(t * 0.22) * 5 - 2 + s * 3;
 
-      // Dust drifts
-      dust.rotation.y = t * 0.015;
-      dust.rotation.x = -s * 0.15;
+      // Dust rotates very slowly
+      dust.rotation.y = t * 0.01;
+      dust.rotation.x = -s * 0.1;
 
       renderer.render(scene, camera);
     };
@@ -349,16 +206,12 @@ export function BackgroundFX() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVis);
       renderer.dispose();
-      nodeGeom.dispose();
-      linkGeom.dispose();
-      linkMat.dispose();
       dustGeom.dispose();
       dustMat.dispose();
       rings.forEach((r) => {
-        r.mesh.geometry.dispose();
-        (r.mesh.material as THREE.Material).dispose();
+        r.geom.dispose();
+        r.mat.dispose();
       });
-      nodes.forEach((n) => (n.mesh.material as THREE.Material).dispose());
       if (renderer.domElement.parentNode) {
         renderer.domElement.parentNode.removeChild(renderer.domElement);
       }
@@ -369,29 +222,59 @@ export function BackgroundFX() {
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse at 20% 10%, oklch(0.35 0.18 300 / 0.55), transparent 55%), radial-gradient(ellipse at 85% 15%, oklch(0.35 0.15 195 / 0.45), transparent 55%), radial-gradient(ellipse at 50% 100%, oklch(0.30 0.14 155 / 0.35), transparent 60%), linear-gradient(180deg, oklch(0.14 0.03 285) 0%, oklch(0.10 0.03 290) 100%)",
-      }}
     >
-      {/* WebGL canvas */}
-      {!fallback && <div ref={mountRef} className="absolute inset-0" />}
-
-      {/* Subtle dotted texture */}
+      {/* Base dark gradient */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0"
         style={{
-          backgroundImage:
-            "radial-gradient(oklch(0.85 0.15 300 / 0.10) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-          maskImage: "radial-gradient(ellipse at center, black 25%, transparent 75%)",
-          WebkitMaskImage:
-            "radial-gradient(ellipse at center, black 25%, transparent 75%)",
+          background:
+            "linear-gradient(180deg, oklch(0.14 0.03 285) 0%, oklch(0.10 0.03 290) 100%)",
         }}
       />
 
-      {/* Vignette for depth */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,oklch(0_0_0/0.55))]" />
+      {/* Aurora blobs — soft, blurred, pushed to corners */}
+      <div
+        className="absolute -left-32 -top-32 h-[36rem] w-[36rem] rounded-full opacity-60 blur-3xl"
+        style={{ background: "radial-gradient(circle, oklch(0.55 0.20 300 / 0.55), transparent 65%)" }}
+      />
+      <div
+        className="absolute -right-32 top-40 h-[32rem] w-[32rem] rounded-full opacity-50 blur-3xl"
+        style={{ background: "radial-gradient(circle, oklch(0.55 0.18 195 / 0.50), transparent 65%)" }}
+      />
+      <div
+        className="absolute -bottom-40 left-1/3 h-[36rem] w-[36rem] rounded-full opacity-40 blur-3xl"
+        style={{ background: "radial-gradient(circle, oklch(0.55 0.16 155 / 0.40), transparent 65%)" }}
+      />
+
+      {/* WebGL canvas */}
+      {!fallback && (
+        <div
+          ref={mountRef}
+          className="absolute inset-0 opacity-70 [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_45%,black_100%)]"
+        />
+      )}
+
+      {/* Central legibility veil — keeps text crisp */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at center, oklch(0.10 0.03 290 / 0.55) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* Fine noise / grain via subtle dots */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage:
+            "radial-gradient(oklch(0.85 0.15 300 / 0.10) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,oklch(0_0_0/0.5))]" />
     </div>
   );
 }
