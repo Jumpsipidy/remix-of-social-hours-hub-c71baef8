@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
+import { CreateEventPanel } from "@/components/create-event-panel";
 
 export const Route = createFileRoute("/school")({
   head: () => ({
@@ -56,7 +57,7 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<"students" | "orgs">("students");
+  const [tab, setTab] = useState<"students" | "orgs" | "events">("students");
 
   useEffect(() => {
     if (!user || profile?.role !== "school_admin") return;
@@ -153,6 +154,10 @@ function SchoolDashboard() {
                 className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                 Organizacijos partneriai
               </button>
+              <button onClick={() => setTab("events")}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "events" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                Vienkartiniai renginiai
+              </button>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -162,7 +167,7 @@ function SchoolDashboard() {
             </div>
           </div>
 
-          {tab === "students" ? (
+          {tab === "students" && (
             <div className="mt-6 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -214,7 +219,8 @@ function SchoolDashboard() {
                 </tbody>
               </table>
             </div>
-          ) : (
+          )}
+          {tab === "orgs" && (
             <div className="mt-6 grid gap-3 md:grid-cols-2">
               {filteredOrgs.map((o) => (
                 <div key={o.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4 transition hover:border-primary/40">
@@ -236,6 +242,11 @@ function SchoolDashboard() {
                 </div>
               ))}
               {filteredOrgs.length === 0 && <div className="col-span-2 py-12 text-center text-sm text-muted-foreground">Organizacijų nerasta.</div>}
+            </div>
+          )}
+          {tab === "events" && (
+            <div className="mt-6">
+              <CreateEventPanel />
             </div>
           )}
         </div>

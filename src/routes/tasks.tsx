@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { TiltCard } from "@/components/tilt-card";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X } from "lucide-react";
+import { TasksBackgroundFX } from "@/components/tasks-background";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/tasks")({
@@ -33,6 +34,9 @@ type Task = {
   category?: string | null;
   spots_total: number;
   is_open: boolean;
+  is_event?: boolean;
+  event_host_name?: string | null;
+  created_by?: string | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
@@ -154,9 +158,11 @@ function TasksPage() {
 
   return (
     <PageShell>
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="absolute inset-0 bg-gradient-mesh opacity-60" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
+      <div className="relative">
+        <TasksBackgroundFX />
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
+          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <span className="text-xs font-semibold uppercase tracking-wider text-primary">Atraskite galimybes</span>
           <h1 className="mt-2 font-display text-4xl font-bold tracking-tight sm:text-5xl">Užduotys ir organizacijos</h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
@@ -186,17 +192,17 @@ function TasksPage() {
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <select value={town} onChange={(e) => setTown(e.target.value)}
-                    className="h-9 bg-transparent pr-2 text-sm outline-none">
-                    <option value="">Visi miestai</option>
-                    {towns.map((t) => <option key={t} value={t}>{t}</option>)}
+                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" className="bg-card text-foreground">Visi miestai</option>
+                    {towns.map((t) => <option key={t} value={t} className="bg-card text-foreground">{t}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <select value={cat} onChange={(e) => setCat(e.target.value)}
-                    className="h-9 bg-transparent pr-2 text-sm outline-none">
-                    <option value="">Visos kategorijos</option>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" className="bg-card text-foreground">Visos kategorijos</option>
+                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card text-foreground">{v}</option>)}
                   </select>
                 </div>
               </>
@@ -216,7 +222,7 @@ function TasksPage() {
             </button>
           </div>
         </div>
-      </section>
+        </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {tab === "tasks" ? (
@@ -240,8 +246,9 @@ function TasksPage() {
                       <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
                         <div className="relative flex items-start justify-between gap-3">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
-                            <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
+                          <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
+                            {t.is_event ? <CalendarHeart className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
+                            {t.is_event ? (t.event_host_name || "Vienkartinis renginys") : orgName(t.organization_id)}
                           </div>
                           <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
                             {Number(t.available_hours)} val.
@@ -322,7 +329,8 @@ function TasksPage() {
             </div>
           </>
         )}
-      </section>
+        </section>
+      </div>
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
       <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />

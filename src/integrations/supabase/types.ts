@@ -201,9 +201,12 @@ export type Database = {
         Row: {
           available_hours: number
           created_at: string
+          created_by: string | null
           description: string
           end_time: string | null
+          event_host_name: string | null
           id: string
+          is_event: boolean
           is_open: boolean
           location: string
           organization_id: string
@@ -216,9 +219,12 @@ export type Database = {
         Insert: {
           available_hours?: number
           created_at?: string
+          created_by?: string | null
           description?: string
           end_time?: string | null
+          event_host_name?: string | null
           id?: string
+          is_event?: boolean
           is_open?: boolean
           location?: string
           organization_id: string
@@ -231,9 +237,12 @@ export type Database = {
         Update: {
           available_hours?: number
           created_at?: string
+          created_by?: string | null
           description?: string
           end_time?: string | null
+          event_host_name?: string | null
           id?: string
+          is_event?: boolean
           is_open?: boolean
           location?: string
           organization_id?: string
@@ -243,7 +252,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

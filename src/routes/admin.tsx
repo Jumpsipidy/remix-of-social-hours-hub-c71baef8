@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo } from "lucide-react";
+import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
+import { adminCreateAccount } from "@/lib/admin-actions.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
@@ -52,7 +54,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0, tasks_open: 0, messages_24h: 0 });
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tab, setTab] = useState<"overview" | "organizations" | "activity">("overview");
+  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts">("overview");
   const [q, setQ] = useState("");
 
   useEffect(() => {
@@ -166,6 +168,7 @@ function AdminDashboard() {
                 { k: "overview", label: "Apžvalga" },
                 { k: "organizations", label: "Organizacijų reitingas" },
                 { k: "activity", label: "Aktyvumo istorija" },
+                { k: "accounts", label: "Kurti paskyras" },
               ].map((t) => (
                 <button key={t.k} onClick={() => setTab(t.k as any)}
                   className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
@@ -276,8 +279,98 @@ function AdminDashboard() {
               })}
             </div>
           )}
+
+          {tab === "accounts" && <CreateAccountPanel />}
         </div>
       </section>
     </PageShell>
+  );
+}
+
+function CreateAccountPanel() {
+  const [role, setRole] = useState<"organization" | "school_admin">("organization");
+  const [fullName, setFullName] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await adminCreateAccount({
+        data: {
+          email: email.trim(),
+          password,
+          full_name: fullName.trim() || (role === "organization" ? orgName.trim() : ""),
+          role,
+          organization_name: role === "organization" ? orgName.trim() : null,
+        },
+      });
+      toast.success("Paskyra sukurta");
+      setFullName(""); setOrgName(""); setEmail(""); setPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepavyko sukurti");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <form onSubmit={submit} className="rounded-2xl border border-border bg-background/60 p-5">
+        <h3 className="font-display text-lg font-bold flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /> Sukurti naują paskyrą</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Sukuriamos organizacijos arba mokyklos administratoriaus paskyros. Vartotojas galės iškart prisijungti.</p>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          {[
+            { k: "organization", label: "Organizacija", icon: Building2 },
+            { k: "school_admin", label: "Mokyklos admin.", icon: GraduationCap },
+          ].map((r) => {
+            const active = role === r.k;
+            return (
+              <button key={r.k} type="button" onClick={() => setRole(r.k as any)}
+                className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-semibold transition ${active ? "border-primary bg-gradient-primary text-primary-foreground shadow-glow" : "border-border bg-card/60 hover:border-primary/40"}`}>
+                <r.icon className="h-4 w-4" /> {r.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {role === "organization" && (
+            <FieldInput label="Organizacijos pavadinimas" value={orgName} onChange={setOrgName} placeholder="Žaliasis Vilnius" required />
+          )}
+          <FieldInput label="Kontaktinis asmuo / Vardas Pavardė" value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required={role === "school_admin"} />
+          <FieldInput label="El. paštas" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" type="email" required />
+          <FieldInput label="Slaptažodis (min. 6)" value={password} onChange={setPassword} placeholder="••••••" type="password" required />
+        </div>
+
+        <button type="submit" disabled={busy}
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />} Sukurti paskyrą
+        </button>
+      </form>
+
+      <div className="rounded-2xl border border-dashed border-border bg-background/40 p-5 text-sm">
+        <h4 className="font-display text-base font-bold">Ką atsiųsti naujam vartotojui</h4>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
+          <li>Prisijungimo nuoroda: <span className="rounded bg-card px-1.5 py-0.5 text-foreground">{typeof window !== "undefined" ? window.location.origin : ""}/login</span></li>
+          <li>El. paštas ir tavo sukurtas slaptažodis.</li>
+          <li>Vartotojas turėtų prisijungti ir pakeisti slaptažodį profilio nustatymuose.</li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+function FieldInput({ label, value, onChange, placeholder, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} required={required}
+        className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+    </label>
   );
 }
