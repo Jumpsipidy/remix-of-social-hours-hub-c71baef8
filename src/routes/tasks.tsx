@@ -286,32 +286,37 @@ function TasksPage() {
               {filteredOrgs.map((o, i) => {
                 const orgTaskCount = tasks.filter((t) => t.organization_id === o.id).length;
                 return (
-                  <motion.article key={o.id}
-                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                    whileHover={{ y: -4 }}
-                    className="flex flex-col rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur transition hover:shadow-xl"
+                  <motion.div key={o.id}
+                    initial={{ opacity: 0, y: 30, rotateY: -15 }} animate={{ opacity: 1, y: 0, rotateY: 0 }}
+                    transition={{ delay: (i % 6) * 0.05, type: "spring", stiffness: 110, damping: 18 }}
+                    style={{ perspective: 1200 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-lg text-primary-foreground shadow-glow">
-                        {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h3>
-                        <p className="truncate text-xs text-muted-foreground">{o.email}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-xs">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-                        {orgTaskCount} atvirų užduočių
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => { setTab("tasks"); setQ(o.organization_name ?? o.full_name ?? ""); }}
-                      className="mt-5 w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold transition hover:border-primary/40 hover:bg-accent"
-                    >
-                      Peržiūrėti užduotis
-                    </button>
-                  </motion.article>
+                    <TiltCard intensity={9}>
+                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
+                        <motion.div aria-hidden className="pointer-events-none absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-gradient-accent opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
+                        <div className="relative flex items-center gap-3">
+                          <motion.div whileHover={{ rotate: [0, -8, 8, 0], scale: 1.08 }} transition={{ duration: 0.5 }} className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-lg text-primary-foreground shadow-glow">
+                            {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
+                          </motion.div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h3>
+                            <p className="truncate text-xs text-muted-foreground">{o.email}</p>
+                          </div>
+                        </div>
+                        <div className="relative mt-4 flex items-center gap-2 text-xs">
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                            {orgTaskCount} atvirų užduočių
+                          </span>
+                        </div>
+                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
+                          onClick={() => { setTab("tasks"); setQ(o.organization_name ?? o.full_name ?? ""); }}
+                          className="relative mt-5 w-full rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:border-primary/40 hover:bg-accent"
+                        >
+                          Peržiūrėti užduotis
+                        </motion.button>
+                      </article>
+                    </TiltCard>
+                  </motion.div>
                 );
               })}
             </div>
