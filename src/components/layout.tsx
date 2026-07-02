@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
+import { BackgroundFX } from "@/components/background-fx";
+import { motion } from "framer-motion";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
@@ -193,9 +195,16 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen">
+      <BackgroundFX />
       <Navbar />
-      <main>{children}</main>
+      <motion.main
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
+        {children}
+      </motion.main>
       <Footer />
     </div>
   );
