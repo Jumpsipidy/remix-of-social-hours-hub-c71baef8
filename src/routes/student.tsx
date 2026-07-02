@@ -4,11 +4,9 @@ import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { organizations } from "@/lib/mock-data";
-import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle } from "lucide-react";
+import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
-import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/student")({
   head: () => ({
