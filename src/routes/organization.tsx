@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle, PlayCircle, ShieldCheck } from "lucide-react";
+import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle, PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateTaskPanel } from "@/components/create-task-panel";
@@ -55,21 +55,24 @@ async function ensureRoomAndNotify(reservation: Reservation, content: string, se
   await supabase.from("messages").insert({ chat_room_id: roomId, sender_id: senderId, content });
 }
 
+type TaskRow = { id: string; title: string; task_date: string; available_hours: number; location: string | null; is_open: boolean; created_at: string };
+
 function OrgDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [students, setStudents] = useState<Record<string, StudentLite>>({});
+  const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
 
   const refresh = async (uid: string) => {
-    const { data } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("organization_id", uid)
-      .order("created_at", { ascending: false });
-    const rs = (data as Reservation[]) ?? [];
+    const [{ data: rData }, { data: tData }] = await Promise.all([
+      supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
+      supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
+    ]);
+    const rs = (rData as Reservation[]) ?? [];
     setReservations(rs);
+    setTasks((tData as TaskRow[]) ?? []);
     const ids = Array.from(new Set(rs.map((r) => r.student_id)));
     if (ids.length) {
       const { data: ps } = await supabase
@@ -85,6 +88,20 @@ function OrgDashboard() {
   useEffect(() => {
     if (user) refresh(user.id);
   }, [user]);
+
+  const toggleTask = async (t: TaskRow) => {
+    const { error } = await supabase.from("tasks").update({ is_open: !t.is_open }).eq("id", t.id);
+    if (error) return toast.error(error.message);
+    toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
+    if (user) refresh(user.id);
+  };
+  const deleteTask = async (t: TaskRow) => {
+    if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
+    const { error } = await supabase.from("tasks").delete().eq("id", t.id);
+    if (error) return toast.error(error.message);
+    toast.success("Užduotis ištrinta");
+    if (user) refresh(user.id);
+  };
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "organization") {
@@ -180,6 +197,78 @@ function OrgDashboard() {
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <CreateTaskPanel organizationId={user.id} />
       </section>
+
+      {/* Published tasks list */}
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold flex items-center gap-2"><ListTodo className="h-5 w-5 text-primary" /> Mano paskelbtos užduotys</h2>
+              <p className="text-xs text-muted-foreground">Įjunk / išjunk matomumą mokiniams arba pašalink užduotį.</p>
+            </div>
+            <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">{tasks.filter((t) => t.is_open).length} atviros · {tasks.length} iš viso</span>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {tasks.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Dar nesukūrei nė vienos užduoties. Pradėk viršuje ↑</div>
+            )}
+            {tasks.map((t) => (
+              <div key={t.id} className={`rounded-2xl border p-4 transition ${t.is_open ? "border-primary/30 bg-primary/5" : "border-border bg-background/60 opacity-70"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{t.title}</p>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CalendarDays className="h-3 w-3" /> {t.task_date} · {Number(t.available_hours)} val.{t.location ? ` · ${t.location}` : ""}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${t.is_open ? "bg-success/20 text-success" : "bg-muted text-muted-foreground"}`}>
+                    {t.is_open ? "AKTYVI" : "PASLĖPTA"}
+                  </span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => toggleTask(t)} className="flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                    {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
+                  </button>
+                  <button onClick={() => deleteTask(t)} className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Top volunteers */}
+      {(() => {
+        const totals: Record<string, number> = {};
+        completed.forEach((r) => { totals[r.student_id] = (totals[r.student_id] ?? 0) + Number(r.hours_to_earn); });
+        const top = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        if (top.length === 0) return null;
+        return (
+          <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+            <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+              <h2 className="text-lg font-bold flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Aktyviausi savanoriai</h2>
+              <ul className="mt-4 space-y-2">
+                {top.map(([sid, hrs], i) => {
+                  const s = students[sid];
+                  return (
+                    <li key={sid} className="flex items-center gap-3 rounded-2xl bg-background/60 p-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground shadow-glow">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
+                        <p className="truncate text-xs text-muted-foreground">{s?.email}</p>
+                      </div>
+                      <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-bold text-success">{hrs} val.</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </section>
+        );
+      })()}
+
 
       <section className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-5">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">

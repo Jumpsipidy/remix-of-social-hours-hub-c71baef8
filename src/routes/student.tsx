@@ -4,11 +4,9 @@ import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { organizations } from "@/lib/mock-data";
-import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle } from "lucide-react";
+import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
-import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/student")({
   head: () => ({
@@ -31,28 +29,39 @@ type Reservation = {
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
-const orgName = (id: string) => organizations.find((o) => o.id === id)?.name ?? "Organizacija";
-const orgEmoji = (id: string) => organizations.find((o) => o.id === id)?.emoji ?? "🤝";
+type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
 
 function StudentDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [orgMap, setOrgMap] = useState<Record<string, OrgLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
 
-  const loadReservations = (uid: string) => {
-    supabase
+  const loadReservations = async (uid: string) => {
+    const { data } = await supabase
       .from("reservations")
       .select("*")
       .eq("student_id", uid)
-      .order("reservation_date", { ascending: false })
-      .then(({ data }) => setReservations((data as Reservation[]) ?? []));
+      .order("reservation_date", { ascending: false });
+    const rs = (data as Reservation[]) ?? [];
+    setReservations(rs);
+    const ids = Array.from(new Set(rs.map((r) => r.organization_id)));
+    if (ids.length) {
+      const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
+      const m: Record<string, OrgLite> = {};
+      (ps as OrgLite[] | null)?.forEach((p) => (m[p.id] = p));
+      setOrgMap(m);
+    }
   };
 
   useEffect(() => {
     if (!user) return;
     loadReservations(user.id);
   }, [user]);
+
+  const orgName = (id: string) => orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
+  const orgInitial = (id: string) => (orgName(id) || "?").trim().charAt(0).toUpperCase();
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
@@ -151,7 +160,7 @@ function StudentDashboard() {
               const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "Vykdoma" : "Laukia patvirtinimo";
               return (
                 <div key={r.id} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-accent text-xl">{orgEmoji(r.organization_id)}</div>
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
                     <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
