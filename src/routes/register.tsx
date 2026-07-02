@@ -28,7 +28,7 @@ function RegisterPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>("student");
   const [fullName, setFullName] = useState("");
-  const [orgName, setOrgName] = useState("");
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState<number>(40);
