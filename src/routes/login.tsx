@@ -62,10 +62,11 @@ function LoginPage() {
   }
 
   async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/student` },
     });
-    if (result.error) toast.error("Nepavyko prisijungti per Google");
+    if (error) toast.error("Nepavyko prisijungti per Google");
   }
 
   return (
