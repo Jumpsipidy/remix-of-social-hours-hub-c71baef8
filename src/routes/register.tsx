@@ -46,15 +46,15 @@ function RegisterPage() {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
             role,
-            full_name: role === "organization" ? orgName : fullName,
-            organization_name: role === "organization" ? orgName : null,
+            full_name: fullName,
+            organization_name: null,
             hours_needed: role === "student" ? hoursNeeded : 0,
           },
         },
       });
       if (error) throw error;
       toast.success("Paskyra sukurta! Sveiki atvykę.");
-      navigate({ to: role === "organization" ? "/organization" : "/student" });
+      navigate({ to: role === "school_admin" ? "/school" : "/student" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Nepavyko sukurti paskyros";
       toast.error(message);
