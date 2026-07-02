@@ -123,7 +123,7 @@ function Home() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-wider text-muted-foreground">Tavo pažanga</p>
-                        <p className="mt-1 font-display text-3xl font-bold">42 / 60 val.</p>
+                        <p className="mt-1 font-display text-3xl font-bold">0 / 20 val.</p>
                       </div>
                       <motion.div
                         animate={{ rotate: [0, 8, -8, 0] }}
