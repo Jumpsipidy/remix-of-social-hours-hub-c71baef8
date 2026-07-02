@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
+import { BackgroundFX } from "@/components/background-fx";
+import { motion } from "framer-motion";
 
 function ThemeToggle() {
   const [dark, setDark] = useState(false);
