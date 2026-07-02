@@ -30,6 +30,29 @@ function Home() {
   const { scrollYProgress: statsP } = useScroll({ target: statsRef, offset: ["start end", "end start"] });
   const statsBgX = useTransform(statsP, [0, 1], ["-10%", "10%"]);
 
+  const [counts, setCounts] = useState({ students: 0, orgs: 0, hours: 0, schools: 0 });
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [s, o, h, sc] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "organization"),
+        supabase.from("profiles").select("hours_earned").eq("role", "student"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "school_admin"),
+      ]);
+      if (!alive) return;
+      const totalHours = (h.data ?? []).reduce((a: number, r: { hours_earned: number | null }) => a + (r.hours_earned ?? 0), 0);
+      setCounts({
+        students: s.count ?? 0,
+        orgs: o.count ?? 0,
+        hours: Math.round(totalHours),
+        schools: sc.count ?? 0,
+      });
+    })();
+    return () => { alive = false; };
+  }, []);
+  const fmt = (n: number) => new Intl.NumberFormat("lt-LT").format(n);
+
   return (
     <PageShell>
       {/* HERO */}
