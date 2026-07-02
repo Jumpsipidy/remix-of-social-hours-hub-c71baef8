@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
+import { CreateEventPanel } from "@/components/create-event-panel";
 
 export const Route = createFileRoute("/school")({
   head: () => ({
