@@ -29,8 +29,7 @@ type Reservation = {
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
 };
 
-const orgName = (id: string) => organizations.find((o) => o.id === id)?.name ?? "Organizacija";
-const orgEmoji = (id: string) => organizations.find((o) => o.id === id)?.emoji ?? "🤝";
+type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
 
 function StudentDashboard() {
   const { user, profile, loading } = useAuth();
