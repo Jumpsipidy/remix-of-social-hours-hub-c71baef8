@@ -34,6 +34,9 @@ type Task = {
   category?: string | null;
   spots_total: number;
   is_open: boolean;
+  is_event?: boolean;
+  event_host_name?: string | null;
+  created_by?: string | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
