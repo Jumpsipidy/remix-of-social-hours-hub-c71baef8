@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { bootstrapFirstAdmin } from "@/lib/bootstrap-admin.functions";
 
 export type AppRole = "student" | "school_admin" | "organization" | "admin";
 
@@ -48,6 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mock, setMock] = useState<MockSession | null>(null);
+  const bootstrapAdmin = useServerFn(bootstrapFirstAdmin);
+  const bootstrapAdminRef = useRef(bootstrapAdmin);
+
+  useEffect(() => {
+    bootstrapAdminRef.current = bootstrapAdmin;
+  }, [bootstrapAdmin]);
 
   useEffect(() => {
     // Load mock from storage
@@ -64,26 +72,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     const loadProfile = async (uid: string) => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, role, hours_needed, hours_earned, organization_name")
-        .eq("id", uid)
-        .maybeSingle();
-      if (mounted) setProfile((data as Profile | null) ?? null);
+      const fetchProfile = async () => {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, role, hours_needed, hours_earned, organization_name")
+          .eq("id", uid)
+          .maybeSingle();
+        return (data as Profile | null) ?? null;
+      };
+
+      let nextProfile = await fetchProfile();
+
+      // If the database was wiped and no super-admin exists, make the first signed-in user the owner.
+      if (!nextProfile || nextProfile.role !== "admin") {
+        try {
+          const result = await bootstrapAdminRef.current();
+          if (result.bootstrapped) nextProfile = await fetchProfile();
+        } catch {
+          // Normal case after setup: an admin already exists, so nothing changes.
+        }
+      }
+
+      if (mounted) setProfile(nextProfile);
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       const u = session?.user ?? null;
       setUser(u);
-      if (u) setTimeout(() => loadProfile(u.id), 0);
-      else setProfile(null);
+      if (u) {
+        setLoading(true);
+        setTimeout(async () => {
+          await loadProfile(u.id);
+          if (mounted) setLoading(false);
+        }, 0);
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
-      if (u) loadProfile(u.id);
-      setLoading(false);
+      if (u) await loadProfile(u.id);
+      if (mounted) setLoading(false);
     });
 
     return () => {
