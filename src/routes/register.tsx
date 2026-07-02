@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, Mail, Lock, User, GraduationCap, School, Building2, Clock, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/register")({
@@ -116,8 +116,11 @@ function RegisterPage() {
   }
 
   async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) toast.error("Nepavyko prisijungti per Google");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/student` },
+    });
+    if (error) toast.error("Nepavyko prisijungti per Google");
   }
 
   return (
