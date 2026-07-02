@@ -194,10 +194,10 @@ function Home() {
         />
         <div className="relative mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-14 sm:px-6 md:grid-cols-4">
           {[
-            { icon: Users, value: "12 480", label: "Aktyvių moksleivių" },
-            { icon: Building2, value: "320+", label: "Patikrintų organizacijų" },
-            { icon: Clock, value: "184 200", label: "Atliktų valandų" },
-            { icon: Award, value: "98 %", label: "Patenkintų mokyklų" },
+            { icon: Users, value: fmt(counts.students), label: "Aktyvių moksleivių" },
+            { icon: Building2, value: fmt(counts.orgs), label: "Patikrintų organizacijų" },
+            { icon: Clock, value: fmt(counts.hours), label: "Atliktų valandų" },
+            { icon: Award, value: fmt(counts.schools), label: "Prisijungusių mokyklų" },
           ].map((s, i)=>(
             <motion.div
               key={s.label}
