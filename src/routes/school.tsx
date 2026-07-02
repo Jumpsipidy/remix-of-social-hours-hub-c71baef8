@@ -243,6 +243,11 @@ function SchoolDashboard() {
               {filteredOrgs.length === 0 && <div className="col-span-2 py-12 text-center text-sm text-muted-foreground">Organizacijų nerasta.</div>}
             </div>
           )}
+          {tab === "events" && (
+            <div className="mt-6">
+              <CreateEventPanel />
+            </div>
+          )}
         </div>
       </section>
 
