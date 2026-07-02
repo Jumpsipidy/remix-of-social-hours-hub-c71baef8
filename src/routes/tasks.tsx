@@ -190,17 +190,17 @@ function TasksPage() {
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <select value={town} onChange={(e) => setTown(e.target.value)}
-                    className="h-9 bg-transparent pr-2 text-sm outline-none">
-                    <option value="">Visi miestai</option>
-                    {towns.map((t) => <option key={t} value={t}>{t}</option>)}
+                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" className="bg-card text-foreground">Visi miestai</option>
+                    {towns.map((t) => <option key={t} value={t} className="bg-card text-foreground">{t}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <select value={cat} onChange={(e) => setCat(e.target.value)}
-                    className="h-9 bg-transparent pr-2 text-sm outline-none">
-                    <option value="">Visos kategorijos</option>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" className="bg-card text-foreground">Visos kategorijos</option>
+                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card text-foreground">{v}</option>)}
                   </select>
                 </div>
               </>
