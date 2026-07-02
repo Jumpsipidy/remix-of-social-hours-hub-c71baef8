@@ -219,7 +219,8 @@ function SchoolDashboard() {
                 </tbody>
               </table>
             </div>
-          ) : (
+          )}
+          {tab === "orgs" && (
             <div className="mt-6 grid gap-3 md:grid-cols-2">
               {filteredOrgs.map((o) => (
                 <div key={o.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4 transition hover:border-primary/40">
