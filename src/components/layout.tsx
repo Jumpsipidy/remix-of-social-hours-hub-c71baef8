@@ -195,7 +195,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <BackgroundFX />
       <Navbar />
       <motion.main
