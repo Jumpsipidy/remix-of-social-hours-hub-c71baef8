@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageShell } from "../components/layout";
 import { TiltCard } from "../components/tilt-card";
 import { organizations } from "../lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
 import { Sparkles, Search, CalendarCheck, Award, ArrowRight, Star, Users, Clock, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -28,6 +29,29 @@ function Home() {
   const statsRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: statsP } = useScroll({ target: statsRef, offset: ["start end", "end start"] });
   const statsBgX = useTransform(statsP, [0, 1], ["-10%", "10%"]);
+
+  const [counts, setCounts] = useState({ students: 0, orgs: 0, hours: 0, schools: 0 });
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const [s, o, h, sc] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "organization"),
+        supabase.from("profiles").select("hours_earned").eq("role", "student"),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "school_admin"),
+      ]);
+      if (!alive) return;
+      const totalHours = (h.data ?? []).reduce((a: number, r: { hours_earned: number | null }) => a + (r.hours_earned ?? 0), 0);
+      setCounts({
+        students: s.count ?? 0,
+        orgs: o.count ?? 0,
+        hours: Math.round(totalHours),
+        schools: sc.count ?? 0,
+      });
+    })();
+    return () => { alive = false; };
+  }, []);
+  const fmt = (n: number) => new Intl.NumberFormat("lt-LT").format(n);
 
   return (
     <PageShell>
@@ -86,7 +110,7 @@ function Home() {
                   <div className="flex items-center gap-1 text-warning">
                     {[...Array(5)].map((_,i)=>(<Star key={i} className="h-3.5 w-3.5" fill="currentColor" />))}
                   </div>
-                  <span>4.9/5 — 2 400+ moksleivių</span>
+                  <span>Nauja platforma — {fmt(counts.students)} moksleivių</span>
                 </div>
               </motion.div>
             </div>
@@ -170,10 +194,10 @@ function Home() {
         />
         <div className="relative mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-14 sm:px-6 md:grid-cols-4">
           {[
-            { icon: Users, value: "12 480", label: "Aktyvių moksleivių" },
-            { icon: Building2, value: "320+", label: "Patikrintų organizacijų" },
-            { icon: Clock, value: "184 200", label: "Atliktų valandų" },
-            { icon: Award, value: "98 %", label: "Patenkintų mokyklų" },
+            { icon: Users, value: fmt(counts.students), label: "Aktyvių moksleivių" },
+            { icon: Building2, value: fmt(counts.orgs), label: "Patikrintų organizacijų" },
+            { icon: Clock, value: fmt(counts.hours), label: "Atliktų valandų" },
+            { icon: Award, value: fmt(counts.schools), label: "Prisijungusių mokyklų" },
           ].map((s, i)=>(
             <motion.div
               key={s.label}
@@ -315,7 +339,7 @@ function Home() {
             aria-hidden
           />
           <h2 className="relative text-3xl font-bold text-white sm:text-5xl">Pasiruošę pradėti savanorystę?</h2>
-          <p className="relative mx-auto mt-3 max-w-xl text-white/80">Prisijunk prie 12 000+ moksleivių, kurie jau atlieka socialines valandas paprastai ir prasmingai.</p>
+          <p className="relative mx-auto mt-3 max-w-xl text-white/80">Prisijunk prie moksleivių bendruomenės, kuri atlieka socialines valandas paprastai ir prasmingai.</p>
           <div className="relative mt-8 flex flex-wrap justify-center gap-3">
             <motion.div whileHover={{ scale: 1.06, y: -2 }} whileTap={{ scale: 0.97 }}>
               <Link to="/register" className="inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-primary transition hover:bg-white/90">Sukurti paskyrą</Link>

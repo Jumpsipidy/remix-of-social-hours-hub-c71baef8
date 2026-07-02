@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { TiltCard } from "@/components/tilt-card";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -230,40 +231,44 @@ function TasksPage() {
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               <AnimatePresence mode="popLayout">
                 {filteredTasks.map((t, i) => (
-                  <motion.article key={t.id} layout
-                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3, delay: i * 0.03 }}
-                    whileHover={{ y: -4 }}
-                    className="group flex flex-col rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur transition hover:shadow-xl"
+                  <motion.div key={t.id} layout
+                    initial={{ opacity: 0, y: 30, rotateX: -12 }} animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4, delay: (i % 6) * 0.04, type: "spring", stiffness: 120, damping: 18 }}
+                    style={{ perspective: 1200 }}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
-                        <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
-                      </div>
-                      <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
-                        {Number(t.available_hours)} val.
-                      </span>
-                    </div>
-                    <h3 className="mt-4 font-display text-lg font-bold leading-tight">{t.title}</h3>
-                    <span className="mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                      {CATEGORY_LABELS[guessCategory(t)]}
-                    </span>
-                    {t.description && (
-                      <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
-                    )}
-                    <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
-                      <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}</p>
-                      {t.start_time && t.end_time && (
-                        <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
-                      )}
-                      {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
-                    </div>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => handleReserve(t)}
-                      className="mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
-                      Rezervuoti
-                    </motion.button>
-                  </motion.article>
+                    <TiltCard intensity={10}>
+                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
+                        <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
+                        <div className="relative flex items-start justify-between gap-3">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
+                            <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
+                          </div>
+                          <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
+                            {Number(t.available_hours)} val.
+                          </span>
+                        </div>
+                        <h3 className="relative mt-4 font-display text-lg font-bold leading-tight">{t.title}</h3>
+                        <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                          {CATEGORY_LABELS[guessCategory(t)]}
+                        </span>
+                        {t.description && (
+                          <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
+                        )}
+                        <div className="relative mt-4 space-y-1.5 text-xs text-muted-foreground">
+                          <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}</p>
+                          {t.start_time && t.end_time && (
+                            <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
+                          )}
+                          {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
+                        </div>
+                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
+                          onClick={() => handleReserve(t)}
+                          className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
+                          Rezervuoti
+                        </motion.button>
+                      </article>
+                    </TiltCard>
+                  </motion.div>
                 ))}
               </AnimatePresence>
             </div>
@@ -281,32 +286,37 @@ function TasksPage() {
               {filteredOrgs.map((o, i) => {
                 const orgTaskCount = tasks.filter((t) => t.organization_id === o.id).length;
                 return (
-                  <motion.article key={o.id}
-                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                    whileHover={{ y: -4 }}
-                    className="flex flex-col rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur transition hover:shadow-xl"
+                  <motion.div key={o.id}
+                    initial={{ opacity: 0, y: 30, rotateY: -15 }} animate={{ opacity: 1, y: 0, rotateY: 0 }}
+                    transition={{ delay: (i % 6) * 0.05, type: "spring", stiffness: 110, damping: 18 }}
+                    style={{ perspective: 1200 }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-lg text-primary-foreground shadow-glow">
-                        {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h3>
-                        <p className="truncate text-xs text-muted-foreground">{o.email}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-xs">
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-                        {orgTaskCount} atvirų užduočių
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => { setTab("tasks"); setQ(o.organization_name ?? o.full_name ?? ""); }}
-                      className="mt-5 w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold transition hover:border-primary/40 hover:bg-accent"
-                    >
-                      Peržiūrėti užduotis
-                    </button>
-                  </motion.article>
+                    <TiltCard intensity={9}>
+                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
+                        <motion.div aria-hidden className="pointer-events-none absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-gradient-accent opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
+                        <div className="relative flex items-center gap-3">
+                          <motion.div whileHover={{ rotate: [0, -8, 8, 0], scale: 1.08 }} transition={{ duration: 0.5 }} className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-lg text-primary-foreground shadow-glow">
+                            {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
+                          </motion.div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h3>
+                            <p className="truncate text-xs text-muted-foreground">{o.email}</p>
+                          </div>
+                        </div>
+                        <div className="relative mt-4 flex items-center gap-2 text-xs">
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                            {orgTaskCount} atvirų užduočių
+                          </span>
+                        </div>
+                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
+                          onClick={() => { setTab("tasks"); setQ(o.organization_name ?? o.full_name ?? ""); }}
+                          className="relative mt-5 w-full rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:border-primary/40 hover:bg-accent"
+                        >
+                          Peržiūrėti užduotis
+                        </motion.button>
+                      </article>
+                    </TiltCard>
+                  </motion.div>
                 );
               })}
             </div>
