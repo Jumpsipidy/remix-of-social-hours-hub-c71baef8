@@ -14,6 +14,8 @@ export type Profile = {
   hours_needed: number;
   hours_earned: number;
   organization_name: string | null;
+  school_id?: string | null;
+  class_year?: string | null;
 };
 
 type MockSession = { user: User; profile: Profile };
@@ -75,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const fetchProfile = async () => {
         const { data } = await supabase
           .from("profiles")
-          .select("id, full_name, email, role, hours_needed, hours_earned, organization_name")
+          .select("id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year")
           .eq("id", uid)
           .maybeSingle();
         return (data as Profile | null) ?? null;

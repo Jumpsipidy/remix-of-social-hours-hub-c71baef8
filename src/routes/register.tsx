@@ -15,7 +15,7 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
-type Mode = "student" | "school_admin" | "org_request";
+type Mode = "student" | "org_request";
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
@@ -70,6 +70,8 @@ function RegisterPage() {
             role: mode,
             full_name: fullName,
             hours_needed: mode === "student" ? hoursNeeded : 0,
+            school_id: mode === "student" ? schoolId : null,
+            class_year: mode === "student" ? classYear : null,
           },
         },
       });
@@ -79,7 +81,7 @@ function RegisterPage() {
         await supabase.from("profiles").update({ school_id: schoolId, class_year: classYear }).eq("id", signUp.user.id);
       }
       toast.success("Paskyra sukurta! Sveiki atvykę.");
-      navigate({ to: mode === "school_admin" ? "/school" : "/student" });
+      navigate({ to: "/student" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");
     } finally { setLoading(false); }
@@ -118,7 +120,7 @@ function RegisterPage() {
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/admin` },
+      options: { redirectTo: `${window.location.origin}/student` },
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
@@ -138,10 +140,9 @@ function RegisterPage() {
           <h1 className="text-2xl font-bold">Sukurk paskyrą</h1>
           <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi</p>
 
-          <div className="mt-6 grid gap-2 sm:grid-cols-3">
+          <div className="mt-6 grid gap-2 sm:grid-cols-2">
             {([
               { k: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk valandas" },
-              { k: "school_admin", label: "Mokyklos admin.", icon: School, hint: "Stebėk mokinius" },
               { k: "org_request", label: "Organizacija", icon: Building2, hint: "Pateik prašymą" },
             ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
               const active = mode === opt.k;
@@ -187,11 +188,9 @@ function RegisterPage() {
             </>
           ) : (
             <>
-              {mode === "school_admin" && (
-                <div className="mt-4 rounded-2xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-                  ℹ️ Po registracijos administratorius susies tavo paskyrą su mokyklos ekosistema.
-                </div>
-              )}
+              <div className="mt-4 rounded-2xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+                Mokyklos administratorių paskyras kuria tik Super Admin per administravimo skydą.
+              </div>
               <form className="mt-5 space-y-4" onSubmit={handleAccountSignup}>
                 <Field label="Vardas Pavardė" icon={User} value={fullName} onChange={setFullName} placeholder="Emilija Kazlauskaitė" required />
 
