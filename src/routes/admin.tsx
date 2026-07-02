@@ -279,6 +279,8 @@ function AdminDashboard() {
               })}
             </div>
           )}
+
+          {tab === "accounts" && <CreateAccountPanel />}
         </div>
       </section>
     </PageShell>
