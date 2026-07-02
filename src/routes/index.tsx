@@ -269,18 +269,22 @@ function Home() {
         </div>
       </section>
 
-      {/* ORGS SHOWCASE */}
+      {/* ORGS SHOWCASE — DEMO ONLY */}
       <section className="relative mx-auto max-w-7xl px-4 pb-28 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="flex flex-wrap items-end justify-between gap-4"
         >
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-primary">Populiariausios</span>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Organizacijos, kurioms reikia tavęs</h2>
+            <span className="text-xs font-semibold uppercase tracking-wider text-warning">Demonstraciniai duomenys · bus pašalinta</span>
+            <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Kaip atrodo organizacijų sąrašas</h2>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+              ⚠️ Žemiau matomos organizacijos yra <b>išgalvotos</b> ir naudojamos tik reklamai / dizaino demonstracijai. Šis blokas netrukus bus pašalintas.
+              Realias, patikrintas organizacijas ir jų užduotis rasi puslapyje <Link to="/tasks" className="font-semibold text-primary underline">/tasks</Link>.
+            </p>
           </div>
           <Link to="/tasks" className="group inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">
-            Visos organizacijos <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            Į realias užduotis <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </motion.div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" style={{ perspective: 1400 }}>

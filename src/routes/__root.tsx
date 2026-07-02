@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "../components/ui/sonner";
 import { MockTesterPanel } from "../components/mock-tester-panel";
+import { BugReportWidget } from "../components/bug-report-widget";
 import { AuthProvider } from "@/hooks/use-auth";
 
 function NotFoundComponent() {
@@ -20,16 +21,13 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Puslapis nerastas</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          Ieškomas puslapis neegzistuoja arba buvo perkeltas.
         </p>
         <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
+          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Į pradžią
           </Link>
         </div>
       </div>
@@ -48,26 +46,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Puslapis neužsikrovė
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Kažkas nutiko. Bandyk atnaujinti arba grįžti į pradžią.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
+          <button onClick={() => { router.invalidate(); reset(); }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            Bandyti dar
           </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
+          <a href="/" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            Į pradžią
           </a>
         </div>
       </div>
@@ -102,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="lt">
       <head>
         <HeadContent />
       </head>
@@ -116,12 +106,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Outlet />
         <Toaster />
+        <BugReportWidget />
         <MockTesterPanel />
       </AuthProvider>
     </QueryClientProvider>
