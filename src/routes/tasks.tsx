@@ -246,8 +246,9 @@ function TasksPage() {
                       <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
                         <div className="relative flex items-start justify-between gap-3">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-semibold">
-                            <Building2 className="h-3 w-3" /> {orgName(t.organization_id)}
+                          <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
+                            {t.is_event ? <CalendarHeart className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
+                            {t.is_event ? (t.event_host_name || "Vienkartinis renginys") : orgName(t.organization_id)}
                           </div>
                           <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
                             {Number(t.available_hours)} val.
