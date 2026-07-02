@@ -55,21 +55,24 @@ async function ensureRoomAndNotify(reservation: Reservation, content: string, se
   await supabase.from("messages").insert({ chat_room_id: roomId, sender_id: senderId, content });
 }
 
+type TaskRow = { id: string; title: string; task_date: string; available_hours: number; location: string | null; is_open: boolean; created_at: string };
+
 function OrgDashboard() {
   const { user, profile, loading } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [students, setStudents] = useState<Record<string, StudentLite>>({});
+  const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
 
   const refresh = async (uid: string) => {
-    const { data } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("organization_id", uid)
-      .order("created_at", { ascending: false });
-    const rs = (data as Reservation[]) ?? [];
+    const [{ data: rData }, { data: tData }] = await Promise.all([
+      supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
+      supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
+    ]);
+    const rs = (rData as Reservation[]) ?? [];
     setReservations(rs);
+    setTasks((tData as TaskRow[]) ?? []);
     const ids = Array.from(new Set(rs.map((r) => r.student_id)));
     if (ids.length) {
       const { data: ps } = await supabase
@@ -85,6 +88,20 @@ function OrgDashboard() {
   useEffect(() => {
     if (user) refresh(user.id);
   }, [user]);
+
+  const toggleTask = async (t: TaskRow) => {
+    const { error } = await supabase.from("tasks").update({ is_open: !t.is_open }).eq("id", t.id);
+    if (error) return toast.error(error.message);
+    toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
+    if (user) refresh(user.id);
+  };
+  const deleteTask = async (t: TaskRow) => {
+    if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
+    const { error } = await supabase.from("tasks").delete().eq("id", t.id);
+    if (error) return toast.error(error.message);
+    toast.success("Užduotis ištrinta");
+    if (user) refresh(user.id);
+  };
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "organization") {
