@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Heart, Mail, Lock, GraduationCap, Building2, School, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import { toast } from "sonner";
 
 type Role = "student" | "organization" | "school_admin" | "admin";
@@ -62,10 +62,11 @@ function LoginPage() {
   }
 
   async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/student` },
     });
-    if (result.error) toast.error("Nepavyko prisijungti per Google");
+    if (error) toast.error("Nepavyko prisijungti per Google");
   }
 
   return (
