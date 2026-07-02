@@ -367,3 +367,71 @@ function FieldInput({ label, value, onChange, placeholder, type = "text", requir
     </label>
   );
 }
+
+type AccessRequest = {
+  id: string;
+  organization_name: string;
+  legal_code: string | null;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string | null;
+  website: string | null;
+  description: string;
+  status: "pending" | "approved" | "rejected";
+  admin_notes: string | null;
+  created_at: string;
+};
+
+function AccessRequestsPanel() {
+  const [rows, setRows] = useState<AccessRequest[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = async () => {
+    const { data } = await supabase.from("organization_access_requests").select("*").order("created_at", { ascending: false });
+    setRows((data as AccessRequest[]) ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const setStatus = async (id: string, status: "approved" | "rejected") => {
+    setBusy(id);
+    try {
+      const { error } = await supabase.from("organization_access_requests").update({ status }).eq("id", id);
+      if (error) throw error;
+      toast.success(status === "approved" ? "Pažymėta kaip patvirtinta. Sukurk paskyrą aukščiau." : "Atmesta.");
+      await load();
+    } catch (e: any) { toast.error(e?.message ?? "Klaida"); }
+    finally { setBusy(null); }
+  };
+
+  return (
+    <div className="mt-8 rounded-2xl border border-border bg-background/60 p-5">
+      <h3 className="font-display text-lg font-bold">📥 Organizacijų prieigos prašymai</h3>
+      <p className="mt-1 text-xs text-muted-foreground">Prašymai iš viešos registracijos formos. Patvirtinus — sukurk paskyrą aukščiau ir pats išsiųsk kredencialus.</p>
+      <div className="mt-4 space-y-3">
+        {rows.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Kol kas nėra prašymų.</p>}
+        {rows.map((r) => (
+          <div key={r.id} className="rounded-xl border border-border bg-card/70 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-semibold">{r.organization_name}</p>
+                <p className="text-xs text-muted-foreground">Kodas: {r.legal_code ?? "—"} · {r.contact_name} · {r.contact_email} · {r.contact_phone ?? "—"}</p>
+                {r.website && <p className="text-xs text-primary">{r.website}</p>}
+              </div>
+              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${r.status === "pending" ? "bg-warning/15 text-warning-foreground" : r.status === "approved" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                {r.status}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">{r.description}</p>
+            {r.status === "pending" && (
+              <div className="mt-3 flex gap-2">
+                <button disabled={busy === r.id} onClick={() => setStatus(r.id, "approved")} className="rounded-lg bg-success/20 px-3 py-1.5 text-xs font-semibold text-success hover:bg-success/30 disabled:opacity-50">✓ Patvirtinti</button>
+                <button disabled={busy === r.id} onClick={() => setStatus(r.id, "rejected")} className="rounded-lg bg-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/30 disabled:opacity-50">✗ Atmesti</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
