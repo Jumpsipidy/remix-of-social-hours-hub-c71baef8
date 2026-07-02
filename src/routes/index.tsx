@@ -110,7 +110,7 @@ function Home() {
                   <div className="flex items-center gap-1 text-warning">
                     {[...Array(5)].map((_,i)=>(<Star key={i} className="h-3.5 w-3.5" fill="currentColor" />))}
                   </div>
-                  <span>4.9/5 — 2 400+ moksleivių</span>
+                  <span>Nauja platforma — {fmt(counts.students)} moksleivių</span>
                 </div>
               </motion.div>
             </div>
