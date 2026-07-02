@@ -5,16 +5,22 @@ type Props = {
   children: ReactNode;
   className?: string;
   intensity?: number;
+  glare?: boolean;
 };
 
-export function TiltCard({ children, className = "", intensity = 6 }: Props) {
+/**
+ * 3D tilt with cursor-following glare highlight.
+ */
+export function TiltCard({ children, className = "", intensity = 10, glare = true }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const sx = useSpring(x, { stiffness: 200, damping: 18 });
-  const sy = useSpring(y, { stiffness: 200, damping: 18 });
+  const sx = useSpring(x, { stiffness: 220, damping: 20 });
+  const sy = useSpring(y, { stiffness: 220, damping: 20 });
   const rotateX = useTransform(sy, [-0.5, 0.5], [intensity, -intensity]);
   const rotateY = useTransform(sx, [-0.5, 0.5], [-intensity, intensity]);
+  const glareX = useTransform(sx, [-0.5, 0.5], ["0%", "100%"]);
+  const glareY = useTransform(sy, [-0.5, 0.5], ["0%", "100%"]);
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = ref.current?.getBoundingClientRect();
@@ -32,12 +38,27 @@ export function TiltCard({ children, className = "", intensity = 6 }: Props) {
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
-      style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      whileHover={{ y: -6 }}
-      transition={{ type: "spring", stiffness: 200, damping: 18 }}
-      className={`will-change-transform ${className}`}
+      style={{ rotateX, rotateY, transformPerspective: 1200, transformStyle: "preserve-3d" }}
+      whileHover={{ y: -8, scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 220, damping: 20 }}
+      className={`relative will-change-transform ${className}`}
     >
-      {children}
+      <div style={{ transform: "translateZ(30px)" }} className="relative">
+        {children}
+        {glare && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 mix-blend-overlay transition-opacity duration-300 [.group\\/tilt:hover_&]:opacity-100"
+            style={{
+              background: useTransform(
+                [glareX, glareY],
+                ([gx, gy]) =>
+                  `radial-gradient(600px circle at ${gx} ${gy}, oklch(1 0 0 / 0.35), transparent 40%)`
+              ) as unknown as string,
+            }}
+          />
+        )}
+      </div>
     </motion.div>
   );
 }
