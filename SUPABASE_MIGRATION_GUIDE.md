@@ -1,188 +1,146 @@
-# Move this app from Lovable-managed backend to your own Supabase
+# Move this app to your own Supabase (simple version)
 
-This is the safe path: first copy the database, then switch Vercel to the new Supabase project. Do **not** delete the old backend until the new one works.
+Your only real data is your admin account. Skip the export/import — just recreate the admin fresh. Way less work.
 
-## 1. Create your real Supabase project
+---
 
-1. Go to `supabase.com`.
-2. Create a new project.
-3. Save the database password somewhere safe.
-4. Open the new project dashboard.
+## Step 1 — Create a new Supabase project
 
-## 2. Copy the table structure
+1. Go to `supabase.com` and sign in.
+2. Click **New project**.
+3. Name it, pick a region close to you, set a database password (save it somewhere safe).
+4. Wait ~1 minute for it to finish setting up.
 
-This repo already has the database migrations in `supabase/migrations/`.
+---
 
-In your new Supabase dashboard:
+## Step 2 — Create the tables (run the SQL)
 
-1. Open **SQL Editor**.
-2. Open each file in `supabase/migrations/`, oldest first.
-3. Copy the SQL into Supabase SQL Editor.
-4. Click **Run** for each file.
+1. In your new project, click **SQL Editor** in the left sidebar.
+2. Open the folder `supabase/migrations/` in this repo.
+3. Open each file **oldest first** (they are dated in the filename).
+4. For each file: copy all the SQL → paste into the SQL Editor → click **Run**.
+5. Do this for every file, in order.
 
-That recreates the tables, functions, policies, and seed rows that are stored in migrations.
+When done, click **Table Editor** in the sidebar. You should see: `profiles`, `schools`, `tasks`, `reservations`, `chat_rooms`, `messages`, `organization_access_requests`, `bug_reports`. If they're all there, you're good.
 
-## 3. Copy existing table data so you do not lose it
+---
 
-In Lovable:
+## Step 3 — Create your admin account
 
-1. Open **Backend**.
-2. Go to **Advanced settings**.
-3. Use **Export data**.
-4. Download the export when it is ready.
+1. In Supabase, click **Authentication** → **Users** → **Add user** → **Create new user**.
+2. Email: `gamingdooper0@gmail.com`
+3. Password: `elijas7851` (or whatever you want)
+4. ✅ Check **Auto Confirm User**
+5. Click **Create user**.
 
-In Supabase:
+That's it. The app auto-promotes the first user to admin on first login. You don't need to touch the `profiles` table.
 
-1. Open your new project.
-2. Go to **Table Editor**.
-3. For each table, import the matching CSV/data from the export.
+---
 
-Important order if import complains about linked rows:
+## Step 4 — Get your new keys
 
-1. `schools`
-2. `profiles`
-3. `tasks`
-4. `reservations`
-5. `chat_rooms`
-6. `messages`
-7. `organization_access_requests`
-8. `bug_reports`
+In Supabase: **Project Settings** (gear icon, bottom left) → **API**.
 
-## 4. Auth users are separate from table data
+Copy these three values (keep this tab open):
 
-Your table rows can be copied, but login accounts live in Supabase Auth, not normal tables.
+- **Project URL** — looks like `https://abcdef.supabase.co`
+- **anon / public key** — long string starting with `eyJ...`
+- **service_role key** — long string starting with `eyJ...` (KEEP PRIVATE, never share)
 
-Simplest safe option:
+---
 
-1. In Supabase dashboard, go to **Authentication → Users**.
-2. Create your admin user manually with your email.
-3. Set a temporary password.
-4. In **Table Editor → profiles**, make sure your user row has `role = admin`.
+## Step 5 — Put the keys in Vercel
 
-If your copied `profiles.id` does not match the new Auth user id, update that one profile row to the new Auth user id before using the app.
+1. Go to your project on `vercel.com` → **Settings** → **Environment Variables**.
+2. Add each of these (paste the values from Step 4):
 
-For other people, let them create new accounts again or create them from your app admin panel.
+| Name | Value |
+|---|---|
+| `VITE_SUPABASE_URL` | your Project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | your anon key |
+| `SUPABASE_URL` | your Project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | your anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | your service_role key |
 
-## 5. Put the new Supabase keys into Vercel
+3. **Delete** `LOVABLE_API_KEY` if it's there.
+4. Go to **Deployments** → click the three dots on the latest one → **Redeploy**.
 
-In Supabase dashboard:
+---
 
-1. Go to **Project Settings → API**.
-2. Copy **Project URL**.
-3. Copy the **anon/public key**.
-4. Copy the **service_role key** and keep it private.
+## Step 6 — Tell Supabase which URLs are allowed
 
-In Vercel:
+In Supabase: **Authentication** → **URL Configuration**.
 
-1. Open your project.
-2. Go to **Settings → Environment Variables**.
-3. Set these values:
+- **Site URL**: `https://your-app.vercel.app` (your actual Vercel domain)
+- **Redirect URLs** — add all three:
+  ```
+  https://your-app.vercel.app/**
+  http://localhost:8080/**
+  http://localhost:5173/**
+  ```
 
-```env
-VITE_SUPABASE_URL=your Supabase Project URL
-VITE_SUPABASE_PUBLISHABLE_KEY=your anon/public key
-SUPABASE_URL=your Supabase Project URL
-SUPABASE_PUBLISHABLE_KEY=your anon/public key
-SUPABASE_SERVICE_ROLE_KEY=your service_role key
-```
+Click **Save**.
 
-4. Remove `LOVABLE_API_KEY` if it exists.
-5. Redeploy the Vercel app.
+---
 
-## 6. Supabase Auth URL settings
+## Step 7 — Test it
 
-In Supabase dashboard:
+1. Open your Vercel app.
+2. Log in with `gamingdooper0@gmail.com` + your password.
+3. You should land in the admin dashboard.
 
-1. Go to **Authentication → URL Configuration**.
-2. Set **Site URL** to your Vercel domain, for example:
+If that works, you're fully off the Lovable-managed backend. 🎉
 
-```txt
-https://your-app.vercel.app
-```
+---
 
-3. Add these **Redirect URLs**:
+## Step 8 (optional) — Add Google login
 
-```txt
-https://your-app.vercel.app/**
-http://localhost:8080/**
-http://localhost:5173/**
-```
-
-Password reset uses:
-
-```txt
-https://your-app.vercel.app/update-password
-```
-
-## 7. Add Google login normally in real Supabase
-
-### A. In Google Cloud
+### Part A — Google Cloud Console
 
 1. Go to `console.cloud.google.com`.
-2. Pick or create a project.
-3. Go to **APIs & Services → OAuth consent screen**.
-4. Choose **External**.
-5. App name: `Socialinės Valandos`.
-6. User support email: your email.
-7. Developer contact email: your email.
-8. Add scopes:
-   - `openid`
-   - `.../auth/userinfo.email`
-   - `.../auth/userinfo.profile`
-9. Save.
-10. Go to **APIs & Services → Credentials**.
-11. Click **Create credentials → OAuth client ID**.
-12. Application type: **Web application**.
-13. Authorized JavaScript origins:
+2. Create a project (or pick an existing one).
+3. Left menu: **APIs & Services** → **OAuth consent screen**.
+   - Choose **External** → Create.
+   - App name: `Socialinės Valandos`
+   - User support email: your email
+   - Developer contact: your email
+   - Save and continue through the rest (defaults are fine).
+4. Left menu: **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**.
+   - Application type: **Web application**
+   - **Authorized JavaScript origins**:
+     ```
+     https://your-app.vercel.app
+     http://localhost:8080
+     ```
+   - **Authorized redirect URIs** — get this from Supabase: **Authentication → Providers → Google** shows the exact callback URL. Paste it here. It looks like:
+     ```
+     https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback
+     ```
+   - Click **Create**. Copy the **Client ID** and **Client Secret**.
 
-```txt
-https://your-app.vercel.app
-http://localhost:8080
-http://localhost:5173
-```
+### Part B — Supabase
 
-14. Authorized redirect URI:
+1. **Authentication** → **Providers** → **Google**.
+2. Toggle **Enable**.
+3. Paste **Client ID** and **Client Secret**.
+4. **Save**.
 
-```txt
-https://YOUR-SUPABASE-PROJECT-REF.supabase.co/auth/v1/callback
-```
+Done — the Google button in the app will now work.
 
-You get `YOUR-SUPABASE-PROJECT-REF` from your Supabase project URL. Example: if the URL is `https://abc123.supabase.co`, the ref is `abc123`.
+---
 
-15. Copy the Google **Client ID** and **Client Secret**.
+## Step 9 (optional) — Password reset emails
 
-### B. In Supabase
+The forgot-password button already works in code, but emails won't actually send until you set up email.
 
-1. Go to **Authentication → Providers**.
-2. Open **Google**.
-3. Enable it.
-4. Paste the Google Client ID.
-5. Paste the Google Client Secret.
-6. Save.
+- **Easy option**: Supabase's built-in email works for a few emails per hour — fine for testing.
+- **Real option**: **Authentication** → **Emails** → **SMTP Settings** and plug in Resend, SendGrid, or similar.
 
-## 8. Turn on email/password and password reset
+---
 
-In Supabase:
+## What if something breaks
 
-1. Go to **Authentication → Providers → Email**.
-2. Enable Email provider.
-3. Keep password signups enabled if students can register themselves.
-4. For real password-reset emails, configure SMTP or a custom email provider in Supabase.
-
-If SMTP/email sending is not configured, the app can request a reset, but users may not receive the email.
-
-## 9. Test before deleting anything
-
-Test this order:
-
-1. Open Vercel app.
-2. Create a student account.
-3. Log out.
-4. Log in with email/password.
-5. Request forgot password.
-6. Click reset email link and set a new password.
-7. Log in with Google.
-8. Log in as admin.
-9. Create an organization/school admin account from admin panel.
-
-Only after this works should you stop using the Lovable-managed backend.
+- **"Missing Supabase environment variable"** on Vercel → you forgot one of the vars in Step 5, or forgot to redeploy.
+- **Login says "incorrect password"** → wrong password, or you forgot to check **Auto Confirm User** in Step 3.
+- **Google login errors** → the redirect URI in Google Cloud must match Supabase's callback URL *exactly*.
+- **Tables missing** → re-run any migration file you skipped in Step 2.
