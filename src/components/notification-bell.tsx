@@ -97,9 +97,26 @@ export function NotificationBell() {
       )
       .subscribe();
 
+    // Admin: new bug reports
+    let chBugs: ReturnType<typeof supabase.channel> | null = null;
+    if (profile?.role === "admin") {
+      chBugs = supabase
+        .channel(`notif-bugs-${uid}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "bug_reports" }, (payload) => {
+          const b = payload.new as { message: string; severity?: string };
+          push({
+            kind: "message",
+            title: `🐛 Naujas bug report${b.severity ? ` (${b.severity})` : ""}`,
+            body: b.message.length > 100 ? b.message.slice(0, 100) + "…" : b.message,
+          });
+        })
+        .subscribe();
+    }
+
     return () => {
       supabase.removeChannel(chMsg);
       supabase.removeChannel(chRes);
+      if (chBugs) supabase.removeChannel(chBugs);
     };
   }, [user, isAuthenticated, profile?.role]);
 
