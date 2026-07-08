@@ -236,18 +236,17 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     setBusy(true);
     setError(null);
 
-    // Verify signup code matches the selected school
-    const { data: school, error: schoolErr } = await supabase
-      .from("schools")
-      .select("id, signup_code")
-      .eq("id", schoolId)
-      .maybeSingle();
-    if (schoolErr || !school) {
+    // Verify signup code matches the selected school (via security-definer RPC)
+    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+      _school_id: schoolId,
+      _code: signupCode.trim(),
+    });
+    if (rpcErr) {
       setBusy(false);
-      setError("Nepavyko patikrinti mokyklos.");
+      setError("Nepavyko patikrinti kodo. Pabandyk dar kartą.");
       return;
     }
-    if ((school as any).signup_code?.toUpperCase() !== signupCode.trim().toUpperCase()) {
+    if (!ok) {
       setBusy(false);
       setError("Neteisingas mokyklos kodas. Gauk jį iš savo mokyklos administratoriaus.");
       return;
