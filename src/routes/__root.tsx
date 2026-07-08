@@ -115,6 +115,7 @@ function RootComponent() {
         <Outlet />
         <Toaster />
         <BugReportWidget />
+        <CookieConsent />
         <MockTesterPanel />
       </AuthProvider>
     </QueryClientProvider>
