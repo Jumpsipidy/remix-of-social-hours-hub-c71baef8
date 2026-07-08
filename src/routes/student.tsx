@@ -201,11 +201,15 @@ function StudentDashboard() {
 }
 
 function StudentProfileSetup({ userId }: { userId: string }) {
+  const { user, profile } = useAuth();
   const [schools, setSchools] = useState<SchoolRow[]>([]);
+  const [fullName, setFullName] = useState("");
   const [schoolId, setSchoolId] = useState("");
+  const [signupCode, setSignupCode] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.from("schools").select("id, name, city").eq("is_active", true).order("name")
@@ -216,16 +220,53 @@ function StudentProfileSetup({ userId }: { userId: string }) {
       });
   }, []);
 
+  // Prefill full name from Google (or existing profile)
+  useEffect(() => {
+    if (fullName) return;
+    const fromMeta = (user?.user_metadata as any)?.full_name
+      ?? (user?.user_metadata as any)?.name
+      ?? profile?.full_name
+      ?? "";
+    if (fromMeta) setFullName(fromMeta);
+  }, [user, profile, fullName]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!schoolId || !classYear) return;
+    if (!schoolId || !classYear || !fullName.trim() || !signupCode.trim()) return;
     setBusy(true);
-    const { error } = await supabase
+    setError(null);
+
+    // Verify signup code matches the selected school (via security-definer RPC)
+    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+      _school_id: schoolId,
+      _code: signupCode.trim(),
+    });
+    if (rpcErr) {
+      setBusy(false);
+      setError("Nepavyko patikrinti kodo. Pabandyk dar kartą.");
+      return;
+    }
+    if (!ok) {
+      setBusy(false);
+      setError("Neteisingas mokyklos kodas. Gauk jį iš savo mokyklos administratoriaus.");
+      return;
+    }
+
+    const { error: updErr } = await supabase
       .from("profiles")
-      .update({ school_id: schoolId, class_year: classYear, hours_needed: hoursNeeded, role: "student" })
+      .update({
+        full_name: fullName.trim(),
+        school_id: schoolId,
+        class_year: classYear,
+        hours_needed: hoursNeeded,
+        role: "student",
+      })
       .eq("id", userId);
     setBusy(false);
-    if (error) return;
+    if (updErr) {
+      setError(updErr.message);
+      return;
+    }
     window.location.reload();
   };
 
@@ -238,15 +279,40 @@ function StudentProfileSetup({ userId }: { userId: string }) {
           </div>
           <h1 className="mt-5 text-2xl font-bold">Užbaik mokinio profilį</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Google prisijungimas veikia — dabar pasirink mokyklą, klasę ir valandų tikslą.
+            Patikrink savo vardą, pasirink mokyklą ir įvesk mokyklos kodą, kurį gavai iš mokyklos administratoriaus.
           </p>
           <form onSubmit={submit} className="mt-6 space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Vardas ir pavardė</span>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                placeholder="Vardenis Pavardenis"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+              />
+            </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Mokykla</span>
               <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary">
                 {schools.length === 0 && <option value="">Kraunama…</option>}
                 {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
               </select>
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Mokyklos kodas</span>
+              <input
+                type="text"
+                value={signupCode}
+                onChange={(e) => setSignupCode(e.target.value.toUpperCase())}
+                required
+                placeholder="pvz. A1B2C3D4"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-mono tracking-wider outline-none focus:border-primary"
+              />
+              <span className="mt-1 block text-[11px] text-muted-foreground">
+                Kodą gauni iš savo mokyklos administratoriaus. Be jo negalėsi registruotis kaip mokinys.
+              </span>
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Klasė</span>
@@ -259,6 +325,11 @@ function StudentProfileSetup({ userId }: { userId: string }) {
               <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas</span>
               <input type="number" min={1} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(1, Number(e.target.value)))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
             </label>
+            {error && (
+              <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {error}
+              </div>
+            )}
             <button disabled={busy} className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
               {busy ? "Saugoma…" : "Išsaugoti ir tęsti"}
             </button>

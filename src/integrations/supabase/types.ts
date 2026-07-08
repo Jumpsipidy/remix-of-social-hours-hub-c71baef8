@@ -296,6 +296,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          signup_code: string
         }
         Insert: {
           city?: string | null
@@ -303,6 +304,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          signup_code: string
         }
         Update: {
           city?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          signup_code?: string
         }
         Relationships: []
       }
@@ -396,6 +399,10 @@ export type Database = {
         Returns: boolean
       }
       purge_old_messages: { Args: never; Returns: undefined }
+      verify_school_signup_code: {
+        Args: { _code: string; _school_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "student" | "school_admin" | "organization" | "admin"
