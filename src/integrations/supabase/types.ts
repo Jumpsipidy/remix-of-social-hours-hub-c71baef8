@@ -296,6 +296,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          signup_code: string
         }
         Insert: {
           city?: string | null
@@ -303,6 +304,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          signup_code: string
         }
         Update: {
           city?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          signup_code?: string
         }
         Relationships: []
       }
