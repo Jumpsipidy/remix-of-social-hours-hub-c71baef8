@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "../components/ui/sonner";
 import { MockTesterPanel } from "../components/mock-tester-panel";
 import { BugReportWidget } from "../components/bug-report-widget";
+import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 
 function NotFoundComponent() {
