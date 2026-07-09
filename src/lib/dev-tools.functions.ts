@@ -81,11 +81,16 @@ function generateEcosystem(): DevAccount[] {
   ];
 }
 
-async function requireAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (data) return;
-  // Bootstrap: if there is no admin in the system yet, promote the current caller.
+async function requireAdmin(_supabase: any, userId: string) {
+  // Use service-role client so we don't depend on has_role EXECUTE grants.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: me } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if ((me as { role?: string } | null)?.role === "admin") return;
+  // Bootstrap: if there is no admin in the system yet, promote the current caller.
   const { count } = await supabaseAdmin
     .from("profiles")
     .select("id", { count: "exact", head: true })
