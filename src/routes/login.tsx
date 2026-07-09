@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Heart, Mail, Lock, GraduationCap, Building2, School, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Auth3DBackground } from "@/components/auth-3d-background";
 
 import { toast } from "sonner";
 
@@ -40,20 +41,20 @@ function LoginPage() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      // Verify the account role matches the tab the user selected
+      // Always route based on the ACTUAL profile role, not the selected tab.
       const { data: prof } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", data.user.id)
         .maybeSingle();
-      if (prof?.role && prof.role !== role) {
-        toast.error(`Ši paskyra yra "${prof.role}", ne "${role}". Perkeliame į jos skydą.`);
-        const target = ROLES.find((r) => r.id === prof.role)?.dest ?? "/";
-        navigate({ to: target });
-        return;
+      const actual = prof?.role ?? role;
+      const target = ROLES.find((r) => r.id === actual)?.dest ?? "/";
+      if (actual !== role) {
+        toast.success(`Sveikas! Nukreipiam į tavo skydą (${actual}).`);
+      } else {
+        toast.success("Sveikas atvykęs!");
       }
-      toast.success("Sveikas atvykęs!");
-      navigate({ to: roleMeta.dest });
+      navigate({ to: target });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
     } finally {
@@ -69,10 +70,19 @@ function LoginPage() {
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
 
+  async function handleDiscord() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: `${window.location.origin}/student` },
+    });
+    if (error) toast.error("Nepavyko prisijungti per Discord");
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      <div className="absolute inset-0 bg-gradient-mesh" aria-hidden />
-      <div className="relative mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
+      <Auth3DBackground />
+      <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
+      <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
         <div className="hidden lg:block">
           <Link to="/" className="inline-flex items-center gap-2">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary shadow-glow">
