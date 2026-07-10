@@ -2,12 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Role = "organization" | "school_admin";
+type OrgCategory = "organizacija" | "bendruomene";
 
-async function requireAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (!data) throw new Error("Reikia sistemos administratoriaus teisių");
-}
+const MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN = 10;
 
+/**
+ * Create a new organization / bendruomenė / school-admin account.
+ * - Callable by super-admin (full permissions).
+ * - Callable by school_admin BUT only for role="organization" and capped at
+ *   MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN accounts they've personally created.
+ */
 export const adminCreateAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
@@ -16,22 +20,33 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     full_name: string;
     role: Role;
     organization_name?: string | null;
+    org_category?: OrgCategory | null;
+    school_id?: string | null;
   }) => input)
   .handler(async ({ data, context }) => {
-    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Check caller role
+    const { data: me } = await supabaseAdmin.from("profiles").select("role, school_id").eq("id", context.userId).maybeSingle();
+    const isAdmin = (me as any)?.role === "admin";
+    const isSchoolAdmin = (me as any)?.role === "school_admin";
+    if (!isAdmin && !isSchoolAdmin) throw new Error("Reikia administratoriaus arba mokyklos administratoriaus teisių");
+    if (isSchoolAdmin) {
+      if (data.role !== "organization") throw new Error("Mokyklos administratorius gali kurti tik organizacijų / bendruomenių paskyras");
+      // Cap check via user_metadata.created_by_school_admin
+      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const created = usersPage.users.filter((u) => (u.user_metadata as any)?.created_by_school_admin === context.userId).length;
+      if (created >= MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN) {
+        throw new Error(`Pasiektas limitas: iki ${MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN} organizacijų paskyrų vienam mokyklos administratoriui`);
+      }
+    }
+
     if (!data.email || !data.password || data.password.length < 6) {
       throw new Error("El. paštas ir bent 6 simbolių slaptažodis būtini");
     }
-    if (!["organization", "school_admin"].includes(data.role)) {
-      throw new Error("Netinkama rolė");
-    }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const normalizedEmail = data.email.trim().toLowerCase();
+    if (!["organization", "school_admin"].includes(data.role)) throw new Error("Netinkama rolė");
 
-    // Supabase Admin API has no direct "get user by email" call, so we scan the
-    // small admin-managed user list and update an existing invite if the email
-    // was already created. This prevents "already registered" from breaking
-    // real onboarding when you recreate credentials for an organization.
+    const normalizedEmail = data.email.trim().toLowerCase();
     const { data: usersPage, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (listError) throw new Error(listError.message);
     const existing = usersPage.users.find((u) => u.email?.toLowerCase() === normalizedEmail);
@@ -44,7 +59,9 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         role: data.role,
         full_name: data.full_name,
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
+        org_category: data.role === "organization" ? (data.org_category ?? "organizacija") : null,
         hours_needed: 0,
+        created_by_school_admin: isSchoolAdmin ? context.userId : null,
       },
     };
 
@@ -54,7 +71,6 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
 
     if (error || !created.user) throw new Error(error?.message ?? "Nepavyko sukurti paskyros");
 
-    // Ensure profile row matches (trigger should handle, but upsert to be safe)
     await supabaseAdmin.from("profiles").upsert(
       {
         id: created.user.id,
@@ -62,6 +78,8 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         full_name: data.full_name,
         role: data.role,
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
+        org_category: data.role === "organization" ? (data.org_category ?? "organizacija") : null,
+        school_id: data.school_id ?? (me as any)?.school_id ?? null,
         hours_needed: 0,
         hours_earned: 0,
       },
@@ -69,4 +87,16 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     );
 
     return { ok: true, id: created.user.id, updated: !!existing };
+  });
+
+/** How many org accounts this school_admin has personally created (for cap UI). */
+export const schoolAdminCreatedCount = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
+    if ((me as any)?.role !== "school_admin") return { count: 0, cap: MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN };
+    const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const count = usersPage.users.filter((u) => (u.user_metadata as any)?.created_by_school_admin === context.userId).length;
+    return { count, cap: MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN };
   });

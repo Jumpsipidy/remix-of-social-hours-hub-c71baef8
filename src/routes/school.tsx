@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2 } from "lucide-react";
+import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2, UserPlus } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
+import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
 
 export const Route = createFileRoute("/school")({
   head: () => ({
@@ -57,7 +58,7 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<"students" | "orgs" | "events">("students");
+  const [tab, setTab] = useState<"students" | "orgs" | "events" | "accounts">("students");
 
   useEffect(() => {
     if (!user || profile?.role !== "school_admin") return;
@@ -158,6 +159,10 @@ function SchoolDashboard() {
                 className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "events" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                 Vienkartiniai renginiai
               </button>
+              <button onClick={() => setTab("accounts")}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "accounts" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                <UserPlus className="mr-1 inline h-3.5 w-3.5" /> Naujos paskyros
+              </button>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -247,6 +252,20 @@ function SchoolDashboard() {
           {tab === "events" && (
             <div className="mt-6">
               <CreateEventPanel />
+            </div>
+          )}
+          {tab === "accounts" && (
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <SchoolCreateOrgPanel />
+              <div className="rounded-2xl border border-dashed border-border bg-background/40 p-5 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Kada tai naudinga?</p>
+                <ul className="mt-2 list-disc space-y-1 pl-4">
+                  <li>Miesto <b>bendruomenė</b> priima mokinius savanoriauti.</li>
+                  <li>Nauja <b>organizacija</b> nori bendradarbiauti tik su tavo mokykla.</li>
+                  <li>Vienkartinis renginys, kuriam reikia atskiros paskyros.</li>
+                </ul>
+                <p className="mt-3 text-xs">Limitas — 10 paskyrų vienam mokyklos administratoriui. Kredencialus perduodi asmeniškai; vartotojas galės iškart prisijungti ir kurti užduotis.</p>
+              </div>
             </div>
           )}
         </div>
