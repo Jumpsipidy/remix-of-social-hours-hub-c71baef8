@@ -58,7 +58,7 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<"students" | "orgs" | "events">("students");
+  const [tab, setTab] = useState<"students" | "orgs" | "events" | "accounts">("students");
 
   useEffect(() => {
     if (!user || profile?.role !== "school_admin") return;
