@@ -254,6 +254,20 @@ function SchoolDashboard() {
               <CreateEventPanel />
             </div>
           )}
+          {tab === "accounts" && (
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <SchoolCreateOrgPanel />
+              <div className="rounded-2xl border border-dashed border-border bg-background/40 p-5 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Kada tai naudinga?</p>
+                <ul className="mt-2 list-disc space-y-1 pl-4">
+                  <li>Miesto <b>bendruomenė</b> priima mokinius savanoriauti.</li>
+                  <li>Nauja <b>organizacija</b> nori bendradarbiauti tik su tavo mokykla.</li>
+                  <li>Vienkartinis renginys, kuriam reikia atskiros paskyros.</li>
+                </ul>
+                <p className="mt-3 text-xs">Limitas — 10 paskyrų vienam mokyklos administratoriui. Kredencialus perduodi asmeniškai; vartotojas galės iškart prisijungti ir kurti užduotis.</p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
