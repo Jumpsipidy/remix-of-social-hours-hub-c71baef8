@@ -183,6 +183,7 @@ export type Database = {
           hours_earned: number
           hours_needed: number
           id: string
+          org_category: Database["public"]["Enums"]["org_category"] | null
           organization_name: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
@@ -197,6 +198,7 @@ export type Database = {
           hours_earned?: number
           hours_needed?: number
           id: string
+          org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
@@ -211,6 +213,7 @@ export type Database = {
           hours_earned?: number
           hours_needed?: number
           id?: string
+          org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
@@ -406,6 +409,7 @@ export type Database = {
     }
     Enums: {
       app_role: "student" | "school_admin" | "organization" | "admin"
+      org_category: "organizacija" | "bendruomene"
       reservation_status:
         | "pending"
         | "confirmed"
@@ -540,6 +544,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "school_admin", "organization", "admin"],
+      org_category: ["organizacija", "bendruomene"],
       reservation_status: [
         "pending",
         "confirmed",
