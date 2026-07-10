@@ -161,12 +161,15 @@ export const resetDevData = createServerFn({ method: "POST" })
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Find every dev.local profile (not the calling admin themselves — dev.local suffix protects them)
-    const { data: profs } = await supabaseAdmin.from("profiles").select("id").like("email", "%@dev.local");
+    // Delete every non-admin account (students, organizations, school_admins,
+    // whether real or @dev.local). Admins are preserved so the caller stays signed in.
+    const { data: profs } = await supabaseAdmin
+      .from("profiles")
+      .select("id, role")
+      .neq("role", "admin");
     const ids = (profs ?? []).map((p) => p.id);
     if (ids.length === 0) return { ok: true, cleared: 0 };
 
-    // Delete their reservations + chat/messages first, then auth users (profiles cascade)
     await supabaseAdmin.from("messages").delete().in("sender_id", ids);
     await supabaseAdmin.from("chat_rooms").delete().in("student_id", ids);
     await supabaseAdmin.from("chat_rooms").delete().in("organization_id", ids);
