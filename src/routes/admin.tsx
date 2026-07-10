@@ -289,6 +289,7 @@ function AdminDashboard() {
 
 function CreateAccountPanel() {
   const [role, setRole] = useState<"organization" | "school_admin">("organization");
+  const [orgCategory, setOrgCategory] = useState<"organizacija" | "bendruomene">("organizacija");
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
@@ -306,6 +307,7 @@ function CreateAccountPanel() {
           full_name: fullName.trim() || (role === "organization" ? orgName.trim() : ""),
           role,
           organization_name: role === "organization" ? orgName.trim() : null,
+          org_category: role === "organization" ? orgCategory : null,
         },
       });
       toast.success("Paskyra sukurta");
@@ -321,11 +323,11 @@ function CreateAccountPanel() {
     <div className="mt-6 grid gap-6 lg:grid-cols-2">
       <form onSubmit={submit} className="rounded-2xl border border-border bg-background/60 p-5">
         <h3 className="font-display text-lg font-bold flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /> Sukurti naują paskyrą</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Sukuriamos organizacijos arba mokyklos administratoriaus paskyros. Vartotojas galės iškart prisijungti.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Sukuriamos organizacijos/bendruomenės arba mokyklos administratoriaus paskyros. Vartotojas galės iškart prisijungti.</p>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
           {[
-            { k: "organization", label: "Organizacija", icon: Building2 },
+            { k: "organization", label: "Organizacija/Bendruomenė", icon: Building2 },
             { k: "school_admin", label: "Mokyklos admin.", icon: GraduationCap },
           ].map((r) => {
             const active = role === r.k;
@@ -338,9 +340,26 @@ function CreateAccountPanel() {
           })}
         </div>
 
+        {role === "organization" && (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {[
+              { k: "organizacija", label: "Organizacija" },
+              { k: "bendruomene", label: "Bendruomenė" },
+            ].map((c) => {
+              const active = orgCategory === c.k;
+              return (
+                <button key={c.k} type="button" onClick={() => setOrgCategory(c.k as any)}
+                  className={`rounded-xl border p-2 text-xs font-semibold transition ${active ? "border-primary bg-primary/15 text-primary" : "border-border bg-card/60 hover:border-primary/40"}`}>
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="mt-4 space-y-3">
           {role === "organization" && (
-            <FieldInput label="Organizacijos pavadinimas" value={orgName} onChange={setOrgName} placeholder="Žaliasis Vilnius" required />
+            <FieldInput label={orgCategory === "bendruomene" ? "Bendruomenės pavadinimas" : "Organizacijos pavadinimas"} value={orgName} onChange={setOrgName} placeholder="Pavyzdys" required />
           )}
           <FieldInput label="Kontaktinis asmuo / Vardas Pavardė" value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required={role === "school_admin"} />
           <FieldInput label="El. paštas" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" type="email" required />
