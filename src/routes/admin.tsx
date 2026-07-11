@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
+import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
