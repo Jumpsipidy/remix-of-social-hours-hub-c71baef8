@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
+import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
@@ -54,7 +57,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0, tasks_open: 0, messages_24h: 0 });
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts">("overview");
+  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts" | "manage">("overview");
   const [q, setQ] = useState("");
 
   useEffect(() => {
@@ -169,7 +172,9 @@ function AdminDashboard() {
                 { k: "organizations", label: "Organizacijų reitingas" },
                 { k: "activity", label: "Aktyvumo istorija" },
                 { k: "accounts", label: "Kurti paskyras" },
+                { k: "manage", label: "Valdyti paskyras" },
               ].map((t) => (
+
                 <button key={t.k} onClick={() => setTab(t.k as any)}
                   className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                   {t.label}
@@ -281,6 +286,8 @@ function AdminDashboard() {
           )}
 
           {tab === "accounts" && <CreateAccountPanel />}
+          {tab === "manage" && <ManageAccountsPanel currentUserId={user?.id ?? ""} />}
+
         </div>
       </section>
     </PageShell>
@@ -453,4 +460,106 @@ function AccessRequestsPanel() {
     </div>
   );
 }
+
+function ManageAccountsPanel({ currentUserId }: { currentUserId: string }) {
+  const list = useServerFn(adminListAllAccounts);
+  const del = useServerFn(adminDeleteAccount);
+  const [rows, setRows] = useState<any[]>([]);
+  const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const r = await list();
+      setRows(r.profiles as any[]);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nepavyko įkelti");
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const handleDelete = async (id: string, label: string) => {
+    if (!confirm(`Ištrinti paskyrą „${label}“? Šio veiksmo atšaukti negalima.`)) return;
+    setBusy(id);
+    try {
+      await del({ data: { userId: id } });
+      toast.success("Paskyra ištrinta");
+      setRows((prev) => prev.filter((r) => r.id !== id));
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nepavyko ištrinti");
+    } finally { setBusy(null); }
+  };
+
+  const filtered = rows.filter((r) => {
+    if (roleFilter !== "all" && r.role !== roleFilter) return false;
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (r.email ?? "").toLowerCase().includes(s)
+      || (r.full_name ?? "").toLowerCase().includes(s)
+      || (r.organization_name ?? "").toLowerCase().includes(s);
+  });
+
+  const ROLE_LT: Record<string, string> = { student: "Mokinys", organization: "Organizacija", school_admin: "Mokyklos admin", admin: "Super admin" };
+
+  return (
+    <div className="mt-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti pagal el. paštą, vardą…" className="h-10 w-72 bg-transparent text-sm outline-none" />
+        </div>
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="h-10 rounded-full border border-border bg-background px-3 text-sm">
+          <option value="all">Visos rolės</option>
+          <option value="student">Mokiniai</option>
+          <option value="organization">Organizacijos</option>
+          <option value="school_admin">Mokyklos administratoriai</option>
+          <option value="admin">Super administratoriai</option>
+        </select>
+        <button onClick={refresh} className="h-10 rounded-full border border-border px-4 text-xs font-semibold hover:bg-accent">Atnaujinti</button>
+        <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {rows.length}</span>
+      </div>
+
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <th className="py-3 pr-3">Vardas</th>
+              <th className="py-3 pr-3">El. paštas</th>
+              <th className="py-3 pr-3">Rolė</th>
+              <th className="py-3 pr-3 text-right">Veiksmai</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && <tr><td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">Kraunama…</td></tr>}
+            {!loading && filtered.map((r) => {
+              const isMe = r.id === currentUserId;
+              return (
+                <tr key={r.id} className="border-b border-border/60 hover:bg-accent/40">
+                  <td className="py-3 pr-3 font-medium">{r.organization_name ?? r.full_name ?? "—"}</td>
+                  <td className="py-3 pr-3 text-muted-foreground">{r.email}</td>
+                  <td className="py-3 pr-3"><span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold">{ROLE_LT[r.role] ?? r.role}</span></td>
+                  <td className="py-3 pr-3 text-right">
+                    <button
+                      disabled={busy === r.id || isMe}
+                      onClick={() => handleDelete(r.id, r.organization_name ?? r.full_name ?? r.email ?? r.id)}
+                      className="rounded-lg bg-destructive/15 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/25 disabled:opacity-40"
+                      title={isMe ? "Negali ištrinti savo paskyros" : "Ištrinti paskyrą"}
+                    >
+                      {busy === r.id ? "Trinama…" : isMe ? "Tu pats" : "Ištrinti"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+            {!loading && filtered.length === 0 && <tr><td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">Nieko nerasta.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 
