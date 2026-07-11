@@ -182,3 +182,84 @@ export const resetDevData = createServerFn({ method: "POST" })
     }
     return { ok: true, cleared: ids.length };
   });
+
+// ---- Extra debug helpers -------------------------------------------------
+
+export const createTestAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    role: "student" | "organization" | "school_admin" | "admin";
+    school_id?: string | null;
+  }) => input)
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const suf = randSuffix();
+    let acc: DevAccount;
+    if (data.role === "student") {
+      const n = pick(STUDENT_POOL);
+      acc = { role: "student", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n, hours_needed: 20 };
+    } else if (data.role === "organization") {
+      const o = pick(ORG_POOL);
+      acc = { role: "organization", email: `${slugify(o.org)}.${suf}@dev.local`, password: "DevPass123!", full_name: o.contact, organization_name: o.org };
+    } else if (data.role === "school_admin") {
+      const n = pick(SCHOOL_ADMIN_POOL);
+      acc = { role: "school_admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+    } else {
+      const n = pick(ADMIN_POOL);
+      acc = { role: "admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+    }
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: acc.email, password: acc.password, email_confirm: true,
+      user_metadata: {
+        full_name: acc.full_name, role: acc.role,
+        organization_name: acc.organization_name ?? null,
+        hours_needed: acc.hours_needed ?? 0,
+      },
+    });
+    if (error || !created.user) throw new Error(error?.message ?? "create failed");
+    await supabaseAdmin.from("profiles").upsert({
+      id: created.user.id, email: acc.email, full_name: acc.full_name, role: acc.role,
+      organization_name: acc.organization_name ?? null,
+      hours_needed: acc.hours_needed ?? 0, hours_earned: 0,
+      school_id: data.school_id ?? null,
+    }, { onConflict: "id" });
+    return { ok: true, account: { ...acc, id: created.user.id } };
+  });
+
+export const listSchoolCodes = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin.from("schools").select("id, name, signup_code, is_active").order("name");
+    return { schools: data ?? [] };
+  });
+
+export const testSignupCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { school_id: string; code: string }) => input)
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ok, error } = await supabaseAdmin.rpc("verify_school_signup_code", {
+      _school_id: data.school_id, _code: data.code,
+    });
+    if (error) throw new Error(error.message);
+    return { valid: !!ok };
+  });
+
+export const verifyAccountDeleted = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { userId: string }) => input)
+  .handler(async ({ data, context }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: prof } = await supabaseAdmin.from("profiles").select("id").eq("id", data.userId).maybeSingle();
+    const { data: auth } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+    return {
+      profile_exists: !!prof,
+      auth_exists: !!auth?.user,
+      fully_deleted: !prof && !auth?.user,
+    };
+  });
