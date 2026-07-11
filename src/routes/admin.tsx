@@ -283,6 +283,8 @@ function AdminDashboard() {
           )}
 
           {tab === "accounts" && <CreateAccountPanel />}
+          {tab === "manage" && <ManageAccountsPanel currentUserId={user?.id ?? ""} />}
+
         </div>
       </section>
     </PageShell>
