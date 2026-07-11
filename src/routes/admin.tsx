@@ -169,7 +169,9 @@ function AdminDashboard() {
                 { k: "organizations", label: "Organizacijų reitingas" },
                 { k: "activity", label: "Aktyvumo istorija" },
                 { k: "accounts", label: "Kurti paskyras" },
+                { k: "manage", label: "Valdyti paskyras" },
               ].map((t) => (
+
                 <button key={t.k} onClick={() => setTab(t.k as any)}
                   className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                   {t.label}
