@@ -150,7 +150,7 @@ export function MockTesterPanel() {
                         <div className="truncate text-xs font-semibold">{p.full_name ?? p.email}</div>
                         <div className="truncate text-[10px] text-muted-foreground">{ROLE_LABEL[p.role]} · {p.email}</div>
                       </div>
-                      <button onClick={() => copy(p.email)} title="Kopijuoti el. paštą" className="grid h-7 w-7 place-items-center rounded hover:bg-accent"><Copy className="h-3 w-3" /></button>
+                      <button onClick={() => copy(p.email ?? "")} title="Kopijuoti el. paštą" className="grid h-7 w-7 place-items-center rounded hover:bg-accent"><Copy className="h-3 w-3" /></button>
                       <button onClick={() => handleImpersonate(p)} disabled={busy===p.id} title="Prisijungti" className="grid h-7 w-7 place-items-center rounded hover:bg-accent text-primary"><LogIn className="h-3 w-3" /></button>
                       <button onClick={() => handleDelete(p)} disabled={busy===p.id} title="Ištrinti + verifikuoti" className="grid h-7 w-7 place-items-center rounded hover:bg-destructive/10 text-destructive"><Trash2 className="h-3 w-3" /></button>
                     </div>
