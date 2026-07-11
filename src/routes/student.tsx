@@ -305,14 +305,15 @@ function StudentProfileSetup({ userId }: { userId: string }) {
               <input
                 type="text"
                 value={signupCode}
-                onChange={(e) => setSignupCode(e.target.value.toUpperCase())}
+                onChange={(e) => setSignupCode(e.target.value)}
                 required
-                placeholder="pvz. A1B2C3D4"
+                placeholder="pvz. SEDUVOS2026"
                 className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-mono tracking-wider outline-none focus:border-primary"
               />
               <span className="mt-1 block text-[11px] text-muted-foreground">
-                Kodą gauni iš savo mokyklos administratoriaus. Be jo negalėsi registruotis kaip mokinys.
+                Kodą gauni iš savo mokyklos administratoriaus. Didžiosios/mažosios raidės nesvarbu.
               </span>
+
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Klasė</span>
