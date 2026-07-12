@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
-import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { adminListAllAccounts, adminDeleteAccount, adminPurgeOldMessages, adminWipeAllReservations, adminWipeAllTasks, adminPlatformHealth } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
 
 
