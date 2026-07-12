@@ -638,7 +638,7 @@ function BugReportsPanel() {
   }
   useEffect(() => { load(); }, []);
 
-  async function update(id: string, patch: Partial<BugRow>) {
+  async function update(id: string, patch: { status?: string; admin_note?: string }) {
     const { error } = await supabase.from("bug_reports").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
