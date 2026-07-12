@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       bug_reports: {
         Row: {
+          admin_note: string | null
           created_at: string
           id: string
           message: string
@@ -26,6 +27,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          admin_note?: string | null
           created_at?: string
           id?: string
           message: string
@@ -36,6 +38,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          admin_note?: string | null
           created_at?: string
           id?: string
           message?: string
