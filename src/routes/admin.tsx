@@ -189,7 +189,9 @@ function AdminDashboard() {
             )}
           </div>
 
+          {tab === "overview" && <QuickActions />}
           {tab === "overview" && (
+
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-border bg-background/60 p-5">
                 <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Būsenų suvestinė</h3>
