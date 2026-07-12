@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
-import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { adminListAllAccounts, adminDeleteAccount, adminPurgeOldMessages, adminWipeAllReservations, adminWipeAllTasks, adminPlatformHealth } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
 
 
@@ -189,7 +189,9 @@ function AdminDashboard() {
             )}
           </div>
 
+          {tab === "overview" && <QuickActions />}
           {tab === "overview" && (
+
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-border bg-background/60 p-5">
                 <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Būsenų suvestinė</h3>
@@ -393,6 +395,62 @@ function FieldInput({ label, value, onChange, placeholder, type = "text", requir
     </label>
   );
 }
+
+function QuickActions() {
+  const purge = useServerFn(adminPurgeOldMessages);
+  const wipeRes = useServerFn(adminWipeAllReservations);
+  const wipeTasks = useServerFn(adminWipeAllTasks);
+  const health = useServerFn(adminPlatformHealth);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [snap, setSnap] = useState<any>(null);
+
+  const run = async (key: string, fn: () => Promise<any>, confirmMsg?: string) => {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    setBusy(key);
+    try {
+      const r = await fn();
+      toast.success(`${key}: ${JSON.stringify(r)}`);
+      if (key === "health") setSnap(r);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Klaida");
+    } finally { setBusy(null); }
+  };
+
+  const btn = "inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-2 text-xs font-semibold hover:bg-accent transition disabled:opacity-50";
+  return (
+    <div className="mt-6 rounded-2xl border border-border bg-background/60 p-5">
+      <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Greiti veiksmai</h3>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button disabled={!!busy} className={btn} onClick={() => run("health", () => health())}>
+          {busy === "health" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Activity className="h-3 w-3" />} DB sveikatos patikra
+        </button>
+        <button disabled={!!busy} className={btn} onClick={() => run("purge", () => purge(), "Ištrinti visas žinutes senesnes nei 12 dienų?")}>
+          {busy === "purge" ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3" />} Išvalyti senas žinutes (12d.)
+        </button>
+        <button disabled={!!busy} className={btn} onClick={() => run("res", () => wipeRes(), "IŠTRINTI VISAS rezervacijas iš duomenų bazės?")}>
+          {busy === "res" ? <Loader2 className="h-3 w-3 animate-spin" /> : <ClipboardList className="h-3 w-3" />} Trinti visas rezervacijas
+        </button>
+        <button disabled={!!busy} className={btn} onClick={() => run("tasks", () => wipeTasks(), "IŠTRINTI VISAS užduotis?")}>
+          {busy === "tasks" ? <Loader2 className="h-3 w-3 animate-spin" /> : <ListTodo className="h-3 w-3" />} Trinti visas užduotis
+        </button>
+        <button className={btn} onClick={() => window.location.reload()}>
+          <TrendingUp className="h-3 w-3" /> Perkrauti duomenis
+        </button>
+      </div>
+      {snap && (
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 md:grid-cols-6">
+          {Object.entries(snap).map(([k, v]) => (
+            <div key={k} className="rounded-xl border border-border bg-card/60 px-3 py-2">
+              <div className="text-muted-foreground">{k}</div>
+              <div className="font-bold tabular-nums">{String(v)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 type AccessRequest = {
   id: string;
