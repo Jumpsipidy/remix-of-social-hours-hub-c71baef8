@@ -290,6 +290,8 @@ function AdminDashboard() {
 
           {tab === "accounts" && <CreateAccountPanel />}
           {tab === "manage" && <ManageAccountsPanel currentUserId={user?.id ?? ""} />}
+          {tab === "bugs" && <BugReportsPanel />}
+
 
         </div>
       </section>
