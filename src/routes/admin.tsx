@@ -173,6 +173,7 @@ function AdminDashboard() {
                 { k: "activity", label: "Aktyvumo istorija" },
                 { k: "accounts", label: "Kurti paskyras" },
                 { k: "manage", label: "Valdyti paskyras" },
+                { k: "bugs", label: "Bug pranešimai" },
               ].map((t) => (
 
                 <button key={t.k} onClick={() => setTab(t.k as any)}
