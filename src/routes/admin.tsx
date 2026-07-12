@@ -57,7 +57,7 @@ function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0, tasks_open: 0, messages_24h: 0 });
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts" | "manage">("overview");
+  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts" | "manage" | "bugs">("overview");
   const [q, setQ] = useState("");
 
   useEffect(() => {
