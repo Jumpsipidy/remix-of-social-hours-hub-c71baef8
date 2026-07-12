@@ -30,8 +30,9 @@ export const adminDeleteAccount = createServerFn({ method: "POST" })
     await supabaseAdmin.from("reservations").delete().or(`student_id.eq.${id},organization_id.eq.${id}`);
     await supabaseAdmin.from("tasks").delete().eq("organization_id", id);
     // Bug reports & access requests (best-effort; ignore if tables absent)
-    try { await supabaseAdmin.from("bug_reports").delete().eq("user_id", id); } catch {}
-    try { await supabaseAdmin.from("organization_access_requests").delete().eq("requested_by", id); } catch {}
+    try { await supabaseAdmin.from("bug_reports").delete().eq("reporter_user_id", id); } catch {}
+    try { await supabaseAdmin.from("organization_access_requests").delete().eq("contact_email", (await supabaseAdmin.auth.admin.getUserById(id)).data.user?.email ?? ""); } catch {}
+
     await supabaseAdmin.from("profiles").delete().eq("id", id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
     if (error && !/not.*found/i.test(error.message)) throw new Error(error.message);
