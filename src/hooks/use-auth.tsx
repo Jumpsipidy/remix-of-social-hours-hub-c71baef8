@@ -98,11 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) setProfile(nextProfile);
     };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Ignore TOKEN_REFRESHED / INITIAL_SESSION — they fire on tab focus and
+      // would otherwise reset component state (scroll, form inputs).
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       const u = session?.user ?? null;
-      setUser(u);
+      setUser((prev) => (prev?.id === u?.id ? prev : u));
       if (u) {
-        setLoading(true);
         setTimeout(async () => {
           await loadProfile(u.id);
           if (mounted) setLoading(false);
