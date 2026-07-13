@@ -668,13 +668,15 @@ function BugReportsPanel() {
   return (
     <div className="mt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-          {(["open", "in_progress", "resolved", "all"] as const).map((k) => (
-            <button key={k} onClick={() => setFilter(k)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-              {k === "open" ? "Nauji" : k === "in_progress" ? "Vykdoma" : k === "resolved" ? "Išspręsta" : "Visi"}
-            </button>
-          ))}
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
+            {(["open", "in_progress", "resolved", "all"] as const).map((k) => (
+              <button key={k} onClick={() => setFilter(k)}
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                {k === "open" ? "Nauji" : k === "in_progress" ? "Vykdoma" : k === "resolved" ? "Išspręsta" : "Visi"}
+              </button>
+            ))}
+          </div>
         </div>
         <button onClick={load} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">Atnaujinti</button>
       </div>
