@@ -169,15 +169,17 @@ function TasksPage() {
             {tasks.length} atvirų užduočių iš {allOrgs.length} organizacijų. Filtruok pagal miestą, kategoriją arba raktinius žodžius.
           </p>
 
-          <div className="mt-6 inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
-            <button
-              onClick={() => setTab("tasks")}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "tasks" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
-            >Užduotys</button>
-            <button
-              onClick={() => setTab("orgs")}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
-            >Organizacijos</button>
+          <div className="mt-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
+              <button
+                onClick={() => setTab("tasks")}
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "tasks" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+              >Užduotys</button>
+              <button
+                onClick={() => setTab("orgs")}
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+              >Organizacijos</button>
+            </div>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">

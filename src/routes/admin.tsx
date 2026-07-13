@@ -164,28 +164,29 @@ function AdminDashboard() {
       </section>
 
       <section className="mx-auto mt-8 max-w-7xl px-4 pb-16 sm:px-6">
-        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-              {[
-                { k: "overview", label: "Apžvalga" },
-                { k: "organizations", label: "Organizacijų reitingas" },
-                { k: "activity", label: "Aktyvumo istorija" },
-                { k: "accounts", label: "Kurti paskyras" },
-                { k: "manage", label: "Valdyti paskyras" },
-                { k: "bugs", label: "Bug pranešimai" },
-              ].map((t) => (
-
-                <button key={t.k} onClick={() => setTab(t.k as any)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                  {t.label}
-                </button>
-              ))}
+        <div className="rounded-3xl border border-border bg-gradient-card p-4 shadow-md backdrop-blur sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
+                {[
+                  { k: "overview", label: "Apžvalga" },
+                  { k: "organizations", label: "Organizacijų reitingas" },
+                  { k: "activity", label: "Aktyvumo istorija" },
+                  { k: "accounts", label: "Kurti paskyras" },
+                  { k: "manage", label: "Valdyti paskyras" },
+                  { k: "bugs", label: "Bug pranešimai" },
+                ].map((t) => (
+                  <button key={t.k} onClick={() => setTab(t.k as any)}
+                    className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
             {tab === "organizations" && (
               <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti organizacijos…" className="h-10 w-56 bg-transparent text-sm outline-none" />
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti organizacijos…" className="h-10 w-full min-w-0 bg-transparent text-sm outline-none sm:w-56" />
               </div>
             )}
           </div>
@@ -667,13 +668,15 @@ function BugReportsPanel() {
   return (
     <div className="mt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-          {(["open", "in_progress", "resolved", "all"] as const).map((k) => (
-            <button key={k} onClick={() => setFilter(k)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-              {k === "open" ? "Nauji" : k === "in_progress" ? "Vykdoma" : k === "resolved" ? "Išspręsta" : "Visi"}
-            </button>
-          ))}
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
+            {(["open", "in_progress", "resolved", "all"] as const).map((k) => (
+              <button key={k} onClick={() => setFilter(k)}
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                {k === "open" ? "Nauji" : k === "in_progress" ? "Vykdoma" : k === "resolved" ? "Išspręsta" : "Visi"}
+              </button>
+            ))}
+          </div>
         </div>
         <button onClick={load} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">Atnaujinti</button>
       </div>

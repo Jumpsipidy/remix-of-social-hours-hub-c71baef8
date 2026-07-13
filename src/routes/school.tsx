@@ -144,31 +144,33 @@ function SchoolDashboard() {
       </section>
 
       <section className="mx-auto mt-8 max-w-7xl px-4 pb-16 sm:px-6">
-        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md backdrop-blur">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-              <button onClick={() => setTab("students")}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "students" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                Mokiniai
-              </button>
-              <button onClick={() => setTab("orgs")}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                Organizacijos partneriai
-              </button>
-              <button onClick={() => setTab("events")}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "events" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                Vienkartiniai renginiai
-              </button>
-              <button onClick={() => setTab("accounts")}
-                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "accounts" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                <UserPlus className="mr-1 inline h-3.5 w-3.5" /> Naujos paskyros
-              </button>
+        <div className="rounded-3xl border border-border bg-gradient-card p-4 shadow-md backdrop-blur sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
+                <button onClick={() => setTab("students")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "students" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  Mokiniai
+                </button>
+                <button onClick={() => setTab("orgs")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  Organizacijos partneriai
+                </button>
+                <button onClick={() => setTab("events")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "events" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  Vienkartiniai renginiai
+                </button>
+                <button onClick={() => setTab("accounts")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "accounts" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  <UserPlus className="mr-1 inline h-3.5 w-3.5" /> Naujos paskyros
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
-              <Search className="h-4 w-4 text-muted-foreground" />
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <input value={q} onChange={(e) => setQ(e.target.value)}
                 placeholder={tab === "students" ? "Ieškoti mokinio…" : "Ieškoti organizacijos…"}
-                className="h-10 w-56 bg-transparent text-sm outline-none" />
+                className="h-10 w-full min-w-0 bg-transparent text-sm outline-none sm:w-56" />
             </div>
           </div>
 
