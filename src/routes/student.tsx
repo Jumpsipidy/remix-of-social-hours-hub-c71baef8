@@ -205,7 +205,6 @@ function StudentProfileSetup({ userId }: { userId: string }) {
   const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [fullName, setFullName] = useState("");
   const [schoolId, setSchoolId] = useState("");
-  const [signupCode, setSignupCode] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
   const [busy, setBusy] = useState(false);
@@ -232,25 +231,9 @@ function StudentProfileSetup({ userId }: { userId: string }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!schoolId || !classYear || !fullName.trim() || !signupCode.trim()) return;
+    if (!schoolId || !classYear || !fullName.trim()) return;
     setBusy(true);
     setError(null);
-
-    // Verify signup code matches the selected school (via security-definer RPC)
-    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
-      _school_id: schoolId,
-      _code: signupCode.trim(),
-    });
-    if (rpcErr) {
-      setBusy(false);
-      setError("Nepavyko patikrinti kodo. Pabandyk dar kartą.");
-      return;
-    }
-    if (!ok) {
-      setBusy(false);
-      setError("Neteisingas mokyklos kodas. Gauk jį iš savo mokyklos administratoriaus.");
-      return;
-    }
 
     const { error: updErr } = await supabase
       .from("profiles")
@@ -279,7 +262,7 @@ function StudentProfileSetup({ userId }: { userId: string }) {
           </div>
           <h1 className="mt-5 text-2xl font-bold">Užbaik mokinio profilį</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Patikrink savo vardą, pasirink mokyklą ir įvesk mokyklos kodą, kurį gavai iš mokyklos administratoriaus.
+            Patikrink savo vardą, pasirink mokyklą, klasę ir valandų tikslą. Viskas — jokio papildomo kodo nereikia.
           </p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <label className="block">
@@ -299,21 +282,6 @@ function StudentProfileSetup({ userId }: { userId: string }) {
                 {schools.length === 0 && <option value="">Kraunama…</option>}
                 {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
               </select>
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-muted-foreground">Mokyklos kodas</span>
-              <input
-                type="text"
-                value={signupCode}
-                onChange={(e) => setSignupCode(e.target.value)}
-                required
-                placeholder="pvz. SEDUVOS2026"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-mono tracking-wider outline-none focus:border-primary"
-              />
-              <span className="mt-1 block text-[11px] text-muted-foreground">
-                Kodą gauni iš savo mokyklos administratoriaus. Didžiosios/mažosios raidės nesvarbu.
-              </span>
-
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Klasė</span>
