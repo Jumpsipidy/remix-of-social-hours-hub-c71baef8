@@ -60,9 +60,16 @@ function RegisterPage() {
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (mode === "student" && (!schoolId || !classYear)) {
-      toast.error("Pasirink mokyklą ir klasę.");
-      return;
+    if (mode === "student") {
+      if (!schoolId || !classYear) { toast.error("Pasirink mokyklą ir klasę."); return; }
+      if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
+      if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
+      if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
+      // Verify school code BEFORE creating the account
+      const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+        _school_id: schoolId, _code: schoolCode.trim(),
+      });
+      if (rpcErr || !ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
     setLoading(true);
     try {
@@ -80,7 +87,6 @@ function RegisterPage() {
         },
       });
       if (error) throw error;
-      // Attach school/class for students (profile row was created by trigger)
       if (mode === "student" && signUp.user) {
         await supabase.from("profiles").update({ school_id: schoolId, class_year: classYear }).eq("id", signUp.user.id);
       }
@@ -90,6 +96,7 @@ function RegisterPage() {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");
     } finally { setLoading(false); }
   }
+
 
   async function handleOrgRequest(e: React.FormEvent) {
     e.preventDefault();
