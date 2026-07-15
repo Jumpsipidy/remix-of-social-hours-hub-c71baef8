@@ -207,6 +207,8 @@ function StudentProfileSetup({ userId }: { userId: string }) {
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
+  const [schoolCode, setSchoolCode] = useState("");
+  const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -231,9 +233,33 @@ function StudentProfileSetup({ userId }: { userId: string }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!schoolId || !classYear || !fullName.trim()) return;
-    setBusy(true);
     setError(null);
+    if (!schoolId || !classYear || !fullName.trim()) {
+      setError("Užpildyk visus laukelius.");
+      return;
+    }
+    if (fullName.trim().split(/\s+/).length < 2) {
+      setError("Įvesk tikrą vardą ir pavardę (bent du žodžius).");
+      return;
+    }
+    if (!schoolCode.trim()) {
+      setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo).");
+      return;
+    }
+    if (!agree) {
+      setError("Patvirtink, kad pateikta informacija yra tikra.");
+      return;
+    }
+    setBusy(true);
+    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+      _school_id: schoolId,
+      _code: schoolCode.trim(),
+    });
+    if (rpcErr || !ok) {
+      setBusy(false);
+      setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
+      return;
+    }
 
     const { error: updErr } = await supabase
       .from("profiles")
@@ -253,6 +279,7 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     window.location.reload();
   };
 
+
   return (
     <PageShell>
       <section className="mx-auto max-w-xl px-4 py-16 sm:px-6">
@@ -262,17 +289,20 @@ function StudentProfileSetup({ userId }: { userId: string }) {
           </div>
           <h1 className="mt-5 text-2xl font-bold">Užbaik mokinio profilį</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Patikrink savo vardą, pasirink mokyklą, klasę ir valandų tikslą. Viskas — jokio papildomo kodo nereikia.
+            Kad į platformą nepatektų atsitiktiniai žmonės, prašome įvesti tikrus duomenis ir mokyklos prisijungimo kodą.
           </p>
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
+            🔑 <b>Mokyklos kodą</b> gauk iš savo klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyra nebus aktyvuota.
+          </div>
+          <form onSubmit={submit} className="mt-5 space-y-4">
             <label className="block">
-              <span className="text-xs font-semibold text-muted-foreground">Vardas ir pavardė</span>
+              <span className="text-xs font-semibold text-muted-foreground">Tikras vardas ir pavardė</span>
               <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                placeholder="Vardenis Pavardenis"
+                placeholder="Pvz.: Emilija Kazlauskaitė"
                 className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
               />
             </label>
@@ -291,8 +321,24 @@ function StudentProfileSetup({ userId }: { userId: string }) {
               </select>
             </label>
             <label className="block">
-              <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas</span>
+              <span className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</span>
+              <input
+                type="text"
+                value={schoolCode}
+                onChange={(e) => setSchoolCode(e.target.value)}
+                required
+                autoComplete="off"
+                placeholder="Pvz.: SEDUVOS2026"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas per mokslo metus</span>
               <input type="number" min={1} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(1, Number(e.target.value)))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
+            </label>
+            <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+              <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+              <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje ir pateikti duomenys yra teisingi. Suprantu, kad melagingi duomenys reiškia paskyros pašalinimą.</span>
             </label>
             {error && (
               <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -300,9 +346,10 @@ function StudentProfileSetup({ userId }: { userId: string }) {
               </div>
             )}
             <button disabled={busy} className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
-              {busy ? "Saugoma…" : "Išsaugoti ir tęsti"}
+              {busy ? "Tikrinama…" : "Patvirtinti ir tęsti"}
             </button>
           </form>
+
         </div>
       </section>
     </PageShell>

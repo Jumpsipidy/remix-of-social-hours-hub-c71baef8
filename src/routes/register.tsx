@@ -36,6 +36,9 @@ function RegisterPage() {
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
+  const [schoolCode, setSchoolCode] = useState("");
+  const [agree, setAgree] = useState(false);
+
 
   // Org request
   const [orgName, setOrgName] = useState("");
@@ -57,9 +60,16 @@ function RegisterPage() {
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (mode === "student" && (!schoolId || !classYear)) {
-      toast.error("Pasirink mokyklą ir klasę.");
-      return;
+    if (mode === "student") {
+      if (!schoolId || !classYear) { toast.error("Pasirink mokyklą ir klasę."); return; }
+      if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
+      if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
+      if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
+      // Verify school code BEFORE creating the account
+      const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+        _school_id: schoolId, _code: schoolCode.trim(),
+      });
+      if (rpcErr || !ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
     setLoading(true);
     try {
@@ -77,7 +87,6 @@ function RegisterPage() {
         },
       });
       if (error) throw error;
-      // Attach school/class for students (profile row was created by trigger)
       if (mode === "student" && signUp.user) {
         await supabase.from("profiles").update({ school_id: schoolId, class_year: classYear }).eq("id", signUp.user.id);
       }
@@ -87,6 +96,7 @@ function RegisterPage() {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");
     } finally { setLoading(false); }
   }
+
 
   async function handleOrgRequest(e: React.FormEvent) {
     e.preventDefault();
@@ -234,8 +244,20 @@ function RegisterPage() {
                         <span className="text-sm text-muted-foreground">val. per mokslo metus</span>
                       </div>
                     </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</label>
+                      <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
+                        autoComplete="off" placeholder="Pvz.: SEDUVOS2026"
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary" />
+                      <p className="mt-1 text-[11px] text-muted-foreground">🔑 Gauk iš klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyros neaktyvuosime.</p>
+                    </div>
+                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-[11px] text-muted-foreground">
+                      <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+                      <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje ir pateikti duomenys yra teisingi. Melagingi duomenys — paskyros pašalinimas.</span>
+                    </label>
                   </>
                 )}
+
 
                 <Field label="El. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" required />
                 <Field label="Slaptažodis" icon={Lock} type="password" value={password} onChange={setPassword} placeholder="Bent 8 simboliai" required />

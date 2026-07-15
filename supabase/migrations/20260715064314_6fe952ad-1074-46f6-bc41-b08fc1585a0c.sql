@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.verify_school_signup_code(uuid, text) TO anon, authenticated, service_role;
