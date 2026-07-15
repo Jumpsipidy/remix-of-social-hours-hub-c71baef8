@@ -244,8 +244,20 @@ function RegisterPage() {
                         <span className="text-sm text-muted-foreground">val. per mokslo metus</span>
                       </div>
                     </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</label>
+                      <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
+                        autoComplete="off" placeholder="Pvz.: SEDUVOS2026"
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary" />
+                      <p className="mt-1 text-[11px] text-muted-foreground">🔑 Gauk iš klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyros neaktyvuosime.</p>
+                    </div>
+                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-[11px] text-muted-foreground">
+                      <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
+                      <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje ir pateikti duomenys yra teisingi. Melagingi duomenys — paskyros pašalinimas.</span>
+                    </label>
                   </>
                 )}
+
 
                 <Field label="El. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" required />
                 <Field label="Slaptažodis" icon={Lock} type="password" value={password} onChange={setPassword} placeholder="Bent 8 simboliai" required />
