@@ -36,6 +36,9 @@ function RegisterPage() {
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
+  const [schoolCode, setSchoolCode] = useState("");
+  const [agree, setAgree] = useState(false);
+
 
   // Org request
   const [orgName, setOrgName] = useState("");
