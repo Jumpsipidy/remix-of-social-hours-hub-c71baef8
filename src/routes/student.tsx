@@ -207,6 +207,8 @@ function StudentProfileSetup({ userId }: { userId: string }) {
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
+  const [schoolCode, setSchoolCode] = useState("");
+  const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -231,9 +233,33 @@ function StudentProfileSetup({ userId }: { userId: string }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!schoolId || !classYear || !fullName.trim()) return;
-    setBusy(true);
     setError(null);
+    if (!schoolId || !classYear || !fullName.trim()) {
+      setError("Užpildyk visus laukelius.");
+      return;
+    }
+    if (fullName.trim().split(/\s+/).length < 2) {
+      setError("Įvesk tikrą vardą ir pavardę (bent du žodžius).");
+      return;
+    }
+    if (!schoolCode.trim()) {
+      setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo).");
+      return;
+    }
+    if (!agree) {
+      setError("Patvirtink, kad pateikta informacija yra tikra.");
+      return;
+    }
+    setBusy(true);
+    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
+      _school_id: schoolId,
+      _code: schoolCode.trim(),
+    });
+    if (rpcErr || !ok) {
+      setBusy(false);
+      setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
+      return;
+    }
 
     const { error: updErr } = await supabase
       .from("profiles")
@@ -252,6 +278,7 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     }
     window.location.reload();
   };
+
 
   return (
     <PageShell>
