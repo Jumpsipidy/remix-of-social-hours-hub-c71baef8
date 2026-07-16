@@ -29,6 +29,7 @@ type AuthState = {
   loading: boolean;
   signOut: () => Promise<void>;
   impersonate: (profile: Profile) => void;
+  impersonateReal: (email: string, password: string) => Promise<void>;
   clearImpersonation: () => void;
 };
 
@@ -145,6 +146,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       impersonate: (p: Profile) => {
         try { localStorage.setItem(MOCK_KEY, JSON.stringify({ profile: p })); } catch {}
         setMock({ user: makeMockUser(p), profile: p });
+      },
+      impersonateReal: async (email: string, password: string) => {
+        try { localStorage.removeItem(MOCK_KEY); } catch {}
+        setMock(null);
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
       },
       clearImpersonation: () => {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
