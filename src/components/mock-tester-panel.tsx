@@ -87,13 +87,24 @@ export function MockTesterPanel() {
     } catch (e: any) { toast.error(e?.message ?? "Klaida"); }
     finally { setBusy(null); }
   };
-  const handleCreateOne = async (role: "student" | "organization" | "school_admin" | "admin") => {
+  const handleCreateOne = async (role: "student" | "organization" | "school_admin" | "admin", andLogin = false) => {
     setBusy("create-" + role);
     try {
       const r = await createOne({ data: { role } });
       setLastCreated({ email: r.account.email, password: r.account.password, role: r.account.role, id: r.account.id });
-      toast.success("Sukurta – kredencialai apačioje");
       await refresh();
+      if (andLogin) {
+        const { profiles } = await list();
+        const created = (profiles as Profile[]).find(p => p.id === r.account.id);
+        if (created) {
+          impersonate(created);
+          toast.success(`Sukurta + prisijungta kaip ${ROLE_LABEL[role]}`);
+          navigate({ to: DASH_BY_ROLE[role] ?? "/" });
+          setOpen(false);
+          return;
+        }
+      }
+      toast.success("Sukurta – kredencialai apačioje");
     } catch (e: any) { toast.error(e?.message ?? "Nepavyko"); }
     finally { setBusy(null); }
   };
