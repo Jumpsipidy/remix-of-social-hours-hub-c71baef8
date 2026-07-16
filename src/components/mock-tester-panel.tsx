@@ -178,13 +178,20 @@ export function MockTesterPanel() {
 
             {tab === "create" && (
               <>
-                <p className="text-[11px] text-muted-foreground">Sukurk vieną paskyrą su atsitiktine tapatybe. Slaptažodis: <code className="rounded bg-muted px-1">DevPass123!</code></p>
-                <div className="grid grid-cols-2 gap-2">
+                <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis: <code className="rounded bg-muted px-1">DevPass123!</code></p>
+                <div className="space-y-2">
                   {(["student","organization","school_admin","admin"] as const).map(r => (
-                    <button key={r} onClick={() => handleCreateOne(r)} disabled={busy===`create-${r}`}
-                      className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-accent disabled:opacity-50">
-                      <UserPlus className="h-3.5 w-3.5" />{ROLE_LABEL[r]}
-                    </button>
+                    <div key={r} className="flex gap-1.5">
+                      <button onClick={() => handleCreateOne(r, true)} disabled={!!busy}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-glow disabled:opacity-50">
+                        <LogIn className="h-3.5 w-3.5" /> Sukurti + Login: {ROLE_LABEL[r]}
+                      </button>
+                      <button onClick={() => handleCreateOne(r, false)} disabled={!!busy}
+                        title="Tik sukurti, be prisijungimo"
+                        className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-accent disabled:opacity-50">
+                        <UserPlus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   ))}
                 </div>
                 {lastCreated && (
