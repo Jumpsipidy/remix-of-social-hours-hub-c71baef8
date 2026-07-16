@@ -72,8 +72,22 @@ export function MockTesterPanel() {
     finally { setBusy(null); }
   };
   const handleImpersonate = async (p: Profile) => {
-    impersonate(p); toast.success(`Prisijungta kaip ${ROLE_LABEL[p.role]}`);
-    navigate({ to: DASH_BY_ROLE[p.role] ?? "/" }); setOpen(false);
+    setBusy(p.id);
+    try {
+      // Real sign-in so RLS treats us as this user (hours, chat, reservations work).
+      // All debug accounts share DevPass123!. Falls back to mock if password differs.
+      if (p.email?.endsWith("@dev.local")) {
+        await impersonateReal(p.email, "DevPass123!");
+        toast.success(`Prisijungta kaip ${ROLE_LABEL[p.role]} (tikra sesija)`);
+      } else {
+        impersonate(p);
+        toast.success(`Mock: ${ROLE_LABEL[p.role]} (be RLS)`);
+      }
+      navigate({ to: DASH_BY_ROLE[p.role] ?? "/" });
+      setOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Nepavyko prisijungti");
+    } finally { setBusy(null); }
   };
   const handleDelete = async (p: Profile) => {
     if (!confirm(`Ištrinti ${p.email} ir patikrinti?`)) return;
@@ -94,15 +108,11 @@ export function MockTesterPanel() {
       setLastCreated({ email: r.account.email, password: r.account.password, role: r.account.role, id: r.account.id });
       await refresh();
       if (andLogin) {
-        const { profiles } = await list();
-        const created = (profiles as Profile[]).find(p => p.id === r.account.id);
-        if (created) {
-          impersonate(created);
-          toast.success(`Sukurta + prisijungta kaip ${ROLE_LABEL[role]}`);
-          navigate({ to: DASH_BY_ROLE[role] ?? "/" });
-          setOpen(false);
-          return;
-        }
+        await impersonateReal(r.account.email, r.account.password);
+        toast.success(`Sukurta + prisijungta kaip ${ROLE_LABEL[role]}`);
+        navigate({ to: DASH_BY_ROLE[role] ?? "/" });
+        setOpen(false);
+        return;
       }
       toast.success("Sukurta – kredencialai apačioje");
     } catch (e: any) { toast.error(e?.message ?? "Nepavyko"); }
