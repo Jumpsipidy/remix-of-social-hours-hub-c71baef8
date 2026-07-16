@@ -29,6 +29,7 @@ type AuthState = {
   loading: boolean;
   signOut: () => Promise<void>;
   impersonate: (profile: Profile) => void;
+  impersonateReal: (email: string, password: string) => Promise<void>;
   clearImpersonation: () => void;
 };
 
