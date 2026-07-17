@@ -52,6 +52,32 @@ function Home() {
     })();
     return () => { alive = false; };
   }, []);
+
+  const { profile, isAuthenticated } = useAuth();
+  const isStudent = isAuthenticated && profile?.role === "student";
+  const myEarned = isStudent ? Math.round(profile?.hours_earned ?? 0) : 0;
+  const myNeeded = isStudent ? Math.max(profile?.hours_needed ?? 0, 1) : 20;
+  const myPct = isStudent ? Math.min(100, Math.round((myEarned / myNeeded) * 100)) : 0;
+
+  const [myPlanned, setMyPlanned] = useState(0);
+  const [myCompleted, setMyCompleted] = useState(0);
+  useEffect(() => {
+    if (!isStudent || !profile?.id) { setMyPlanned(0); setMyCompleted(0); return; }
+    let alive = true;
+    (async () => {
+      const [p, c] = await Promise.all([
+        supabase.from("reservations").select("id", { count: "exact", head: true })
+          .eq("student_id", profile.id).in("status", ["pending", "approved"]),
+        supabase.from("reservations").select("id", { count: "exact", head: true })
+          .eq("student_id", profile.id).eq("status", "completed"),
+      ]);
+      if (!alive) return;
+      setMyPlanned(p.count ?? 0);
+      setMyCompleted(c.count ?? 0);
+    })();
+    return () => { alive = false; };
+  }, [isStudent, profile?.id]);
+
   const fmt = (n: number) => new Intl.NumberFormat("lt-LT").format(n);
 
   return (
