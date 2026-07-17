@@ -149,8 +149,17 @@ function Home() {
                   <div className="relative rounded-3xl border border-border bg-gradient-card/90 p-6 shadow-elegant backdrop-blur-xl">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-muted-foreground">Tavo pažanga</p>
-                        <p className="mt-1 font-display text-3xl font-bold">0 / 20 val.</p>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                          {isStudent ? "Tavo pažanga" : "Pavyzdinė pažanga"}
+                        </p>
+                        <p className="mt-1 font-display text-3xl font-bold">
+                          {myEarned} / {myNeeded} val.
+                        </p>
+                        {!isStudent && (
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            Prisijunk, kad matytum savo skaičius
+                          </p>
+                        )}
                       </div>
                       <motion.div
                         animate={{ rotate: [0, 8, -8, 0] }}
@@ -162,14 +171,14 @@ function Home() {
                     </div>
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
                       <motion.div
-                        initial={{ width: 0 }} animate={{ width: "0%" }} transition={{ duration: 1.2, delay: 0.6, ease: "easeOut" }}
+                        initial={{ width: 0 }} animate={{ width: `${myPct}%` }} transition={{ duration: 1.2, delay: 0.6, ease: "easeOut" }}
                         className="h-full rounded-full bg-gradient-primary"
                       />
                     </div>
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       {[
-                        { label: "Užbaigta", value: "0 val." },
-                        { label: "Suplanuota", value: "0 vizitai" },
+                        { label: "Užbaigta", value: `${myCompleted} vizit.` },
+                        { label: "Suplanuota", value: `${myPlanned} vizit.` },
                       ].map((s)=>(
                         <div key={s.label} className="rounded-2xl border border-border bg-background/50 p-4 backdrop-blur">
                           <p className="text-xs text-muted-foreground">{s.label}</p>
