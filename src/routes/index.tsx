@@ -5,6 +5,7 @@ import { PageShell } from "../components/layout";
 import { TiltCard } from "../components/tilt-card";
 import { organizations } from "../lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Sparkles, Search, CalendarCheck, Award, ArrowRight, Star, Users, Clock, Building2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
