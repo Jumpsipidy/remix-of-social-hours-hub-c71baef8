@@ -26,6 +26,8 @@ function AccountsPage() {
   );
 }
 
+const ALL_CLASSES = ["5", "6", "7", "8", "9", "10", "11", "12"];
+
 function CreateAccountPanel() {
   const [role, setRole] = useState<"organization" | "school_admin">("organization");
   const [orgCategory, setOrgCategory] = useState<"organizacija" | "bendruomene">("organizacija");
@@ -33,7 +35,15 @@ function CreateAccountPanel() {
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [assignedClasses, setAssignedClasses] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
+  const toggleClass = (c: string) => {
+    setAssignedClasses((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+  };
+  const toggleAll = () => {
+    setAssignedClasses((prev) => (prev.length === ALL_CLASSES.length ? [] : [...ALL_CLASSES]));
+  };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +57,7 @@ function CreateAccountPanel() {
           role,
           organization_name: role === "organization" ? orgName.trim() : null,
           org_category: role === "organization" ? orgCategory : null,
+          assigned_classes: role === "school_admin" ? assignedClasses : null,
         },
       });
       toast.success("Paskyra sukurta");
@@ -54,12 +65,14 @@ function CreateAccountPanel() {
       setOrgName("");
       setEmail("");
       setPassword("");
+      setAssignedClasses([]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti");
     } finally {
       setBusy(false);
     }
   }
+
 
   return (
     <form onSubmit={submit} className="rounded-2xl border border-border bg-card/70 p-5 shadow-md backdrop-blur">
