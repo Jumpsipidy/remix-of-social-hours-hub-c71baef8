@@ -79,7 +79,7 @@ function RegisterPage() {
       if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
       const rule = hoursRuleFor(classYear);
-      const effectiveHours = rule.locked ? rule.min : Math.max(rule.min, hoursNeeded);
+      if (!rule.locked && hoursNeeded < rule.min) { toast.error(`8+ klasėms — min. ${rule.min} val.`); return; }
       const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
       if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
