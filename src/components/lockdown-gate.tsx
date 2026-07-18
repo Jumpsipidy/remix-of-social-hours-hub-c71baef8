@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, Lock, ShieldCheck, X, ExternalLink, Copy, Check, AlertTriangle, Radio } from "lucide-react";
+import { RefreshCw, X, ExternalLink, Copy, Check, ShieldCheck } from "lucide-react";
 import { readSiteSettings } from "@/lib/site-settings";
 import { getLockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken } from "@/lib/lockdown-bypass.functions";
@@ -14,31 +14,19 @@ const ALLOWED_PATHS = ["/status"];
 
 const SEVERITY = {
   info: {
-    hue: "#60a5fa",
-    ring: "border-sky-400/30",
-    text: "text-sky-100",
-    dot: "bg-sky-400",
-    glow: "shadow-[0_0_60px_-15px_rgba(96,165,250,0.55)]",
-    label: "Techninė priežiūra",
-    stripes: "from-sky-500/0 via-sky-500/30 to-sky-500/0",
+    accent: "#4a6b8a",
+    label: "Pranešimas",
+    kicker: "Techninė priežiūra",
   },
   warn: {
-    hue: "#f59e0b",
-    ring: "border-amber-400/40",
-    text: "text-amber-100",
-    dot: "bg-amber-400",
-    glow: "shadow-[0_0_60px_-15px_rgba(245,158,11,0.6)]",
-    label: "Sistemos gedimas",
-    stripes: "from-amber-500/0 via-amber-500/35 to-amber-500/0",
+    accent: "#a67c3a",
+    label: "Įspėjimas",
+    kicker: "Sistemos gedimas",
   },
   critical: {
-    hue: "#ef4444",
-    ring: "border-red-500/50",
-    text: "text-red-100",
-    dot: "bg-red-500",
-    glow: "shadow-[0_0_80px_-15px_rgba(239,68,68,0.7)]",
-    label: "Kritinis įvykis",
-    stripes: "from-red-600/0 via-red-500/45 to-red-600/0",
+    accent: "#9b3535",
+    label: "Kritinis pranešimas",
+    kicker: "Sistemos incidentas",
   },
 } as const;
 
@@ -58,11 +46,11 @@ export function LockdownGate() {
     typeof window !== "undefined" ? window.location.pathname : "/"
   );
   const [autoTick, setAutoTick] = useState(60);
+  const [now, setNow] = useState<string>(() => new Date().toISOString().slice(11, 19));
   const bufferRef = useRef("");
   const verifyToken = useServerFn(verifyBypassToken);
   const submitCodeFn = useServerFn(verifyBypassCode);
 
-  // Verify stored bypass token server-side on mount
   useEffect(() => {
     let alive = true;
     const t = (() => { try { return sessionStorage.getItem(BYPASS_TOKEN_KEY); } catch { return null; } })();
@@ -73,7 +61,6 @@ export function LockdownGate() {
     return () => { alive = false; };
   }, [verifyToken]);
 
-  // Track pathname changes
   useEffect(() => {
     const update = () => setPathname(window.location.pathname);
     window.addEventListener("popstate", update);
@@ -81,8 +68,6 @@ export function LockdownGate() {
     return () => { window.removeEventListener("popstate", update); clearInterval(int); };
   }, []);
 
-  // Initial read; then a 60s poll (NO realtime auto-hide — user must trigger a
-  // refresh, but that refresh happens automatically every minute).
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -98,7 +83,6 @@ export function LockdownGate() {
     return () => { mounted = false; clearInterval(poll); };
   }, []);
 
-  // Countdown to next auto-refresh (60s), then trigger runCheck
   useEffect(() => {
     if (!lockdown || bypassed) return;
     setAutoTick(60);
@@ -112,7 +96,11 @@ export function LockdownGate() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lockdown, bypassed]);
 
-  // Trigger word listener
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date().toISOString().slice(11, 19)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   useEffect(() => {
     if (!lockdown || bypassed) return;
     const onKey = (e: KeyboardEvent) => {
@@ -135,7 +123,6 @@ export function LockdownGate() {
   const severity = errInfo?.severity ?? "warn";
   const s = SEVERITY[severity];
   const displayCode = errInfo?.code ?? codeId ?? "E-0000";
-  const codeChars = displayCode.split("");
 
   const submitCode = async () => {
     if (codeChecking) return;
@@ -163,8 +150,7 @@ export function LockdownGate() {
     setRefreshOk(null);
     try {
       const { data, error } = await readSiteSettings();
-      // small dramatic pause
-      await new Promise((r) => setTimeout(r, auto ? 400 : 1100));
+      await new Promise((r) => setTimeout(r, auto ? 400 : 900));
       if (!error && !data?.lockdown_enabled) {
         setLockdown(false);
         setRefreshOk(true);
@@ -185,236 +171,209 @@ export function LockdownGate() {
     try { await navigator.clipboard.writeText(displayCode); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
   };
 
+  const fade = (delay = 0) => ({
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  });
+
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[#08070a] text-white">
-      {/* Deep vignette + colored halo based on severity */}
-      <div className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute left-1/2 top-1/2 h-[900px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-          style={{ background: `radial-gradient(circle, ${s.hue}33, transparent 60%)` }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.85)_80%)]" />
-      </div>
-
-      {/* Alert candy-stripe bars top & bottom */}
-      <motion.div
-        aria-hidden
-        initial={{ backgroundPositionX: 0 }}
-        animate={{ backgroundPositionX: 80 }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-x-0 top-0 h-2"
-        style={{
-          background:
-            `repeating-linear-gradient(45deg, ${s.hue} 0 12px, transparent 12px 24px)`,
-          opacity: 0.7,
-        }}
-      />
-      <motion.div
-        aria-hidden
-        initial={{ backgroundPositionX: 0 }}
-        animate={{ backgroundPositionX: -80 }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-x-0 bottom-0 h-2"
-        style={{
-          background:
-            `repeating-linear-gradient(45deg, ${s.hue} 0 12px, transparent 12px 24px)`,
-          opacity: 0.7,
-        }}
-      />
-
-      {/* Scanline sweep */}
-      <motion.div
-        aria-hidden
-        initial={{ y: "-100%" }}
-        animate={{ y: "120%" }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: "linear" }}
-        className={`pointer-events-none absolute left-0 right-0 h-40 bg-gradient-to-b ${s.stripes}`}
-      />
-
-      {/* Faint grid */}
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#0e0d0c] text-[#e8e4dd]">
+      {/* Subtle paper grain */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-          maskImage: "radial-gradient(ellipse at center, #000 45%, transparent 85%)",
-          WebkitMaskImage: "radial-gradient(ellipse at center, #000 45%, transparent 85%)",
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+        }}
+      />
+      {/* Very soft warm vignette */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 30%, rgba(212,182,140,0.05), transparent 60%)," +
+            "radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.6), transparent 65%)",
         }}
       />
 
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5 py-10">
-        {/* Top badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className={`mb-8 inline-flex items-center gap-2 rounded-full border ${s.ring} bg-white/[0.03] px-4 py-1.5 backdrop-blur-xl ${s.glow}`}
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[880px] flex-col px-6 py-10 sm:px-10 sm:py-14">
+        {/* Header rule */}
+        <motion.header
+          {...fade(0)}
+          className="flex items-center justify-between border-b border-white/12 pb-5"
         >
-          <motion.span
-            animate={{ scale: [1, 1.25, 1], opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-            className={`inline-flex h-2 w-2 rounded-full ${s.dot}`}
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 bg-white/[0.03] font-display text-sm font-semibold tracking-tight text-white">
+              SV
+            </div>
+            <div className="leading-tight">
+              <div className="font-display text-[15px] text-white/95">Socialinės Valandos</div>
+              <div className="text-[10px] uppercase tracking-[0.28em] text-white/45">Sistemos būklės pranešimas</div>
+            </div>
+          </div>
+          <div className="hidden items-center gap-2 font-mono text-[11px] text-white/50 sm:flex">
+            <motion.span
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 2.2, repeat: Infinity }}
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: s.accent }}
+            />
+            <span>UTC {now}</span>
+          </div>
+        </motion.header>
+
+        {/* Kicker + severity label */}
+        <motion.div {...fade(0.05)} className="mt-12 flex items-baseline gap-4">
+          <span
+            className="inline-block h-px w-10"
+            style={{ background: s.accent }}
           />
-          <span className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${s.text}`}>
-            <AlertTriangle className="mr-1 inline h-3 w-3 -translate-y-[1px]" />
+          <span
+            className="text-[11px] font-medium uppercase tracking-[0.32em]"
+            style={{ color: s.accent }}
+          >
             {s.label}
           </span>
+          <span className="text-[11px] uppercase tracking-[0.28em] text-white/40">{s.kicker}</span>
         </motion.div>
 
-        {/* Giant error code */}
-        <motion.button
-          onClick={copyCode}
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="group relative select-none"
-          title="Kopijuoti kodą"
-        >
-          {/* pulsing halo behind code */}
-          <motion.div
-            aria-hidden
-            animate={{ opacity: [0.25, 0.55, 0.25], scale: [0.95, 1.02, 0.95] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-0 -z-10 rounded-full blur-3xl"
-            style={{ background: `radial-gradient(circle, ${s.hue}55, transparent 70%)` }}
-          />
-          <div className="relative flex items-center justify-center gap-1 sm:gap-2">
-            {codeChars.map((ch, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 30, filter: "blur(6px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.1 + i * 0.06, duration: 0.55, ease: "easeOut" }}
-                className={`font-display font-bold leading-none tracking-tight ${
-                  ch === "-"
-                    ? "text-6xl sm:text-8xl md:text-9xl text-white/25"
-                    : "text-7xl sm:text-9xl md:text-[11rem]"
-                }`}
-                style={ch !== "-" ? {
-                  color: s.hue,
-                  textShadow: `0 0 40px ${s.hue}66, 0 0 12px ${s.hue}aa`,
-                } : undefined}
-              >
-                {ch}
-              </motion.span>
-            ))}
-          </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.32em] text-white/40 group-hover:text-white/70"
-          >
-            {copied ? <><Check className="h-3 w-3" /> Nukopijuota</> : <><Copy className="h-3 w-3" /> Kopijuoti kodą</>}
-          </motion.div>
-        </motion.button>
-
-        {/* Title */}
+        {/* Editorial serif headline */}
         <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55, duration: 0.5 }}
-          className="mt-10 max-w-2xl text-balance text-center font-display text-2xl font-semibold tracking-tight text-white sm:text-3xl"
+          {...fade(0.12)}
+          className="mt-5 max-w-[720px] font-display text-[40px] font-normal leading-[1.05] tracking-[-0.02em] text-white sm:text-[56px]"
+          style={{ fontFamily: "Fraunces, Georgia, serif" }}
         >
           {errInfo?.title ?? "Sistema laikinai neveikia"}
         </motion.h1>
+
+        {/* Body copy */}
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          className="mt-4 max-w-xl text-center text-[15px] leading-relaxed text-white/60"
+          {...fade(0.2)}
+          className="mt-6 max-w-[620px] text-[17px] leading-[1.65] text-white/70"
         >
-          {message?.trim() || errInfo?.description || "Šiuo metu tvarkome sistemą. Grįžk po kelių minučių."}
+          {message?.trim() || errInfo?.description ||
+            "Šiuo metu tvarkome sistemą. Grįžk po kelių minučių — jokie tavo duomenys nebus prarasti."}
         </motion.p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.85, duration: 0.5 }}
-          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.24em] text-white/40"
+        {/* Data grid: code / eta / auto refresh */}
+        <motion.dl
+          {...fade(0.28)}
+          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-6 border-y border-white/10 py-6 sm:grid-cols-3"
         >
-          {errInfo?.eta && (<span>Trukmė · <strong className="text-white/75">{errInfo.eta}</strong></span>)}
-          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Duomenys saugūs</span>
-          <span className="inline-flex items-center gap-1.5">
-            <Radio className="h-3.5 w-3.5" /> Auto: <strong className="text-white/70 tabular-nums">{autoTick}s</strong>
-          </span>
-        </motion.div>
+          <div>
+            <dt className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/40">
+              Klaidos kodas
+            </dt>
+            <dd className="mt-2 flex items-center gap-2">
+              <button
+                onClick={copyCode}
+                className="group inline-flex items-center gap-2 rounded-sm border border-white/15 bg-white/[0.03] px-2.5 py-1 font-mono text-[15px] tracking-[0.08em] text-white transition hover:border-white/35 hover:bg-white/[0.06]"
+                title="Kopijuoti kodą"
+                style={{ borderLeft: `2px solid ${s.accent}` }}
+              >
+                {displayCode}
+                <span className="text-white/40 group-hover:text-white/70">
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                </span>
+              </button>
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/40">
+              Numatoma trukmė
+            </dt>
+            <dd className="mt-2 font-display text-[17px] text-white/90">
+              {errInfo?.eta ?? "nežinoma"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-medium uppercase tracking-[0.28em] text-white/40">
+              Kitas automatinis patikrinimas
+            </dt>
+            <dd className="mt-2 flex items-center gap-2 font-display text-[17px] text-white/90">
+              <span className="tabular-nums">{autoTick}s</span>
+              <span
+                aria-hidden
+                className="relative h-1 w-16 overflow-hidden rounded-full bg-white/8"
+              >
+                <motion.span
+                  key={autoTick}
+                  initial={{ scaleX: 1 }}
+                  animate={{ scaleX: 0 }}
+                  transition={{ duration: 1, ease: "linear" }}
+                  className="absolute inset-y-0 left-0 w-full origin-left rounded-full"
+                  style={{ background: s.accent }}
+                />
+              </span>
+            </dd>
+          </div>
+        </motion.dl>
 
         {/* Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 0.5 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3"
-        >
+        <motion.div {...fade(0.36)} className="mt-10 flex flex-wrap items-center gap-3">
           <button
             onClick={() => runCheck(false)}
             disabled={refreshing}
-            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-6 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-70"
+            className="group relative inline-flex items-center gap-2.5 rounded-sm bg-white px-5 py-3 text-sm font-medium tracking-tight text-[#0e0d0c] transition hover:bg-white/90 disabled:opacity-70"
           >
-            <span
-              aria-hidden
-              className="absolute inset-0 -z-0 opacity-0 transition group-hover:opacity-100"
-              style={{ background: `radial-gradient(120px 60px at var(--x,50%) var(--y,50%), ${s.hue}22, transparent 60%)` }}
-            />
             <motion.span
               animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
-              transition={refreshing
-                ? { duration: 0.75, repeat: Infinity, ease: "linear" }
-                : { type: "spring", stiffness: 200, damping: 15 }}
-              className="relative inline-flex"
+              transition={
+                refreshing
+                  ? { duration: 0.9, repeat: Infinity, ease: "linear" }
+                  : { type: "spring", stiffness: 180, damping: 14 }
+              }
+              className="inline-flex"
             >
               <RefreshCw className="h-4 w-4" />
             </motion.span>
-            <span className="relative">{refreshing ? "Tikrinama sistema…" : "Patikrinti dar kartą"}</span>
-            {refreshing && (
-              <motion.span
-                aria-hidden
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-y-0 left-0 w-1/3"
-                style={{ background: `linear-gradient(90deg, transparent, ${s.hue}55, transparent)` }}
-              />
-            )}
+            {refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
           </button>
 
           <a
             href="/status"
-            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-6 py-3 text-sm font-medium text-white/80 backdrop-blur transition hover:bg-white/[0.07] hover:text-white"
+            className="inline-flex items-center gap-2 rounded-sm border border-white/15 bg-transparent px-5 py-3 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white"
           >
             Klaidų kodų gidas <ExternalLink className="h-3.5 w-3.5" />
           </a>
+
+          <AnimatePresence>
+            {refreshOk === false && (
+              <motion.span
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-xs text-white/60"
+              >
+                Sistema vis dar neveikia — pabandyk po minutės.
+              </motion.span>
+            )}
+            {refreshOk === true && (
+              <motion.span
+                initial={{ opacity: 0, x: -4 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-300/90"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" /> Sistema veikia. Grįžtame.
+              </motion.span>
+            )}
+          </AnimatePresence>
         </motion.div>
 
-        <AnimatePresence>
-          {refreshOk === false && (
-            <motion.span
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-amber-200/90"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" /> Sistema vis dar neveikia. Netrukus.
-            </motion.span>
-          )}
-          {refreshOk === true && (
-            <motion.span
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-emerald-300"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" /> Viskas veikia — grįžtame!
-            </motion.span>
-          )}
-        </AnimatePresence>
-
-        <div className="absolute bottom-6 left-0 right-0 mx-auto flex max-w-2xl items-center justify-between px-6 text-[10px] uppercase tracking-widest text-white/25">
-          <span className="inline-flex items-center gap-2"><Lock className="h-3 w-3" /> Socialinės Valandos</span>
-          <span className="font-mono">status · {new Date().toISOString().slice(11, 19)}</span>
-        </div>
+        {/* Footer meta */}
+        <motion.footer
+          {...fade(0.5)}
+          className="mt-auto flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-[11px] uppercase tracking-[0.24em] text-white/40"
+        >
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="h-3.5 w-3.5" /> Duomenys apsaugoti
+          </span>
+          <span className="font-mono text-white/35">socialinesvalandos.lt / status</span>
+        </motion.footer>
       </div>
 
       <AnimatePresence>
@@ -427,17 +386,24 @@ export function LockdownGate() {
             onClick={() => setShowCodeModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.94, y: 12 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.94, y: 12 }}
+              initial={{ scale: 0.96, y: 8, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.96, y: 8, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-2xl border border-white/12 bg-[#0f0e12] p-6 shadow-2xl"
+              className="relative w-full max-w-sm rounded-sm border border-white/15 bg-[#141311] p-6 shadow-2xl"
             >
-              <button onClick={() => setShowCodeModal(false)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-white/50 hover:bg-white/10 hover:text-white">
+              <button
+                onClick={() => setShowCodeModal(false)}
+                className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-sm text-white/50 hover:bg-white/10 hover:text-white"
+              >
                 <X className="h-4 w-4" />
               </button>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/50">Slaptas įėjimas</p>
-              <h2 className="mt-1 font-display text-xl font-medium text-white">Įvesk kodą</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/50">
+                Administracinė prieiga
+              </p>
+              <h2 className="mt-1 font-display text-xl font-medium text-white" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
+                Įvesk kodą
+              </h2>
               <input
                 autoFocus
                 type="password"
@@ -446,15 +412,15 @@ export function LockdownGate() {
                 onChange={(e) => setCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitCode()}
                 disabled={codeChecking}
-                className={`mt-4 w-full rounded-xl border bg-black/40 px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] text-white outline-none transition disabled:opacity-60 ${
-                  codeError ? "border-rose-500 animate-shake" : "border-white/12 focus:border-white/50"
+                className={`mt-4 w-full rounded-sm border bg-black/40 px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] text-white outline-none transition disabled:opacity-60 ${
+                  codeError ? "border-rose-500 animate-shake" : "border-white/15 focus:border-white/50"
                 }`}
                 placeholder="••••"
               />
               <button
                 onClick={submitCode}
                 disabled={codeChecking}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-black hover:bg-white/90 disabled:opacity-70"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-white py-3 text-sm font-medium text-black hover:bg-white/90 disabled:opacity-70"
               >
                 {codeChecking && (
                   <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
