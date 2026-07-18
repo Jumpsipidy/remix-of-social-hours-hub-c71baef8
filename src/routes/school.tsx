@@ -25,7 +25,9 @@ type Student = {
   email: string | null;
   hours_needed: number;
   hours_earned: number;
+  class_year?: string | null;
 };
+
 
 type Reservation = {
   id: string;
@@ -64,9 +66,10 @@ function SchoolDashboard() {
     if (!user || profile?.role !== "school_admin") return;
     (async () => {
       const [{ data: st }, { data: og }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, hours_needed, hours_earned").eq("role", "student").order("full_name", { ascending: true }),
+        supabase.from("profiles").select("id, full_name, email, hours_needed, hours_earned, class_year").eq("role", "student").order("full_name", { ascending: true }),
         supabase.from("profiles").select("id, full_name, email, organization_name").eq("role", "organization").order("organization_name", { ascending: true }),
       ]);
+
       setStudents((st as Student[]) ?? []);
       const orgList = (og as OrgProfile[]) ?? [];
       setOrgs(orgList);
@@ -86,10 +89,17 @@ function SchoolDashboard() {
       .then(({ data }) => setAuditRes((data as Reservation[]) ?? []));
   }, [auditing]);
 
+  const assignedClasses = profile?.assigned_classes ?? [];
+  // If admin has classes assigned, restrict view to those only. Empty = see all (fallback for old accounts).
+  const classRestricted = assignedClasses.length > 0;
   const filteredStudents = useMemo(
-    () => students.filter((s) => !q || (s.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (s.email ?? "").toLowerCase().includes(q.toLowerCase())),
-    [students, q],
+    () =>
+      students
+        .filter((s) => !classRestricted || (s.class_year && assignedClasses.includes(String(s.class_year))))
+        .filter((s) => !q || (s.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (s.email ?? "").toLowerCase().includes(q.toLowerCase())),
+    [students, q, classRestricted, assignedClasses],
   );
+
   const filteredOrgs = useMemo(
     () => orgs.filter((o) => !q || (o.organization_name ?? o.full_name ?? "").toLowerCase().includes(q.toLowerCase())),
     [orgs, q],
