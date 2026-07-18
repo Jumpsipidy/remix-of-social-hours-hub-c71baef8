@@ -1,12 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare, CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School } from "lucide-react";
+import {
+  Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare,
+  CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School,
+  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star,
+} from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
 export const Route = createFileRoute("/student")({
   head: () => ({
@@ -27,6 +32,8 @@ type Reservation = {
   end_time: string;
   hours_to_earn: number;
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
+  tags?: string[] | null;
+  note?: string | null;
 };
 
 type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
@@ -40,6 +47,7 @@ function StudentDashboard() {
   const [orgMap, setOrgMap] = useState<Record<string, OrgLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "completed">("all");
 
   const loadReservations = async (uid: string) => {
     const { data } = await supabase
@@ -66,6 +74,31 @@ function StudentDashboard() {
   const orgName = (id: string) => orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
   const orgInitial = (id: string) => (orgName(id) || "?").trim().charAt(0).toUpperCase();
 
+  // Weekly chart data: last 8 weeks of completed hours
+  const weeklyData = useMemo(() => {
+    const now = new Date();
+    const weeks: { label: string; val: number }[] = [];
+    for (let i = 7; i >= 0; i--) {
+      const end = new Date(now); end.setDate(now.getDate() - i * 7);
+      const start = new Date(end); start.setDate(end.getDate() - 6);
+      const label = `${start.getDate()}.${start.getMonth() + 1}`;
+      const val = reservations
+        .filter((r) => (r.status === "completed" || r.status === "confirmed") && r.reservation_date >= start.toISOString().slice(0, 10) && r.reservation_date <= end.toISOString().slice(0, 10))
+        .reduce((a, r) => a + Number(r.hours_to_earn), 0);
+      weeks.push({ label, val });
+    }
+    return weeks;
+  }, [reservations]);
+
+  const streak = useMemo(() => {
+    // Consecutive weeks with at least one completed reservation, working backwards.
+    let s = 0;
+    for (let i = weeklyData.length - 1; i >= 0; i--) {
+      if (weeklyData[i].val > 0) s++; else break;
+    }
+    return s;
+  }, [weeklyData]);
+
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
     return (
@@ -86,7 +119,28 @@ function StudentDashboard() {
   const required = Number(profile.hours_needed ?? 0);
   const progress = required ? Math.min(100, Math.round((completed / required) * 100)) : 0;
   const remaining = Math.max(0, required - completed);
-  const upcoming = reservations.filter((r) => r.status !== "declined");
+  const active = reservations.filter((r) => r.status === "pending" || r.status === "approved");
+  const done = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
+  const nextRes = active
+    .slice()
+    .sort((a, b) => (a.reservation_date + a.start_time).localeCompare(b.reservation_date + b.start_time))[0];
+  const avgHoursPerVisit = done.length ? (done.reduce((a, r) => a + Number(r.hours_to_earn), 0) / done.length) : 0;
+
+  const filtered = reservations.filter((r) => {
+    if (filter === "all") return true;
+    if (filter === "completed") return r.status === "completed" || r.status === "confirmed";
+    return r.status === filter;
+  });
+
+  // Achievements
+  const achievements = [
+    { key: "first", label: "Pirmoji valanda", got: completed >= 1, icon: Star },
+    { key: "ten", label: "10 valandų", got: completed >= 10, icon: Trophy },
+    { key: "half", label: "Pusiaukelė", got: progress >= 50, icon: Rocket },
+    { key: "done", label: "Tikslas pasiektas", got: progress >= 100, icon: Award },
+    { key: "orgs3", label: "3 organizacijos", got: new Set(reservations.map((r) => r.organization_id)).size >= 3, icon: Building2 },
+    { key: "streak", label: `${streak} sav. iš eilės`, got: streak >= 2, icon: Flame },
+  ];
 
   return (
     <PageShell>
@@ -109,13 +163,71 @@ function StudentDashboard() {
         </div>
       </section>
 
+      {/* Hero: Ring + Next reservation */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
+            <div className="relative flex flex-wrap items-center gap-6">
+              <ProgressRing pct={progress} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Metinis tikslas</p>
+                <p className="mt-1 font-display text-3xl font-bold">{completed} / {required} val.</p>
+                <p className="mt-1 text-sm text-muted-foreground">{remaining > 0 ? `Liko ${remaining} val. iki tikslo.` : "Tikslas pasiektas 🎉"}</p>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <Pill icon={Flame} tone="warn">{streak} sav. iš eilės</Pill>
+                  <Pill icon={Timer} tone="info">Vid. {avgHoursPerVisit.toFixed(1)} val./vizitui</Pill>
+                  <Pill icon={CalendarDays} tone="ok">{done.length} užbaigti vizitai</Pill>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-primary">Kitas vizitas</h2>
+              {nextRes && (
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${nextRes.status === "approved" ? "bg-primary/15 text-primary" : "bg-warning/20 text-warning-foreground"}`}>
+                  {nextRes.status === "approved" ? "Vykdoma" : "Laukiama"}
+                </span>
+              )}
+            </div>
+            {nextRes ? (
+              <div className="mt-4">
+                <p className="font-display text-xl font-bold">{orgName(nextRes.organization_id)}</p>
+                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {nextRes.reservation_date} · {nextRes.start_time.slice(0, 5)}–{nextRes.end_time.slice(0, 5)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{Number(nextRes.hours_to_earn)} val. socialinių</p>
+                {nextRes.tags && nextRes.tags.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {nextRes.tags.slice(0, 5).map((t) => (
+                      <span key={t} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">#{t}</span>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => setChatRes({ id: nextRes.id, student_id: nextRes.student_id, organization_id: nextRes.organization_id, organization_name: orgName(nextRes.organization_id) })}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition hover:opacity-90"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" /> Atverti pokalbį
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                Nėra suplanuotų vizitų. <Link to="/tasks" className="font-semibold text-primary hover:underline">Rink užduotį</Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Stat cards */}
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Clock, label: "Užbaigtos valandos", value: `${completed}`, sub: `iš ${required} reikalingų` },
             { icon: Target, label: "Liko valandų", value: `${remaining}`, sub: `${progress}% iki tikslo` },
-            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: upcoming.length, sub: "" },
-            { icon: Building2, label: "Skirtingų organizacijų", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "" },
+            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: active.length, sub: nextRes ? `Artimiausia: ${nextRes.reservation_date}` : "" },
+            { icon: Building2, label: "Organizacijos", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "kur savanoriavai" },
           ].map((s) => (
             <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
               <div className="flex items-center justify-between">
@@ -132,57 +244,121 @@ function StudentDashboard() {
         </div>
       </section>
 
+      {/* Weekly chart + Achievements */}
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold">Progresas iki tikslo</h2>
-              <p className="text-xs text-muted-foreground">{completed} iš {required} val.</p>
+        <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold">Savaitinis aktyvumas</h2>
+                <p className="text-xs text-muted-foreground">Užbaigtos valandos per pastarąsias 8 savaites.</p>
+              </div>
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
+                {weeklyData.reduce((a, w) => a + w.val, 0)} val. iš viso
+              </span>
             </div>
-            <span className="font-display text-2xl font-bold">{progress}%</span>
+            <div className="mt-4 h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyData} margin={{ top: 10, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="hrs" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                    labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                  />
+                  <Area type="monotone" dataKey="val" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#hrs)" name="Valandos" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="mt-4 h-3 overflow-hidden rounded-full bg-accent">
-            <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.8 }} className="h-full bg-gradient-primary" />
+
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <h2 className="text-lg font-bold flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Pasiekimai</h2>
+            <p className="text-xs text-muted-foreground">Atrakinta {achievements.filter((a) => a.got).length} iš {achievements.length}</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {achievements.map((a) => (
+                <div key={a.key} className={`rounded-xl border p-3 text-xs transition ${a.got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
+                  <a.icon className={`h-4 w-4 ${a.got ? "text-primary" : "text-muted-foreground"}`} />
+                  <p className="mt-2 font-semibold leading-tight">{a.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <OpenTasksFeed />
 
+      {/* Reservations list w/ filter */}
       <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-          <h2 className="text-lg font-bold">Mano rezervacijos</h2>
-          <p className="text-xs text-muted-foreground">Bendrauk su organizacija ar mokyklos administratoriumi saugiame 3-šalių pokalbyje.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-lg font-bold">Mano rezervacijos</h2>
+              <p className="text-xs text-muted-foreground">Bendrauk saugiame 3-šalių pokalbyje su organizacija.</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                ["all", "Visos"],
+                ["pending", "Laukia"],
+                ["approved", "Vykdomos"],
+                ["completed", "Užbaigtos"],
+              ] as const).map(([k, l]) => (
+                <button
+                  key={k}
+                  onClick={() => setFilter(k)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "border border-border bg-background/60 text-muted-foreground hover:bg-accent"}`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-5 space-y-3">
-            {reservations.length === 0 && (
+            {filtered.length === 0 && (
               <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-                Dar nėra rezervacijų. <Link to="/tasks" className="font-semibold text-primary hover:underline">Pasirink organizaciją</Link>
+                Nėra rezervacijų šioje kategorijoje. <Link to="/tasks" className="font-semibold text-primary hover:underline">Pasirink organizaciją</Link>
               </div>
             )}
-            {reservations.map((r) => {
+            {filtered.map((r) => {
               const isDone = r.status === "completed" || r.status === "confirmed";
               const isApproved = r.status === "approved";
               const tone = isDone ? "bg-success/15 text-success" : r.status === "declined" ? "bg-destructive/15 text-destructive" : isApproved ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning-foreground";
               const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : isApproved ? PlayCircle : AlarmClock;
               const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "Vykdoma" : "Laukia patvirtinimo";
               return (
-                <div key={r.id} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
-                    <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                <div key={r.id} className={`rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                    <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
+                      <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
+                        <Icon className="h-3 w-3" /> {label}
+                      </span>
+                      <button
+                        onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
+                        className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"
+                      >
+                        <MessageSquare className="h-3 w-3" /> Pokalbis
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
-                      <Icon className="h-3 w-3" /> {label}
-                    </span>
-                    <button
-                      onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
-                      className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"
-                    >
-                      <MessageSquare className="h-3 w-3" /> Pokalbis
-                    </button>
-                  </div>
+                  {(r.tags && r.tags.length > 0) || r.note ? (
+                    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
+                      {r.tags?.slice(0, 6).map((t) => (
+                        <span key={t} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">#{t}</span>
+                      ))}
+                      {r.note && <span className="ml-1 flex items-center gap-1 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3" /> {r.note.slice(0, 80)}</span>}
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
@@ -197,6 +373,42 @@ function StudentDashboard() {
         onCreated={() => loadReservations(user.id)}
       />
     </PageShell>
+  );
+}
+
+function ProgressRing({ pct }: { pct: number }) {
+  const size = 128; const stroke = 12; const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const off = c - (Math.min(100, pct) / 100) * c;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="hsl(var(--border))" strokeWidth={stroke} fill="none" />
+        <motion.circle
+          cx={size / 2} cy={size / 2} r={r}
+          stroke="hsl(var(--primary))" strokeWidth={stroke} strokeLinecap="round"
+          fill="none" strokeDasharray={c}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: off }}
+          transition={{ duration: 1.1, ease: "easeOut" }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center">
+        <div className="text-center">
+          <p className="font-display text-2xl font-bold">{pct}%</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">progresas</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Pill({ icon: Icon, tone, children }: { icon: typeof Flame; tone: "warn" | "info" | "ok"; children: React.ReactNode }) {
+  const cls = tone === "warn" ? "bg-warning/15 text-warning-foreground" : tone === "info" ? "bg-primary/15 text-primary" : "bg-success/15 text-success";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${cls}`}>
+      <Icon className="h-3 w-3" /> {children}
+    </span>
   );
 }
 
@@ -221,11 +433,10 @@ function StudentProfileSetup({ userId }: { userId: string }) {
       });
   }, []);
 
-  // Prefill full name from Google (or existing profile)
   useEffect(() => {
     if (fullName) return;
-    const fromMeta = (user?.user_metadata as any)?.full_name
-      ?? (user?.user_metadata as any)?.name
+    const fromMeta = (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name
+      ?? (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name
       ?? profile?.full_name
       ?? "";
     if (fromMeta) setFullName(fromMeta);
@@ -234,22 +445,10 @@ function StudentProfileSetup({ userId }: { userId: string }) {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!schoolId || !classYear || !fullName.trim()) {
-      setError("Užpildyk visus laukelius.");
-      return;
-    }
-    if (fullName.trim().split(/\s+/).length < 2) {
-      setError("Įvesk tikrą vardą ir pavardę (bent du žodžius).");
-      return;
-    }
-    if (!schoolCode.trim()) {
-      setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo).");
-      return;
-    }
-    if (!agree) {
-      setError("Patvirtink, kad pateikta informacija yra tikra.");
-      return;
-    }
+    if (!schoolId || !classYear || !fullName.trim()) { setError("Užpildyk visus laukelius."); return; }
+    if (fullName.trim().split(/\s+/).length < 2) { setError("Įvesk tikrą vardą ir pavardę (bent du žodžius)."); return; }
+    if (!schoolCode.trim()) { setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo)."); return; }
+    if (!agree) { setError("Patvirtink, kad pateikta informacija yra tikra."); return; }
     setBusy(true);
     const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
       _school_id: schoolId,
@@ -272,13 +471,9 @@ function StudentProfileSetup({ userId }: { userId: string }) {
       })
       .eq("id", userId);
     setBusy(false);
-    if (updErr) {
-      setError(updErr.message);
-      return;
-    }
+    if (updErr) { setError(updErr.message); return; }
     window.location.reload();
   };
-
 
   return (
     <PageShell>
@@ -292,19 +487,14 @@ function StudentProfileSetup({ userId }: { userId: string }) {
             Kad į platformą nepatektų atsitiktiniai žmonės, prašome įvesti tikrus duomenis ir mokyklos prisijungimo kodą.
           </p>
           <div className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 text-xs text-muted-foreground">
-            🔑 <b>Mokyklos kodą</b> gauk iš savo klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyra nebus aktyvuota.
+            🔑 <b>Mokyklos kodą</b> gauk iš klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyra nebus aktyvuota.
           </div>
           <form onSubmit={submit} className="mt-5 space-y-4">
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Tikras vardas ir pavardė</span>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
+              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required
                 placeholder="Pvz.: Emilija Kazlauskaitė"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-              />
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Mokykla</span>
@@ -322,15 +512,9 @@ function StudentProfileSetup({ userId }: { userId: string }) {
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</span>
-              <input
-                type="text"
-                value={schoolCode}
-                onChange={(e) => setSchoolCode(e.target.value)}
-                required
-                autoComplete="off"
+              <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required autoComplete="off"
                 placeholder="Pvz.: SEDUVOS2026"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary"
-              />
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary" />
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas per mokslo metus</span>
@@ -341,15 +525,12 @@ function StudentProfileSetup({ userId }: { userId: string }) {
               <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje ir pateikti duomenys yra teisingi. Suprantu, kad melagingi duomenys reiškia paskyros pašalinimą.</span>
             </label>
             {error && (
-              <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                {error}
-              </div>
+              <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
             )}
             <button disabled={busy} className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
               {busy ? "Tikrinama…" : "Patvirtinti ir tęsti"}
             </button>
           </form>
-
         </div>
       </section>
     </PageShell>
@@ -357,24 +538,24 @@ function StudentProfileSetup({ userId }: { userId: string }) {
 }
 
 function OpenTasksFeed() {
-  const [tasks, setTasks] = useState<Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>>([]);
+  const [tasks, setTasks] = useState<Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string; tags?: string[] | null }>>([]);
   const [orgs, setOrgs] = useState<Record<string, { organization_name: string | null; full_name: string | null }>>({});
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("tasks")
-        .select("id, title, task_date, available_hours, location, organization_id")
+        .select("id, title, task_date, available_hours, location, organization_id, tags")
         .eq("is_open", true)
         .order("task_date", { ascending: true })
         .limit(4);
-      const list = (data as any[]) ?? [];
+      const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string; tags?: string[] | null }>) ?? [];
       setTasks(list);
       const ids = Array.from(new Set(list.map((t) => t.organization_id)));
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
-        const map: Record<string, any> = {};
-        (ps ?? []).forEach((p: any) => (map[p.id] = p));
+        const map: Record<string, { organization_name: string | null; full_name: string | null }> = {};
+        (ps ?? []).forEach((p: { id: string; organization_name: string | null; full_name: string | null }) => (map[p.id] = p));
         setOrgs(map);
       }
     })();
@@ -401,6 +582,13 @@ function OpenTasksFeed() {
                   <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">{Number(t.available_hours)} val.</span>
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">{orgLabel} · {t.task_date}{t.location ? ` · ${t.location}` : ""}</p>
+                {t.tags && t.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {t.tags.slice(0, 4).map((tg) => (
+                      <span key={tg} className="rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[9px] font-semibold text-primary">#{tg}</span>
+                    ))}
+                  </div>
+                )}
               </Link>
             );
           })}
