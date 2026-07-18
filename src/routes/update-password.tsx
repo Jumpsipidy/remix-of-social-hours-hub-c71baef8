@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Lock, Loader2, ShieldCheck } from "lucide-react";
+import { Heart, Lock, Loader2, ShieldCheck, MailKey } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,7 +18,10 @@ function UpdatePasswordPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
+  const [codeBusy, setCodeBusy] = useState(false);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("Tikrinama atkūrimo nuoroda…");
 
@@ -47,8 +50,31 @@ function UpdatePasswordPage() {
       }
     }
     void prepareRecoverySession();
+    setEmail(sessionStorage.getItem("sv_reset_email") ?? "");
     return () => { cancelled = true; };
   }, []);
+
+  async function verifyCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (codeBusy) return;
+    setCodeBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp.trim(),
+        type: "recovery",
+      });
+      if (error) throw error;
+      sessionStorage.setItem("sv_reset_email", email.trim());
+      setReady(true);
+      setStatus("Kodas patvirtintas. Įvesk naują slaptažodį.");
+      toast.success("Kodas patvirtintas.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nepavyko patvirtinti kodo.");
+    } finally {
+      setCodeBusy(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,9 +129,41 @@ function UpdatePasswordPage() {
               </button>
             </form>
           ) : (
-            <Link to="/forgot-password" className="mt-6 inline-flex w-full justify-center rounded-full border border-border px-4 py-3 text-sm font-semibold hover:bg-accent">
-              Siųsti naują atkūrimo laišką
-            </Link>
+            <div className="mt-6 space-y-4">
+              <form onSubmit={verifyCode} className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <MailKey className="h-4 w-4" /> Turi kodą iš laiško?
+                </div>
+                <label className="block">
+                  <span className="text-xs font-semibold text-muted-foreground">El. paštas</span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="vardas@mokykla.lt"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold text-muted-foreground">Atkūrimo kodas</span>
+                  <input
+                    type="text"
+                    required
+                    value={otp}
+                    onChange={(event) => setOtp(event.target.value)}
+                    placeholder="Įklijuok kodą iš laiško"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-widest outline-none focus:border-primary"
+                  />
+                </label>
+                <button disabled={codeBusy} className="w-full rounded-full bg-gradient-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
+                  {codeBusy ? "Tikrinama…" : "Patvirtinti kodą"}
+                </button>
+              </form>
+              <Link to="/forgot-password" className="inline-flex w-full justify-center rounded-full border border-border px-4 py-3 text-sm font-semibold hover:bg-accent">
+                Siųsti naują atkūrimo laišką
+              </Link>
+            </div>
           )}
         </div>
       </div>
