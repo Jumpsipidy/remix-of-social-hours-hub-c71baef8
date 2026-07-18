@@ -270,6 +270,13 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 />
               </div>
 
+              {/* Tags */}
+              <div className="mt-5">
+                <TagsInput value={tags} onChange={setTags} hint="Kad mokytojai iš karto matytų, kokia tai veikla" />
+              </div>
+
+
+
               <div className="mt-5 flex items-start gap-3 rounded-2xl bg-accent/50 p-4 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <p>Patvirtinus, valandos bus automatiškai pridėtos prie tavo profilio.</p>
