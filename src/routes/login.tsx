@@ -71,9 +71,9 @@ function LoginPage() {
   useEffect(() => {
     if (loading) return;
     if (isAuthenticated && profile?.role) {
-      navigate({ to: DASH_BY_ROLE[profile.role] ?? "/" });
+      window.location.assign(DASH_BY_ROLE[profile.role] ?? "/");
     }
-  }, [isAuthenticated, profile?.role, loading, navigate]);
+  }, [isAuthenticated, profile?.role, loading]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,7 +96,8 @@ function LoginPage() {
       setFails(0);
       setCaptchaProof(null);
       toast.success("Sveikas atvykęs!");
-      navigate({ to: target });
+      // Hard nav — avoids router transient state crashes after auth change
+      window.location.assign(target);
     } catch (err) {
       const next = fails + 1;
       setFails(next);
