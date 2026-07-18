@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, RefreshCw, Lock, ShieldCheck, X, ExternalLink, Copy, Check } from "lucide-react";
+import { RefreshCw, Lock, ShieldCheck, X, ExternalLink, Copy, Check } from "lucide-react";
 import { readSiteSettings } from "@/lib/site-settings";
 import { getLockdownCode } from "@/lib/lockdown-codes";
 
@@ -9,10 +9,37 @@ const BYPASS_KEY = "sv_lockdown_bypass_v1";
 const TRIGGER_WORD = "jumpsipidy";
 const BYPASS_CODE = "7851";
 
+// Public routes that must remain reachable during lockdown
+const ALLOWED_PATHS = ["/status"];
+
 const SEVERITY_STYLES = {
-  info: { badge: "from-sky-400 to-blue-500", glow: "shadow-sky-500/30", ring: "border-sky-400/40", text: "text-sky-200" },
-  warn: { badge: "from-amber-400 to-rose-500", glow: "shadow-amber-500/30", ring: "border-amber-400/40", text: "text-amber-200" },
-  critical: { badge: "from-rose-500 to-fuchsia-600", glow: "shadow-rose-500/40", ring: "border-rose-400/50", text: "text-rose-200" },
+  info: {
+    grad: "from-sky-400 via-cyan-300 to-blue-500",
+    glow: "shadow-[0_0_120px_-20px_rgba(56,189,248,0.7)]",
+    ring: "border-sky-400/40",
+    text: "text-sky-200",
+    orb: "from-sky-500/30 to-blue-600/20",
+    accent: "bg-sky-400",
+    label: "Techninė priežiūra",
+  },
+  warn: {
+    grad: "from-amber-300 via-orange-400 to-rose-500",
+    glow: "shadow-[0_0_120px_-20px_rgba(251,146,60,0.7)]",
+    ring: "border-amber-400/40",
+    text: "text-amber-200",
+    orb: "from-amber-500/30 to-rose-500/20",
+    accent: "bg-amber-400",
+    label: "Sistemos gedimas",
+  },
+  critical: {
+    grad: "from-rose-400 via-fuchsia-500 to-red-600",
+    glow: "shadow-[0_0_140px_-20px_rgba(244,63,94,0.8)]",
+    ring: "border-rose-400/50",
+    text: "text-rose-200",
+    orb: "from-rose-600/30 to-fuchsia-600/20",
+    accent: "bg-rose-500",
+    label: "Kritinis įvykis",
+  },
 } as const;
 
 export function LockdownGate() {
@@ -26,10 +53,18 @@ export function LockdownGate() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshOk, setRefreshOk] = useState<null | boolean>(null);
   const [copied, setCopied] = useState(false);
+  const [pathname, setPathname] = useState<string>(typeof window !== "undefined" ? window.location.pathname : "/");
   const bufferRef = useRef("");
 
   useEffect(() => {
     try { if (sessionStorage.getItem(BYPASS_KEY) === "1") setBypassed(true); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const update = () => setPathname(window.location.pathname);
+    window.addEventListener("popstate", update);
+    const int = setInterval(update, 500);
+    return () => { window.removeEventListener("popstate", update); clearInterval(int); };
   }, []);
 
   useEffect(() => {
@@ -74,10 +109,13 @@ export function LockdownGate() {
 
   if (lockdown === null) return null;
   if (!lockdown || bypassed) return null;
+  if (ALLOWED_PATHS.includes(pathname)) return null;
 
   const errInfo = getLockdownCode(codeId);
   const severity = errInfo?.severity ?? "warn";
   const styles = SEVERITY_STYLES[severity];
+  const displayCode = errInfo?.code ?? codeId ?? "E-0000";
+  const codeChars = displayCode.split("");
 
   const submitCode = () => {
     if (code.trim() === BYPASS_CODE) {
@@ -111,8 +149,7 @@ export function LockdownGate() {
   };
 
   const copyCode = async () => {
-    if (!errInfo) return;
-    try { await navigator.clipboard.writeText(errInfo.code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
+    try { await navigator.clipboard.writeText(displayCode); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
   };
 
   return (
@@ -120,16 +157,12 @@ export function LockdownGate() {
       {/* Aurora orbs */}
       <div className="pointer-events-none absolute inset-0">
         <motion.div
-          className={`absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full blur-3xl bg-gradient-to-br ${
-            severity === "critical" ? "from-rose-600/30 to-fuchsia-600/20" :
-            severity === "info" ? "from-sky-500/25 to-blue-600/15" :
-            "from-amber-500/30 to-rose-500/20"
-          }`}
+          className={`absolute -left-40 -top-40 h-[620px] w-[620px] rounded-full blur-3xl bg-gradient-to-br ${styles.orb}`}
           animate={{ x: [0, 80, 0], y: [0, 50, 0] }}
           transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute -right-40 bottom-0 h-[560px] w-[560px] rounded-full bg-gradient-to-tr from-violet-600/25 to-cyan-500/15 blur-3xl"
+          className="absolute -right-40 bottom-0 h-[620px] w-[620px] rounded-full bg-gradient-to-tr from-violet-600/25 to-cyan-500/15 blur-3xl"
           animate={{ x: [0, -60, 0], y: [0, -40, 0] }}
           transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -137,11 +170,13 @@ export function LockdownGate() {
 
       {/* Grid */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
+          backgroundSize: "72px 72px",
+          maskImage: "radial-gradient(ellipse at center, #000 40%, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, #000 40%, transparent 80%)",
         }}
       />
 
@@ -153,125 +188,140 @@ export function LockdownGate() {
         transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
       />
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5 py-10">
+        {/* Top badge */}
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.03] p-8 sm:p-10 shadow-2xl backdrop-blur-xl"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className={`mb-8 inline-flex items-center gap-2 rounded-full border ${styles.ring} bg-black/40 px-4 py-1.5 backdrop-blur-xl`}
         >
-          {/* Conic spinning border */}
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute -inset-[1px] rounded-[28px]"
-            style={{
-              background:
-                severity === "critical"
-                  ? "conic-gradient(from 0deg, transparent 0deg, rgba(244,63,94,0.65) 60deg, transparent 140deg, transparent 220deg, rgba(217,70,239,0.6) 300deg, transparent 360deg)"
-                  : severity === "info"
-                  ? "conic-gradient(from 0deg, transparent 0deg, rgba(56,189,248,0.6) 60deg, transparent 140deg, transparent 220deg, rgba(99,102,241,0.55) 300deg, transparent 360deg)"
-                  : "conic-gradient(from 0deg, transparent 0deg, rgba(250,204,21,0.65) 60deg, transparent 140deg, transparent 220deg, rgba(244,63,94,0.6) 300deg, transparent 360deg)",
-              maskImage: "linear-gradient(#000,#000) content-box, linear-gradient(#000,#000)",
-              WebkitMaskImage: "linear-gradient(#000,#000) content-box, linear-gradient(#000,#000)",
-              padding: 1,
-              WebkitMaskComposite: "xor",
-              maskComposite: "exclude",
-            }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-          />
-
-          <div className="relative">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  animate={{ rotate: [0, -8, 8, 0] }}
-                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-                  className={`grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${styles.badge} shadow-lg ${styles.glow}`}
-                >
-                  <AlertTriangle className="h-6 w-6 text-black" />
-                </motion.div>
-                <div>
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${styles.text}`}>
-                    {severity === "critical" ? "Kritinis įvykis" : severity === "info" ? "Techninė priežiūra" : "Sistemos gedimas"}
-                  </p>
-                  <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                    Sistema laikinai neveikia
-                  </h1>
-                </div>
-              </div>
-
-              {errInfo && (
-                <button
-                  onClick={copyCode}
-                  className={`group inline-flex items-center gap-2 rounded-full border ${styles.ring} bg-black/40 px-3 py-1.5 font-mono text-xs font-bold ${styles.text} transition hover:bg-black/60`}
-                >
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-70" />}
-                  {errInfo.code}
-                </button>
-              )}
-            </div>
-
-            {errInfo && (
-              <div className={`mt-6 rounded-2xl border ${styles.ring} bg-black/30 p-5`}>
-                <p className={`text-[10px] font-semibold uppercase tracking-[0.28em] ${styles.text}`}>{errInfo.title}</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">{errInfo.description}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-4 text-[11px] text-white/50">
-                  <span>Numatoma trukmė: <strong className="text-white/80">{errInfo.eta}</strong></span>
-                  <a href="/status" className="inline-flex items-center gap-1 hover:text-white">
-                    Klaidų kodų gidas <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-            )}
-
-            <p className="mt-6 text-sm leading-relaxed text-white/70">
-              {message || "Šiuo metu tvarkome sistemą, kad viskas veiktų sklandžiai. Grįžk po kelių minučių — viskas jau kelyje."}
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button
-                onClick={runCheck}
-                disabled={refreshing}
-                className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-70"
-              >
-                <motion.span
-                  animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
-                  transition={refreshing ? { duration: 0.9, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
-                  className="inline-flex"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </motion.span>
-                {refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
-              </button>
-
-              <a
-                href="/status"
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-transparent px-5 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/[0.05] hover:text-white"
-              >
-                Peržiūrėti kodų gidą
-              </a>
-
-              <AnimatePresence>
-                {refreshOk === false && (
-                  <motion.span key="nope" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="text-xs font-medium text-amber-300/90">
-                    Dar tvarkoma. Netrukus.
-                  </motion.span>
-                )}
-                {refreshOk === true && (
-                  <motion.span key="yay" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="inline-flex items-center gap-1 text-xs font-medium text-emerald-300">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Viskas veikia!
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <div className="mt-8 flex items-center justify-between gap-2 border-t border-white/10 pt-4 text-[11px] uppercase tracking-widest text-white/30">
-              <span className="inline-flex items-center gap-2"><Lock className="h-3 w-3" /> Socialinės Valandos</span>
-              <span className="font-mono">status.page</span>
-            </div>
-          </div>
+          <span className={`relative flex h-2 w-2`}>
+            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${styles.accent} opacity-75`} />
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${styles.accent}`} />
+          </span>
+          <span className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${styles.text}`}>
+            {styles.label}
+          </span>
         </motion.div>
+
+        {/* HERO: giant error code */}
+        <motion.button
+          onClick={copyCode}
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+          className="group relative select-none"
+          title="Kopijuoti kodą"
+        >
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className={`h-[80%] w-[110%] rounded-full bg-gradient-to-r ${styles.grad} opacity-20 blur-3xl`} />
+          </div>
+          <div className="relative flex items-center justify-center gap-1 sm:gap-2">
+            {codeChars.map((ch, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ delay: 0.15 + i * 0.06, duration: 0.5, ease: "easeOut" }}
+                className={`font-display font-black leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-b ${styles.grad} ${styles.glow} ${
+                  ch === "-" ? "text-6xl sm:text-8xl md:text-9xl opacity-40" : "text-7xl sm:text-9xl md:text-[10rem]"
+                }`}
+                style={{ WebkitTextStroke: "1px rgba(255,255,255,0.04)" }}
+              >
+                {ch}
+              </motion.span>
+            ))}
+          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-white/40 group-hover:text-white/70"
+          >
+            {copied ? <><Check className="h-3 w-3" /> Nukopijuota</> : <><Copy className="h-3 w-3" /> Kopijuoti kodą</>}
+          </motion.div>
+        </motion.button>
+
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="mt-10 text-center font-display text-2xl font-bold tracking-tight text-white sm:text-3xl"
+        >
+          {errInfo?.title ?? "Sistema laikinai neveikia"}
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.65, duration: 0.5 }}
+          className="mt-3 max-w-xl text-center text-sm leading-relaxed text-white/60 sm:text-base"
+        >
+          {message?.trim() || errInfo?.description || "Šiuo metu tvarkome sistemą. Grįžk po kelių minučių."}
+        </motion.p>
+
+        {/* Meta row */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75, duration: 0.5 }}
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.24em] text-white/40"
+        >
+          {errInfo?.eta && (
+            <span>Trukmė · <strong className="text-white/70">{errInfo.eta}</strong></span>
+          )}
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className={`h-3.5 w-3.5 ${styles.text}`} /> Duomenys saugūs</span>
+        </motion.div>
+
+        {/* Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
+          className="mt-10 flex flex-wrap items-center justify-center gap-3"
+        >
+          <button
+            onClick={runCheck}
+            disabled={refreshing}
+            className={`group inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${styles.grad} px-6 py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-70`}
+          >
+            <motion.span
+              animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
+              transition={refreshing ? { duration: 0.9, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
+              className="inline-flex"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </motion.span>
+            {refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
+          </button>
+
+          <a
+            href="/status"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white/80 backdrop-blur transition hover:bg-white/[0.09] hover:text-white"
+          >
+            Klaidų kodų gidas <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </motion.div>
+
+        <AnimatePresence>
+          {refreshOk === false && (
+            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 text-xs font-medium text-amber-300/90">
+              Dar tvarkoma. Netrukus.
+            </motion.span>
+          )}
+          {refreshOk === true && (
+            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-emerald-300">
+              <ShieldCheck className="h-3.5 w-3.5" /> Viskas veikia!
+            </motion.span>
+          )}
+        </AnimatePresence>
+
+        {/* Footer */}
+        <div className="absolute bottom-6 left-0 right-0 mx-auto flex max-w-2xl items-center justify-between px-6 text-[10px] uppercase tracking-widest text-white/25">
+          <span className="inline-flex items-center gap-2"><Lock className="h-3 w-3" /> Socialinės Valandos</span>
+          <span className="font-mono">status.page</span>
+        </div>
       </div>
 
       {/* Bypass modal */}

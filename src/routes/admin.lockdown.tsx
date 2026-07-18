@@ -219,13 +219,26 @@ function LockdownPage() {
         </div>
 
         <div className="mt-6">
-          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Papildoma žinutė (nebūtina)</label>
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} maxLength={400} placeholder={activeCode.description}
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Papildoma žinutė (nebūtina)</label>
+            <button
+              type="button"
+              onClick={() => setMessage("")}
+              className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground underline-offset-2 hover:text-primary hover:underline"
+            >
+              Rodyti tik kodą (be teksto)
+            </button>
+          </div>
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} maxLength={400} placeholder="Palik tuščią — vartotojai matys tik didelį klaidos kodą ir jo aprašymą iš gido."
             className="mt-2 w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm outline-none focus:border-primary" />
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {message.trim() ? `${message.trim().length}/400 simbolių` : "Tuščia — bus rodomas tik didelis klaidos kodas + jo standartinis aprašymas."}
+          </p>
           <button onClick={saveSettings} disabled={saving} className="mt-3 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
             Išsaugoti nustatymus
           </button>
         </div>
+
       </div>
 
       {/* Health check */}
