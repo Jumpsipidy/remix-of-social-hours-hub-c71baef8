@@ -168,9 +168,9 @@ function StudentDashboard() {
       {/* Hero: Ring + Next reservation */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-4 shadow-md sm:p-6">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
-            <div className="relative flex flex-wrap items-center gap-6">
+            <div className="relative flex flex-wrap items-center gap-4 sm:gap-6">
               <ProgressRing pct={progress} />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary">Metinis tikslas</p>
@@ -185,7 +185,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+          <div className="rounded-3xl border border-border bg-gradient-card p-4 shadow-md sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wider text-primary">Kitas vizitas</h2>
               {nextRes && (

@@ -284,7 +284,7 @@ export function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            className="absolute right-0 top-12 z-50 w-[22rem] overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-elegant backdrop-blur-xl"
+            className="fixed right-2 left-2 top-16 z-50 overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-elegant backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[22rem]"
           >
             {/* animated gradient top strip */}
             <div className="relative h-1 w-full overflow-hidden">

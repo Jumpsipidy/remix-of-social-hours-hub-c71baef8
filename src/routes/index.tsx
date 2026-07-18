@@ -156,7 +156,7 @@ function Home() {
     <PageShell>
       <div className="relative selection:bg-[#C8452A] selection:text-white">
         {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative overflow-hidden px-6 pt-24 pb-32 md:pt-36 md:pb-44">
+        <section ref={heroRef} className="relative overflow-hidden px-4 pt-14 pb-20 sm:px-6 sm:pt-24 sm:pb-32 md:pt-36 md:pb-44">
           {/* animated halos on top of the shell BackgroundFX */}
           <motion.div
             aria-hidden
@@ -192,7 +192,7 @@ function Home() {
               initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0)" }}
               transition={{ duration: 0.9, delay: 0.05 }}
-              className="mb-8 leading-[1.02] text-5xl md:text-7xl lg:text-[88px] font-display"
+              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display"
               style={{ fontWeight: 500 }}
             >
               Kiekviena{" "}
@@ -215,7 +215,7 @@ function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.25 }}
-              className="mx-auto mb-12 max-w-xl text-lg md:text-xl leading-[1.6] text-white/70"
+              className="mx-auto mb-8 sm:mb-12 max-w-xl text-base sm:text-lg md:text-xl leading-[1.6] text-white/70"
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
               savanorystės galimybėmis.
@@ -253,7 +253,7 @@ function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="mx-auto mt-16 flex max-w-md items-center justify-center gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 backdrop-blur-xl"
+              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl"
             >
               <Clock className="h-5 w-5" style={{ color: GOLD }} />
               <div className="text-left">
@@ -282,10 +282,10 @@ function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="relative px-6 py-14 text-center"
+                className="relative px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
                 style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : undefined }}
               >
-                <div className="mb-3 text-5xl md:text-6xl font-display" style={{ fontWeight: 300, color: s.c }}>
+                <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display" style={{ fontWeight: 300, color: s.c }}>
                   <CountUp value={s.v} />
                 </div>
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/60">{s.l}</div>
@@ -295,13 +295,13 @@ function Home() {
         </section>
 
         {/* ROLES ─────────────────────────────────────────────────────────── */}
-        <section className="relative px-6 py-24 md:py-32">
+        <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-16 max-w-3xl">
-              <p className="mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
+            <div className="mb-10 sm:mb-16 max-w-3xl">
+              <p className="mb-3 sm:mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
                 Nr. 02 · Bendruomenė
               </p>
-              <h2 className="text-4xl md:text-6xl font-display text-white" style={{ fontWeight: 500, letterSpacing: "-0.01em" }}>
+              <h2 className="text-3xl sm:text-4xl md:text-6xl font-display text-white" style={{ fontWeight: 500, letterSpacing: "-0.01em" }}>
                 Platforma skirta{" "}
                 <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${EMBER}, ${GOLD})` }}>
                   visiems
@@ -309,7 +309,7 @@ function Home() {
               </h2>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-3">
+            <div className="grid gap-5 sm:gap-8 md:grid-cols-3">
               {roles.map((c, i) => (
                 <motion.div
                   key={c.tag}
@@ -318,7 +318,7 @@ function Home() {
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ delay: i * 0.1, duration: 0.6 }}
                 >
-                  <SpotlightCard accent={c.accent} className="h-full p-8">
+                  <SpotlightCard accent={c.accent} className="h-full p-6 sm:p-8">
                     <div
                       className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl"
                       style={{ background: `${c.accent}22`, border: `1px solid ${c.accent}44` }}
@@ -354,7 +354,7 @@ function Home() {
           </p>
           <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
             <motion.div
-              className="flex shrink-0 items-center gap-12 pr-12 font-display italic text-xl md:text-2xl text-white/60 whitespace-nowrap"
+              className="flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic text-base sm:text-xl md:text-2xl text-white/60 whitespace-nowrap"
               style={{ fontWeight: 400 }}
               animate={{ x: ["0%", "-50%"] }}
               transition={{ duration: 40, ease: "linear", repeat: Infinity }}
@@ -367,7 +367,7 @@ function Home() {
                 "Panevėžio J. Balčikonio gimnazija",
                 "Šiaulių Didždvario gimnazija",
               ].map((name, j) => (
-                <span key={`${k}-${j}`} className="flex items-center gap-12">
+                <span key={`${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
                   <span>{name}</span>
                   <span aria-hidden style={{ color: EMBER }}>◆</span>
                 </span>
@@ -377,7 +377,7 @@ function Home() {
         </section>
 
         {/* CLOSING CTA ─────────────────────────────────────────────────── */}
-        <section className="relative px-6 py-24 md:py-32 text-center overflow-hidden">
+        <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32 text-center overflow-hidden">
           <motion.div
             aria-hidden
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
@@ -396,7 +396,7 @@ function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.7 }}
-              className="mb-8 text-4xl md:text-6xl leading-[1.05] font-display text-white"
+              className="mb-6 sm:mb-8 text-3xl sm:text-4xl md:text-6xl leading-[1.05] font-display text-white"
               style={{ fontWeight: 500 }}
             >
               Pasiruošęs{" "}
@@ -404,12 +404,12 @@ function Home() {
                 pradėti?
               </span>
             </motion.h2>
-            <p className="mb-12 text-lg text-white/70 leading-relaxed">
+            <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
               Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
             </p>
             <Link
               to="/register"
-              className="group inline-flex items-center gap-2 rounded-full px-10 py-5 text-lg font-bold text-white transition-transform hover:scale-[1.03]"
+              className="group inline-flex items-center gap-2 rounded-full px-6 py-3.5 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white transition-transform hover:scale-[1.03]"
               style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
             >
               Sukurti nemokamą paskyrą
