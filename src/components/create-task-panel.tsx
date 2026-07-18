@@ -37,6 +37,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [location, setLocation] = useState("");
   const [spots, setSpots] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
+  const [recurrence, setRecurrence] = useState<"none" | "weekly" | "biweekly" | "monthly">("none");
+  const [recurrenceUntil, setRecurrenceUntil] = useState<string>("");
 
   const refresh = async () => {
     const { data } = await supabase
