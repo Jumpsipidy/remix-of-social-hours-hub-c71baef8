@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Moderni platforma Lietuvos mokykloms, moksleiviams ir organizacijoms: rezervuok savanorystės valandas, gauk automatinę apskaitą ir bendrauk su mokykla vienoje vietoje.",
+          "Moderni platforma Lietuvos mokykloms, moksleiviams ir organizacijoms: rezervuok savanorystės valandas ir gauk automatinę apskaitą vienoje vietoje.",
       },
       { property: "og:title", content: "Socialinės Valandos — moksleivių savanorystės platforma" },
       {

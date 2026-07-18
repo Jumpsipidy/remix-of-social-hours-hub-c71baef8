@@ -16,7 +16,7 @@ export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
       { title: "Užduotys ir organizacijos — Socialinės Valandos" },
-      { name: "description", content: "Naršyk realias savanorystės užduotis ir organizacijų profilius: filtruok pagal kategoriją, datą bei valandas ir rezervuok savo socialines valandas per kelias sekundes." },
+      { name: "description", content: "Naršyk realias savanorystės užduotis ir organizacijų profilius: filtruok pagal kategoriją bei valandas ir rezervuok socialines valandas." },
       { property: "og:title", content: "Savanorystės užduotys ir organizacijos" },
       { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
       { property: "og:url", content: "https://socialinesvalandos.lovable.app/tasks" },
