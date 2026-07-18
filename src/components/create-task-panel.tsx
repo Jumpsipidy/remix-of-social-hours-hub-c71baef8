@@ -155,6 +155,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                   />
                 </div>
               </div>
+              <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams rasti tinkamiausią užduotį" />
               <div className="flex justify-end">
                 <button
                   onClick={submit}
