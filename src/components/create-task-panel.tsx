@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TagsInput } from "@/components/tags-input";
 
 type Task = {
   id: string;
