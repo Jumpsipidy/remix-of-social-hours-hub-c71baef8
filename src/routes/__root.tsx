@@ -145,6 +145,7 @@ function RootComponent() {
         <CookieConsent />
         <MockTesterPanel />
         <LockdownGate />
+        <ErrorMonitor />
       </AuthProvider>
     </QueryClientProvider>
 
