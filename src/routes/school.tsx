@@ -129,6 +129,85 @@ function SchoolDashboard() {
     [students, q, classRestricted, assignedClasses],
   );
 
+  // Klasių sąrašas iš mokinių
+  const availableClasses = useMemo(() => {
+    const s = new Set<string>();
+    filteredStudents.forEach((st) => st.class_year && s.add(String(st.class_year)));
+    return Array.from(s).sort();
+  }, [filteredStudents]);
+
+  const studentById = useMemo(() => {
+    const m: Record<string, Student> = {};
+    students.forEach((s) => (m[s.id] = s));
+    return m;
+  }, [students]);
+
+  const flagsByRes = useMemo(() => {
+    const byStudent: Record<string, ReservationLike[]> = {};
+    allRes.forEach((r) => {
+      (byStudent[r.student_id] ??= []).push(r as unknown as ReservationLike);
+    });
+    const m: Record<string, FraudFlag[]> = {};
+    allRes.forEach((r) => {
+      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? []);
+    });
+    return m;
+  }, [allRes]);
+
+  const visibleStudentIds = useMemo(() => new Set(filteredStudents.map((s) => s.id)), [filteredStudents]);
+
+  const queueRows = useMemo(() => {
+    return allRes
+      .filter((r) => visibleStudentIds.has(r.student_id))
+      .filter((r) => {
+        if (classFilter === "all") return true;
+        const s = studentById[r.student_id];
+        return s?.class_year === classFilter;
+      })
+      .filter((r) => (onlyFlagged ? (flagsByRes[r.id]?.length ?? 0) > 0 : true))
+      .filter((r) => (onlyUnreviewed ? !reviewed.has(r.id) : true))
+      .filter((r) => {
+        if (!q) return true;
+        const s = studentById[r.student_id];
+        return (s?.full_name ?? "").toLowerCase().includes(q.toLowerCase());
+      });
+  }, [allRes, visibleStudentIds, classFilter, studentById, onlyFlagged, onlyUnreviewed, reviewed, flagsByRes, q]);
+
+  const flaggedCount = useMemo(() => queueRows.filter((r) => (flagsByRes[r.id]?.length ?? 0) > 0).length, [queueRows, flagsByRes]);
+  const unreviewedCount = useMemo(() => queueRows.filter((r) => !reviewed.has(r.id)).length, [queueRows, reviewed]);
+
+  const toggleSel = (id: string) => setSelected((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const selectAll = () => setSelected(new Set(queueRows.map((r) => r.id)));
+  const clearSel = () => setSelected(new Set());
+  const bulkMarkReviewed = () => {
+    const n = new Set(reviewed); selected.forEach((id) => n.add(id)); persistReviewed(n); clearSel();
+    toast.success(`Pažymėta peržiūrėta: ${selected.size}`);
+  };
+  const bulkUnreview = () => {
+    const n = new Set(reviewed); selected.forEach((id) => n.delete(id)); persistReviewed(n); clearSel();
+    toast.success(`Peržiūros žymė nuimta: ${selected.size}`);
+  };
+  const exportSelected = () => {
+    const rows = queueRows.filter((r) => selected.has(r.id));
+    if (rows.length === 0) { toast.error("Pažymėk bent vieną eilutę"); return; }
+    const header = ["Mokinys","Klasė","Data","Nuo","Iki","Valandų","Statusas","Organizacija","Įtarimai","Peržiūrėta"];
+    const csv = [header.join(",")].concat(rows.map((r) => {
+      const s = studentById[r.student_id];
+      const fl = (flagsByRes[r.id] ?? []).map((f) => f.label).join("; ");
+      return [
+        `"${(s?.full_name ?? "").replace(/"/g,'""')}"`, s?.class_year ?? "",
+        r.reservation_date, r.start_time?.slice(0,5), r.end_time?.slice(0,5),
+        Number(r.hours_to_earn), r.status, `"${(orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "").replace(/"/g,'""')}"`,
+        `"${fl.replace(/"/g,'""')}"`, reviewed.has(r.id) ? "taip" : "ne",
+      ].join(",");
+    })).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `rezervacijos-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+
   const filteredOrgs = useMemo(
     () => orgs.filter((o) => !q || (o.organization_name ?? o.full_name ?? "").toLowerCase().includes(q.toLowerCase())),
     [orgs, q],
