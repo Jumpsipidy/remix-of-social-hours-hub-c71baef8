@@ -16,6 +16,7 @@ type Task = {
   location: string;
   spots_total: number;
   is_open: boolean;
+  tags?: string[] | null;
 };
 
 function todayISO() {
