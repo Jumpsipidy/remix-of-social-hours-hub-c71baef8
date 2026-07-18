@@ -1,9 +1,36 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock, Sparkles, Bug, Trash2, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+
+// Map a notification to the correct route (based on user role) + hash.
+function routeForNotif(
+  n: { kind: string; hash?: string; status?: string },
+  role?: string | null,
+): { to: string; hash: string } {
+  const hash = n.hash ?? "";
+  // Bug reports → admin bugs page
+  if (n.kind === "bug") return { to: "/admin/bugs", hash };
+  // Messages → role-specific dashboard (each dashboard listens for #chat/<id>)
+  if (n.kind === "message") {
+    if (role === "organization") return { to: "/organization", hash };
+    if (role === "school_admin") return { to: "/school", hash };
+    if (role === "admin") return { to: "/admin/messages", hash };
+    return { to: "/student", hash };
+  }
+  // Reservations → role dashboard
+  if (n.kind === "reservation") {
+    if (role === "organization") return { to: "/organization", hash };
+    if (role === "school_admin") return { to: "/school", hash };
+    if (role === "admin") return { to: "/admin/reservations", hash };
+    return { to: "/student", hash };
+  }
+  // Generic debug/test notif → home
+  return { to: "/", hash };
+}
 
 type Notification = {
   id: string;
