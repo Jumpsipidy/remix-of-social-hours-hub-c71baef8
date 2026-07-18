@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -20,6 +21,7 @@ import {
   BarChart3,
   Lock,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
