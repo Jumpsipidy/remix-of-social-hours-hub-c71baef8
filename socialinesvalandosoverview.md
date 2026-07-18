@@ -1,328 +1,782 @@
-# Socialinės Valandos — pilna platformos apžvalga
+# Socialinės Valandos — pilna platformos apžvalga (kiekvienas mygtukas ir funkcija)
 
-Šis dokumentas paprasta kalba paaiškina **kiekvieną** platformos funkciją: kaip veikia prisijungimai, registracija, kiekvienas vartotojo vaidmuo, kiekvienas mygtukas super admin skydelyje ir kaip visi puslapiai jungiasi tarpusavyje. Skirtas savininkui (tau), kad greitai suprastum bet kurią vietą sistemoje.
+Šis dokumentas paprasta kalba paaiškina **kiekvieną** mygtuką, laukelį, puslapį ir funkciją visoje platformoje. Skirtas tau, savininkui, kad greitai suprastum bet kurią vietą sistemoje — net jei nesi programuotojas.
+
+**Techninis pagrindas** (trumpai): TanStack Start (React) frontendas + Lovable Cloud (Supabase) backendas su RLS taisyklėmis. Vercel hosting. Domenas šiuo metu `socialinesvalandos.vercel.app`, vėliau bus `socialinesvalandos.lt`.
+
+---
+
+## Turinys
+
+1. Kas yra platforma
+2. Vaidmenys (rolės)
+3. Bendri UI elementai (visur matomi)
+4. Pagrindinis puslapis `/`
+5. Registracija `/register`
+6. Prisijungimas `/login`
+7. Slaptažodžio atstatymas
+8. Užduočių sąrašas `/tasks`
+9. Verifikacijos puslapis `/verify/$code`
+10. Moksleivio dashboard'as `/student`
+11. Organizacijos dashboard'as `/organization`
+12. Mokyklos administratoriaus dashboard'as `/school`
+13. Super admin dashboard'as `/admin` (kiekvienas sidebar mygtukas)
+14. Chat sistema (3-way + DM)
+15. Pranešimų varpelis
+16. Draugystės sistema
+17. PDF sertifikatai
+18. Lockdown režimas ir slaptas apėjimas
+19. Debug panelis
+20. Saugumas ir privatumas
+21. Automatiniai cron darbai
+22. Failų struktūra
+23. Kaip pridėti mokyklą / keisti kodą
+24. Ateities planai
 
 ---
 
 ## 1. Kas yra „Socialinės Valandos“?
 
-Tai mokyklų platforma, kurioje **moksleiviai** susiranda savanoriškas veiklas, **organizacijos** siūlo užduotis, **mokyklos administratoriai (auklėtojai)** kontroliuoja savo klases, o **super administratorius** valdo visą sistemą. Užduotys duoda „socialines valandas“, kurios kaupiasi mokinio profilyje ir generuoja PDF sertifikatą pasiekus tikslą.
+Mokyklų platforma, kurioje:
+- **Moksleiviai** susiranda savanoriškas veiklas ir renka valandas.
+- **Organizacijos** siūlo užduotis, tvirtina rezervacijas, uždaro darbus.
+- **Mokyklos administratoriai (auklėtojai)** kontroliuoja savo klases, audituoja, aptinka apgaules.
+- **Super administratorius (tu)** valdo viską — mokyklas, paskyras, saugumą, lockdown.
 
-Techniškai — TanStack Start (React) frontendas + Lovable Cloud (Supabase) backendas su RLS (Row Level Security) taisyklėmis, kurios užtikrina, kad kiekvienas mato tik tai, ką turi matyti.
-
----
-
-## 2. Vaidmenys (rolės)
-
-Sistemoje yra **penki** vaidmenys:
-
-1. **Svečias (guest)** — neprisijungęs žmogus. Mato tik viešus puslapius.
-2. **Moksleivis (student)** — pagrindinis vartotojas. Kaupia valandas.
-3. **Organizacija (organization)** — siūlo užduotis, tvirtina/uždaro rezervacijas.
-4. **Mokyklos administratorius (school_admin)** — mokytojas/auklėtojas, prižiūri klases.
-5. **Super administratorius (admin)** — TU. Visagalis. Vienas ar keli žmonės.
-
-Rolė saugoma `profiles` lentelėje ir dubliuojama `user_roles` (privilegijų eskalacijos prevencijai). Rolės pakeisti kliento pusėje **negalima**.
+Pasiekus valandų tikslą, mokinys generuoja **HMAC-pasirašytą PDF sertifikatą** su QR kodu, kurį universitetai gali patikrinti.
 
 ---
 
-## 3. Registracija (`/register`)
+## 2. Vaidmenys
 
-Registracija turi tik du režimus: **Moksleivis** ir **Mokyklos administratorius**. Organizacijų viešos registracijos **nėra** — jas kuria super admin arba mokyklos administratorius (žr. 8 ir 9 sk.).
+1. **Svečias (guest)** — neprisijungęs. Mato viešus puslapius.
+2. **Moksleivis (student)** — renka valandas.
+3. **Organizacija (organization)** — siūlo užduotis.
+4. **Mokyklos administratorius (school_admin)** — mokytojas/auklėtojas.
+5. **Super administratorius (admin)** — visagalis.
 
-### 3.1 Moksleivio registracija
-
-Reikia:
-- Vardo ir pavardės (privaloma **bent du žodžiai**, kitaip formos nepraleis).
-- El. pašto + slaptažodžio (arba Google/Discord — žr. 4 sk.).
-- Pasirinktos **mokyklos** iš išskleidžiamo sąrašo.
-- Pasirinktos **klasės** (5, 6, 7, 8, 9/I gimn., 10/II gimn., 11/III gimn., 12/IV gimn.).
-- **Valandų tikslo**:
-  - 5–7 klasėms — **fiksuota 20 val.**, mokinys keisti negali.
-  - 8+ klasėms — mokinys pats įrašo (min. 8 val., pagal mokyklos reikalavimą).
-- **Mokyklos prisijungimo kodo** (`signup_code`) — kad atsitiktiniai žmonės iš gatvės neužsiregistruotų svetimai mokyklai. Kodą duoda klasės auklėtojas.
-- Varnelės „patvirtinu, kad duomenys tikri“.
-
-Kodą tikrina serverio RPC `verify_school_signup_code`. Blogas kodas — paskyra **nesukuriama** (nustatoma Supabase Auth pusėje tik po sėkmingo tikrinimo).
-
-### 3.2 Mokyklos administratoriaus registracija
-
-Panašiai kaip moksleivio, tik dar pasirenka **kokias klases** prižiūrės (`assigned_classes`, pvz., `["9 / I gimn.", "10 / II gimn."]`). Jei paliekama tuščia — mato visas mokyklos klases (senų paskyrų suderinamumas).
-
-### 3.3 Google / Discord OAuth registracija
-
-Vartotojas nespaudžia „Registruotis“ — jis spaudžia **„Google“** arba **„Discord“** mygtuką prisijungimo lange. Grįžus atgal į svetainę, jei profilis dar neturi mokyklos, klasės, valandų tikslo — moksleivis matys **profilio užbaigimo formą** (`student.tsx` sekcija), kur privalo tuos laukus užpildyti (su tuo pačiu mokyklos kodu). Kol neužpildo — negali naudoti sistemos.
+Rolė saugoma dviejose vietose: `profiles.role` (rodymui) ir `user_roles` (leidimų patikrai per `has_role` SECURITY DEFINER funkciją). Kliento pusėje pakeisti — neįmanoma.
 
 ---
 
-## 4. Prisijungimas (`/login` ir `/auth`)
+## 3. Bendri UI elementai (visur matomi)
 
-- El. paštas + slaptažodis — standartinis Supabase Auth flow.
-- **Google** — spausk „Prisijungti su Google“. Naudojamas `supabase.auth.signInWithOAuth`. Redirect grįžta į svetainę.
-- **Discord** — spausk „Prisijungti su Discord“. Tas pats mechanizmas.
-- **Slaptažodžio priminimas** — mygtukas „Pamiršau slaptažodį“. Nusiunčia atstatymo laišką (jei el. paštų siuntimas įjungtas). Vartotojas patenka į `/reset-password`.
-- **CAPTCHA** — po kelių nesėkmingų bandymų atsiranda paprastas iššūkis (matematika/paveiksliukas), kad botai negalėtų brute-force'inti.
-- **Lockdown režimas** — jei super admin įjungė lockdown, prisijungimas užrakintas visiems, išskyrus super admin (žr. 8.10).
+### 3.1 Viršutinė navigacija (`layout.tsx`)
 
-Po sėkmingo prisijungimo — hard navigation (`window.location.assign`) į dashboardą pagal rolę (išvengia sesijos race condition su React #310 klaida).
+- **Logotipas kairėje** — spustelėjus grįžta į `/`.
+- **Navigacijos mygtukai** — dinamiškai keičiasi pagal rolę:
+  - Svečias: „Užduotys“, „Prisijungti“, „Registruotis“.
+  - Moksleivis: „Užduotys“, „Mano skydelis“, „Draugai“, varpelis, profilis.
+  - Organizacija: „Skydelis“, „Užduotys“, varpelis, profilis.
+  - Mokyklos admin: „Mokyklos skydelis“, varpelis, profilis.
+  - Super admin: „Admin skydelis“ + visi kiti mygtukai.
+- **Pranešimų varpelis** (žr. 15 sk.).
+- **Profilio meniu** — dropdownas su „Nustatymai“, „Atsijungti“.
+- **Mobiliajame** — mygtukai suglaudžiami į „hamburger“ meniu (sliding sheet).
 
----
+### 3.2 Bug Report Widget (`bug-report-widget.tsx`)
 
-## 5. Svečio (guest) patirtis
+Mažas mygtukas apatiniame dešiniame kampe visuose puslapiuose. Paspaudus:
+- Atsidaro formos modalas.
+- Automatiškai užpildoma: dabartinis URL, user agent, laiko žymė.
+- Vartotojas rašo pranešimą.
+- Įrašas keliauja į `bug_reports` lentelę.
+- Super admin mato juos `/admin/bugs`.
 
-Neprisijungęs žmogus mato:
+### 3.3 Cookie Consent (`cookie-consent.tsx`)
 
-- **`/`** — pagrindinis puslapis su realiu laiku atnaujinamais statistikos rodikliais (bendras valandų skaičius, mokinių skaičius, aktyvių užduočių skaičius). Jei neprisijungęs — hero kortelėje rodo pavyzdinį „0/20 val.“.
-- **`/tasks`** — visas viešų užduočių sąrašas su 3D fonu, filtrais pagal miestą, tag'us, datą.
-- **`/organizations`** (sujungta su `/tasks`) — organizacijų sąrašas.
-- **`/verify/$code`** — bet kas gali įvesti sertifikato kodą ir patikrinti jo autentiškumą (žr. 12 sk.).
-- **`/terms`** — naudojimo taisyklės.
-- **`/blog/*`** — SEO tinklaraštis.
+GDPR baneris apačioje pirmo apsilankymo metu. Mygtukai:
+- **„Sutinku“** — įrašo į `localStorage`, baneris dingsta.
+- **„Sužinoti daugiau“** — nukreipia į `/terms`.
 
-Meniu **neturi** „Skydelis / Dashboard“ nuorodų — jos rodomos tik prisijungus.
+### 3.4 3D fono efektai (`background-fx.tsx`, `tasks-background.tsx`, `auth-3d-background.tsx`)
 
----
+- Naudoja Three.js dalelėms ir parallax efektams.
+- Skirtingi fonai skirtinguose puslapiuose (login turi aurora, tasks — OpenGL dalelės).
+- Automatiškai išjungiami mobiliuose telefonuose taupant baterija ir performance.
 
-## 6. Moksleivio (student) patirtis (`/student`)
+### 3.5 Onboarding turas (`onboarding-tour.tsx`)
 
-### 6.1 Dashboard'as
+Pirmą kartą prisijungęs bet kuris vartotojas mato **spotlight tour** — apšviečia svarbiausius mygtukus, paaiškina ką jie daro. Mygtukai:
+- **„Kitas“** — kitas žingsnis.
+- **„Atgal“** — ankstesnis.
+- **„Praleisti“** — uždaro, įrašo į `localStorage` kad daugiau nerodytų.
 
-Rodo:
-- **KPI kortelės** — sukauptos valandos / tikslas, laukiančių rezervacijų skaičius, artimiausio įvykio data.
-- **Progreso žiedas** — kiek procentų iki tikslo.
-- **Statistikos diagramos** (recharts) — valandų augimas per mėnesius, veiklų kategorijos.
-- **Artimiausios rezervacijos** — kortelės su „Chat“ ir „Detalės“ mygtukais.
-- **Draugų srautas** — kas iš klasės neseniai gavo valandų (motyvacija).
+### 3.6 Error Monitor (`error-monitor.tsx`)
 
-### 6.2 Rezervacijų kūrimas
-
-Du būdai:
-1. **„Rezervuoti“ užduotį** iš `/tasks` — atsidaro modalas, mokinys pasirenka datą, laiką iš siūlomų slot'ų, patvirtina.
-2. **„Pasiūlyti savo“ (custom)** — jei organizacijos ten nėra, mokinys aprašo veiklą, uždeda tag'us, siūlo laiką. **Valandos automatiškai ribojamos iki 8 val. vienai sesijai** ir aiškiai parašyta: „Organizacija turi patvirtinti — negalima susikurti valandų be jos sutikimo.“
-
-### 6.3 Rezervacijos gyvenimo ciklas
-
-`pending` → `approved` (vykdoma) → `completed` (užbaigta, valandos įskaičiuotos). Yra dar `declined` (atmesta). Statusas keičiasi automatiškai su sistemos žinutėmis chate.
-
-### 6.4 Draugai
-
-- `/friends` — draugystės užklausos, priėmimas/atmetimas.
-- **DM chat'as tarp draugų** — asmeninės žinutės, automatiškai **triname po 2 dienų** (`purge_dm_messages` cron), kad neaugtų DB.
-- **Grupinės rezervacijos** — mokinys gali pakviesti draugą prisidėti; organizacijai patvirtinus ir uždarius, valandos duodamos **visiems dalyviams**.
-
-### 6.5 PDF sertifikatas
-
-Pasiekus tikslą (`hours_earned >= hours_needed`) — atsiranda mygtukas **„Generuoti sertifikatą“**. QR kodas nukreipia į `/verify/$code`, kur mokytojas ar universitetas gali patikrinti autentiškumą. Serveris HMAC-pasirašo turinį; kliento pusė **negali** suklastoti. Jei valandų neužtenka — mygtukas neaktyvus.
+Fone gaudo JavaScript klaidas, siunčia į `incident_reports` per `incident.functions.ts`. Vartotojas nieko nemato — tai skirta tau debug'inti.
 
 ---
 
-## 7. Organizacijos patirtis (`/organization`)
+## 4. Pagrindinis puslapis `/` (`routes/index.tsx`)
 
-### 7.1 Dashboard'as
+### 4.1 Hero sekcija
+- **Antraštė** — „Socialinės valandos, kurios veikia“.
+- **Sub-tekstas** — trumpas platformos pristatymas.
+- **3D interaktyvi kortelė** su tavo statistika:
+  - Jei prisijungęs mokinys — rodo **realias** `hours_earned / hours_needed`.
+  - Jei neprisijungęs — rodo pavyzdinį „0/20 val.“.
+- **CTA mygtukai**: „Pradėti dabar“ (→ `/register`), „Peržiūrėti užduotis“ (→ `/tasks`).
 
-- **KPI** — aktyvios užduotys, laukiantys mokiniai, šio mėnesio uždarytos valandos.
-- **Analitika** — savanorių skaičiaus dinamika, populiariausi tag'ai (recharts).
-- **Rezervacijų sąrašas** — su filtrais (laukia / vykdomos / užbaigtos).
+### 4.2 Live statistika (visai svetainei)
+Trys skaitikliai atnaujinami realiu laiku:
+- **Bendras valandų skaičius** (visų mokinių sukauptos).
+- **Aktyvių mokinių** skaičius.
+- **Atvirų užduočių** skaičius.
 
-### 7.2 Užduočių kūrimas („Nauja užduotis“)
+### 4.3 „Kaip veikia?“ sekcija
+Trys žingsniai su tilt-3D kortelėmis: „Rask veiklą“ → „Užsirezervuok“ → „Gauk valandas“.
 
-Formos laukai: pavadinimas, aprašymas, data, laiko intervalas, valandos, vieta, tag'ai, spot'ų skaičius, ar tai vienkartinis renginys (event), pakartojimas (`none` / `weekly` / `biweekly` / `monthly`). Pasikartojančios užduotys automatiškai generuojamos `generate_recurring_tasks` funkcijos (pg_cron kas naktį).
+### 4.4 Featured užduotys
+Trys naujausios užduotys iš DB — spusi ir patenki į `/tasks` su ta užduotimi atidaryta.
 
-### 7.3 Rezervacijos tvirtinimas
-
-Kai mokinys užsirezervuoja, organizacija mato „Patvirtinti“ / „Atmesti“. Patvirtinus — statusas tampa `approved`, chat'e atsiranda sistemos žinutė.
-
-### 7.4 „Verify & Close Task“
-
-Kai darbas atliktas, spaudžia **„Uždaryti su patvirtinimu“**. Modalas reikalauja:
-- Aprašyti, ką mokinys nuveikė.
-- **Privaloma teisinė varnelė**: „Patvirtinu, kad mokinys iš tiesų atliko šį darbą; suprantu, kad melagingi liudijimai gali užtraukti teisinę atsakomybę.“
-
-Šis tekstas saugomas `reservations.legal_disclosure` — mokykla vėliau audite mato tikslų pareiškimą.
-
-Uždarius — kviečiama `award_reservation_hours` SECURITY DEFINER RPC, kuri atomiškai priskiria valandas mokiniui (ir visiems grupės dalyviams).
-
-### 7.5 Laiko derybos chate
-
-Modalas „Keisti rezervacijos laiką“ leidžia organizacijai pasiūlyti kitą laiką; mokinys chate mato mygtukus **„Priimti“ / „Atmesti“**.
+### 4.5 Footer
+Nuorodos: `/terms`, `/verify`, kontaktai, socialiniai tinklai.
 
 ---
 
-## 8. Mokyklos administratorius (`/school`)
+## 5. Registracija `/register` (`routes/register.tsx`)
 
-Dashboard'as suskirstytas į **tabus**:
+**Du režimai** (tab'ai): **Moksleivis** ir **Mokyklos administratorius**. Organizacijų viešos registracijos NĖRA.
 
-### 8.1 „Mokiniai“
+### 5.1 Moksleivio forma — laukai
 
-Sąrašas visų priskirtos klasės (`assigned_classes`) mokinių: vardas, klasė, valandos, tikslas, statuso juostelė. Mygtukas **„Auditas“** atveria mokinio istoriją — visas rezervacijas su sukurtais teisiniais patvirtinimais, chat'ų peržiūra (3-way).
+| Laukas | Taisyklė |
+|---|---|
+| Vardas ir pavardė | Privaloma **bent 2 žodžiai** (validacija) |
+| El. paštas | Standartinė validacija |
+| Slaptažodis | Min 6 simboliai |
+| Mokykla (dropdownas) | Iš `schools` lentelės, tik `is_active = true` |
+| Klasė | 5, 6, 7, 8, 9/I gimn., 10/II gimn., 11/III gimn., 12/IV gimn. |
+| Valandų tikslas | 5-7 kl. — **fiksuota 20** (readonly); 8+ kl. — įvedi pats (min 8) |
+| Mokyklos kodas | Kodą duoda auklėtojas; tikrina RPC `verify_school_signup_code` |
+| „Duomenys tikri“ checkbox | Privaloma pažymėti |
 
-### 8.2 „Peržiūros eilė“
+**Mygtukai**:
+- **„Registruotis“** — validuoja viską; jei kodas blogas, paskyra NEsukuriama.
+- **„Prisijungti su Google“** / **„Prisijungti su Discord“** — OAuth flow. Grįžus, jei profilis nepilnas, `/student` parodo profilio užbaigimo formą.
+- **„Turi paskyrą? Prisijunk“** — nuoroda į `/login`.
 
-**Naujas funkcionalumas.** Rodo visas paskutines rezervacijas kaip lentelę su:
-- **Filtrais pagal klasę** (pvz., tik „9 / I gimn.“).
-- **Įtarimo žymėmis** (fraud flags) — automatiškai aptinka:
-  - Labai daug valandų (≥10) — didelė rizika.
-  - Ilga sesija (8–9 val.) — vidutinė.
-  - Naktinės valandos (prieš 6:00 arba po 22:00).
-  - Ateities data, bet jau pažymėta užbaigta.
-  - Persidengiančios rezervacijos tam pačiam mokiniui tą pačią dieną.
-  - Sukurta ir užbaigta beveik akimirksniu.
-  - Vyko darbo dieną pamokų metu (informacinis).
-- **Bulk veiksmais** — pažymėti visas, „Pažymėti peržiūrėtomis“, „Nuimti peržiūrą“, **eksportuoti CSV**.
-- **Filtrais** — „Tik įtartinos“, „Tik neperžiūrėtos“.
-- Numeriniai badge'ai tab'e: kiek dar neperžiūrėta, kiek įtartinų.
+### 5.2 Mokyklos admin forma — papildomas laukas
 
-Peržiūros būsena saugoma naršyklės `localStorage` — greitas ir be DB nepakraunantis mechanizmas.
+**Priskirtos klasės** (multi-select checkbox'ai) — kokias klases prižiūrės (`assigned_classes` masyvas). Jei tuščias — mato visą mokyklą.
 
-### 8.3 „Organizacijos partneriai“
+### 5.3 Google/Discord onboarding
 
-Sąrašas organizacijų, dirbančių su tavo mokykla. Mygtukas atveria tiesioginį pokalbį.
-
-### 8.4 „Vienkartiniai renginiai“
-
-Mokyklos administratorius pats gali sukurti vienkartinį renginį (pvz., miesto akcija) kaip užduotį, be atskiros organizacijos.
-
-### 8.5 „Naujos paskyros“
-
-Mokyklos administratorius gali kurti **organizacijų paskyras** (iki 10) — kai atsiranda nauja bendruomenė, mokykla nenori laukti super admin.
+Vartotojas nespaudžia „Registruotis“ — spausdinasi OAuth mygtuką. Grįžus:
+- Jei pirmas kartas — `/student` parodo **profilio užbaigimo formą** (mokykla, klasė, tikslas, kodas).
+- Kol neužpildo — sistemos naudoti negali.
 
 ---
 
-## 9. Super administratorius (`/admin`)
+## 6. Prisijungimas `/login` (`routes/login.tsx`)
 
-**Sidebar** su 12+ puslapių. Kiekvienas — atskira, pilnai veikianti sekcija.
+### 6.1 Formos laukai
+- El. paštas.
+- Slaptažodis.
 
-### 9.1 Pagrindinis (Overview)
+### 6.2 Mygtukai
+- **„Prisijungti“** — Supabase Auth. Po sėkmės — `window.location.assign('/{role-dashboard}')` (hard navigation, kad išvengtų React #310 race condition).
+- **„Google“** — `supabase.auth.signInWithOAuth({ provider: 'google' })`.
+- **„Discord“** — tas pats su `discord`.
+- **„Pamiršau slaptažodį“** — → `/forgot-password`.
+- **„Neturi paskyros? Registruokis“** — → `/register`.
 
+### 6.3 CAPTCHA (`components/captcha.tsx`)
+
+Po **3 nesėkmingų bandymų** — atsiranda paprastas iššūkis (matematika arba paveiksliukas). Serveris išduoda proof token'ą per `captcha.functions.ts`; be jo tolimesnės pastangos atmetamos.
+
+### 6.4 Lockdown režimas
+
+Jei super admin įjungė lockdown — visi mato maintenance ekraną (žr. 18 sk.). Tik super admin gali apeiti su slaptu kodu.
+
+### 6.5 Aurora fonas
+
+Animuotas 3D fonas, kurį galima išjungti automatiškai jei įrenginys silpnas.
+
+---
+
+## 7. Slaptažodžio atstatymas
+
+- `/forgot-password` — įvedi el. paštą, spaudi **„Siųsti nuorodą“**. Supabase siunčia atstatymo laišką.
+- `/reset-password` (arba `/update-password`) — įvedi naują slaptažodį, patvirtini, **„Išsaugoti“**.
+- `/verify-email` — patvirtinimo landing puslapis po email verification.
+- `/auth/callback` — OAuth callback route, tvarko token'ą ir redirect'ą.
+
+---
+
+## 8. Užduočių sąrašas `/tasks` (`routes/tasks.tsx`)
+
+### 8.1 Filtrai (kairė pusė arba viršus mobile)
+- **Paieška pagal tekstą** — pavadinimas / aprašymas.
+- **Miesto filtras** — dropdownas.
+- **Tag'ų filtras** — checkbox'ai (senelių namai, aplinkosauga, renginys ir t.t.).
+- **Datos intervalas** — nuo/iki.
+- **Rūšiavimas** — naujausios / valandos↓ / valandos↑ / arčiausiai.
+- **„Išvalyti filtrus“** mygtukas.
+
+### 8.2 Užduočių kortelės
+Kiekviena kortelė rodo:
+- Pavadinimą + organizacijos vardą.
+- Datą, laiką, valandas, likusias vietas.
+- Tag'us.
+- **„Rezervuoti“** mygtuką (jei moksleivis prisijungęs).
+- **„Detalės“** — atveria pilną modalą.
+
+### 8.3 Rezervacijos modalas (`reservation-dialog.tsx`)
+
+Kai spaudi „Rezervuoti“:
+- Datos pasirinkimas.
+- Laiko slotas (`08:00-12:00` tipo).
+- **Live trukmės skaičiuoklė** — automatiškai parodo, kiek valandų gausi.
+- **Pastabos** laukas organizacijai.
+- **„Patvirtinti“** — įrašo į `reservations` su statusu `pending`.
+- **„Atšaukti“**.
+
+### 8.4 Custom rezervacija (`custom-reservation-dialog.tsx`)
+
+Jei organizacijos nėra sąraše — mokinys spaudžia **„Pasiūlyti savo veiklą“**:
+- Aprašymas, tag'ai, data, laikas.
+- **Valandos apribotos iki 8 per sesiją** (spam prevencija).
+- Aiškus tekstas: „Organizacija turi patvirtinti — savavališkai valandų negausi.“
+
+### 8.5 3D fonas
+Specialus OpenGL/Three.js fonas su animuotomis dalelėmis.
+
+---
+
+## 9. Verifikacijos puslapis `/verify/$code` ir `/verify` (`routes/verify.*.tsx`)
+
+**Viešas** puslapis — bet kas gali patikrinti PDF sertifikatą.
+
+### 9.1 `/verify` (index)
+- Input laukas: „Įvesk sertifikato kodą“.
+- **„Patikrinti“** mygtukas → nukreipia į `/verify/$code`.
+- Paaiškinimas kaip sistema veikia ir kodėl klastojimas neįmanomas.
+
+### 9.2 `/verify/$code` (dinamiškas)
+Kviečia `verify_certificate` RPC. Rodo:
+- ✅ Galioja / ❌ Neegzistuoja / ⚠️ Atšauktas.
+- Mokinio vardas, klasė, mokykla.
+- Valandos generavimo momentu.
+- Dabartinis valandų kiekis DB.
+- QR kodo hash'as.
+
+---
+
+## 10. Moksleivio dashboard'as `/student` (`routes/student.tsx`)
+
+### 10.1 KPI kortelės (viršus)
+- **Sukauptos valandos** — `hours_earned / hours_needed` + progreso juosta.
+- **Laukiančios rezervacijos** — skaičius.
+- **Artimiausia veikla** — data + pavadinimas.
+- **Draugų skaičius**.
+
+### 10.2 Progreso žiedas
+Animuotas SVG žiedas rodo % iki tikslo.
+
+### 10.3 Diagramos (recharts)
+- **Valandų augimas per mėnesius** — Area chart.
+- **Veiklų kategorijos** — Pie chart pagal tag'us.
+
+### 10.4 Rezervacijų sąrašas
+Skirtukai (tabs): **„Laukiančios“**, **„Vykdomos“**, **„Užbaigtos“**, **„Atmestos“**. Kiekvienoje kortelėje:
+- Užduoties pavadinimas, data, valandos, statusas.
+- **„Chat“** — atveria 3-way chat'ą su organizacija + mokyklos admin.
+- **„Detalės“** — pilna info.
+- **„Atšaukti“** — jei dar `pending`.
+
+### 10.5 Profilio užbaigimo forma (jei nepilnas)
+Rodoma tik pirmą kartą po OAuth registracijos. Laukai: mokykla, klasė, tikslas, kodas. Mygtukas **„Užbaigti profilį“**.
+
+### 10.6 PDF sertifikato mygtukas (`certificate-button.tsx`)
+- **Rodomas tik jei** `hours_earned >= hours_needed`.
+- Paspaudus — generuojamas PDF su QR kodu.
+- **Serveris HMAC-pasirašo** turinį; kliento klastoti negalima.
+- Jei valandų neužtenka — mygtukas grey/disabled.
+
+### 10.7 Draugų srautas
+Rodo, kas iš klasės neseniai gavo valandų (motyvacija).
+
+---
+
+## 11. Organizacijos dashboard'as `/organization` (`routes/organization.tsx`)
+
+### 11.1 KPI kortelės
+- Aktyvių užduočių skaičius.
+- Laukiančių mokinių skaičius.
+- Šio mėnesio uždarytos valandos.
+- Vidutinis atsako laikas.
+
+### 11.2 Analitika (recharts)
+- Savanorių dinamika (Line).
+- Populiariausi tag'ai (donut).
+- Uždarymo greitis.
+
+### 11.3 „Nauja užduotis“ mygtukas → `create-task-panel.tsx`
+Formos laukai:
+- Pavadinimas, aprašymas.
+- Data, laiko intervalas.
+- Valandos, spot'ų skaičius.
+- Vieta (miestas + adresas).
+- **Tag'ai** (`tags-input.tsx` — chip-style input).
+- Ar tai vienkartinis renginys (event checkbox).
+- **Pakartojimas**: `none` / `weekly` / `biweekly` / `monthly` — pg_cron automatiškai generuoja instances.
+- **„Sukurti“** / **„Atšaukti“**.
+
+### 11.4 Rezervacijų valdymas
+Kiekvienai `pending` rezervacijai:
+- **„Patvirtinti“** — statusas → `approved`, chat'e sisteminė žinutė.
+- **„Atmesti“** — → `declined` su priežastimi.
+- **„Chat“** — atveria pokalbį.
+
+### 11.5 „Uždaryti su patvirtinimu“ (`verify-close-dialog.tsx`)
+Kai darbas atliktas:
+- Aprašymas ką mokinys nuveikė.
+- **Privaloma teisinė varnelė**: „Patvirtinu, kad mokinys iš tiesų atliko šį darbą; suprantu, kad melagingi liudijimai užtraukia teisinę atsakomybę.“
+- Tekstas saugomas `reservations.legal_disclosure`.
+- **„Uždaryti“** — kviečia `award_reservation_hours` RPC, atomiškai priskiria valandas mokiniui (ir visiems grupės dalyviams).
+
+### 11.6 Laiko derybos (`change-reservation-dialog.tsx`)
+Organizacija siūlo kitą laiką → chat'e mokinys mato **„Priimti“ / „Atmesti“** mygtukus.
+
+---
+
+## 12. Mokyklos administratoriaus dashboard'as `/school` (`routes/school.tsx`)
+
+Skirtukai:
+
+### 12.1 „Mokiniai“
+Sąrašas priskirtos klasės mokinių: vardas, klasė, valandos, tikslas, statuso juostelė. Mygtukas **„Auditas“** — atveria mokinio istoriją: visos rezervacijos, teisiniai patvirtinimai, chat'ai.
+
+### 12.2 „Peržiūros eilė“ (fraud detection)
+Lentelė su visomis paskutinėmis rezervacijomis. Kolonos: mokinys, klasė, užduotis, data, valandos, statusas, **fraud flags**.
+
+**Fraud flags** (iš `lib/fraud-flags.ts`):
+- 🔴 Labai daug valandų (≥10) — didelė rizika.
+- 🟠 Ilga sesija (8-9 val.) — vidutinė.
+- 🟡 Naktinės valandos (prieš 6:00 arba po 22:00).
+- 🔴 Ateities data, jau pažymėta užbaigta.
+- 🟠 Persidengia su kita tą pačią dieną.
+- 🔴 Sukurta ir užbaigta beveik akimirksniu.
+- 🟡 Vyko darbo dieną pamokų metu.
+
+**Mygtukai virš lentelės**:
+- Filtras pagal klasę (dropdown).
+- „Tik įtartinos“ checkbox.
+- „Tik neperžiūrėtos“ checkbox.
+- **„Pažymėti visas peržiūrėtomis“** (bulk).
+- **„Nuimti peržiūrą“** (bulk).
+- **„Eksportuoti CSV“**.
+
+Peržiūros būsena — `localStorage` (greita, DB neapkrauna).
+
+### 12.3 „Organizacijos partneriai“
+Sąrašas + **„Rašyti“** mygtukas → chat.
+
+### 12.4 „Vienkartiniai renginiai“ (`create-event-panel.tsx`)
+Mokykla pati kuria vienkartinę užduotį (pvz., miesto akcija) be atskiros organizacijos. Panašūs laukai kaip organizacijos formoje.
+
+### 12.5 „Naujos paskyros“ (`school-create-org-panel.tsx`)
+Mokyklos admin gali sukurti **iki 10 organizacijų paskyrų** — kai atsiranda nauja bendruomenė ir nenori laukti super admin.
+
+---
+
+## 13. Super admin dashboard'as `/admin`
+
+Sidebar su daug puslapių. Kiekvienas — atskira sekcija.
+
+### 13.1 `/admin` (Overview / `admin.index.tsx`)
 - KPI: viso vartotojų, mokinių, organizacijų, mokyklų, atviros užduotys, valandos šį mėnesį.
-- Live diagramos: augimo grafikas (Area chart), pasiskirstymas pagal rolę (Pie), naujausi įrašai.
+- Diagramos: augimo Area chart, rolių Pie chart.
+- Naujausi įrašai.
 
-### 9.2 Analitika (`/admin/analytics`)
-
-Pilnai interaktyvūs recharts diagramos:
+### 13.2 `/admin/analytics` (`admin.analytics.tsx`)
+Pilnai interaktyvios recharts diagramos:
 - Valandų suma per mėnesį (Bar).
-- Aktyvių mokinių trend'as (Line).
-- Populiariausios tag'ų kategorijos (donut).
-- Vidutinis atsako laikas (organizacijos → mokinys).
+- Aktyvūs mokiniai (Line trend).
+- Tag'ų kategorijos (donut).
+- Vidutinis org → mokinys atsako laikas.
 
-### 9.3 Mokiniai (Students)
+### 13.3 `/admin/manage` (Mokiniai) (`admin.manage.tsx`)
+Globali paieška visų mokinių. Mygtukai:
+- **„Keisti rolę“** — dropdown.
+- **„Redaguoti valandas“** — inline edit.
+- **„Ištrinti“** — kaskadinis trynimas.
 
-Globali paieška visų sistemoje esančių mokinių. Rolės keitimas, valandų taisymas, ištrynimas.
+### 13.4 `/admin/reservations` (`admin.reservations.tsx`)
+Visos rezervacijos, filtrai pagal statusą, datą, mokyklą, organizaciją.
 
-### 9.4 Rezervacijos (Global reservations)
-
-Visos rezervacijos iš visų mokyklų su filtrais pagal statusą, datą, mokyklą.
-
-### 9.5 Lyderiai (Leaderboard)
-
+### 13.5 `/admin/leaderboard` (`admin.leaderboard.tsx`)
 Top mokiniai pagal valandas per savaitę / mėnesį / metus. Motyvacinis rodiklis.
 
-### 9.6 Mokyklos (`/admin/schools`)
+### 13.6 `/admin/schools` (`admin.schools.tsx`)
+- Sąrašas mokyklų.
+- **„Pridėti mokyklą“** — formoje: pavadinimas, miestas, `signup_code`, `is_active`.
+- **„Redaguoti“** — keisti kodą, deaktyvuoti.
+- **„Ištrinti“**.
+- Autocomplete sinchronizuotas su registracija.
 
-Sąrašas visų mokyklų. **„Prideti mokyklą“** — įveda pavadinimą, miestą, `signup_code`, `is_active`. Kai mokinys registracijoje ieško mokyklos — įrašius pavadinimą, autocomplete rodo šitas. Kodą galima keisti bet kada (žr. `docs/README-school-code-update.md`).
+### 13.7 `/admin/accounts` (`admin.accounts.tsx`)
+- **„Sukurti paskyrą“** — bet kokiam vaidmeniui.
+- **„Ištrinti paskyrą“** — per `admin-delete.functions.ts` kaskadinis trynimas: auth.users → profiles → rezervacijos → žinutės → viskas išvalyta.
+- Sąrašas visų vartotojų su rolėmis.
 
-### 9.7 Paskyros (Accounts) (`/admin/accounts`)
+### 13.8 `/admin/organizations` (`admin.organizations.tsx`)
+Visų organizacijų valdymas — kūrimas, trynimas, priskyrimas mokyklai.
 
-- **„Sukurti paskyrą“** — bet kokiam vaidmeniui, greitai debug'ui.
-- **„Bulk import“** — dar planuojama (žr. 15 sk.).
-- **„Ištrinti paskyrą“** — kaskadinis trynimas per `deleteAccount` server function (auth.users → profiles → rezervacijos → žinutės → viskas išvalyta).
+### 13.9 `/admin/activity` (`admin.activity.tsx`)
+Sistemos veiklos žurnalas — prisijungimai, kritinės klaidos, incidentai iš `incident_reports`.
 
-### 9.8 Įrankiai (`/admin/tools`)
+### 13.10 `/admin/messages` (`admin.messages.tsx`)
+Chat auditas — visos žinutės (su privatumo įspėjimu). Filtrai pagal chat room, mokyklą.
 
-- **DB sveikatos patikra** (`run_deep_health_scan`) — 18 testų: pasiekiamos lentelės, RLS įjungtas visur, funkcijos egzistuoja, purge dirba, adminas egzistuoja, orphan žinutės, senos DM žinutės. Rezultatas — spalvota kortelių sienelė su kritinių gedimų skaičiumi.
-- **PDF sertifikatų testavimas** — trys mygtukai:
-  - „🎭 Fake Demo PDF“ — sugeneruoja pavyzdinį sertifikatą „Jonas Petraitis“ su 20 val.
-  - „🧪 Debug PDF“ — sugeneruoja realiam prisijungusiam admin'ui apeinant valandų check'ą.
-  - „Verifikuoti kodą“ — įvedi bet kokį kodą, matai backend'o atsakymą.
-- **Mass reset** — ištrinti visas rezervacijas / visas žinutes / visus mokinius. Tik ekstremaliais atvejais.
+### 13.11 `/admin/bugs` (`admin.bugs.tsx`)
+Bug reports iš `BugReportWidget`. Kolonos: pranešėjas, URL, žinutė, laikas, statusas. Mygtukai: **„Pažymėti išspręstu“**, **„Ištrinti“**.
 
-### 9.9 Bug pranešimai (`/admin/bugs`)
+### 13.12 `/admin/lockdown` (`admin.lockdown.tsx`)
+- **Master toggle** — įjungti/išjungti lockdown.
+- **Pranešimo tekstas** vartotojams.
+- **Klaidos kodas**.
+- **Auto-lockdown įjungimas** — jei DB scan aptinka kritinių gedimų.
 
-Kiekvienas puslapis turi „BugReportWidget“ — mažas mygtukas apačioje. Vartotojas rašo pranešimą, ekrano URL ir user agent'as automatiškai pridedami. Čia matai visą sąrašą, gali pažymėti kaip išspręstą.
+### 13.13 `/admin/tools` (`admin.tools.tsx`)
 
-### 9.10 Lockdown (`/admin/lockdown`)
+Įrankių puslapis. Skyriai:
 
-- **Master toggle** — įjungti/išjungti visos svetainės lockdown režimą.
-- Kai įjungta, visi vartotojai mato „maintenance“ ekraną su tavo pranešimu ir klaidos kodu.
-- **Slaptas apėjimas** — būdamas lockdown ekrane, klaviatūra įrašyk žodį `jumpsipidy` (jokių input laukų). Atsiras kodo laukas — įvesk `7851`. Serveris išduoda HMAC-SHA256 token'ą, kuris leidžia super admin toliau dirbti kaip įprasta.
-- Po kelių nepavykusių bandymų — aktyvuojasi CAPTCHA prieš kodo tikrinimą.
-- **Auto-lockdown** — jei `run_deep_health_scan` randa kritinių gedimų, `auto_lockdown_if_unhealthy` automatiškai įjungia lockdown su pranešimu „[auto] Sistemos patikra rado X kritinių gedimų“.
+**A. DB sveikatos patikra** — mygtukas **„Paleisti pilną patikrą“** (`run_deep_health_scan`). 18 testų:
+1. Ar `profiles` lentelė pasiekiama.
+2. Ar `reservations` pasiekiama.
+3. Ar `messages` pasiekiama.
+4. Ar `chat_rooms` pasiekiama.
+5. Ar `user_roles` pasiekiama.
+6. Ar `schools` pasiekiama.
+7. Ar `tasks` pasiekiama.
+8. Ar RLS įjungtas visose viešose lentelėse.
+9. Ar `has_role` funkcija egzistuoja.
+10. Ar `can_view_profile` egzistuoja.
+11. Ar `award_reservation_hours` egzistuoja.
+12. Ar `verify_school_signup_code` egzistuoja.
+13. Ar `purge_old_messages` cron dirba.
+14. Ar `purge_dm_messages` cron dirba.
+15. Ar `generate_recurring_tasks` cron dirba.
+16. Ar bent vienas admin egzistuoja.
+17. Ar nėra orphan žinučių (be chat_room).
+18. Ar nėra senų DM žinučių, kurios neišvalytos.
 
-### 9.11 Onboarding turas
+Rezultatas — spalvota kortelių sienelė. Kritinių gedimų skaičius rodomas viršuje. Jei kritinių >0 — **„Automatiškai įjungti lockdown“** siūlomas mygtukas.
 
-Pirmą kartą prisijungęs super admin (arba bet kuris vartotojas) mato tour'ą — spotlight'ai ant pagrindinių mygtukų su paaiškinimais. Galima praleisti.
+**B. PDF sertifikatų testavimas** — trys mygtukai:
+- **„🎭 Fake Demo PDF“** — sugeneruoja pavyzdinį sertifikatą „Jonas Petraitis, 9 kl., Šeduvos gimnazija“ su 20 val. ir 8 fiktyviais įrašais. Skirtas vizualiai peržiūrai.
+- **„🧪 Debug PDF“** — sugeneruoja realiam prisijungusiam admin'ui apeinant valandų check'ą (`debug: true` flag'as backend'e).
+- **„Verifikuoti kodą“** — įvedi kodą, matai backend'o atsakymą.
 
-### 9.12 Debug panel (visai kitiems vaidmenims impersonuoti)
+**C. Mass reset** (destruktyvūs veiksmai — su patvirtinimu):
+- **„Ištrinti visas rezervacijas“**.
+- **„Ištrinti visas žinutes“**.
+- **„Ištrinti visus mokinius“**.
+- Kiekvienas reikalauja įvesti „TAIP TRINTI“ tekstą.
 
-Super admin skydelyje matomas kampinis panelis su mygtukais:
-- „Sukurti + Login kaip Student“
-- „Sukurti + Login kaip Organization“
-- „Sukurti + Login kaip School Admin“
+### 13.14 Debug panelis (`mock-tester-panel.tsx`)
+Kampinis panelis, matomas tik super admin'ui. Mygtukai:
+- **„Sukurti + Login kaip Student“** — vienu paspaudimu mock paskyra, impersonate, dashboard.
+- **„Sukurti + Login kaip Organization“**.
+- **„Sukurti + Login kaip School Admin“**.
+- **„Grįžti į admin“** — atkuria tavo super admin sesiją.
 
-Vieno paspaudimo debug — sukuriama mock paskyra (per `dev-tools.functions`), impersonuojamas, gauni pilną tos rolės patirtį. Nematomas kitiems.
-
----
-
-## 10. Chat sistema
-
-- **3-way chat** — kiekviena rezervacija turi savo `chat_room`, kurioje mato mokinys, organizacija ir (jei priskirta) mokyklos administratorius.
-- **Sisteminės žinutės** — status keitimai (patvirtinta, atmesta, uždaryta) automatiškai įrašomi kaip sisteminės žinutės chate.
-- **12 dienų autopurge** — `purge_old_messages` cron trina žinutes senesnes nei 12 d. (privatumas + DB dydžio kontrolė). Chate rodomas įspėjamasis label'as „Žinutės automatiškai trinamos po 12 d.“
-- **DM chat'ai tarp draugų** — atskira `dm_rooms` / `dm_messages` lentelė. Trynimas — 2 dienos.
-- **Live** — Supabase Realtime subscriptions, žinutės atsiranda be perkrovimo.
-
----
-
-## 11. Pranešimų varpelis (notification bell)
-
-Viršuje dešinėje. Rodo:
-- Naujos rezervacijos.
-- Statuso pasikeitimai.
-- Nauji chat pranešimai.
-- Draugystės užklausos.
-
-Su animacijomis, hash URL'ais (paspaudus atveria konkretų item'ą).
-
----
-
-## 12. PDF sertifikatai — kaip apsaugoti nuo klastojimo
-
-Kiekvienas sertifikatas turi:
-- **Unikalų kodą** (`code`, upper-case).
-- **SHA-256 hash'ą** turinio (`content_hash`).
-- **HMAC parašą** su `CERT_SIGNING_SECRET` (Lovable Cloud ir Vercel env).
-- **QR kodą**, nukreipiantį į `https://socialinesvalandos.lt/verify/{code}` (arba `socialinesvalandos.vercel.app` dabar).
-
-Verifikacijos puslapis vieša — bet kas įveda kodą arba nuskaito QR — mato: vardas, klasė, mokykla, valandos generavimo momentu, dabartinis kiekis DB, ar sertifikatas atšauktas.
-
-Klastojimas neįmanomas: nesukurdamas įrašo DB, negausi teisingo kodo; parašo be secret'o neatkursi.
-
-Plačiau — `docs/PDF-SERTIFIKATAI.md` ir `docs/PDF-VERIFIKACIJA.md`.
+Naudingas testuoti kiekvieną rolę realiu laiku.
 
 ---
 
-## 13. Saugumas ir privatumas
+## 14. Chat sistema
 
-- **RLS visose vartotojo lentelėse** — mokinys mato tik savo duomenis, organizacija — tik savo rezervacijų mokinius, mokyklos administratorius — tik priskirtos mokyklos, super admin — viską.
-- **`can_view_profile`** funkcija centralizuoja profilio matomumo logiką (išveng permissive policy).
-- **`has_role`** SECURITY DEFINER funkcija — anti-privilege-escalation.
-- **`user_roles`** — atskira lentelė, ne `profiles.role` — kad kliente pakeista rolė netaptų realiu leidimu.
-- **CAPTCHA** — prisijungime po kelių fail'ų, lockdown apėjime.
-- **Bearer token middleware** — kiekvieną protected server function auth patikra.
-- **Cookie-Script** — GDPR banner viešuose puslapiuose.
+### 14.1 3-way chat (rezervacijoms) — `chat-dialog.tsx`
+Kiekviena rezervacija turi savo `chat_room`. Dalyviai: mokinys, organizacija, mokyklos admin (jei priskirtas).
+
+**Mygtukai chat'e**:
+- **Siųsti žinutę** (Enter arba mygtukas).
+- **„Keisti laiką“** (tik organizacija) → `change-reservation-dialog`.
+- **„Pakviesti draugą“** (tik mokinys) → `invite-friends-dialog`.
+- **Sisteminės žinutės** — automatiškai atsiranda kai statusas keičiasi.
+
+**Įspėjamasis label'as**: „Žinutės automatiškai trinamos po 12 dienų“ (`purge_old_messages` cron).
+
+### 14.2 DM chat (draugų) — `dm-dialog.tsx`
+Asmeninės žinutės tarp draugų. Atskira `dm_rooms` / `dm_messages` lentelė. **Trynimas — 2 dienos** (`purge_dm_messages` cron, agresyvus DB dydžio kontrolei).
+
+### 14.3 Grupės pakvietimai (`group-invites-inbox.tsx`, `invite-friends-dialog.tsx`)
+Mokinys pakviečia draugą prisijungti prie rezervacijos. Draugas mato **„Priimti“ / „Atmesti“**. Priėmus — kai užduotis uždaroma, valandos duodamos **visiems** dalyviams.
+
+### 14.4 Realtime
+Supabase Realtime subscription — žinutės atsiranda be perkrovimo.
 
 ---
 
-## 14. Techninių problemų diagnostika
+## 15. Pranešimų varpelis (`notification-bell.tsx`)
 
-- **DB sveikatos patikra** (žr. 9.8) — 18 testų.
-- **BugReportWidget** — vartotojai patys praneša klaidas.
-- **Sentry / logs** — server function logs pasiekiami per Lovable dashboard.
-- **Auto-lockdown** — jei sistema kritiškai nesveika, automatiškai užrakinama, kad nesukurtų daugiau žalos.
+Viršuje dešinėje. Rodo naujus:
+- Rezervacijų statuso keitimus.
+- Chat žinutes.
+- Draugystės užklausas.
+- Grupės pakvietimus.
+
+**Mygtukai**:
+- Varpelio ikonos badge'as su skaičiumi.
+- Paspaudus — dropdown sąrašas.
+- Kiekvienas įrašas — spaudi ir keliauji į atitinkamą puslapį (hash URL, gilus linking).
+- **„Pažymėti visus perskaitytus“**.
+
+Animuoja bounce kai atsiranda nauja.
 
 ---
 
-## 15. Ateities planai (dar neįdiegta)
+## 16. Draugystės sistema (`friends-panel.tsx`, `lib/friends.ts`)
+
+Puslapis `/friends` (arba tab moksleivio dashboard'e).
+
+### 16.1 Draugų sąrašas
+- Vardas, klasė, valandos.
+- **„Rašyti“** — DM chat.
+- **„Pašalinti draugą“**.
+
+### 16.2 Užklausos
+- **Gautos užklausos**: „Priimti“ / „Atmesti“.
+- **Išsiųstos užklausos**: matai statusą.
+
+### 16.3 Paieška
+- Įvedi vardą arba el. paštą.
+- **„Siųsti užklausą“**.
+
+Duomenys — `friendships` lentelėje su unique constraint `(user1, user2)` (mažesnis ID pirmas, kad neatsirastų duplikatų).
+
+---
+
+## 17. PDF sertifikatai (`components/certificate-button.tsx`, `lib/certificates.functions.ts`)
+
+### 17.1 Generavimas
+Mokinys spaudi **„Generuoti sertifikatą“**. Serveris:
+1. Patikrina `hours_earned >= hours_needed` (ne debug režimu).
+2. Sukuria unikalų `code` (upper-case, ~10 simb.).
+3. Suskaičiuoja SHA-256 hash'ą turinio.
+4. HMAC-pasirašo su `CERT_SIGNING_SECRET`.
+5. Įrašo į `certificates` lentelę.
+6. Grąžina duomenis klientui.
+7. `pdf-lib` sugeneruoja PDF (elegantiškas dizainas, taupus rašalui):
+   - Ploni rėmeliai, hairlines.
+   - Klasikinis serifas.
+   - QR kodas kampe → `https://socialinesvalandos.lt/verify/{code}`.
+   - Sąrašas visų rezervacijų su datomis ir valandomis.
+8. Diakritikai (ė, š, ų...) sanitizuojami į ASCII (pdf-lib standart fontai neturi Unicode).
+
+### 17.2 Verifikacija
+Bet kas eina į `/verify/$code` arba nuskaito QR:
+- Serveris kviečia `verify_certificate` RPC.
+- Palygina hash'ą, parašą.
+- Rodo: vardas, klasė, mokykla, valandos, laikas, atšaukimo statusas.
+
+### 17.3 Kodėl neklastojama?
+- Be įrašo DB — kodas negalioja.
+- Be `CERT_SIGNING_SECRET` — parašo neatkursi.
+- Turinio hash'as užrakina — pakeitęs bet kokį baitą, matysi mismatch.
+
+Plačiau: `docs/PDF-SERTIFIKATAI.md`, `docs/PDF-VERIFIKACIJA.md`, `docs/PDF-SERTIFIKATAI-SQL.md`.
+
+---
+
+## 18. Lockdown režimas (`admin.lockdown.tsx`, `components/lockdown-gate.tsx`)
+
+### 18.1 Įjungimas
+Super admin `/admin/lockdown` puslapyje toggle'ina **„Įjungti lockdown“**. Įrašo į `site_settings.lockdown_enabled = true`.
+
+### 18.2 Ką mato vartotojai
+Visi (išskyrus super admin) mato **maintenance ekraną**:
+- Antraštė „Sistema laikinai neprieinama“.
+- Tavo pranešimas.
+- Klaidos kodas.
+
+### 18.3 Slaptas apėjimas („jumpsipidy“)
+Būdamas maintenance ekrane, super admin klaviatūra įrašo žodį **`jumpsipidy`** (jokių input laukų — event listener gaudo klavišus).
+- Atsiranda kodo įvedimo laukas.
+- Įvedi `7851` (arba `LOCKDOWN_BYPASS_CODE` env var).
+- Serveris (`lockdown-bypass.functions.ts`) tikrina:
+  - Client fingerprint (IP + user agent).
+  - Rate limiting (max 5 bandymai, tada 5 min lockout).
+  - Progressive delay (`MIN_DELAY_MS + fails * PER_FAIL_DELAY_MS`).
+  - Po 3 fail'ų — reikalauja CAPTCHA.
+  - Constant-time palyginimas (timing attack apsauga).
+- Sėkmės atveju — HMAC-SHA256 token'as saugomas `sessionStorage`, kuris leidžia super admin toliau naršyti.
+
+### 18.4 Auto-lockdown
+Jei `run_deep_health_scan` randa kritinių gedimų, `auto_lockdown_if_unhealthy` automatiškai įjungia lockdown su pranešimu „[auto] Sistemos patikra rado X kritinių gedimų“.
+
+---
+
+## 19. Debug panelis (mock-tester)
+
+Žr. 13.14. Tik super admin'ui. Vienu paspaudimu:
+- Sukuria mock paskyrą su fake el. paštu ir slaptažodžiu.
+- Impersonate'ina — tu tampi tuo vartotoju.
+- Grįžimas — atkuria tavo super admin sesiją.
+
+---
+
+## 20. Saugumas ir privatumas
+
+- **RLS visose lentelėse** — kiekvienas mato tik savo.
+- **`can_view_profile`** funkcija — centralizuota profilio matomumo logika.
+- **`has_role`** SECURITY DEFINER — anti-privilege-escalation.
+- **`user_roles`** — atskira lentelė (ne `profiles.role`).
+- **CAPTCHA** — prisijungime + lockdown apėjime.
+- **Bearer token middleware** — `src/start.ts` prideda `Authorization: Bearer` prie kiekvieno server function.
+- **HMAC parašai** — sertifikatai, bypass token'ai.
+- **Constant-time palyginimai** — apsauga nuo timing attack'ų.
+- **Rate limiting** — CAPTCHA, lockdown bypass.
+- **Cookie consent** — GDPR banner.
+- **12 d. / 2 d. autopurge** — žinutės neamžinai kaupiasi.
+- **Legal disclosure** — organizacijų parašai saugomi audite.
+- **Incident reports** — kliento klaidos automatiškai loguojamos.
+
+---
+
+## 21. Automatiniai cron darbai (pg_cron)
+
+| Darbas | Dažnis | Ką daro |
+|---|---|---|
+| `purge_old_messages` | kasdien | Trina chat žinutes >12 d. |
+| `purge_dm_messages` | kasdien | Trina DM žinutes >2 d. |
+| `generate_recurring_tasks` | kasdien naktį | Iš `recurring_tasks` sukuria naujas instances |
+| `auto_lockdown_if_unhealthy` | rekomenduojama valandinis | Paleidžia health scan, jei kritinis — lockdown |
+
+Visas SQL: `docs/SQL-REFERENCE.md`.
+
+---
+
+## 22. Failų struktūra
+
+```
+src/
+├── routes/
+│   ├── __root.tsx          # Root layout, head, providers
+│   ├── index.tsx           # /
+│   ├── register.tsx        # /register
+│   ├── login.tsx           # /login
+│   ├── tasks.tsx           # /tasks
+│   ├── student.tsx         # /student
+│   ├── organization.tsx    # /organization
+│   ├── school.tsx          # /school
+│   ├── admin.tsx           # /admin layout
+│   ├── admin.index.tsx     # /admin overview
+│   ├── admin.analytics.tsx
+│   ├── admin.manage.tsx
+│   ├── admin.reservations.tsx
+│   ├── admin.leaderboard.tsx
+│   ├── admin.schools.tsx
+│   ├── admin.accounts.tsx
+│   ├── admin.organizations.tsx
+│   ├── admin.activity.tsx
+│   ├── admin.messages.tsx
+│   ├── admin.bugs.tsx
+│   ├── admin.lockdown.tsx
+│   ├── admin.tools.tsx
+│   ├── verify.index.tsx
+│   ├── verify.$code.tsx
+│   ├── forgot-password.tsx
+│   ├── update-password.tsx
+│   ├── auth.callback.tsx
+│   ├── terms.tsx
+│   ├── blog.*.tsx
+│   └── status.tsx
+├── components/
+│   ├── layout.tsx
+│   ├── notification-bell.tsx
+│   ├── bug-report-widget.tsx
+│   ├── cookie-consent.tsx
+│   ├── captcha.tsx
+│   ├── lockdown-gate.tsx
+│   ├── onboarding-tour.tsx
+│   ├── mock-tester-panel.tsx
+│   ├── chat-dialog.tsx
+│   ├── dm-dialog.tsx
+│   ├── reservation-dialog.tsx
+│   ├── custom-reservation-dialog.tsx
+│   ├── change-reservation-dialog.tsx
+│   ├── verify-close-dialog.tsx
+│   ├── create-task-panel.tsx
+│   ├── create-event-panel.tsx
+│   ├── school-create-org-panel.tsx
+│   ├── certificate-button.tsx
+│   ├── friends-panel.tsx
+│   ├── invite-friends-dialog.tsx
+│   ├── group-invites-inbox.tsx
+│   ├── tags-input.tsx
+│   ├── tilt-card.tsx
+│   ├── background-fx.tsx
+│   ├── tasks-background.tsx
+│   ├── auth-3d-background.tsx
+│   └── error-monitor.tsx
+├── lib/
+│   ├── certificates.functions.ts
+│   ├── admin-delete.functions.ts
+│   ├── admin-actions.functions.ts
+│   ├── admin-super.functions.ts
+│   ├── auth-profile.functions.ts
+│   ├── captcha.functions.ts
+│   ├── dev-tools.functions.ts
+│   ├── incident.functions.ts
+│   ├── lockdown.functions.ts
+│   ├── lockdown-bypass.functions.ts
+│   ├── school-signup.functions.ts
+│   ├── security-crypto.server.ts
+│   ├── fraud-flags.ts
+│   ├── friends.ts
+│   ├── dm.ts
+│   ├── site-settings.ts
+│   └── mock-data.ts
+├── hooks/
+│   ├── use-auth.tsx
+│   └── use-mobile.tsx
+└── integrations/supabase/
+    ├── client.ts           # browser client (auto-gen)
+    ├── client.server.ts    # admin server client (auto-gen)
+    ├── auth-middleware.ts  # (auto-gen)
+    └── types.ts            # (auto-gen)
+
+docs/
+├── PRIDETI-MOKYKLA.md
+├── KEISTI-MOKYKLOS-KODA.md
+├── MOKYKLU-ATSKIRTIS.md
+├── OAUTH-GOOGLE-DISCORD.md
+├── PDF-SERTIFIKATAI.md
+├── PDF-SERTIFIKATAI-SQL.md
+├── PDF-VERIFIKACIJA.md
+├── LOCKDOWN_SQL_SETUP.md
+├── RECAPTCHA-SETUP.md
+└── SQL-REFERENCE.md
+```
+
+---
+
+## 23. Kaip pridėti mokyklą / keisti kodą
+
+**Pridėti mokyklą**:
+1. `/admin/schools` → **„Pridėti mokyklą“**.
+2. Pavadinimas, miestas, kodas (pvz., `KAUNAS2027`), `is_active = true`.
+3. Duok kodą tos mokyklos auklėtojui.
+
+**Keisti kodą**:
+1. `/admin/schools` → mokykla → **„Redaguoti“**.
+2. Naujas `signup_code`.
+3. Praneški visiems auklėtojams.
+
+**Deaktyvuoti**:
+1. Redaguoti → `is_active = false`.
+2. Nauji vartotojai nebematys jos registracijoje; esami tęsia darbą.
+
+Pilni gidai: `docs/PRIDETI-MOKYKLA.md`, `docs/KEISTI-MOKYKLOS-KODA.md`.
+
+---
+
+## 24. Ateities planai (dar neįdiegta)
 
 - Email notifikacijos (registracija, statuso keitimai).
 - Bulk student import iš CSV.
@@ -330,33 +784,9 @@ Plačiau — `docs/PDF-SERTIFIKATAI.md` ir `docs/PDF-VERIFIKACIJA.md`.
 - PWA (offline režimas telefone).
 - Kalendoriaus vaizdas rezervacijoms.
 - Organizacijų atsiliepimai (reviews).
+- Mobile app (native).
+- Multi-language support (EN, RU).
 
 ---
 
-## 16. Failų struktūros gido santrauka
-
-- `src/routes/index.tsx` — pagrindinis.
-- `src/routes/register.tsx`, `login.tsx` — auth.
-- `src/routes/student.tsx`, `organization.tsx`, `school.tsx`, `admin.tsx` — dashboard'ai.
-- `src/routes/admin.*.tsx` — super admin sub-puslapiai.
-- `src/routes/verify.$code.tsx` — sertifikato tikrinimas.
-- `src/components/` — modalai, chat, varpelis, 3D fonai.
-- `src/lib/*.functions.ts` — server functions (createServerFn).
-- `src/integrations/supabase/` — DB klientai (neredaguoti rankomis).
-- `docs/` — atskiri gidai (mokyklos, OAuth, PDF, SQL).
-
----
-
-## 17. Kaip pridėti naują mokyklą (trumpai)
-
-1. Įeik į `/admin/schools`.
-2. Spausk „Pridėti mokyklą“.
-3. Įrašyk pavadinimą, miestą, sugalvok kodą (pvz., `KAUNAS2027`), pažymėk `is_active`.
-4. Duok kodą tos mokyklos administratoriui / auklėtojui.
-5. Jie registruodamiesi pasirenka mokyklą + įveda kodą + priskiria klases.
-
-Pilnas gidas — `docs/README-add-school.md`.
-
----
-
-**Pabaiga.** Šis dokumentas atnaujinamas kartu su platforma. Klausk manęs bet ko — visa architektūra dabar tavo rankose.
+**Pabaiga.** Šis dokumentas atnaujinamas kartu su platforma. Jei kažkur radai neaiškumo — klausk manęs, atnaujinsiu.
