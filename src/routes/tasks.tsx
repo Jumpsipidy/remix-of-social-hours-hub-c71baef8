@@ -80,6 +80,7 @@ function TasksPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [invite, setInvite] = useState<{ id: string; label: string } | null>(null);
 
   useEffect(() => {
     (async () => {
