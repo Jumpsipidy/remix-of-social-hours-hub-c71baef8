@@ -140,23 +140,23 @@ export const ensureSignedInProfile = createServerFn({ method: "POST" })
       return { profile: copied as Profile, created: true };
     }
 
-    const { count, error: countError } = await supabaseAdmin
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "admin");
-    if (countError) throw new Error(countError.message);
-
-    const role: AppRole = (count ?? 0) === 0 ? "admin" : "student";
+    // No admin auto-bootstrap: every fresh sign-in becomes a student. The
+    // first super admin must be promoted manually in the DB (or via an
+    // existing admin using adminCreateAccount). This closes the privilege
+    // escalation path where an empty admin table would promote whoever
+    // signed in next.
+    const role: AppRole = "student";
     const { data: created, error: createError } = await upsertProfileSafely(supabaseAdmin, {
         id: context.userId,
         email,
         full_name: fullName,
         role,
         organization_name: null,
-        hours_needed: role === "student" ? 20 : 0,
+        hours_needed: 20,
         hours_earned: 0,
         assigned_classes: [],
       });
+
     if (createError) throw new Error(createError.message);
 
     return { profile: created as Profile, created: true };

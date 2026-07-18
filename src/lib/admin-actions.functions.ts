@@ -82,12 +82,16 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
         org_category: data.role === "organization" ? (data.org_category ?? "organizacija") : null,
         school_id: data.school_id ?? (me as any)?.school_id ?? null,
+        // Scope school_admin access to a single school — required for the
+        // "School admin can view … in their school" RLS policies to work.
+        associated_school_id: data.role === "school_admin" ? (data.school_id ?? (me as any)?.school_id ?? null) : null,
         assigned_classes: data.role === "school_admin" ? (data.assigned_classes ?? []) : [],
         hours_needed: 0,
         hours_earned: 0,
       },
       { onConflict: "id" },
     );
+
 
 
     return { ok: true, id: created.user.id, updated: !!existing };

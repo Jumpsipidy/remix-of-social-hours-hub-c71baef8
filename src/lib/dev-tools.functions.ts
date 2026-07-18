@@ -90,17 +90,12 @@ async function requireAdmin(_supabase: any, userId: string) {
     .eq("id", userId)
     .maybeSingle();
   if ((me as { role?: string } | null)?.role === "admin") return;
-  // Bootstrap: if there is no admin in the system yet, promote the current caller.
-  const { count } = await supabaseAdmin
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("role", "admin");
-  if ((count ?? 0) === 0) {
-    await supabaseAdmin.from("profiles").upsert({ id: userId, role: "admin" }, { onConflict: "id" });
-    return;
-  }
+  // No auto-bootstrap. Admins must be promoted explicitly by an existing
+  // admin (or via a direct DB update during initial deployment) — otherwise
+  // a temporary empty-admin state would grant anyone super-admin.
   throw new Error("Reikia sistemos administratoriaus teisių");
 }
+
 
 export const listDevProfiles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
