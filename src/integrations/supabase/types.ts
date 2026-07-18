@@ -50,6 +50,74 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          code: string
+          content_hash: string
+          created_at: string
+          generated_at: string
+          hours_needed: number
+          id: string
+          ip_address: string | null
+          reservations_json: Json
+          revoked_at: string | null
+          revoked_reason: string | null
+          school_id: string | null
+          school_name: string | null
+          signature: string
+          student_class: string | null
+          student_id: string
+          student_name: string
+          total_hours: number
+        }
+        Insert: {
+          code: string
+          content_hash: string
+          created_at?: string
+          generated_at?: string
+          hours_needed?: number
+          id?: string
+          ip_address?: string | null
+          reservations_json?: Json
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          school_id?: string | null
+          school_name?: string | null
+          signature: string
+          student_class?: string | null
+          student_id: string
+          student_name: string
+          total_hours?: number
+        }
+        Update: {
+          code?: string
+          content_hash?: string
+          created_at?: string
+          generated_at?: string
+          hours_needed?: number
+          id?: string
+          ip_address?: string | null
+          reservations_json?: Json
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          school_id?: string | null
+          school_name?: string | null
+          signature?: string
+          student_class?: string | null
+          student_id?: string
+          student_name?: string
+          total_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -623,7 +691,12 @@ export type Database = {
       open_dm_room: { Args: { _other: string }; Returns: string }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      revoke_certificate: {
+        Args: { _code: string; _reason: string }
+        Returns: boolean
+      }
       run_deep_health_scan: { Args: never; Returns: Json }
+      verify_certificate: { Args: { _code: string }; Returns: Json }
       verify_school_signup_code: {
         Args: { _code: string; _school_id: string }
         Returns: boolean
