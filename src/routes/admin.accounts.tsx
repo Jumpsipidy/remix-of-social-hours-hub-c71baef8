@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Building2, GraduationCap } from "lucide-react";
+import { UserPlus, Loader2, Building2, GraduationCap, School, Check, ChevronDown, Search } from "lucide-react";
 
 export const Route = createFileRoute("/admin/accounts")({
   component: AccountsPage,
 });
+
 
 function AccountsPage() {
   return (
@@ -28,6 +30,8 @@ function AccountsPage() {
 
 const ALL_CLASSES = ["5", "6", "7", "8", "9", "10", "11", "12"];
 
+type SchoolRow = { id: string; name: string; city: string | null };
+
 function CreateAccountPanel() {
   const [role, setRole] = useState<"organization" | "school_admin">("organization");
   const [orgCategory, setOrgCategory] = useState<"organizacija" | "bendruomene">("organizacija");
@@ -36,7 +40,22 @@ function CreateAccountPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [assignedClasses, setAssignedClasses] = useState<string[]>([]);
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("schools")
+      .select("id, name, city")
+      .eq("is_active", true)
+      .order("name", { ascending: true })
+      .then(({ data }) => {
+        const list = (data ?? []) as SchoolRow[];
+        setSchools(list);
+        if (list.length === 1) setSchoolId(list[0].id);
+      });
+  }, []);
 
   const toggleClass = (c: string) => {
     setAssignedClasses((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -47,6 +66,10 @@ function CreateAccountPanel() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (role === "school_admin" && !schoolId) {
+      toast.error("Pasirink mokyklą");
+      return;
+    }
     setBusy(true);
     try {
       await adminCreateAccount({
@@ -57,6 +80,7 @@ function CreateAccountPanel() {
           role,
           organization_name: role === "organization" ? orgName.trim() : null,
           org_category: role === "organization" ? orgCategory : null,
+          school_id: schoolId,
           assigned_classes: role === "school_admin" ? assignedClasses : null,
         },
       });
@@ -72,6 +96,7 @@ function CreateAccountPanel() {
       setBusy(false);
     }
   }
+
 
 
   return (
