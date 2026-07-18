@@ -14,7 +14,9 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
+import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
 export const Route = createFileRoute("/student")({
