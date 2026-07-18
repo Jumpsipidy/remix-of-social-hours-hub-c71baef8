@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { generateCertificate } from "@/lib/certificates.functions";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, verifyUrl: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
