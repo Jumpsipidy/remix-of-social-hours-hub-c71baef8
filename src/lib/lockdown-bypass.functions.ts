@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createHmac, timingSafeEqual, randomBytes } from "node:crypto";
+import { verifyCaptchaProof } from "./captcha.functions";
+
 
 // ─── Config ────────────────────────────────────────────────────────────────
 function bypassCode() {
