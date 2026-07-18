@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock } from "lucide-react";
+import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+
 
 type Notification = {
   id: string;
@@ -40,7 +42,26 @@ export function NotificationBell() {
   const push = (n: Omit<Notification, "id" | "at">) => {
     setItems((prev) => [{ id: crypto.randomUUID(), at: new Date().toISOString(), ...n }, ...prev].slice(0, 30));
     setUnread((u) => u + 1);
+    // Animated popup toast
+    toast(n.title, {
+      description: n.body,
+      icon: n.kind === "message" ? "💬" : n.status === "completed" ? "✅" : n.status === "declined" ? "❌" : "🔔",
+      duration: 5000,
+    });
   };
+
+  // Expose global push for debug testing
+  useEffect(() => {
+    (window as any).__pushNotification = (n: Partial<Notification>) =>
+      push({
+        kind: (n.kind as any) ?? "message",
+        title: n.title ?? "🔔 Test pranešimas",
+        body: n.body ?? "Šis pranešimas iš debug panelės",
+        status: n.status,
+      });
+    return () => { delete (window as any).__pushNotification; };
+  }, []);
+
 
   useEffect(() => {
     if (!user || !isAuthenticated) return;
