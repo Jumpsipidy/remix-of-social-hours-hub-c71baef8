@@ -41,6 +41,7 @@ type Reservation = {
   hours_to_earn: number;
   status: "pending" | "approved" | "completed" | "confirmed" | "declined";
   legal_disclosure?: string | null;
+  created_at?: string;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
