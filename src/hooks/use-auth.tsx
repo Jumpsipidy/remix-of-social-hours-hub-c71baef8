@@ -36,6 +36,7 @@ type AuthState = {
 };
 
 const MOCK_KEY = "sv_mock_session_v1";
+const ROLE_CACHE_KEY = "sv_last_role_v1";
 const AuthContext = createContext<AuthState | null>(null);
 
 function makeMockUser(profile: Profile): User {
@@ -105,6 +106,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore TOKEN_REFRESHED / INITIAL_SESSION — they fire on tab focus and
       // would otherwise reset component state (scroll, form inputs).
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      if (event === "SIGNED_IN") {
+        // A real login must always override any previous debug impersonation.
+        try { localStorage.removeItem(MOCK_KEY); } catch {}
+        setMock(null);
+      }
       const u = session?.user ?? null;
       setUser((prev) => (prev?.id === u?.id ? prev : u));
       if (u) {
@@ -142,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signOut: async () => {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
+        try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
         setMock(null);
         await supabase.auth.signOut();
       },
@@ -151,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       impersonateReal: async (email: string, password: string) => {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
+        try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
         setMock(null);
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

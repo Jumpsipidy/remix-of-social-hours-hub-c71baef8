@@ -31,7 +31,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { profile, isAuthenticated, loading } = useAuth();
+  const { profile, isAuthenticated, loading, clearImpersonation } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,6 +49,8 @@ function LoginPage() {
     if (busy) return;
     setBusy(true);
     try {
+      clearImpersonation();
+      try { localStorage.removeItem("sv_last_role_v1"); } catch {}
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const { data: prof } = await supabase
@@ -57,6 +59,9 @@ function LoginPage() {
         .eq("id", data.user.id)
         .maybeSingle();
       const target = DASH_BY_ROLE[prof?.role ?? "student"] ?? "/";
+      if (prof?.role) {
+        try { localStorage.setItem("sv_last_role_v1", prof.role); } catch {}
+      }
       toast.success("Sveikas atvykęs!");
       navigate({ to: target });
     } catch (err) {
@@ -67,6 +72,8 @@ function LoginPage() {
   }
 
   async function handleOAuth(provider: "google" | "discord") {
+    clearImpersonation();
+    try { localStorage.removeItem("sv_last_role_v1"); } catch {}
     // Return to /login so the useEffect above routes based on actual role.
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
