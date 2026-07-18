@@ -75,7 +75,7 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
     <AnimatePresence>
       {target && (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center p-4"
+          className="fixed inset-0 z-50 grid place-items-end p-0 sm:place-items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -90,14 +90,14 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
           <motion.div
             role="dialog"
             aria-modal="true"
-            className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl ring-1 ring-black/5"
+            className="relative w-full max-h-[95vh] overflow-hidden rounded-t-3xl border border-border/60 bg-card shadow-2xl ring-1 ring-black/5 sm:max-w-xl sm:rounded-3xl"
             initial={{ opacity: 0, y: 32, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 280, damping: 26 }}
           >
             {/* Header */}
-            <div className="relative overflow-hidden bg-gradient-hero p-7 text-white">
+            <div className="relative overflow-hidden bg-gradient-hero p-5 sm:p-7 text-white">
               <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/15 blur-3xl" />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
               <button
@@ -108,12 +108,12 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
                 <X className="h-4 w-4" />
               </button>
               <div className="relative flex items-center gap-4">
-                <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/20 text-3xl shadow-inner backdrop-blur">
+                <div className="grid h-12 w-12 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-2xl bg-white/20 text-2xl sm:text-3xl shadow-inner backdrop-blur">
                   {target.emoji ?? "🤝"}
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Nauja rezervacija</p>
-                  <h2 className="mt-0.5 truncate text-[22px] font-bold leading-tight">{target.name}</h2>
+                  <h2 className="mt-0.5 truncate text-lg sm:text-[22px] font-bold leading-tight">{target.name}</h2>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/85">
                     {target.town && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {target.town}</span>}
                     {target.rating != null && <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" fill="currentColor" /> {target.rating}</span>}
@@ -130,7 +130,7 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
               </div>
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto px-7 py-6">
+            <div className="max-h-[55vh] sm:max-h-[60vh] overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
               {/* Date */}
               <Field icon={<Calendar className="h-4 w-4" />} label="Data">
                 <input
@@ -228,7 +228,7 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between gap-3 border-t border-border bg-background/60 px-7 py-4">
+            <div className="flex items-center justify-between gap-3 border-t border-border bg-background/60 px-5 py-3 sm:px-7 sm:py-4 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
               <button
                 onClick={onClose}
                 disabled={submitting}

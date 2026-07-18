@@ -190,7 +190,7 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-50 grid place-items-end bg-foreground/40 p-0 backdrop-blur-sm sm:place-items-center sm:p-4"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
       >
         <motion.div
@@ -198,10 +198,10 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.98 }}
           transition={{ type: "spring", stiffness: 280, damping: 28 }}
-          className="flex h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-elegant"
+          className="flex h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl border border-border bg-background shadow-elegant sm:h-[80vh] sm:max-w-2xl sm:rounded-3xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="border-b border-border bg-gradient-card p-5">
+          <div className="border-b border-border bg-gradient-card p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary">
@@ -281,7 +281,7 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
             })}
           </div>
 
-          <div className="border-t border-border bg-card/60 p-3">
+          <div className="border-t border-border bg-card/60 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
             <div className="mb-2 flex items-start gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-foreground" />
               <span>
