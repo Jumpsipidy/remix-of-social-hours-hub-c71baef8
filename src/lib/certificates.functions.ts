@@ -157,6 +157,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
       total_hours: totalHours,
       hours_needed: profile.hours_needed ?? 0,
       reservations,
+      debug: debugMode,
     };
   });
 
