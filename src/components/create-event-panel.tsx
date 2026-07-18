@@ -23,6 +23,7 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
   const [spots, setSpots] = useState(5);
   const [location, setLocation] = useState("");
   const [desc, setDesc] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -47,12 +48,13 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
       spots_total: spots,
       location,
       is_open: true,
+      tags,
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Renginys paskelbtas!");
     setTitle(""); setHost(""); setDate(""); setStart(""); setEnd("");
-    setHours(2); setSpots(5); setLocation(""); setDesc("");
+    setHours(2); setSpots(5); setLocation(""); setDesc(""); setTags([]);
     onCreated?.();
   };
 
