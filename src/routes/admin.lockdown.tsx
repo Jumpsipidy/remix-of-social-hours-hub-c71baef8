@@ -13,6 +13,56 @@ import {
   adminUpdateLockdownSettings,
 } from "@/lib/lockdown.functions";
 
+const LOCKDOWN_SQL = `CREATE TABLE IF NOT EXISTS public.site_settings (
+  id BOOLEAN PRIMARY KEY DEFAULT true CHECK (id = true),
+  lockdown_enabled BOOLEAN NOT NULL DEFAULT false,
+  lockdown_message TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by UUID
+);
+
+GRANT SELECT ON public.site_settings TO anon;
+GRANT SELECT, UPDATE ON public.site_settings TO authenticated;
+GRANT ALL ON public.site_settings TO service_role;
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+
+INSERT INTO public.site_settings (id, lockdown_enabled, lockdown_message)
+VALUES (true, false, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "site_settings read all" ON public.site_settings;
+CREATE POLICY "site_settings read all"
+ON public.site_settings
+FOR SELECT
+TO anon, authenticated
+USING (true);
+
+DROP POLICY IF EXISTS "site_settings admin update" ON public.site_settings;
+CREATE POLICY "site_settings admin update"
+ON public.site_settings
+FOR UPDATE
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'))
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'site_settings'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.site_settings;
+  END IF;
+END $$;
+
+NOTIFY pgrst, 'reload schema';`;
+
 export const Route = createFileRoute("/admin/lockdown")({
   head: () => ({ meta: [{ title: "Lockdown — Socialinės Valandos" }] }),
   component: LockdownPage,
@@ -28,14 +78,19 @@ function LockdownPage() {
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
   const [health, setHealth] = useState<null | Array<{ label: string; ok: boolean; detail: string }>>(null);
+  const [setupProblem, setSetupProblem] = useState<string | null>(null);
 
   const load = async () => {
     try {
       const { settings } = await getLockdownSettings();
+      setSetupProblem(null);
       setEnabled(Boolean(settings.lockdown_enabled));
       setMessage(settings.lockdown_message ?? "");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nepavyko užkrauti Lockdown nustatymų");
+      const msg = error instanceof Error ? error.message : "Nepavyko užkrauti Lockdown nustatymų";
+      setSetupProblem(msg);
+      setEnabled(false);
+      toast.error(msg);
     }
   };
 
@@ -47,6 +102,7 @@ function LockdownPage() {
       const { settings } = await updateLockdownSettings({
         data: { lockdown_enabled: next, lockdown_message: message || null },
       });
+      setSetupProblem(null);
       setEnabled(settings.lockdown_enabled);
       setMessage(settings.lockdown_message ?? "");
       toast.success(next ? "🔒 Lockdown ĮJUNGTAS" : "🔓 Lockdown išjungtas");
@@ -61,6 +117,7 @@ function LockdownPage() {
     setSaving(true);
     try {
       const { settings } = await updateLockdownSettings({ data: { lockdown_message: message || null } });
+      setSetupProblem(null);
       setMessage(settings.lockdown_message ?? "");
       toast.success("Žinutė išsaugota");
     } catch (error) {
@@ -148,6 +205,38 @@ function LockdownPage() {
           Bypass frazė: <code className="rounded bg-accent px-1 text-foreground">jumpsipidy</code> + kodas.
         </p>
       </div>
+
+      {setupProblem && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-amber-500/40 bg-amber-500/[0.07] p-5 shadow-md"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-amber-100">Reikia sukurti Lockdown lentelę</h2>
+              <p className="mt-1 max-w-2xl text-sm text-amber-100/75">
+                OAuth čia ne prie ko — Google ir Discord gali veikti, bet Lockdown neveiks, kol tavo realioje duomenų bazėje nėra
+                <code className="mx-1 rounded bg-black/30 px-1">public.site_settings</code> lentelės.
+              </p>
+              <p className="mt-2 text-xs text-amber-100/60">{setupProblem}</p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(LOCKDOWN_SQL);
+                toast.success("SQL nukopijuotas");
+              }}
+              className="rounded-full bg-amber-300 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-amber-500/20 hover:bg-amber-200"
+            >
+              Kopijuoti SQL
+            </button>
+          </div>
+          <pre className="mt-4 max-h-72 overflow-auto rounded-xl border border-white/10 bg-black/40 p-4 text-[11px] leading-relaxed text-amber-50/85">
+            <code>{LOCKDOWN_SQL}</code>
+          </pre>
+        </motion.div>
+      )}
 
       {/* Status card */}
       <motion.div
