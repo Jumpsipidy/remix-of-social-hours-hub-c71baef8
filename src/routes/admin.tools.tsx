@@ -169,7 +169,11 @@ function ToolsPage() {
                 {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
                 Vykdyti
               </button>
+            </div>
+          );
+        })}
       </div>
+
 
       {/* PDF Certificate Testing */}
       <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">
