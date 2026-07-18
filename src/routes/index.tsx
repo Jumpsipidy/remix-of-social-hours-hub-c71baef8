@@ -1,26 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Socialinės Valandos — moksleivių savanorystės platforma" },
-      {
-        name: "description",
-        content:
-          "Kiekviena valanda — tai žingsnis pokyčio link. Vienintelė Lietuvoje platforma, sujungianti mokinius, mokyklas ir savanorystės organizacijas.",
-      },
+      { name: "description", content: "Kiekviena valanda — tai žingsnis pokyčio link. Vienintelė Lietuvoje platforma, sujungianti mokinius, mokyklas ir savanorystės organizacijas." },
       { property: "og:title", content: "Socialinės Valandos — moksleivių savanorystės platforma" },
-      {
-        property: "og:description",
-        content:
-          "Rezervuok savanorystės valandas, sekk savo pažangą ir gauk automatinę apskaitą — vienoje ramioje vietoje.",
-      },
+      { property: "og:description", content: "Rezervuok savanorystės valandas, sekk savo pažangą ir gauk automatinę apskaitą — vienoje ramioje vietoje." },
       { property: "og:url", content: "https://socialinesvalandos.lovable.app/" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/" }],
@@ -28,16 +20,12 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-// Palette (locked from picked direction "Ink on Paper")
-const INK = "#0B0B0F";
-const PAPER = "#F5F1E8";
+// Accent palette — sits on top of the site's dark navy BackgroundFX
 const EMBER = "#C8452A";
-const EMBER_DARK = "#A63922";
 const GOLD = "#E9B44C";
 
 const fmt = (n: number) => new Intl.NumberFormat("lt-LT").format(n);
 
-/** Number that eases from 0 → value once when scrolled into view. */
 function CountUp({ value, className }: { value: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
@@ -45,7 +33,7 @@ function CountUp({ value, className }: { value: number; className?: string }) {
   useEffect(() => {
     if (!inView) return;
     const start = performance.now();
-    const dur = 1400;
+    const dur = 1600;
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / dur);
@@ -59,9 +47,53 @@ function CountUp({ value, className }: { value: number; className?: string }) {
   return <span ref={ref} className={className}>{fmt(n)}</span>;
 }
 
+/** Cursor-tracking spotlight card */
+function SpotlightCard({
+  children,
+  className = "",
+  accent = EMBER,
+}: { children: React.ReactNode; className?: string; accent?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const mx = useMotionValue(50);
+  const my = useMotionValue(50);
+  const rx = useSpring(useTransform(my, [0, 100], [6, -6]), { stiffness: 120, damping: 15 });
+  const ry = useSpring(useTransform(mx, [0, 100], [-6, 6]), { stiffness: 120, damping: 15 });
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={(e) => {
+        const r = ref.current!.getBoundingClientRect();
+        mx.set(((e.clientX - r.left) / r.width) * 100);
+        my.set(((e.clientY - r.top) / r.height) * 100);
+      }}
+      onMouseLeave={() => { mx.set(50); my.set(50); }}
+      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/20 ${className}`}
+    >
+      <motion.div
+        aria-hidden
+        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{
+          background: useTransform(
+            [mx, my] as any,
+            ([x, y]: any) => `radial-gradient(400px circle at ${x}% ${y}%, ${accent}22, transparent 60%)`,
+          ),
+        }}
+      />
+      {children}
+    </motion.div>
+  );
+}
+
 function Home() {
   const { profile, isAuthenticated } = useAuth();
   const isStudent = isAuthenticated && profile?.role === "student";
+
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
 
   const [counts, setCounts] = useState({ students: 0, orgs: 0, hours: 0, schools: 0 });
   useEffect(() => {
@@ -75,8 +107,7 @@ function Home() {
       ]);
       if (!alive) return;
       const totalHours = (h.data ?? []).reduce(
-        (a: number, r: { hours_earned: number | null }) => a + (r.hours_earned ?? 0),
-        0,
+        (a: number, r: { hours_earned: number | null }) => a + (r.hours_earned ?? 0), 0,
       );
       setCounts({
         students: s.count ?? 0,
@@ -91,58 +122,103 @@ function Home() {
   const primaryCta = isStudent ? "/student" : "/register";
   const primaryLabel = isStudent ? "Į mano sritį" : "Pradėti savanorystę";
 
+  const roles = [
+    {
+      tag: "Mokiniams",
+      title: "Atrask save",
+      body: "Rinkis iš šimtų veiklų, kaupk valandas ir formuok savo ateities CV per prasmingą darbą.",
+      cta: "Naršyti užduotis",
+      to: "/tasks",
+      icon: GraduationCap,
+      accent: EMBER,
+    },
+    {
+      tag: "Organizacijoms",
+      title: "Rask pagalbą",
+      body: "Skelbk iniciatyvas ir pritrauk motyvuotus jaunus žmones prisidėti prie tavo tikslų.",
+      cta: "Sukurti profilį",
+      to: "/register",
+      icon: Building2,
+      accent: GOLD,
+    },
+    {
+      tag: "Mokykloms",
+      title: "Valdyk paprastai",
+      body: "Skaitmenizuok socialinių valandų apskaitą ir stebėk savo bendruomenės poveikį.",
+      cta: "Mokyklų portalas",
+      to: "/register",
+      icon: Users,
+      accent: "#8b5cf6",
+    },
+  ];
+
   return (
     <PageShell>
-      <div
-        style={{ background: INK, color: PAPER, fontFamily: "'Inter', sans-serif" }}
-        className="selection:bg-[#C8452A] selection:text-white"
-      >
+      <div className="relative selection:bg-[#C8452A] selection:text-white">
         {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-6 pt-24 pb-32 md:pt-40 md:pb-48">
-          {/* soft ember + gold halos, very subtle */}
-          <div aria-hidden className="pointer-events-none absolute inset-0">
-            <div
-              className="absolute -left-40 top-0 h-[520px] w-[520px] rounded-full opacity-[0.08] blur-3xl"
-              style={{ background: `radial-gradient(circle, ${EMBER}, transparent 60%)` }}
+        <section ref={heroRef} className="relative overflow-hidden px-6 pt-24 pb-32 md:pt-36 md:pb-44">
+          {/* animated halos on top of the shell BackgroundFX */}
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{ y: heroY, opacity: heroOpacity }}
+          >
+            <motion.div
+              className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
+              style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 65%)` }}
+              animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
+              transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             />
-            <div
-              className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full opacity-[0.06] blur-3xl"
-              style={{ background: `radial-gradient(circle, ${GOLD}, transparent 60%)` }}
+            <motion.div
+              className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full blur-3xl"
+              style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 65%)` }}
+              animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
+              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
             />
-          </div>
+          </motion.div>
 
-          <div className="relative mx-auto max-w-4xl text-center">
-            <motion.p
+          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative mx-auto max-w-4xl text-center">
+            <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="mb-8 text-[11px] uppercase tracking-[0.32em]"
-              style={{ color: `${PAPER}80` }}
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
+              <Sparkles className="h-3 w-3" style={{ color: GOLD }} />
               Lietuvos moksleiviams · nemokamai
-            </motion.p>
+            </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+              initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0)" }}
               transition={{ duration: 0.9, delay: 0.05 }}
-              className="mb-10 leading-[1.02] text-5xl md:text-7xl lg:text-[92px]"
-              style={{ fontFamily: "'Fraunces', serif", fontWeight: 500 }}
+              className="mb-8 leading-[1.02] text-5xl md:text-7xl lg:text-[88px] font-display"
+              style={{ fontWeight: 500 }}
             >
               Kiekviena{" "}
-              <span className="italic" style={{ color: GOLD, fontWeight: 400 }}>valanda</span>{" "}
-              — tai žingsnis pokyčio link
+              <span className="relative inline-block italic" style={{ fontWeight: 400 }}>
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER}, ${GOLD})`,
+                    backgroundSize: "200% 100%",
+                    animation: "shine 6s linear infinite",
+                  }}
+                >
+                  valanda
+                </span>
+              </span>{" "}
+              — žingsnis pokyčio link
             </motion.h1>
 
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.25 }}
-              className="mx-auto mb-12 max-w-xl text-lg md:text-xl leading-[1.6]"
-              style={{ color: `${PAPER}B3` }}
+              className="mx-auto mb-12 max-w-xl text-lg md:text-xl leading-[1.6] text-white/70"
             >
-              Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su
-              prasmingomis savanorystės galimybėmis.
+              Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
+              savanorystės galimybėmis.
             </motion.p>
 
             <motion.div
@@ -153,243 +229,201 @@ function Home() {
             >
               <Link
                 to={primaryCta}
-                className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-9 py-4 text-base font-semibold text-white transition-colors"
-                style={{ background: EMBER }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = EMBER_DARK)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = EMBER)}
+                className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
+                style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
               >
-                {primaryLabel}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span className="relative z-10">{primaryLabel}</span>
+                <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span
+                  aria-hidden
+                  className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
+                />
               </Link>
               <Link
                 to="/tasks"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-9 py-4 text-base font-semibold border transition-colors"
-                style={{ borderColor: `${PAPER}4D`, color: PAPER }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = PAPER)}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${PAPER}4D`)}
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
               >
                 Naršyti užduotis
               </Link>
             </motion.div>
-          </div>
+
+            {/* floating stat pill under CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="mx-auto mt-16 flex max-w-md items-center justify-center gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 backdrop-blur-xl"
+            >
+              <Clock className="h-5 w-5" style={{ color: GOLD }} />
+              <div className="text-left">
+                <div className="text-2xl font-display font-semibold text-white">
+                  <CountUp value={counts.hours} /> val.
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.2em] text-white/50">
+                  jau užregistruota mūsų bendruomenėje
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </section>
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
-        <section className="border-y" style={{ borderColor: `${PAPER}1A` }}>
-          <div
-            className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3"
-            style={{ background: INK }}
-          >
+        <section className="relative border-y border-white/10 backdrop-blur-sm">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[
-              { v: counts.hours, l: "Užregistruota valandų" },
-              { v: counts.students, l: "Aktyvių mokinių" },
-              { v: counts.orgs, l: "Partnerių organizacijų" },
+              { v: counts.hours, l: "Užregistruota valandų", c: GOLD },
+              { v: counts.students, l: "Aktyvių mokinių", c: EMBER },
+              { v: counts.orgs, l: "Partnerių organizacijų", c: "#8b5cf6" },
             ].map((s, i) => (
-              <div
+              <motion.div
                 key={s.l}
-                className="px-6 py-14 text-center"
-                style={{
-                  borderLeft: i > 0 ? `1px solid ${PAPER}1A` : undefined,
-                }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: i * 0.1, duration: 0.6 }}
+                className="relative px-6 py-14 text-center"
+                style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : undefined }}
               >
-                <div
-                  className="mb-3 text-5xl md:text-6xl"
-                  style={{
-                    fontFamily: "'Fraunces', serif",
-                    fontWeight: 300,
-                    color: GOLD,
-                  }}
-                >
+                <div className="mb-3 text-5xl md:text-6xl font-display" style={{ fontWeight: 300, color: s.c }}>
                   <CountUp value={s.v} />
                 </div>
-                <div
-                  className="text-[11px] uppercase tracking-[0.24em]"
-                  style={{ color: `${PAPER}99` }}
-                >
-                  {s.l}
-                </div>
-              </div>
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/60">{s.l}</div>
+              </motion.div>
             ))}
           </div>
         </section>
 
-        {/* ROLES — cream paper section ─────────────────────────────────── */}
-        <section
-          className="px-6 py-24 md:py-32"
-          style={{ background: PAPER, color: INK }}
-        >
+        {/* ROLES ─────────────────────────────────────────────────────────── */}
+        <section className="relative px-6 py-24 md:py-32">
           <div className="mx-auto max-w-7xl">
             <div className="mb-16 max-w-3xl">
-              <p className="mb-4 text-[11px] uppercase tracking-[0.32em]" style={{ color: `${INK}80` }}>
+              <p className="mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
                 Nr. 02 · Bendruomenė
               </p>
-              <h2
-                className="text-4xl md:text-6xl"
-                style={{ fontFamily: "'Fraunces', serif", fontWeight: 500, letterSpacing: "-0.01em" }}
-              >
-                Platforma skirta <span className="italic" style={{ color: EMBER }}>visiems</span>
+              <h2 className="text-4xl md:text-6xl font-display text-white" style={{ fontWeight: 500, letterSpacing: "-0.01em" }}>
+                Platforma skirta{" "}
+                <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${EMBER}, ${GOLD})` }}>
+                  visiems
+                </span>
               </h2>
             </div>
 
             <div className="grid gap-8 md:grid-cols-3">
-              {[
-                {
-                  tag: "Mokiniams",
-                  title: "Atrask save",
-                  body: "Rinkis iš šimtų veiklų, kaupk valandas ir formuok savo ateities CV per prasmingą darbą.",
-                  cta: "Sužinoti daugiau",
-                  to: "/tasks",
-                  hoverBg: INK,
-                  hoverFg: PAPER,
-                },
-                {
-                  tag: "Organizacijoms",
-                  title: "Rask pagalbą",
-                  body: "Paskelbkite savo iniciatyvas ir pritraukite motyvuotus jaunus žmones prisidėti prie jūsų tikslų.",
-                  cta: "Sukurti profilį",
-                  to: "/register",
-                  hoverBg: EMBER,
-                  hoverFg: "#FFFFFF",
-                },
-                {
-                  tag: "Mokykloms",
-                  title: "Valdyk paprastai",
-                  body: "Skaitmenizuokite socialinių valandų apskaitą ir stebėkite savo bendruomenės poveikį.",
-                  cta: "Mokyklų portalas",
-                  to: "/register",
-                  hoverBg: GOLD,
-                  hoverFg: INK,
-                },
-              ].map((c, i) => (
-                <motion.article
+              {roles.map((c, i) => (
+                <motion.div
                   key={c.tag}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  transition={{ delay: i * 0.08, duration: 0.6 }}
-                  className="group relative p-10 border transition-colors duration-300"
-                  style={
-                    {
-                      borderColor: `${INK}1A`,
-                      "--h-bg": c.hoverBg,
-                      "--h-fg": c.hoverFg,
-                    } as React.CSSProperties
-                  }
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = c.hoverBg;
-                    e.currentTarget.style.color = c.hoverFg;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = INK;
-                  }}
+                  transition={{ delay: i * 0.1, duration: 0.6 }}
                 >
-                  <div className="mb-8 text-[11px] font-bold uppercase tracking-[0.24em] opacity-60">
-                    {c.tag}
-                  </div>
-                  <h3
-                    className="mb-5 text-3xl italic"
-                    style={{ fontFamily: "'Fraunces', serif", fontWeight: 500 }}
-                  >
-                    {c.title}
-                  </h3>
-                  <p className="mb-10 text-[15px] leading-relaxed opacity-80">{c.body}</p>
-                  <Link
-                    to={c.to}
-                    className="inline-flex items-center gap-2 text-sm font-bold"
-                  >
-                    {c.cta} <span aria-hidden>→</span>
-                  </Link>
-                </motion.article>
+                  <SpotlightCard accent={c.accent} className="h-full p-8">
+                    <div
+                      className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl"
+                      style={{ background: `${c.accent}22`, border: `1px solid ${c.accent}44` }}
+                    >
+                      <c.icon className="h-6 w-6" style={{ color: c.accent }} />
+                    </div>
+                    <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/50">
+                      {c.tag}
+                    </div>
+                    <h3 className="mb-4 text-3xl italic font-display text-white" style={{ fontWeight: 500 }}>
+                      {c.title}
+                    </h3>
+                    <p className="mb-8 text-[15px] leading-relaxed text-white/70">{c.body}</p>
+                    <Link
+                      to={c.to}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors hover:opacity-90"
+                      style={{ color: c.accent }}
+                    >
+                      {c.cta}
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </SpotlightCard>
+                </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* TRUST — school band ─────────────────────────────────────────── */}
-        <section className="py-20 md:py-24" style={{ background: INK }}>
-          <div className="mx-auto max-w-7xl px-6">
-            <p
-              className="mb-10 text-center text-[11px] uppercase tracking-[0.32em]"
-              style={{ color: `${PAPER}66` }}
+        {/* MARQUEE — school band ─────────────────────────────────────────── */}
+        <section className="relative overflow-hidden border-y border-white/10 py-14">
+          <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
+            Mūsų bendruomenėje jau dalyvauja
+          </p>
+          <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+            <motion.div
+              className="flex shrink-0 items-center gap-12 pr-12 font-display italic text-xl md:text-2xl text-white/60 whitespace-nowrap"
+              style={{ fontWeight: 400 }}
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 40, ease: "linear", repeat: Infinity }}
             >
-              Mūsų bendruomenėje jau dalyvauja
-            </p>
-            <div
-              className="flex flex-wrap justify-center gap-x-12 gap-y-6 italic md:text-xl text-lg"
-              style={{ fontFamily: "'Fraunces', serif", color: `${PAPER}99`, fontWeight: 400 }}
-            >
-              <span>Šeduvos gimnazija</span>
-              <span aria-hidden style={{ color: EMBER }}>◆</span>
-              <span>Vilniaus licėjus</span>
-              <span aria-hidden style={{ color: EMBER }}>◆</span>
-              <span>Kauno KTU gimnazija</span>
-              <span aria-hidden style={{ color: EMBER }}>◆</span>
-              <span>Klaipėdos Ąžuolyno gimnazija</span>
-              <span aria-hidden style={{ color: EMBER }}>◆</span>
-              <span>Panevėžio J. Balčikonio gimnazija</span>
-              <span aria-hidden style={{ color: EMBER }}>◆</span>
-              <span>Šiaulių Didždvario gimnazija</span>
-            </div>
+              {Array.from({ length: 2 }).flatMap((_, k) => [
+                "Šeduvos gimnazija",
+                "Vilniaus licėjus",
+                "Kauno KTU gimnazija",
+                "Klaipėdos Ąžuolyno gimnazija",
+                "Panevėžio J. Balčikonio gimnazija",
+                "Šiaulių Didždvario gimnazija",
+              ].map((name, j) => (
+                <span key={`${k}-${j}`} className="flex items-center gap-12">
+                  <span>{name}</span>
+                  <span aria-hidden style={{ color: EMBER }}>◆</span>
+                </span>
+              )))}
+            </motion.div>
           </div>
         </section>
 
         {/* CLOSING CTA ─────────────────────────────────────────────────── */}
-        <section
-          className="px-6 py-24 md:py-32 text-center"
-          style={{ background: EMBER, color: "#FFFFFF" }}
-        >
-          <div className="mx-auto max-w-3xl">
+        <section className="relative px-6 py-24 md:py-32 text-center overflow-hidden">
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <motion.div
+              className="h-[600px] w-[600px] rounded-full blur-3xl"
+              style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
+
+          <div className="relative mx-auto max-w-3xl">
             <motion.h2
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ duration: 0.7 }}
-              className="mb-8 text-4xl md:text-6xl leading-[1.05]"
-              style={{ fontFamily: "'Fraunces', serif", fontWeight: 500 }}
+              className="mb-8 text-4xl md:text-6xl leading-[1.05] font-display text-white"
+              style={{ fontWeight: 500 }}
             >
-              Pasiruošę pradėti?
+              Pasiruošęs{" "}
+              <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER})` }}>
+                pradėti?
+              </span>
             </motion.h2>
-            <p className="mb-12 text-lg opacity-90 leading-relaxed">
-              Prisijunkite prie didžiausio Lietuvoje savanorystės tinklo ir kurkite
-              vertę sau ir kitiems.
+            <p className="mb-12 text-lg text-white/70 leading-relaxed">
+              Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
             </p>
             <Link
               to="/register"
-              className="inline-flex items-center gap-2 px-10 py-5 text-lg font-bold transition-transform hover:scale-[1.03]"
-              style={{ background: "#FFFFFF", color: INK }}
+              className="group inline-flex items-center gap-2 rounded-full px-10 py-5 text-lg font-bold text-white transition-transform hover:scale-[1.03]"
+              style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
             >
-              Sukurti nemokamą paskyrą <ArrowRight className="h-5 w-5" />
+              Sukurti nemokamą paskyrą
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </section>
 
-        {/* FOOTER strip ────────────────────────────────────────────────── */}
-        <footer
-          className="border-t px-6 py-12"
-          style={{ background: INK, borderColor: `${PAPER}1A`, color: `${PAPER}66` }}
-        >
-          <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-6 text-sm">
-            <div
-              className="text-xl italic"
-              style={{ fontFamily: "'Fraunces', serif", color: PAPER, fontWeight: 300 }}
-            >
-              Socialinės Valandos
-            </div>
-            <div className="flex gap-8 text-[11px] uppercase tracking-[0.24em]">
-              <Link to="/terms" className="hover:opacity-100" style={{ color: `${PAPER}99` }}>
-                Taisyklės
-              </Link>
-              <Link to="/terms" className="hover:opacity-100" style={{ color: `${PAPER}99` }}>
-                Privatumas
-              </Link>
-              <Link to="/login" className="hover:opacity-100" style={{ color: `${PAPER}99` }}>
-                Prisijungti
-              </Link>
-            </div>
-            <div className="text-xs">© {new Date().getFullYear()} Socialinės Valandos</div>
-          </div>
-        </footer>
+        <style>{`
+          @keyframes shine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+          }
+        `}</style>
       </div>
     </PageShell>
   );
