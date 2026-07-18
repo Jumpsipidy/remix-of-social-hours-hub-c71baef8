@@ -4,7 +4,9 @@ import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { motion } from "framer-motion";
+
 
 
 const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> = {
@@ -70,20 +72,28 @@ export function Navbar() {
           </span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
-              activeProps={{ className: "rounded-full px-4 py-2 text-sm font-medium bg-accent text-accent-foreground" }}
-              activeOptions={{ exact: l.to === "/" }}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            const tag =
+              l.to === "/tasks" ? "tasks" :
+              l.to === "/" ? "home" :
+              "dashboard";
+            return (
+              <Link
+                key={l.to}
+                to={l.to}
+                data-tour={tag}
+                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                activeProps={{ className: "rounded-full px-4 py-2 text-sm font-medium bg-accent text-accent-foreground" }}
+                activeOptions={{ exact: l.to === "/" }}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="flex items-center gap-2">
-          <NotificationBell />
+          <div data-tour="notifications" className="contents"><NotificationBell /></div>
+
 
           {isAuthenticated ? (
             <button
@@ -205,6 +215,8 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         {children}
       </motion.main>
       <Footer />
+      <OnboardingTour />
     </div>
   );
+
 }

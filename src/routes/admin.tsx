@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -20,6 +21,7 @@ import {
   BarChart3,
   Lock,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
@@ -76,8 +78,8 @@ function AdminLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to || pathname === `${to}/` : pathname === to || pathname.startsWith(`${to}/`);
 
-  const NavList = ({ onClick }: { onClick?: () => void }) => (
-    <nav className="flex flex-col gap-1">
+  const NavList = ({ onClick, compact = false }: { onClick?: () => void; compact?: boolean }) => (
+    <nav className={`flex flex-col ${compact ? "gap-1" : "gap-1"}`}>
       {NAV.map((item) => {
         const active = isActive(item.to, item.exact);
         const Icon = item.icon;
@@ -86,6 +88,7 @@ function AdminLayout() {
             key={item.to}
             to={item.to}
             onClick={onClick}
+            resetScroll={false}
             className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
               active
                 ? "bg-gradient-primary text-primary-foreground shadow-glow"
@@ -100,6 +103,14 @@ function AdminLayout() {
     </nav>
   );
 
+  // Lock body scroll while mobile sheet is open
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
+
   return (
     <PageShell>
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
@@ -111,19 +122,58 @@ function AdminLayout() {
             <h1 className="mt-1 truncate font-display text-xl font-bold tracking-tight">Valdymo skydas</h1>
           </div>
           <button
-            onClick={() => setMobileOpen((v) => !v)}
+            onClick={() => setMobileOpen(true)}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur"
             aria-label="Meniu"
           >
-            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            <Menu className="h-4 w-4" />
           </button>
         </div>
 
-        {mobileOpen && (
-          <div className="mb-4 rounded-2xl border border-border bg-card/80 p-3 shadow-md backdrop-blur lg:hidden">
-            <NavList onClick={() => setMobileOpen(false)} />
-          </div>
-        )}
+        <AnimatePresence>
+          {mobileOpen && (
+            <>
+              <motion.div
+                key="backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileOpen(false)}
+                className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm lg:hidden"
+              />
+              <motion.aside
+                key="sheet"
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                className="fixed left-0 top-0 z-[81] flex h-full w-[86%] max-w-[320px] flex-col border-r border-border bg-card p-4 shadow-2xl lg:hidden"
+              >
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Super Admin</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{profile.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setMobileOpen(false)}
+                    className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+                    aria-label="Uždaryti meniu"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="mt-3 flex-1 overflow-y-auto pr-1">
+                  <NavList onClick={() => setMobileOpen(false)} compact />
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
 
         <div className="grid gap-6 pb-16 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-10">
           <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur lg:block">
@@ -149,3 +199,4 @@ function AdminLayout() {
     </PageShell>
   );
 }
+
