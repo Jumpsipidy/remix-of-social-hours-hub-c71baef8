@@ -215,6 +215,8 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         {children}
       </motion.main>
       <Footer />
+      <OnboardingTour />
     </div>
   );
+
 }
