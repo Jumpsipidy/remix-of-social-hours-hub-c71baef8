@@ -1,119 +1,52 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
-import { Shield, Users, Building2, GraduationCap, ClipboardList, Activity, TrendingUp, Search, MessageSquare, PlayCircle, CheckCircle2, AlarmClock, XCircle, Zap, ListTodo, UserPlus, Loader2 } from "lucide-react";
-import { adminCreateAccount } from "@/lib/admin-actions.functions";
-import { adminListAllAccounts, adminDeleteAccount, adminPurgeOldMessages, adminWipeAllReservations, adminWipeAllTasks, adminPlatformHealth } from "@/lib/admin-delete.functions";
-import { toast } from "sonner";
-
+import {
+  Shield,
+  LayoutDashboard,
+  Building2,
+  Activity,
+  UserPlus,
+  Users,
+  GraduationCap,
+  MessageSquare,
+  Bug,
+  Wrench,
+  Menu,
+  X,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
-  component: AdminDashboard,
+  component: AdminLayout,
 });
 
-type Stats = {
-  students: number;
-  organizations: number;
-  school_admins: number;
-  reservations: number;
-  completed: number;
-  hours_total: number;
-  tasks_open: number;
-  messages_24h: number;
-};
+type NavItem = { to: string; label: string; icon: typeof Shield; exact?: boolean };
+const NAV: NavItem[] = [
+  { to: "/admin", label: "Apžvalga", icon: LayoutDashboard, exact: true },
+  { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
+  { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
+  { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },
+  { to: "/admin/manage", label: "Valdyti paskyras", icon: Users },
+  { to: "/admin/schools", label: "Mokyklos & kodai", icon: GraduationCap },
+  { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
+  { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
+  { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
+];
 
-type Profile = { id: string; role: string; full_name: string | null; organization_name: string | null; email: string | null; hours_earned: number; hours_needed: number };
-type Reservation = { id: string; status: string; hours_to_earn: number; reservation_date: string; organization_id: string; student_id: string; created_at: string };
-
-const STATUS_TONE: Record<string, string> = {
-  pending: "bg-warning/15 text-warning-foreground",
-  approved: "bg-primary/15 text-primary",
-  completed: "bg-success/15 text-success",
-  confirmed: "bg-success/15 text-success",
-  declined: "bg-destructive/15 text-destructive",
-};
-const STATUS_LT: Record<string, string> = {
-  pending: "Laukia",
-  approved: "Vykdoma",
-  completed: "Užbaigta",
-  confirmed: "Užbaigta",
-  declined: "Atmesta",
-};
-const STATUS_ICON: Record<string, any> = {
-  pending: AlarmClock,
-  approved: PlayCircle,
-  completed: CheckCircle2,
-  confirmed: CheckCircle2,
-  declined: XCircle,
-};
-
-function AdminDashboard() {
+function AdminLayout() {
   const { user, profile, loading } = useAuth();
-  const [stats, setStats] = useState<Stats>({ students: 0, organizations: 0, school_admins: 0, reservations: 0, completed: 0, hours_total: 0, tasks_open: 0, messages_24h: 0 });
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [tab, setTab] = useState<"overview" | "organizations" | "activity" | "accounts" | "manage" | "bugs">("overview");
-  const [q, setQ] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
 
-  useEffect(() => {
-    if (!user || profile?.role !== "admin") return;
-    (async () => {
-      const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-      const [pRes, rRes, tRes, mRes] = await Promise.all([
-        supabase.from("profiles").select("id, role, full_name, organization_name, email, hours_earned, hours_needed"),
-        supabase.from("reservations").select("id, status, hours_to_earn, reservation_date, organization_id, student_id, created_at").order("created_at", { ascending: false }),
-        supabase.from("tasks").select("id", { count: "exact", head: true }).eq("is_open", true),
-        supabase.from("messages").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
-      ]);
-      const profs = (pRes.data as Profile[]) ?? [];
-      const res = (rRes.data as Reservation[]) ?? [];
-      setProfiles(profs);
-      setReservations(res);
-      setStats({
-        students: profs.filter((p) => p.role === "student").length,
-        organizations: profs.filter((p) => p.role === "organization").length,
-        school_admins: profs.filter((p) => p.role === "school_admin").length,
-        reservations: res.length,
-        completed: res.filter((r) => r.status === "completed" || r.status === "confirmed").length,
-        hours_total: profs.reduce((a, p) => a + Number(p.hours_earned ?? 0), 0),
-        tasks_open: tRes.count ?? 0,
-        messages_24h: mRes.count ?? 0,
-      });
-    })();
-  }, [user, profile]);
-
-  const orgMap = useMemo(() => {
-    const m: Record<string, Profile> = {};
-    profiles.filter((p) => p.role === "organization").forEach((p) => (m[p.id] = p));
-    return m;
-  }, [profiles]);
-  const studentMap = useMemo(() => {
-    const m: Record<string, Profile> = {};
-    profiles.filter((p) => p.role === "student").forEach((p) => (m[p.id] = p));
-    return m;
-  }, [profiles]);
-
-  const orgAgg = useMemo(() => {
-    const rows = Object.values(orgMap).map((o) => {
-      const rs = reservations.filter((r) => r.organization_id === o.id);
-      const done = rs.filter((r) => r.status === "completed" || r.status === "confirmed");
-      return {
-        org: o,
-        total: rs.length,
-        pending: rs.filter((r) => r.status === "pending").length,
-        completed: done.length,
-        hours: done.reduce((a, r) => a + Number(r.hours_to_earn), 0),
-      };
-    });
-    return rows.sort((a, b) => b.hours - a.hours);
-  }, [orgMap, reservations]);
-
-  if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="p-20 text-center text-muted-foreground">Kraunama…</div>
+      </PageShell>
+    );
+  }
   if (!user || profile?.role !== "admin") {
     return (
       <PageShell>
@@ -121,597 +54,90 @@ function AdminDashboard() {
           <Shield className="mx-auto h-10 w-10 text-muted-foreground" />
           <h1 className="mt-4 text-2xl font-bold">Reikia sistemos administratoriaus teisių</h1>
           <p className="mt-2 text-sm text-muted-foreground">Prisijunk su Super Admin paskyra.</p>
-          <Link to="/login" className="mt-6 inline-flex rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">Prisijungti</Link>
+          <Link
+            to="/login"
+            className="mt-6 inline-flex rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow"
+          >
+            Prisijungti
+          </Link>
         </div>
       </PageShell>
     );
   }
 
-  const cards = [
-    { icon: GraduationCap, label: "Mokiniai", value: stats.students, tone: "from-primary/20 to-primary/5" },
-    { icon: Building2, label: "Organizacijos", value: stats.organizations, tone: "from-warning/20 to-warning/5" },
-    { icon: Users, label: "Mokyklos adm.", value: stats.school_admins, tone: "from-success/20 to-success/5" },
-    { icon: ClipboardList, label: "Rezervacijos", value: stats.reservations, tone: "from-primary/20 to-primary/5" },
-    { icon: Activity, label: "Užbaigtos", value: stats.completed, tone: "from-success/20 to-success/5" },
-    { icon: Shield, label: "Iš viso valandų", value: stats.hours_total, tone: "from-primary/20 to-primary/5" },
-    { icon: ListTodo, label: "Atviros užduotys", value: stats.tasks_open, tone: "from-warning/20 to-warning/5" },
-    { icon: MessageSquare, label: "Žinutės (24 val.)", value: stats.messages_24h, tone: "from-primary/20 to-primary/5" },
-  ];
+  const isActive = (to: string, exact?: boolean) =>
+    exact ? pathname === to || pathname === `${to}/` : pathname === to || pathname.startsWith(`${to}/`);
 
-  const filteredOrgAgg = orgAgg.filter((r) => !q || (r.org.organization_name ?? r.org.full_name ?? "").toLowerCase().includes(q.toLowerCase()));
+  const NavList = ({ onClick }: { onClick?: () => void }) => (
+    <nav className="flex flex-col gap-1">
+      {NAV.map((item) => {
+        const active = isActive(item.to, item.exact);
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={onClick}
+            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              active
+                ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+            }`}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Sistemos savininko sritis</p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">Super Admin skydas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Realaus laiko platformos apžvalga.</p>
-      </section>
-
-      <section className="mx-auto mt-8 grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {cards.map((c) => (
-          <motion.div key={c.label} whileHover={{ y: -3 }} className={`rounded-3xl border border-border bg-gradient-to-br ${c.tone} p-5 shadow-md backdrop-blur`}>
-            <div className="flex items-center justify-between">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                <c.icon className="h-5 w-5" />
-              </div>
-              <TrendingUp className="h-4 w-4 text-success" />
-            </div>
-            <p className="mt-4 font-display text-3xl font-bold">{c.value}</p>
-            <p className="text-xs text-muted-foreground">{c.label}</p>
-          </motion.div>
-        ))}
-      </section>
-
-      <section className="mx-auto mt-8 max-w-7xl px-4 pb-16 sm:px-6">
-        <div className="rounded-3xl border border-border bg-gradient-card p-4 shadow-md backdrop-blur sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-                {[
-                  { k: "overview", label: "Apžvalga" },
-                  { k: "organizations", label: "Organizacijų reitingas" },
-                  { k: "activity", label: "Aktyvumo istorija" },
-                  { k: "accounts", label: "Kurti paskyras" },
-                  { k: "manage", label: "Valdyti paskyras" },
-                  { k: "bugs", label: "Bug pranešimai" },
-                ].map((t) => (
-                  <button key={t.k} onClick={() => setTab(t.k as any)}
-                    className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === t.k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {tab === "organizations" && (
-              <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti organizacijos…" className="h-10 w-full min-w-0 bg-transparent text-sm outline-none sm:w-56" />
-              </div>
-            )}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-3 py-6 lg:hidden">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+              Super Admin
+            </p>
+            <h1 className="mt-1 font-display text-2xl font-bold tracking-tight">Valdymo skydas</h1>
           </div>
-
-          {tab === "overview" && <QuickActions />}
-          {tab === "overview" && (
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-background/60 p-5">
-                <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Būsenų suvestinė</h3>
-                <div className="mt-4 space-y-2">
-                  {["pending", "approved", "completed", "declined"].map((k) => {
-                    const n = reservations.filter((r) => r.status === k || (k === "completed" && r.status === "confirmed")).length;
-                    const pct = stats.reservations ? Math.round((n / stats.reservations) * 100) : 0;
-                    const Icon = STATUS_ICON[k];
-                    return (
-                      <div key={k}>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="flex items-center gap-1.5 font-semibold"><Icon className="h-3.5 w-3.5" /> {STATUS_LT[k]}</span>
-                          <span className="tabular-nums text-muted-foreground">{n} · {pct}%</span>
-                        </div>
-                        <div className="mt-1 h-2 overflow-hidden rounded-full bg-accent">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} className="h-full bg-gradient-primary" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border bg-background/60 p-5">
-                <h3 className="font-display text-lg font-bold">Top 5 organizacijos pagal valandas</h3>
-                <ul className="mt-4 space-y-2">
-                  {orgAgg.slice(0, 5).map((r, i) => (
-                    <li key={r.org.id} className="flex items-center gap-3 rounded-xl bg-card/60 p-3">
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">{i + 1}</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{r.org.organization_name ?? r.org.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{r.completed} užbaigtos · {r.total} iš viso</p>
-                      </div>
-                      <span className="rounded-full bg-success/15 px-2.5 py-1 text-xs font-bold text-success">{r.hours} val.</span>
-                    </li>
-                  ))}
-                  {orgAgg.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Nėra duomenų.</p>}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {tab === "organizations" && (
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="py-3 pr-3">Organizacija</th>
-                    <th className="hidden py-3 pr-3 md:table-cell">El. paštas</th>
-                    <th className="py-3 pr-3 text-right">Rezervacijos</th>
-                    <th className="py-3 pr-3 text-right">Laukia</th>
-                    <th className="py-3 pr-3 text-right">Užbaigta</th>
-                    <th className="py-3 pr-3 text-right">Valandos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrgAgg.map((r) => (
-                    <tr key={r.org.id} className="border-b border-border/60 transition hover:bg-accent/40">
-                      <td className="py-3 pr-3 font-medium">{r.org.organization_name ?? r.org.full_name}</td>
-                      <td className="hidden py-3 pr-3 text-muted-foreground md:table-cell">{r.org.email}</td>
-                      <td className="py-3 pr-3 text-right tabular-nums">{r.total}</td>
-                      <td className="py-3 pr-3 text-right tabular-nums text-warning-foreground">{r.pending}</td>
-                      <td className="py-3 pr-3 text-right tabular-nums text-success">{r.completed}</td>
-                      <td className="py-3 pr-3 text-right font-bold tabular-nums">{r.hours}</td>
-                    </tr>
-                  ))}
-                  {filteredOrgAgg.length === 0 && <tr><td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Nieko nerasta.</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {tab === "activity" && (
-            <div className="mt-6 divide-y divide-border">
-              {reservations.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Kol kas nėra rezervacijų.</p>}
-              {reservations.slice(0, 20).map((r) => {
-                const Icon = STATUS_ICON[r.status] ?? AlarmClock;
-                const tone = STATUS_TONE[r.status] ?? "";
-                const orgN = orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "—";
-                const stN = studentMap[r.student_id]?.full_name ?? "Mokinys";
-                return (
-                  <div key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{stN} → {orgN}</p>
-                      <p className="text-xs text-muted-foreground">{r.reservation_date} · {Number(r.hours_to_earn)} val. · sukurta {new Date(r.created_at).toLocaleString("lt-LT")}</p>
-                    </div>
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
-                      <Icon className="h-3 w-3" /> {STATUS_LT[r.status] ?? r.status}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {tab === "accounts" && <CreateAccountPanel />}
-          {tab === "manage" && <ManageAccountsPanel currentUserId={user?.id ?? ""} />}
-          {tab === "bugs" && <BugReportsPanel />}
-
-
-        </div>
-      </section>
-    </PageShell>
-  );
-}
-
-function CreateAccountPanel() {
-  const [role, setRole] = useState<"organization" | "school_admin">("organization");
-  const [orgCategory, setOrgCategory] = useState<"organizacija" | "bendruomene">("organizacija");
-  const [fullName, setFullName] = useState("");
-  const [orgName, setOrgName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await adminCreateAccount({
-        data: {
-          email: email.trim(),
-          password,
-          full_name: fullName.trim() || (role === "organization" ? orgName.trim() : ""),
-          role,
-          organization_name: role === "organization" ? orgName.trim() : null,
-          org_category: role === "organization" ? orgCategory : null,
-        },
-      });
-      toast.success("Paskyra sukurta");
-      setFullName(""); setOrgName(""); setEmail(""); setPassword("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepavyko sukurti");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="mt-6 grid gap-6 lg:grid-cols-2">
-      <form onSubmit={submit} className="rounded-2xl border border-border bg-background/60 p-5">
-        <h3 className="font-display text-lg font-bold flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /> Sukurti naują paskyrą</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Sukuriamos organizacijos/bendruomenės arba mokyklos administratoriaus paskyros. Vartotojas galės iškart prisijungti.</p>
-
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          {[
-            { k: "organization", label: "Organizacija/Bendruomenė", icon: Building2 },
-            { k: "school_admin", label: "Mokyklos admin.", icon: GraduationCap },
-          ].map((r) => {
-            const active = role === r.k;
-            return (
-              <button key={r.k} type="button" onClick={() => setRole(r.k as any)}
-                className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-semibold transition ${active ? "border-primary bg-gradient-primary text-primary-foreground shadow-glow" : "border-border bg-card/60 hover:border-primary/40"}`}>
-                <r.icon className="h-4 w-4" /> {r.label}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setMobileOpen((v) => !v)}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur"
+            aria-label="Meniu"
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
         </div>
 
-        {role === "organization" && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {[
-              { k: "organizacija", label: "Organizacija" },
-              { k: "bendruomene", label: "Bendruomenė" },
-            ].map((c) => {
-              const active = orgCategory === c.k;
-              return (
-                <button key={c.k} type="button" onClick={() => setOrgCategory(c.k as any)}
-                  className={`rounded-xl border p-2 text-xs font-semibold transition ${active ? "border-primary bg-primary/15 text-primary" : "border-border bg-card/60 hover:border-primary/40"}`}>
-                  {c.label}
-                </button>
-              );
-            })}
+        {mobileOpen && (
+          <div className="mb-4 rounded-2xl border border-border bg-card/80 p-3 shadow-md backdrop-blur lg:hidden">
+            <NavList onClick={() => setMobileOpen(false)} />
           </div>
         )}
 
-        <div className="mt-4 space-y-3">
-          {role === "organization" && (
-            <FieldInput label={orgCategory === "bendruomene" ? "Bendruomenės pavadinimas" : "Organizacijos pavadinimas"} value={orgName} onChange={setOrgName} placeholder="Pavyzdys" required />
-          )}
-          <FieldInput label="Kontaktinis asmuo / Vardas Pavardė" value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required={role === "school_admin"} />
-          <FieldInput label="El. paštas" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" type="email" required />
-          <FieldInput label="Slaptažodis (min. 6)" value={password} onChange={setPassword} placeholder="••••••" type="password" required />
-        </div>
-
-        <button type="submit" disabled={busy}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />} Sukurti paskyrą
-        </button>
-      </form>
-
-      <AccessRequestsPanel />
-    </div>
-  );
-}
-
-function FieldInput({ label, value, onChange, placeholder, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
-      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} required={required}
-        className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
-    </label>
-  );
-}
-
-function QuickActions() {
-  const purge = useServerFn(adminPurgeOldMessages);
-  const wipeRes = useServerFn(adminWipeAllReservations);
-  const wipeTasks = useServerFn(adminWipeAllTasks);
-  const health = useServerFn(adminPlatformHealth);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [snap, setSnap] = useState<any>(null);
-
-  const run = async (key: string, fn: () => Promise<any>, confirmMsg?: string) => {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
-    setBusy(key);
-    try {
-      const r = await fn();
-      toast.success(`${key}: ${JSON.stringify(r)}`);
-      if (key === "health") setSnap(r);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Klaida");
-    } finally { setBusy(null); }
-  };
-
-  const btn = "inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-4 py-2 text-xs font-semibold hover:bg-accent transition disabled:opacity-50";
-  return (
-    <div className="mt-6 rounded-2xl border border-border bg-background/60 p-5">
-      <h3 className="font-display text-lg font-bold flex items-center gap-2"><Zap className="h-4 w-4 text-primary" /> Greiti veiksmai</h3>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button disabled={!!busy} className={btn} onClick={() => run("health", () => health())}>
-          {busy === "health" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Activity className="h-3 w-3" />} DB sveikatos patikra
-        </button>
-        <button disabled={!!busy} className={btn} onClick={() => run("purge", () => purge(), "Ištrinti visas žinutes senesnes nei 12 dienų?")}>
-          {busy === "purge" ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageSquare className="h-3 w-3" />} Išvalyti senas žinutes (12d.)
-        </button>
-        <button disabled={!!busy} className={btn} onClick={() => run("res", () => wipeRes(), "IŠTRINTI VISAS rezervacijas iš duomenų bazės?")}>
-          {busy === "res" ? <Loader2 className="h-3 w-3 animate-spin" /> : <ClipboardList className="h-3 w-3" />} Trinti visas rezervacijas
-        </button>
-        <button disabled={!!busy} className={btn} onClick={() => run("tasks", () => wipeTasks(), "IŠTRINTI VISAS užduotis?")}>
-          {busy === "tasks" ? <Loader2 className="h-3 w-3 animate-spin" /> : <ListTodo className="h-3 w-3" />} Trinti visas užduotis
-        </button>
-        <button className={btn} onClick={() => window.location.reload()}>
-          <TrendingUp className="h-3 w-3" /> Perkrauti duomenis
-        </button>
-      </div>
-      {snap && (
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 md:grid-cols-6">
-          {Object.entries(snap).map(([k, v]) => (
-            <div key={k} className="rounded-xl border border-border bg-card/60 px-3 py-2">
-              <div className="text-muted-foreground">{k}</div>
-              <div className="font-bold tabular-nums">{String(v)}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-type AccessRequest = {
-  id: string;
-  organization_name: string;
-  legal_code: string | null;
-  contact_name: string;
-  contact_email: string;
-  contact_phone: string | null;
-  website: string | null;
-  description: string;
-  status: "pending" | "approved" | "rejected";
-  admin_notes: string | null;
-  created_at: string;
-};
-
-function AccessRequestsPanel() {
-  const [rows, setRows] = useState<AccessRequest[]>([]);
-  const [busy, setBusy] = useState<string | null>(null);
-
-  const load = async () => {
-    const { data } = await supabase.from("organization_access_requests").select("*").order("created_at", { ascending: false });
-    setRows((data as AccessRequest[]) ?? []);
-  };
-  useEffect(() => { load(); }, []);
-
-  const setStatus = async (id: string, status: "approved" | "rejected") => {
-    setBusy(id);
-    try {
-      const { error } = await supabase.from("organization_access_requests").update({ status }).eq("id", id);
-      if (error) throw error;
-      toast.success(status === "approved" ? "Pažymėta kaip patvirtinta. Sukurk paskyrą aukščiau." : "Atmesta.");
-      await load();
-    } catch (e: any) { toast.error(e?.message ?? "Klaida"); }
-    finally { setBusy(null); }
-  };
-
-  return (
-    <div className="mt-8 rounded-2xl border border-border bg-background/60 p-5">
-      <h3 className="font-display text-lg font-bold">📥 Organizacijų prieigos prašymai</h3>
-      <p className="mt-1 text-xs text-muted-foreground">Prašymai iš viešos registracijos formos. Patvirtinus — sukurk paskyrą aukščiau ir pats išsiųsk kredencialus.</p>
-      <div className="mt-4 space-y-3">
-        {rows.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Kol kas nėra prašymų.</p>}
-        {rows.map((r) => (
-          <div key={r.id} className="rounded-xl border border-border bg-card/70 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-semibold">{r.organization_name}</p>
-                <p className="text-xs text-muted-foreground">Kodas: {r.legal_code ?? "—"} · {r.contact_name} · {r.contact_email} · {r.contact_phone ?? "—"}</p>
-                {r.website && <p className="text-xs text-primary">{r.website}</p>}
+        <div className="grid gap-6 pb-16 lg:grid-cols-[240px_1fr] lg:py-10">
+          <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur lg:block">
+            <div className="mb-4 flex items-center gap-2 px-1">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+                <Shield className="h-4 w-4" />
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase ${r.status === "pending" ? "bg-warning/15 text-warning-foreground" : r.status === "approved" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-                {r.status}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">{r.description}</p>
-            {r.status === "pending" && (
-              <div className="mt-3 flex gap-2">
-                <button disabled={busy === r.id} onClick={() => setStatus(r.id, "approved")} className="rounded-lg bg-success/20 px-3 py-1.5 text-xs font-semibold text-success hover:bg-success/30 disabled:opacity-50">✓ Patvirtinti</button>
-                <button disabled={busy === r.id} onClick={() => setStatus(r.id, "rejected")} className="rounded-lg bg-destructive/20 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/30 disabled:opacity-50">✗ Atmesti</button>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                  Super Admin
+                </p>
+                <p className="text-xs text-muted-foreground">{profile.email}</p>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+            </div>
+            <NavList />
+          </aside>
 
-function ManageAccountsPanel({ currentUserId }: { currentUserId: string }) {
-  const list = useServerFn(adminListAllAccounts);
-  const del = useServerFn(adminDeleteAccount);
-  const [rows, setRows] = useState<any[]>([]);
-  const [q, setQ] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = async () => {
-    setLoading(true);
-    try {
-      const r = await list();
-      setRows(r.profiles as any[]);
-    } catch (e: any) {
-      toast.error(e?.message ?? "Nepavyko įkelti");
-    } finally { setLoading(false); }
-  };
-  useEffect(() => { refresh(); }, []);
-
-  const handleDelete = async (id: string, label: string) => {
-    if (!confirm(`Ištrinti paskyrą „${label}“? Šio veiksmo atšaukti negalima.`)) return;
-    setBusy(id);
-    try {
-      await del({ data: { userId: id } });
-      toast.success("Paskyra ištrinta");
-      setRows((prev) => prev.filter((r) => r.id !== id));
-    } catch (e: any) {
-      toast.error(e?.message ?? "Nepavyko ištrinti");
-    } finally { setBusy(null); }
-  };
-
-  const filtered = rows.filter((r) => {
-    if (roleFilter !== "all" && r.role !== roleFilter) return false;
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (r.email ?? "").toLowerCase().includes(s)
-      || (r.full_name ?? "").toLowerCase().includes(s)
-      || (r.organization_name ?? "").toLowerCase().includes(s);
-  });
-
-  const ROLE_LT: Record<string, string> = { student: "Mokinys", organization: "Organizacija", school_admin: "Mokyklos admin", admin: "Super admin" };
-
-  return (
-    <div className="mt-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti pagal el. paštą, vardą…" className="h-10 w-72 bg-transparent text-sm outline-none" />
-        </div>
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="h-10 rounded-full border border-border bg-background px-3 text-sm">
-          <option value="all">Visos rolės</option>
-          <option value="student">Mokiniai</option>
-          <option value="organization">Organizacijos</option>
-          <option value="school_admin">Mokyklos administratoriai</option>
-          <option value="admin">Super administratoriai</option>
-        </select>
-        <button onClick={refresh} className="h-10 rounded-full border border-border px-4 text-xs font-semibold hover:bg-accent">Atnaujinti</button>
-        <span className="ml-auto text-xs text-muted-foreground">{filtered.length} / {rows.length}</span>
-      </div>
-
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <th className="py-3 pr-3">Vardas</th>
-              <th className="py-3 pr-3">El. paštas</th>
-              <th className="py-3 pr-3">Rolė</th>
-              <th className="py-3 pr-3 text-right">Veiksmai</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && <tr><td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">Kraunama…</td></tr>}
-            {!loading && filtered.map((r) => {
-              const isMe = r.id === currentUserId;
-              return (
-                <tr key={r.id} className="border-b border-border/60 hover:bg-accent/40">
-                  <td className="py-3 pr-3 font-medium">{r.organization_name ?? r.full_name ?? "—"}</td>
-                  <td className="py-3 pr-3 text-muted-foreground">{r.email}</td>
-                  <td className="py-3 pr-3"><span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold">{ROLE_LT[r.role] ?? r.role}</span></td>
-                  <td className="py-3 pr-3 text-right">
-                    <button
-                      disabled={busy === r.id || isMe}
-                      onClick={() => handleDelete(r.id, r.organization_name ?? r.full_name ?? r.email ?? r.id)}
-                      className="rounded-lg bg-destructive/15 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/25 disabled:opacity-40"
-                      title={isMe ? "Negali ištrinti savo paskyros" : "Ištrinti paskyrą"}
-                    >
-                      {busy === r.id ? "Trinama…" : isMe ? "Tu pats" : "Ištrinti"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-            {!loading && filtered.length === 0 && <tr><td colSpan={4} className="py-8 text-center text-xs text-muted-foreground">Nieko nerasta.</td></tr>}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-type BugRow = { id: string; message: string; reporter_email: string | null; reporter_user_id: string | null; page_url: string | null; severity: string; status: string | null; admin_note: string | null; created_at: string };
-
-function BugReportsPanel() {
-  const [rows, setRows] = useState<BugRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "open" | "in_progress" | "resolved">("open");
-
-  async function load() {
-    setLoading(true);
-    const { data } = await supabase.from("bug_reports").select("*").order("created_at", { ascending: false });
-    setRows((data as BugRow[]) ?? []);
-    setLoading(false);
-  }
-  useEffect(() => { load(); }, []);
-
-  async function update(id: string, patch: { status?: string; admin_note?: string }) {
-    const { error } = await supabase.from("bug_reports").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
-    setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  }
-  async function remove(id: string) {
-    if (!confirm("Ištrinti šį pranešimą?")) return;
-    const { error } = await supabase.from("bug_reports").delete().eq("id", id);
-    if (error) return toast.error(error.message);
-    setRows((rs) => rs.filter((r) => r.id !== id));
-    toast.success("Ištrinta");
-  }
-
-  const shown = rows.filter((r) => filter === "all" || (r.status ?? "open") === filter);
-  const sevTone: Record<string, string> = {
-    critical: "bg-destructive/20 text-destructive",
-    high: "bg-warning/20 text-warning-foreground",
-    normal: "bg-primary/15 text-primary",
-    low: "bg-muted text-muted-foreground",
-  };
-  const statusTone: Record<string, string> = {
-    open: "bg-warning/15 text-warning-foreground",
-    in_progress: "bg-primary/15 text-primary",
-    resolved: "bg-success/15 text-success",
-  };
-
-  return (
-    <div className="mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="inline-flex rounded-full border border-border bg-background/70 p-1">
-            {(["open", "in_progress", "resolved", "all"] as const).map((k) => (
-              <button key={k} onClick={() => setFilter(k)}
-                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition ${filter === k ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
-                {k === "open" ? "Nauji" : k === "in_progress" ? "Vykdoma" : k === "resolved" ? "Išspręsta" : "Visi"}
-              </button>
-            ))}
+          <div className="min-w-0">
+            <Outlet />
           </div>
         </div>
-        <button onClick={load} className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent">Atnaujinti</button>
       </div>
-
-      <div className="mt-4 space-y-3">
-        {loading && <p className="py-8 text-center text-sm text-muted-foreground">Kraunama…</p>}
-        {!loading && shown.length === 0 && <p className="py-10 text-center text-sm text-muted-foreground">Pranešimų nėra 🎉</p>}
-        {shown.map((r) => {
-          const status = r.status ?? "open";
-          return (
-            <div key={r.id} className="rounded-2xl border border-border bg-background/60 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${sevTone[r.severity] ?? "bg-muted"}`}>{r.severity}</span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusTone[status] ?? "bg-muted"}`}>{status}</span>
-                <span className="text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleString("lt-LT")}</span>
-                {r.reporter_email && <span className="text-[11px] text-muted-foreground">· {r.reporter_email}</span>}
-                {r.page_url && <a href={r.page_url} target="_blank" rel="noreferrer" className="text-[11px] text-primary underline">atidaryti puslapį</a>}
-              </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm">{r.message}</p>
-              <textarea defaultValue={r.admin_note ?? ""} onBlur={(e) => { const v = e.target.value; if (v !== (r.admin_note ?? "")) update(r.id, { admin_note: v }); }}
-                placeholder="Admin pastaba (išsaugoma nuvedus žymeklį)…"
-                className="mt-2 w-full rounded-lg border border-border bg-background p-2 text-xs outline-none focus:border-primary" rows={2} />
-              <div className="mt-2 flex flex-wrap gap-2">
-                {status !== "in_progress" && <button onClick={() => update(r.id, { status: "in_progress" })} className="rounded-full border border-border px-3 py-1 text-xs font-semibold hover:bg-accent">Vykdoma</button>}
-                {status !== "resolved" && <button onClick={() => update(r.id, { status: "resolved" })} className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success hover:bg-success/25">Išspręsta</button>}
-                {status !== "open" && <button onClick={() => update(r.id, { status: "open" })} className="rounded-full border border-border px-3 py-1 text-xs font-semibold hover:bg-accent">Atverti iš naujo</button>}
-                <button onClick={() => remove(r.id)} className="ml-auto rounded-full border border-destructive/40 px-3 py-1 text-xs font-semibold text-destructive hover:bg-destructive/10">Trinti</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    </PageShell>
   );
 }
-
-
-

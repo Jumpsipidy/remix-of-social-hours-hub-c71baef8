@@ -201,53 +201,62 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.2 }}
               className="lg:mt-6"
+              style={{ perspective: 1400 }}
             >
-              <TiltCard intensity={6}>
-                <div className="relative rounded-2xl border border-border bg-card/70 p-8 shadow-elegant backdrop-blur-xl">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                        {isStudent ? "Tavo pažanga" : "Kaip atrodo pažanga"}
+              <TiltCard intensity={14}>
+                <div className="relative rounded-3xl">
+                  {/* Blue neon halo */}
+                  <div className="absolute -inset-4 rounded-3xl bg-gradient-primary opacity-30 blur-2xl" aria-hidden />
+                  <div className="relative rounded-3xl border border-border bg-gradient-card/90 p-6 shadow-elegant backdrop-blur-xl sm:p-8">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                          {isStudent ? "Tavo pažanga" : "Kaip atrodo pažanga"}
+                        </p>
+                        <p className="mt-3 font-display text-4xl font-semibold tracking-tight">
+                          {myEarned}
+                          <span className="text-2xl text-muted-foreground"> / {myNeeded} val.</span>
+                        </p>
+                      </div>
+                      <motion.div
+                        animate={{ rotate: [0, 8, -8, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow"
+                      >
+                        <Award className="h-5 w-5" />
+                      </motion.div>
+                    </div>
+
+                    <div className="mt-6 h-2 overflow-hidden rounded-full bg-secondary">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${myPct}%` }}
+                        transition={{ duration: 1.4, delay: 0.5, ease: "easeOut" }}
+                        className="h-full rounded-full bg-gradient-primary"
+                      />
+                    </div>
+                    <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                      <span>{myPct}% įvykdyta</span>
+                      <span>{isStudent ? "Realaus laiko duomenys" : "Prisijunk, kad matytum savo"}</span>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-3">
+                      <div className="rounded-2xl border border-border bg-background/50 p-4 backdrop-blur">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Užbaigta</p>
+                        <p className="mt-2 font-display text-xl font-semibold">{myCompleted}</p>
+                      </div>
+                      <div className="rounded-2xl border border-border bg-background/50 p-4 backdrop-blur">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Suplanuota</p>
+                        <p className="mt-2 font-display text-xl font-semibold">{myPlanned}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 border-t border-border/70 pt-5 text-xs text-muted-foreground">
+                      <p className="italic leading-relaxed">
+                        „Pirmą kartą matau, kur nueina mokinių valandos. Viskas viename lange.”
                       </p>
-                      <p className="mt-3 font-display text-4xl font-semibold tracking-tight">
-                        {myEarned}
-                        <span className="text-2xl text-muted-foreground"> / {myNeeded} val.</span>
-                      </p>
+                      <p className="mt-2 not-italic">— Mokyklos administratorius, pilotinė mokykla</p>
                     </div>
-                    <div className="grid h-11 w-11 place-items-center rounded-full border border-border">
-                      <Award className="h-4 w-4" />
-                    </div>
-                  </div>
-
-                  <div className="mt-6 h-[3px] overflow-hidden rounded-full bg-secondary">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${myPct}%` }}
-                      transition={{ duration: 1.4, delay: 0.5, ease: "easeOut" }}
-                      className="h-full rounded-full bg-gradient-primary"
-                    />
-                  </div>
-                  <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-                    <span>{myPct}% įvykdyta</span>
-                    <span>{isStudent ? "Realaus laiko duomenys" : "Prisijunk, kad matytum savo"}</span>
-                  </div>
-
-                  <div className="mt-8 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-border/70 p-4">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Užbaigta</p>
-                      <p className="mt-2 font-display text-xl font-semibold">{myCompleted}</p>
-                    </div>
-                    <div className="rounded-xl border border-border/70 p-4">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Suplanuota</p>
-                      <p className="mt-2 font-display text-xl font-semibold">{myPlanned}</p>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 border-t border-border/70 pt-5 text-xs text-muted-foreground">
-                    <p className="italic leading-relaxed">
-                      „Pirmą kartą matau, kur nueina mokinių valandos. Viskas viename lange.”
-                    </p>
-                    <p className="mt-2 not-italic">— Mokyklos administratorius, pilotinė mokykla</p>
                   </div>
                 </div>
               </TiltCard>

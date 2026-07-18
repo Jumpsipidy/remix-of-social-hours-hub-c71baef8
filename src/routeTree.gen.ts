@@ -20,6 +20,15 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminToolsRouteImport } from './routes/admin.tools'
+import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
+import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminManageRouteImport } from './routes/admin.manage'
+import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
+import { Route as AdminActivityRouteImport } from './routes/admin.activity'
+import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
 
 const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
   id: '/update-password',
@@ -76,10 +85,55 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminToolsRoute = AdminToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSchoolsRoute = AdminSchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminManageRoute = AdminManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBugsRoute = AdminBugsRouteImport.update({
+  id: '/bugs',
+  path: '/bugs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAccountsRoute = AdminAccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
@@ -89,10 +143,18 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/bugs': typeof AdminBugsRoute
+  '/admin/manage': typeof AdminManageRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/tools': typeof AdminToolsRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
@@ -102,11 +164,20 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/bugs': typeof AdminBugsRoute
+  '/admin/manage': typeof AdminManageRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/tools': typeof AdminToolsRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
@@ -116,6 +187,15 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/admin/accounts': typeof AdminAccountsRoute
+  '/admin/activity': typeof AdminActivityRoute
+  '/admin/bugs': typeof AdminBugsRoute
+  '/admin/manage': typeof AdminManageRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/tools': typeof AdminToolsRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,10 +211,18 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/admin/accounts'
+    | '/admin/activity'
+    | '/admin/bugs'
+    | '/admin/manage'
+    | '/admin/messages'
+    | '/admin/organizations'
+    | '/admin/schools'
+    | '/admin/tools'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/forgot-password'
     | '/login'
     | '/organization'
@@ -144,6 +232,15 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/admin/accounts'
+    | '/admin/activity'
+    | '/admin/bugs'
+    | '/admin/manage'
+    | '/admin/messages'
+    | '/admin/organizations'
+    | '/admin/schools'
+    | '/admin/tools'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -157,11 +254,20 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/admin/accounts'
+    | '/admin/activity'
+    | '/admin/bugs'
+    | '/admin/manage'
+    | '/admin/messages'
+    | '/admin/organizations'
+    | '/admin/schools'
+    | '/admin/tools'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   OrganizationRoute: typeof OrganizationRoute
@@ -252,12 +358,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tools': {
+      id: '/admin/tools'
+      path: '/tools'
+      fullPath: '/admin/tools'
+      preLoaderRoute: typeof AdminToolsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/schools': {
+      id: '/admin/schools'
+      path: '/schools'
+      fullPath: '/admin/schools'
+      preLoaderRoute: typeof AdminSchoolsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/organizations': {
+      id: '/admin/organizations'
+      path: '/organizations'
+      fullPath: '/admin/organizations'
+      preLoaderRoute: typeof AdminOrganizationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/manage': {
+      id: '/admin/manage'
+      path: '/manage'
+      fullPath: '/admin/manage'
+      preLoaderRoute: typeof AdminManageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bugs': {
+      id: '/admin/bugs'
+      path: '/bugs'
+      fullPath: '/admin/bugs'
+      preLoaderRoute: typeof AdminBugsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/accounts': {
+      id: '/admin/accounts'
+      path: '/accounts'
+      fullPath: '/admin/accounts'
+      preLoaderRoute: typeof AdminAccountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAccountsRoute: typeof AdminAccountsRoute
+  AdminActivityRoute: typeof AdminActivityRoute
+  AdminBugsRoute: typeof AdminBugsRoute
+  AdminManageRoute: typeof AdminManageRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminOrganizationsRoute: typeof AdminOrganizationsRoute
+  AdminSchoolsRoute: typeof AdminSchoolsRoute
+  AdminToolsRoute: typeof AdminToolsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAccountsRoute: AdminAccountsRoute,
+  AdminActivityRoute: AdminActivityRoute,
+  AdminBugsRoute: AdminBugsRoute,
+  AdminManageRoute: AdminManageRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
+  AdminOrganizationsRoute: AdminOrganizationsRoute,
+  AdminSchoolsRoute: AdminSchoolsRoute,
+  AdminToolsRoute: AdminToolsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   OrganizationRoute: OrganizationRoute,
