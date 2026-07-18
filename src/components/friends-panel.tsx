@@ -259,6 +259,8 @@ export function FriendsPanel({ userId, schoolId }: Props) {
           </div>
         </section>
       )}
+
+      <DmDialog friend={dmFriend} me={userId} onClose={() => setDmFriend(null)} />
     </div>
   );
 }
