@@ -257,12 +257,20 @@ function RegisterPage() {
                       <label className="flex items-center gap-2 text-xs font-semibold text-primary">
                         <Clock className="h-4 w-4" /> Kiek valandų turi atlikti?
                       </label>
-                      <div className="mt-3 flex items-center gap-3">
-                        <input type="number" min={1} max={500} value={hoursNeeded} required
-                          onChange={(e) => setHoursNeeded(Math.max(0, Number(e.target.value)))}
-                          className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
-                        <span className="text-sm text-muted-foreground">val. per mokslo metus</span>
-                      </div>
+                      {classYear && isLowerClass(classYear) ? (
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-primary/40 bg-primary/10 text-sm font-bold">20</div>
+                          <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> nustatyta automatiškai ir keisti negalima.</span>
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center gap-3">
+                          <input type="number" min={classYear ? hoursRuleFor(classYear).min : 8} max={500}
+                            value={hoursNeeded} required
+                            onChange={(e) => setHoursNeeded(Math.max(classYear ? hoursRuleFor(classYear).min : 8, Number(e.target.value)))}
+                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
+                          <span className="text-xs text-muted-foreground">val. per mokslo metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</label>
