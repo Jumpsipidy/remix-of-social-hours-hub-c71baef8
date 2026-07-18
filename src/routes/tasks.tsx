@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { TiltCard } from "@/components/tilt-card";
 import { TasksBackgroundFX } from "@/components/tasks-background";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
