@@ -56,8 +56,12 @@ function ToolsPage() {
     setBusy(key);
     try {
       const r = (await fn()) as Record<string, unknown>;
-      toast.success(`${key}: ${JSON.stringify(r)}`);
-      if (key === "health") setSnap(r);
+      if (key === "health") {
+        setSnap(r);
+        toast.success("Ataskaita paruošta");
+      } else {
+        toast.success(`${key}: ${JSON.stringify(r)}`);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Klaida");
     } finally {
