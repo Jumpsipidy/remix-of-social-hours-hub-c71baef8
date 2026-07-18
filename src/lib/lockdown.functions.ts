@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const adminGetLockdownSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const settingsColumns = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
+    const settingsColumns = "id, lockdown_enabled, lockdown_message, lockdown_code, updated_at, updated_by";
     const setupMessage =
       "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
     const isSchemaError = (error: unknown) => {
@@ -20,6 +20,7 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
       id: Boolean(row?.id ?? true),
       lockdown_enabled: Boolean(row?.lockdown_enabled),
       lockdown_message: row?.lockdown_message ?? null,
+      lockdown_code: row?.lockdown_code ?? null,
       updated_at: row?.updated_at ?? null,
       updated_by: row?.updated_by ?? null,
     });
@@ -53,9 +54,9 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
 
 export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { lockdown_enabled?: boolean; lockdown_message?: string | null }) => input)
+  .inputValidator((input: { lockdown_enabled?: boolean; lockdown_message?: string | null; lockdown_code?: string | null }) => input)
   .handler(async ({ data, context }) => {
-    const settingsColumns = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
+    const settingsColumns = "id, lockdown_enabled, lockdown_message, lockdown_code, updated_at, updated_by";
     const setupMessage =
       "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
     const isSchemaError = (error: unknown) => {
@@ -71,6 +72,7 @@ export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
       id: Boolean(row?.id ?? true),
       lockdown_enabled: Boolean(row?.lockdown_enabled),
       lockdown_message: row?.lockdown_message ?? null,
+      lockdown_code: row?.lockdown_code ?? null,
       updated_at: row?.updated_at ?? null,
       updated_by: row?.updated_by ?? null,
     });
@@ -87,6 +89,10 @@ export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
     if ("lockdown_message" in data) {
       const trimmed = (data.lockdown_message ?? "").trim();
       patch.lockdown_message = trimmed.length ? trimmed : null;
+    }
+    if ("lockdown_code" in data) {
+      const trimmed = (data.lockdown_code ?? "").trim();
+      patch.lockdown_code = trimmed.length ? trimmed : null;
     }
 
     const { data: updated, error } = await supabaseAdmin

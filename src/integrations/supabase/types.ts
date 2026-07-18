@@ -331,6 +331,7 @@ export type Database = {
       site_settings: {
         Row: {
           id: boolean
+          lockdown_code: string | null
           lockdown_enabled: boolean
           lockdown_message: string | null
           updated_at: string
@@ -338,6 +339,7 @@ export type Database = {
         }
         Insert: {
           id?: boolean
+          lockdown_code?: string | null
           lockdown_enabled?: boolean
           lockdown_message?: string | null
           updated_at?: string
@@ -345,6 +347,7 @@ export type Database = {
         }
         Update: {
           id?: boolean
+          lockdown_code?: string | null
           lockdown_enabled?: boolean
           lockdown_message?: string | null
           updated_at?: string

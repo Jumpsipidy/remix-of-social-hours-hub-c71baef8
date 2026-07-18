@@ -4,11 +4,12 @@ export type SiteSettings = {
   id: boolean;
   lockdown_enabled: boolean;
   lockdown_message: string | null;
+  lockdown_code: string | null;
   updated_at?: string | null;
   updated_by?: string | null;
 };
 
-const SITE_SETTINGS_COLUMNS = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
+const SITE_SETTINGS_COLUMNS = "id, lockdown_enabled, lockdown_message, lockdown_code, updated_at, updated_by";
 
 export function isSiteSettingsSchemaError(error: unknown) {
   const message = String((error as { message?: string } | null)?.message ?? "");
