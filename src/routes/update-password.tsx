@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Heart, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Heart, Lock, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,6 +19,36 @@ function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState("Tikrinama atkūrimo nuoroda…");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function prepareRecoverySession() {
+      try {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        }
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!data.session) throw new Error("Atkūrimo nuoroda pasibaigė arba neteisinga.");
+        if (!cancelled) {
+          setReady(true);
+          setStatus("Nuoroda patvirtinta. Įvesk naują slaptažodį.");
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setStatus(err instanceof Error ? err.message : "Nepavyko patvirtinti atkūrimo nuorodos.");
+          toast.error("Atidaryk naujausią atkūrimo laišką arba paprašyk naujos nuorodos.");
+        }
+      }
+    }
+    void prepareRecoverySession();
+    return () => { cancelled = true; };
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,17 +87,26 @@ function UpdatePasswordPage() {
 
         <div className="rounded-3xl border border-border bg-gradient-card p-8 shadow-elegant backdrop-blur-xl">
           <h1 className="text-2xl font-bold">Sukurk naują slaptažodį</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Įvesk naują slaptažodį savo paskyrai.</p>
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <PasswordField label="Naujas slaptažodis" value={password} onChange={setPassword} />
-            <PasswordField label="Pakartok slaptažodį" value={confirm} onChange={setConfirm} />
-            <button
-              disabled={busy}
-              className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60"
-            >
-              {busy ? "Saugoma…" : "Pakeisti slaptažodį"}
-            </button>
-          </form>
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-background/70 p-3 text-sm text-muted-foreground">
+            {ready ? <ShieldCheck className="h-5 w-5 text-primary" /> : <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+            <span>{status}</span>
+          </div>
+          {ready ? (
+            <form onSubmit={submit} className="mt-6 space-y-4">
+              <PasswordField label="Naujas slaptažodis" value={password} onChange={setPassword} />
+              <PasswordField label="Pakartok slaptažodį" value={confirm} onChange={setConfirm} />
+              <button
+                disabled={busy}
+                className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60"
+              >
+                {busy ? "Saugoma…" : "Pakeisti slaptažodį"}
+              </button>
+            </form>
+          ) : (
+            <Link to="/forgot-password" className="mt-6 inline-flex w-full justify-center rounded-full border border-border px-4 py-3 text-sm font-semibold hover:bg-accent">
+              Siųsti naują atkūrimo laišką
+            </Link>
+          )}
         </div>
       </div>
     </div>

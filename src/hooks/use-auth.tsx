@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import type { User } from "@supabase/supabase-js";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { bootstrapFirstAdmin } from "@/lib/bootstrap-admin.functions";
+import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
 
 export type AppRole = "student" | "school_admin" | "organization" | "admin";
 
@@ -56,12 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [mock, setMock] = useState<MockSession | null>(null);
-  const bootstrapAdmin = useServerFn(bootstrapFirstAdmin);
-  const bootstrapAdminRef = useRef(bootstrapAdmin);
+  const ensureProfile = useServerFn(ensureSignedInProfile);
+  const ensureProfileRef = useRef(ensureProfile);
 
   useEffect(() => {
-    bootstrapAdminRef.current = bootstrapAdmin;
-  }, [bootstrapAdmin]);
+    ensureProfileRef.current = ensureProfile;
+  }, [ensureProfile]);
 
   useEffect(() => {
     // Load mock from storage
@@ -78,6 +78,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     const loadProfile = async (uid: string) => {
+      try {
+        const ensured = await ensureProfileRef.current();
+        if (mounted && ensured.profile) {
+          setProfile(ensured.profile as Profile);
+          try { localStorage.setItem(ROLE_CACHE_KEY, ensured.profile.role); } catch {}
+          return;
+        }
+      } catch {
+        // Fall back to a normal RLS read; this keeps auth usable even if the
+        // privileged repair path is temporarily unavailable.
+      }
+
       const fetchProfile = async () => {
         const { data } = await supabase
           .from("profiles")
@@ -89,17 +101,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let nextProfile = await fetchProfile();
 
-      // If the database was wiped and no super-admin exists, make the first signed-in user the owner.
-      if (!nextProfile || nextProfile.role !== "admin") {
-        try {
-          const result = await bootstrapAdminRef.current();
-          if (result.bootstrapped) nextProfile = await fetchProfile();
-        } catch {
-          // Normal case after setup: an admin already exists, so nothing changes.
+      if (mounted) {
+        setProfile(nextProfile);
+        if (nextProfile?.role) {
+          try { localStorage.setItem(ROLE_CACHE_KEY, nextProfile.role); } catch {}
         }
       }
-
-      if (mounted) setProfile(nextProfile);
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {

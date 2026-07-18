@@ -135,7 +135,7 @@ function RegisterPage() {
   async function handleGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/student` },
+      options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: "select_account" } },
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
@@ -143,7 +143,7 @@ function RegisterPage() {
   async function handleDiscord() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
-      options: { redirectTo: `${window.location.origin}/student` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) toast.error("Nepavyko prisijungti per Discord");
   }

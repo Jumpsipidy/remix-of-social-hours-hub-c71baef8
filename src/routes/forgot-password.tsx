@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Heart, Mail, ArrowLeft } from "lucide-react";
+import { Heart, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,8 +53,18 @@ function ForgotPasswordPage() {
           </Link>
           <h1 className="text-2xl font-bold">Atkurti slaptažodį</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Įvesk el. paštą — atsiųsime saugią nuorodą naujam slaptažodžiui susikurti.
+            Įvesk el. paštą — atsiųsime saugią atkūrimo nuorodą. Paspaudus ją galėsi įvesti naują slaptažodį.
           </p>
+          <div className="mt-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 font-semibold text-primary">
+              <ShieldCheck className="h-4 w-4" /> Kaip tai veikia
+            </div>
+            <ol className="mt-2 list-decimal space-y-1 pl-4">
+              <li>Gauni laišką į savo el. paštą.</li>
+              <li>Paspaudi saugią nuorodą laiške.</li>
+              <li>Šiame puslapyje susikuri naują slaptažodį.</li>
+            </ol>
+          </div>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             <label className="block">

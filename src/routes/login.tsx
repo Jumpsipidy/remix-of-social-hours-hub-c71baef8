@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
-import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
+import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight, Building2, GraduationCap, BarChart3, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Auth3DBackground } from "@/components/auth-3d-background";
 import { useAuth } from "@/hooks/use-auth";
+import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
 import { toast } from "sonner";
 
 const DASH_BY_ROLE: Record<string, string> = {
@@ -32,9 +33,11 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { profile, isAuthenticated, loading, clearImpersonation } = useAuth();
+  const ensureProfile = useServerFn(ensureSignedInProfile);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
 
   // Auto-redirect if already authenticated (e.g. returning from Google OAuth)
   useEffect(() => {
@@ -51,16 +54,13 @@ function LoginPage() {
     try {
       clearImpersonation();
       try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .maybeSingle();
-      const target = DASH_BY_ROLE[prof?.role ?? "student"] ?? "/";
-      if (prof?.role) {
-        try { localStorage.setItem("sv_last_role_v1", prof.role); } catch {}
+      const ensured = await ensureProfile();
+      const role = ensured.profile?.role ?? "student";
+      const target = DASH_BY_ROLE[role] ?? "/";
+      if (role) {
+        try { localStorage.setItem("sv_last_role_v1", role); } catch {}
       }
       toast.success("Sveikas atvykęs!");
       navigate({ to: target });
@@ -72,22 +72,28 @@ function LoginPage() {
   }
 
   async function handleOAuth(provider: "google" | "discord") {
+    if (oauthBusy) return;
+    setOauthBusy(provider);
     clearImpersonation();
     try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-    // Return to /login so the useEffect above routes based on actual role.
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/login` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: provider === "google" ? { prompt: "select_account" } : undefined,
+      },
     });
-    if (error) toast.error(`Nepavyko prisijungti per ${provider === "google" ? "Google" : "Discord"}`);
+    if (error) {
+      setOauthBusy(null);
+      toast.error(`Nepavyko prisijungti per ${provider === "google" ? "Google" : "Discord"}`);
+    }
   }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      <Auth3DBackground />
-      <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,hsl(var(--primary)/0.18),transparent_34%),linear-gradient(135deg,hsl(var(--background)),hsl(var(--card)))]" aria-hidden />
       <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
-        {/* Left column — brand narrative (replaces the empty middle block) */}
+        {/* Left column — professional trust panel */}
         <div className="hidden flex-col justify-center lg:flex">
           <Link to="/" className="inline-flex items-center gap-2">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary shadow-glow">
@@ -102,12 +108,40 @@ function LoginPage() {
             transition={{ duration: 0.6 }}
             className="mt-14 max-w-lg text-5xl font-black leading-[1.05] tracking-tight"
           >
-            Tavo valandos.<br />
-            <span className="text-gradient">Vienoj vietoj.</span>
+            Saugus prisijungimas<br />
+            <span className="text-gradient">mokykloms ir organizacijoms.</span>
           </motion.h1>
           <p className="mt-5 max-w-md text-base text-muted-foreground">
-            Rezervuok savanorystę, kalbėkis su organizacijomis ir stebėk progresą — viskas realiu laiku.
+            Po prisijungimo sistema patikrina tavo paskyrą ir iškart nukreipia į teisingą skydą — moksleivio, organizacijos, mokyklos arba administratoriaus.
           </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="mt-10 max-w-lg rounded-[2rem] border border-border/70 bg-card/70 p-5 shadow-elegant backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Platformos būsena</p>
+                <p className="mt-1 text-lg font-bold">Vaidmenys, valandos, pokalbiai</p>
+              </div>
+              <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">Aktyvu</div>
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {[
+                { icon: GraduationCap, label: "Mokiniai", value: "klasės" },
+                { icon: Building2, label: "Partneriai", value: "užduotys" },
+                { icon: BarChart3, label: "Auditas", value: "valandos" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-border bg-background/70 p-3">
+                  <item.icon className="h-5 w-5 text-primary" />
+                  <p className="mt-3 text-sm font-bold">{item.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
           <div className="mt-10 grid max-w-md gap-3">
             {[
@@ -157,17 +191,19 @@ function LoginPage() {
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
               <button
                 onClick={() => handleOAuth("google")}
+                disabled={!!oauthBusy || busy}
                 type="button"
-                className="relative flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold transition hover:bg-accent"
+                className="relative flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <GoogleIcon /> Google
+                {oauthBusy === "google" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />} Google
               </button>
               <button
                 onClick={() => handleOAuth("discord")}
+                disabled={!!oauthBusy || busy}
                 type="button"
-                className="flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold transition hover:bg-accent"
+                className="flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <DiscordIcon /> Discord
+                {oauthBusy === "discord" ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon />} Discord
               </button>
             </div>
 
