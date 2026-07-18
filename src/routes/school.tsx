@@ -62,7 +62,22 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<"students" | "orgs" | "events" | "accounts">("students");
+  const [tab, setTab] = useState<"students" | "queue" | "orgs" | "events" | "accounts">("students");
+
+  // Peržiūros eilė
+  const [allRes, setAllRes] = useState<Reservation[]>([]);
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const REVIEWED_KEY = "sv_reviewed_reservations";
+  const [reviewed, setReviewed] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(REVIEWED_KEY) || "[]")); } catch { return new Set(); }
+  });
+  const [onlyFlagged, setOnlyFlagged] = useState(false);
+  const [onlyUnreviewed, setOnlyUnreviewed] = useState(false);
+  const persistReviewed = (s: Set<string>) => {
+    setReviewed(new Set(s));
+    localStorage.setItem(REVIEWED_KEY, JSON.stringify([...s]));
+  };
 
   useEffect(() => {
     if (!user || profile?.role !== "school_admin") return;
