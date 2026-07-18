@@ -157,12 +157,19 @@ function BugsPage() {
                 )}
                 {status !== "resolved" && (
                   <button
-                    onClick={() => update(r.id, { status: "resolved" })}
+                    onClick={async () => {
+                      if (!confirm("Pažymėti kaip išspręstą ir ištrinti iš duomenų bazės?")) return;
+                      const { error } = await supabase.from("bug_reports").delete().eq("id", r.id);
+                      if (error) return toast.error(error.message);
+                      setRows((rs) => rs.filter((x) => x.id !== r.id));
+                      toast.success("Išspręsta ir ištrinta");
+                    }}
                     className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success hover:bg-success/25"
                   >
                     Išspręsta
                   </button>
                 )}
+
                 {status !== "open" && (
                   <button
                     onClick={() => update(r.id, { status: "open" })}

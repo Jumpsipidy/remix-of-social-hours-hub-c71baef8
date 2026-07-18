@@ -1,36 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Moon, Sun, Heart, Menu, X, LogOut } from "lucide-react";
+import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
 import { motion } from "framer-motion";
 
-function ThemeToggle() {
-  const [dark, setDark] = useState(true);
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    // Default to dark unless the user explicitly chose light.
-    const isDark = stored ? stored === "dark" : true;
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, []);
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  };
-  return (
-    <button
-      onClick={toggle}
-      aria-label="Keisti temą"
-      className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition hover:bg-accent"
-    >
-      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </button>
-  );
-}
 
 const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> = {
   student: { to: "/student", label: "Mokinio sritis" },
@@ -109,7 +84,7 @@ export function Navbar() {
         </nav>
         <div className="flex items-center gap-2">
           <NotificationBell />
-          <ThemeToggle />
+
           {isAuthenticated ? (
             <button
               onClick={handleSignOut}
