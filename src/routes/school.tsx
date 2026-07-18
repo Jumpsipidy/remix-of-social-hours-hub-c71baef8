@@ -25,7 +25,9 @@ type Student = {
   email: string | null;
   hours_needed: number;
   hours_earned: number;
+  class_year?: string | null;
 };
+
 
 type Reservation = {
   id: string;
@@ -64,9 +66,10 @@ function SchoolDashboard() {
     if (!user || profile?.role !== "school_admin") return;
     (async () => {
       const [{ data: st }, { data: og }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, hours_needed, hours_earned").eq("role", "student").order("full_name", { ascending: true }),
+        supabase.from("profiles").select("id, full_name, email, hours_needed, hours_earned, class_year").eq("role", "student").order("full_name", { ascending: true }),
         supabase.from("profiles").select("id, full_name, email, organization_name").eq("role", "organization").order("organization_name", { ascending: true }),
       ]);
+
       setStudents((st as Student[]) ?? []);
       const orgList = (og as OrgProfile[]) ?? [];
       setOrgs(orgList);
@@ -86,10 +89,17 @@ function SchoolDashboard() {
       .then(({ data }) => setAuditRes((data as Reservation[]) ?? []));
   }, [auditing]);
 
+  const assignedClasses = profile?.assigned_classes ?? [];
+  // If admin has classes assigned, restrict view to those only. Empty = see all (fallback for old accounts).
+  const classRestricted = assignedClasses.length > 0;
   const filteredStudents = useMemo(
-    () => students.filter((s) => !q || (s.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (s.email ?? "").toLowerCase().includes(q.toLowerCase())),
-    [students, q],
+    () =>
+      students
+        .filter((s) => !classRestricted || (s.class_year && assignedClasses.includes(String(s.class_year))))
+        .filter((s) => !q || (s.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (s.email ?? "").toLowerCase().includes(q.toLowerCase())),
+    [students, q, classRestricted, assignedClasses],
   );
+
   const filteredOrgs = useMemo(
     () => orgs.filter((o) => !q || (o.organization_name ?? o.full_name ?? "").toLowerCase().includes(q.toLowerCase())),
     [orgs, q],
@@ -124,7 +134,16 @@ function SchoolDashboard() {
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">Mokyklos sritis</p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">Sveiki, {profile.full_name ?? "Administratoriau"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">Stebėk mokyklos mokinius, audituok rezervacijas ir palaikyk ryšį su organizacijomis.</p>
+        {classRestricted && (
+          <div className="mt-3 inline-flex flex-wrap items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">Priskirtos klasės:</span>
+            {assignedClasses.map((c) => (
+              <span key={c} className="rounded-full bg-gradient-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">{c} kl.</span>
+            ))}
+          </div>
+        )}
       </section>
+
 
       <section className="mx-auto mt-8 grid max-w-7xl gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         {[

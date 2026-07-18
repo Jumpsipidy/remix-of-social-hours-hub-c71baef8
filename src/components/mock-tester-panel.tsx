@@ -189,6 +189,26 @@ export function MockTesterPanel() {
             {tab === "create" && (
               <>
                 <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis: <code className="rounded bg-muted px-1">DevPass123!</code></p>
+                <button
+                  onClick={() => {
+                    const w = window as any;
+                    if (typeof w.__pushNotification === "function") {
+                      w.__pushNotification({
+                        kind: Math.random() > 0.5 ? "message" : "reservation",
+                        title: "🔔 Test pranešimas",
+                        body: "Sveikas! Tai fake pranešimas iš debug panelės.",
+                        status: "approved",
+                      });
+                      toast.success("Test pranešimas išsiųstas");
+                    } else {
+                      toast.error("NotificationBell dar neužkrautas");
+                    }
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10"
+                >
+                  🔔 Trigger fake pranešimą (test popup)
+                </button>
+
                 <div className="space-y-2">
                   {(["student","organization","school_admin","admin"] as const).map(r => (
                     <div key={r} className="flex gap-1.5">
