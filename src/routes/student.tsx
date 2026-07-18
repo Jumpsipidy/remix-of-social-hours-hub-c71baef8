@@ -298,6 +298,22 @@ function StudentDashboard() {
 
       <OpenTasksFeed />
 
+      {/* Group invites + Friends */}
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+          <div className="space-y-4">
+            <GroupInvitesInbox userId={user.id} />
+          </div>
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <h2 className="text-lg font-bold">Draugai</h2>
+              <span className="text-xs text-muted-foreground">Kviesk juos į grupines rezervacijas</span>
+            </div>
+            <FriendsPanel userId={user.id} schoolId={profile.school_id ?? null} />
+          </div>
+        </div>
+      </section>
+
       {/* Reservations list w/ filter */}
       <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
