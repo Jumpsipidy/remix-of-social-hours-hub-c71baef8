@@ -30,6 +30,7 @@ import { Route as AdminReservationsRouteImport } from './routes/admin.reservatio
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
+import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
 import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
 import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -142,6 +143,11 @@ const AdminManageRoute = AdminManageRouteImport.update({
   path: '/manage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLockdownRoute = AdminLockdownRouteImport.update({
+  id: '/lockdown',
+  path: '/lockdown',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLeaderboardRoute = AdminLeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
+  '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
+  '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
+  '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bugs'
     | '/admin/leaderboard'
+    | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bugs'
     | '/admin/leaderboard'
+    | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bugs'
     | '/admin/leaderboard'
+    | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -504,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/lockdown': {
+      id: '/admin/lockdown'
+      path: '/lockdown'
+      fullPath: '/admin/lockdown'
+      preLoaderRoute: typeof AdminLockdownRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/leaderboard': {
       id: '/admin/leaderboard'
       path: '/leaderboard'
@@ -548,6 +567,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBugsRoute: typeof AdminBugsRoute
   AdminLeaderboardRoute: typeof AdminLeaderboardRoute
+  AdminLockdownRoute: typeof AdminLockdownRoute
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
@@ -563,6 +583,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBugsRoute: AdminBugsRoute,
   AdminLeaderboardRoute: AdminLeaderboardRoute,
+  AdminLockdownRoute: AdminLockdownRoute,
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,

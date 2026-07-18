@@ -328,6 +328,30 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          id: boolean
+          lockdown_enabled: boolean
+          lockdown_message: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          lockdown_enabled?: boolean
+          lockdown_message?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          lockdown_enabled?: boolean
+          lockdown_message?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           available_hours: number

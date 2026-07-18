@@ -15,6 +15,7 @@ import { MockTesterPanel } from "../components/mock-tester-panel";
 import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
+import { LockdownGate } from "@/components/lockdown-gate";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +143,7 @@ function RootComponent() {
         <BugReportWidget />
         <CookieConsent />
         <MockTesterPanel />
+        <LockdownGate />
       </AuthProvider>
     </QueryClientProvider>
 
