@@ -117,7 +117,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
         `Sertifikatas dar negalimas — surinkta ${totalHours}/${hoursNeeded} val. Užbaik visas reikalingas valandas.`,
       );
     }
-    const code = makeCode();
+    const code = debugMode ? `DBG-${makeCode().slice(3)}` : makeCode();
     const payload = JSON.stringify({
       code,
       student_id: userId,
@@ -128,21 +128,23 @@ export const generateCertificate = createServerFn({ method: "POST" })
     const content_hash = await sha256Hex(payload);
     const signature = await hmacHex(secret, code + "|" + content_hash);
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: insErr } = await supabaseAdmin.from("certificates").insert({
-      code,
-      student_id: userId,
-      student_name: profile.full_name ?? "",
-      student_class: profile.class_year ?? null,
-      school_id: profile.school_id ?? null,
-      school_name: schoolName,
-      total_hours: totalHours,
-      hours_needed: profile.hours_needed ?? 0,
-      reservations_json: reservations,
-      content_hash,
-      signature,
-    });
-    if (insErr) throw new Error(insErr.message);
+    if (!debugMode) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: insErr } = await supabaseAdmin.from("certificates").insert({
+        code,
+        student_id: userId,
+        student_name: profile.full_name ?? "",
+        student_class: profile.class_year ?? null,
+        school_id: profile.school_id ?? null,
+        school_name: schoolName,
+        total_hours: totalHours,
+        hours_needed: profile.hours_needed ?? 0,
+        reservations_json: reservations,
+        content_hash,
+        signature,
+      });
+      if (insErr) throw new Error(insErr.message);
+    }
 
     return {
       code,
