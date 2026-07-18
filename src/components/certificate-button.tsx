@@ -187,11 +187,13 @@ export function CertificateButton({ className }: { className?: string }) {
   const goalReached = !!hours && hours.needed > 0 && hours.earned >= hours.needed;
   const canGenerate = goalReached || isAdmin;
 
-  async function generate(debug: boolean) {
+  async function generate(mode: "real" | "debug" | "fake") {
     if (busy) return;
     setBusy(true);
     try {
-      const cert = await gen({ data: { debug } });
+      const cert = await gen({
+        data: { debug: mode === "debug", fake: mode === "fake" },
+      });
       const origin =
         typeof window !== "undefined" ? window.location.origin : "https://socialinesvalandos.lt";
       const verifyUrl = `${origin}/verify/${cert.code}`;
@@ -205,11 +207,12 @@ export function CertificateButton({ className }: { className?: string }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success(
-        debug
-          ? `DEBUG sertifikatas sugeneruotas (neįrašomas į DB). Kodas: ${cert.code}`
-          : `Sertifikatas sugeneruotas! Kodas: ${cert.code}`,
-      );
+      const msgMap = {
+        real: `Sertifikatas sugeneruotas! Kodas: ${cert.code}`,
+        debug: `DEBUG sertifikatas sugeneruotas (neįrašomas į DB). Kodas: ${cert.code}`,
+        fake: `FAKE demo sertifikatas su išgalvotais duomenimis. Kodas: ${cert.code}`,
+      } as const;
+      toast.success(msgMap[mode]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Nepavyko: ${msg}`);
@@ -240,18 +243,28 @@ export function CertificateButton({ className }: { className?: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button onClick={() => generate(false)} disabled={busy} className={baseCls}>
+      <button onClick={() => generate("real")} disabled={busy} className={baseCls}>
         {busy ? "Generuojama..." : "📄 Atsisiųsti PDF sertifikatą"}
       </button>
       {isAdmin && (
-        <button
-          onClick={() => generate(true)}
-          disabled={busy}
-          title="Debug: sugeneruoja PDF nepaisant valandų, neįrašo į DB"
-          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-60"
-        >
-          🧪 Debug PDF
-        </button>
+        <>
+          <button
+            onClick={() => generate("debug")}
+            disabled={busy}
+            title="Debug: sugeneruoja PDF su TAVO paskyros duomenimis, nepaisant valandų"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-60"
+          >
+            🧪 Debug PDF
+          </button>
+          <button
+            onClick={() => generate("fake")}
+            disabled={busy}
+            title="Fake: sugeneruoja PDF su išgalvotu moksleiviu (Jonas Petraitis, 11B, ~20 val.) — matai kaip atrodo pilnas sertifikatas"
+            className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/60 bg-fuchsia-500/10 px-4 py-2.5 text-sm font-semibold text-fuchsia-300 hover:bg-fuchsia-500/20 disabled:opacity-60"
+          >
+            🎭 Fake Demo PDF
+          </button>
+        </>
       )}
     </div>
   );
