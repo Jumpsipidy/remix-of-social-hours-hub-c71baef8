@@ -328,6 +328,23 @@ function TasksPage() {
                           )}
                           {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
                         </div>
+                        {t.tags && t.tags.length > 0 && (
+                          <div className="relative mt-3 flex flex-wrap gap-1">
+                            {t.tags.slice(0, 5).map((tg) => (
+                              <button
+                                key={tg}
+                                onClick={(e) => { e.stopPropagation(); toggleTag(tg); }}
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition ${
+                                  selectedTags.includes(tg)
+                                    ? "bg-gradient-primary text-primary-foreground"
+                                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                                }`}
+                              >
+                                #{tg}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
                           onClick={() => handleReserve(t)}
                           className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
