@@ -76,20 +76,20 @@ export const adminListRecentMessages = createServerFn({ method: "GET" })
     const limit = Math.min(Math.max(data.limit ?? 100, 10), 500);
     const { data: rows, error } = await sb
       .from("messages")
-      .select("id, room_id, sender_id, content, created_at")
+      .select("id, chat_room_id, sender_id, content, created_at")
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw new Error(error.message);
-    const senderIds = Array.from(new Set((rows ?? []).map((r) => r.sender_id).filter(Boolean)));
-    const { data: profs } = await sb
-      .from("profiles")
-      .select("id, full_name, organization_name, email, role")
-      .in("id", senderIds);
+    const list = rows ?? [];
+    const senderIds = Array.from(new Set(list.map((r) => r.sender_id).filter((v): v is string => !!v)));
+    const { data: profs } = senderIds.length
+      ? await sb.from("profiles").select("id, full_name, organization_name, email, role").in("id", senderIds)
+      : { data: [] as { id: string; full_name: string | null; organization_name: string | null; email: string | null; role: string }[] };
     const map = new Map((profs ?? []).map((p) => [p.id, p]));
     return {
-      messages: (rows ?? []).map((r) => ({
+      messages: list.map((r) => ({
         ...r,
-        sender: map.get(r.sender_id) ?? null,
+        sender: r.sender_id ? map.get(r.sender_id) ?? null : null,
       })),
     };
   });
