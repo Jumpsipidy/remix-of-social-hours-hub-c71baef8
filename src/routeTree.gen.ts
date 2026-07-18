@@ -22,7 +22,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
@@ -103,10 +105,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyIndexRoute = VerifyIndexRouteImport.update({
+  id: '/verify/',
+  path: '/verify/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const VerifyCodeRoute = VerifyCodeRouteImport.update({
+  id: '/verify/$code',
+  path: '/verify/$code',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BlogKasYraSocialinesValandosRoute =
   BlogKasYraSocialinesValandosRouteImport.update({
@@ -208,7 +220,9 @@ export interface FileRoutesByFullPath {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
+  '/verify/': typeof VerifyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -237,7 +251,9 @@ export interface FileRoutesByTo {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
+  '/verify': typeof VerifyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,7 +284,9 @@ export interface FileRoutesById {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
+  '/verify/': typeof VerifyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -300,7 +318,9 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/verify/$code'
     | '/admin/'
+    | '/verify/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -329,7 +349,9 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/verify/$code'
     | '/admin'
+    | '/verify'
   id:
     | '__root__'
     | '/'
@@ -359,7 +381,9 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/verify/$code'
     | '/admin/'
+    | '/verify/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -378,6 +402,8 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
+  VerifyCodeRoute: typeof VerifyCodeRoute
+  VerifyIndexRoute: typeof VerifyIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -473,12 +499,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify/': {
+      id: '/verify/'
+      path: '/verify'
+      fullPath: '/verify/'
+      preLoaderRoute: typeof VerifyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/verify/$code': {
+      id: '/verify/$code'
+      path: '/verify/$code'
+      fullPath: '/verify/$code'
+      preLoaderRoute: typeof VerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/blog/kas-yra-socialines-valandos': {
       id: '/blog/kas-yra-socialines-valandos'
@@ -631,6 +671,8 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
+  VerifyCodeRoute: VerifyCodeRoute,
+  VerifyIndexRoute: VerifyIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
