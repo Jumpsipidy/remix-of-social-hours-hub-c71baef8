@@ -14,7 +14,7 @@ const MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN = 10;
  */
 export const adminCreateAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     email: string;
     password: string;
     full_name: string;

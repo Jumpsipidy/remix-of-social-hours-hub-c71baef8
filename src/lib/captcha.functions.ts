@@ -20,7 +20,7 @@ export const issueMathChallenge = createServerFn({ method: "GET" }).handler(asyn
 });
 
 export const solveCaptcha = createServerFn({ method: "POST" })
-  .inputValidator((data: { kind: "math" | "recaptcha"; challenge?: string; answer?: number | string; token?: string }) => ({
+  .validator((data: { kind: "math" | "recaptcha"; challenge?: string; answer?: number | string; token?: string }) => ({
     kind: data?.kind === "recaptcha" ? ("recaptcha" as const) : ("math" as const),
     challenge: typeof data?.challenge === "string" ? data.challenge.slice(0, 256) : "",
     answer: data?.answer === undefined ? NaN : Number(data.answer),

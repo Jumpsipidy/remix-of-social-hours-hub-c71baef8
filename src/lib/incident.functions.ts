@@ -12,7 +12,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  */
 export const reportCriticalIncident = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { code?: string; detail?: string; source?: string }) => ({
+  .validator((input: { code?: string; detail?: string; source?: string }) => ({
     code: (input.code ?? "E-2001").slice(0, 16),
     detail: (input.detail ?? "").slice(0, 240),
     source: (input.source ?? "client-monitor").slice(0, 64),
