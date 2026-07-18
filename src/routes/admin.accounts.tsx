@@ -169,6 +169,12 @@ function CreateAccountPanel() {
         <Field label="Slaptažodis (min. 6)" value={password} onChange={setPassword} type="password" required />
 
         {role === "school_admin" && (
+          <SchoolPicker schools={schools} value={schoolId} onChange={setSchoolId} />
+        )}
+
+
+
+        {role === "school_admin" && (
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground">Priskirtos klasės</span>
