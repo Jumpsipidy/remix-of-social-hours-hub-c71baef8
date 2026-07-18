@@ -18,6 +18,7 @@ import {
   CalendarClock,
   Trophy,
   BarChart3,
+  Lock,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
