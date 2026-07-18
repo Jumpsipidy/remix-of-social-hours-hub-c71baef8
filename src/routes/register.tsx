@@ -78,8 +78,8 @@ function RegisterPage() {
       if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
       if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
-      // Verify school code BEFORE creating the account. This goes through the app backend
-      // so the private school code never needs broad browser database permissions.
+      const rule = hoursRuleFor(classYear);
+      const effectiveHours = rule.locked ? rule.min : Math.max(rule.min, hoursNeeded);
       const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
       if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
