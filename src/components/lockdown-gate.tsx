@@ -508,10 +508,16 @@ export function LockdownGate() {
                     placeholder="••••"
                   />
                   {codeError && <p className="mt-2 text-center text-xs text-rose-300/90">{codeError}</p>}
+                  {captchaRequired && (
+                    <div className="mt-4">
+                      <Captcha tone="dark" onVerify={(proof) => setCaptchaProof(proof)} />
+                    </div>
+                  )}
                   <button
-                    onClick={submitCode} disabled={codeChecking}
+                    onClick={submitCode} disabled={codeChecking || (captchaRequired && !captchaProof)}
                     className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-white py-3 text-sm font-medium text-black hover:bg-white/90 disabled:opacity-70"
                   >
+
                     {codeChecking && (
                       <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
                         <RefreshCw className="h-4 w-4" />
