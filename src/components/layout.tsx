@@ -39,17 +39,39 @@ const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> =
   admin: { to: "/admin", label: "Sistemos administracija" },
 };
 
+const ROLE_CACHE_KEY = "sv_last_role_v1";
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [cachedRole, setCachedRole] = useState<AppRole | null>(null);
 
+  // Cache last known role so the dashboard link stays stable across route
+  // changes / hydration while useAuth is still refetching the profile.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ROLE_CACHE_KEY);
+      if (raw) setCachedRole(raw as AppRole);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    if (profile?.role) {
+      try { localStorage.setItem(ROLE_CACHE_KEY, profile.role); } catch {}
+      setCachedRole(profile.role);
+    } else if (!isAuthenticated) {
+      try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
+      setCachedRole(null);
+    }
+  }, [profile?.role, isAuthenticated]);
+
+  const activeRole: AppRole | null = profile?.role ?? (isAuthenticated ? cachedRole : null);
   const links: { to: string; label: string }[] = [
     { to: "/", label: "Pradžia" },
     { to: "/tasks", label: "Užduotys ir organizacijos" },
   ];
-  if (isAuthenticated && profile) {
-    const dash = DASHBOARD_BY_ROLE[profile.role];
+  if (activeRole) {
+    const dash = DASHBOARD_BY_ROLE[activeRole];
     if (dash) links.push(dash);
   }
 
