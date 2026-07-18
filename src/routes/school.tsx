@@ -93,6 +93,18 @@ function SchoolDashboard() {
       const m: Record<string, OrgProfile> = {};
       orgList.forEach((o) => (m[o.id] = o));
       setOrgMap(m);
+
+      // Load recent reservations for the review queue
+      const ids = (st as Student[] | null)?.map((s) => s.id) ?? [];
+      if (ids.length) {
+        const { data: rs } = await supabase
+          .from("reservations")
+          .select("*")
+          .in("student_id", ids)
+          .order("reservation_date", { ascending: false })
+          .limit(500);
+        setAllRes((rs as Reservation[]) ?? []);
+      }
     })();
   }, [user, profile]);
 
