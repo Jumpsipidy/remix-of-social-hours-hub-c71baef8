@@ -19,10 +19,6 @@ type Task = {
   tags?: string[] | null;
 };
 
-function isMissingTaskTagsColumn(error: { message?: string } | null) {
-  return !!error?.message?.toLowerCase().includes("'tags' column of 'tasks'");
-}
-
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -80,10 +76,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       recurrence_weekday: recurrence === "weekly" || recurrence === "biweekly" ? weekday : null,
       recurrence_until: recurrenceUntil || null,
     };
-    let { error } = await supabase.from("tasks").insert({ ...baseTask, tags } as any);
-    if (isMissingTaskTagsColumn(error)) {
-      ({ error } = await supabase.from("tasks").insert(baseTask as any));
-    }
+    const { error } = await supabase.from("tasks").insert(baseTask as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(recurrence === "none" ? "Užduotis paskelbta" : "Pasikartojanti užduotis paskelbta");
