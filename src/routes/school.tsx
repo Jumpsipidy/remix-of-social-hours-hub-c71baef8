@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2, UserPlus } from "lucide-react";
+import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2, UserPlus, AlertTriangle, Filter, ClipboardCheck, Download } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
+import { detectFlags, highestSeverity, type FraudFlag, type ReservationLike } from "@/lib/fraud-flags";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/school")({
   head: () => ({
@@ -39,6 +41,7 @@ type Reservation = {
   hours_to_earn: number;
   status: "pending" | "approved" | "completed" | "confirmed" | "declined";
   legal_disclosure?: string | null;
+  created_at?: string;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
@@ -60,7 +63,22 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<"students" | "orgs" | "events" | "accounts">("students");
+  const [tab, setTab] = useState<"students" | "queue" | "orgs" | "events" | "accounts">("students");
+
+  // Peržiūros eilė
+  const [allRes, setAllRes] = useState<Reservation[]>([]);
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const REVIEWED_KEY = "sv_reviewed_reservations";
+  const [reviewed, setReviewed] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(REVIEWED_KEY) || "[]")); } catch { return new Set(); }
+  });
+  const [onlyFlagged, setOnlyFlagged] = useState(false);
+  const [onlyUnreviewed, setOnlyUnreviewed] = useState(false);
+  const persistReviewed = (s: Set<string>) => {
+    setReviewed(new Set(s));
+    localStorage.setItem(REVIEWED_KEY, JSON.stringify([...s]));
+  };
 
   useEffect(() => {
     if (!user || profile?.role !== "school_admin") return;
@@ -76,6 +94,18 @@ function SchoolDashboard() {
       const m: Record<string, OrgProfile> = {};
       orgList.forEach((o) => (m[o.id] = o));
       setOrgMap(m);
+
+      // Load recent reservations for the review queue
+      const ids = (st as Student[] | null)?.map((s) => s.id) ?? [];
+      if (ids.length) {
+        const { data: rs } = await supabase
+          .from("reservations")
+          .select("*")
+          .in("student_id", ids)
+          .order("reservation_date", { ascending: false })
+          .limit(500);
+        setAllRes((rs as Reservation[]) ?? []);
+      }
     })();
   }, [user, profile]);
 
@@ -99,6 +129,85 @@ function SchoolDashboard() {
         .filter((s) => !q || (s.full_name ?? "").toLowerCase().includes(q.toLowerCase()) || (s.email ?? "").toLowerCase().includes(q.toLowerCase())),
     [students, q, classRestricted, assignedClasses],
   );
+
+  // Klasių sąrašas iš mokinių
+  const availableClasses = useMemo(() => {
+    const s = new Set<string>();
+    filteredStudents.forEach((st) => st.class_year && s.add(String(st.class_year)));
+    return Array.from(s).sort();
+  }, [filteredStudents]);
+
+  const studentById = useMemo(() => {
+    const m: Record<string, Student> = {};
+    students.forEach((s) => (m[s.id] = s));
+    return m;
+  }, [students]);
+
+  const flagsByRes = useMemo(() => {
+    const byStudent: Record<string, ReservationLike[]> = {};
+    allRes.forEach((r) => {
+      (byStudent[r.student_id] ??= []).push(r as unknown as ReservationLike);
+    });
+    const m: Record<string, FraudFlag[]> = {};
+    allRes.forEach((r) => {
+      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? []);
+    });
+    return m;
+  }, [allRes]);
+
+  const visibleStudentIds = useMemo(() => new Set(filteredStudents.map((s) => s.id)), [filteredStudents]);
+
+  const queueRows = useMemo(() => {
+    return allRes
+      .filter((r) => visibleStudentIds.has(r.student_id))
+      .filter((r) => {
+        if (classFilter === "all") return true;
+        const s = studentById[r.student_id];
+        return s?.class_year === classFilter;
+      })
+      .filter((r) => (onlyFlagged ? (flagsByRes[r.id]?.length ?? 0) > 0 : true))
+      .filter((r) => (onlyUnreviewed ? !reviewed.has(r.id) : true))
+      .filter((r) => {
+        if (!q) return true;
+        const s = studentById[r.student_id];
+        return (s?.full_name ?? "").toLowerCase().includes(q.toLowerCase());
+      });
+  }, [allRes, visibleStudentIds, classFilter, studentById, onlyFlagged, onlyUnreviewed, reviewed, flagsByRes, q]);
+
+  const flaggedCount = useMemo(() => queueRows.filter((r) => (flagsByRes[r.id]?.length ?? 0) > 0).length, [queueRows, flagsByRes]);
+  const unreviewedCount = useMemo(() => queueRows.filter((r) => !reviewed.has(r.id)).length, [queueRows, reviewed]);
+
+  const toggleSel = (id: string) => setSelected((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const selectAll = () => setSelected(new Set(queueRows.map((r) => r.id)));
+  const clearSel = () => setSelected(new Set());
+  const bulkMarkReviewed = () => {
+    const n = new Set(reviewed); selected.forEach((id) => n.add(id)); persistReviewed(n); clearSel();
+    toast.success(`Pažymėta peržiūrėta: ${selected.size}`);
+  };
+  const bulkUnreview = () => {
+    const n = new Set(reviewed); selected.forEach((id) => n.delete(id)); persistReviewed(n); clearSel();
+    toast.success(`Peržiūros žymė nuimta: ${selected.size}`);
+  };
+  const exportSelected = () => {
+    const rows = queueRows.filter((r) => selected.has(r.id));
+    if (rows.length === 0) { toast.error("Pažymėk bent vieną eilutę"); return; }
+    const header = ["Mokinys","Klasė","Data","Nuo","Iki","Valandų","Statusas","Organizacija","Įtarimai","Peržiūrėta"];
+    const csv = [header.join(",")].concat(rows.map((r) => {
+      const s = studentById[r.student_id];
+      const fl = (flagsByRes[r.id] ?? []).map((f) => f.label).join("; ");
+      return [
+        `"${(s?.full_name ?? "").replace(/"/g,'""')}"`, s?.class_year ?? "",
+        r.reservation_date, r.start_time?.slice(0,5), r.end_time?.slice(0,5),
+        Number(r.hours_to_earn), r.status, `"${(orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "").replace(/"/g,'""')}"`,
+        `"${fl.replace(/"/g,'""')}"`, reviewed.has(r.id) ? "taip" : "ne",
+      ].join(",");
+    })).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `rezervacijos-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   const filteredOrgs = useMemo(
     () => orgs.filter((o) => !q || (o.organization_name ?? o.full_name ?? "").toLowerCase().includes(q.toLowerCase())),
@@ -170,6 +279,12 @@ function SchoolDashboard() {
                 <button onClick={() => setTab("students")}
                   className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "students" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                   Mokiniai
+                </button>
+                <button onClick={() => setTab("queue")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "queue" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  <ClipboardCheck className="mr-1 inline h-3.5 w-3.5" /> Peržiūros eilė
+                  {unreviewedCount > 0 && <span className="ml-1.5 rounded-full bg-warning/20 px-1.5 text-[10px] font-bold text-warning-foreground">{unreviewedCount}</span>}
+                  {flaggedCount > 0 && <span className="ml-1 rounded-full bg-destructive/20 px-1.5 text-[10px] font-bold text-destructive">{flaggedCount}⚠</span>}
                 </button>
                 <button onClick={() => setTab("orgs")}
                   className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
@@ -244,6 +359,98 @@ function SchoolDashboard() {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+          {tab === "queue" && (
+            <div className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-background/60 p-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                  <Filter className="h-3.5 w-3.5" /> Klasė:
+                </div>
+                <button onClick={() => setClassFilter("all")} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${classFilter === "all" ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>Visos</button>
+                {availableClasses.map((c) => (
+                  <button key={c} onClick={() => setClassFilter(c)} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${classFilter === c ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>{c}</button>
+                ))}
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <input type="checkbox" checked={onlyFlagged} onChange={(e) => setOnlyFlagged(e.target.checked)} /> Tik įtartinos
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <input type="checkbox" checked={onlyUnreviewed} onChange={(e) => setOnlyUnreviewed(e.target.checked)} /> Tik neperžiūrėtos
+                  </label>
+                </div>
+              </div>
+
+              {selected.size > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+                  <span className="text-xs font-semibold">Pažymėta: <b>{selected.size}</b></span>
+                  <button onClick={bulkMarkReviewed} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"><CheckCircle2 className="h-3.5 w-3.5" /> Pažymėti peržiūrėtomis</button>
+                  <button onClick={bulkUnreview} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent">Nuimti peržiūrą</button>
+                  <button onClick={exportSelected} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent"><Download className="h-3.5 w-3.5" /> Eksportuoti CSV</button>
+                  <button onClick={clearSel} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Atšaukti</button>
+                </div>
+              )}
+
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-background/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                      <th className="w-10 py-3 pl-3">
+                        <input type="checkbox" checked={selected.size > 0 && selected.size === queueRows.length} onChange={(e) => e.target.checked ? selectAll() : clearSel()} />
+                      </th>
+                      <th className="py-3 pr-3">Mokinys</th>
+                      <th className="hidden py-3 pr-3 md:table-cell">Klasė</th>
+                      <th className="py-3 pr-3">Data · laikas</th>
+                      <th className="py-3 pr-3">Val.</th>
+                      <th className="hidden py-3 pr-3 md:table-cell">Organizacija</th>
+                      <th className="py-3 pr-3">Statusas</th>
+                      <th className="py-3 pr-3">Įtarimai</th>
+                      <th className="py-3 pr-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {queueRows.length === 0 && (
+                      <tr><td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">Nieko nerasta pagal filtrus.</td></tr>
+                    )}
+                    {queueRows.map((r) => {
+                      const s = studentById[r.student_id];
+                      const fl = flagsByRes[r.id] ?? [];
+                      const sev = highestSeverity(fl);
+                      const sevTone = sev === "high" ? "bg-destructive/15 text-destructive border-destructive/30"
+                        : sev === "medium" ? "bg-warning/15 text-warning-foreground border-warning/30"
+                        : sev === "low" ? "bg-primary/10 text-primary border-primary/20" : "";
+                      const isReviewed = reviewed.has(r.id);
+                      return (
+                        <tr key={r.id} className={`border-b border-border/50 transition hover:bg-accent/30 ${isReviewed ? "opacity-60" : ""}`}>
+                          <td className="py-2 pl-3"><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
+                          <td className="py-2 pr-3 font-semibold">{s?.full_name ?? "—"}</td>
+                          <td className="hidden py-2 pr-3 md:table-cell text-muted-foreground">{s?.class_year ?? "—"}</td>
+                          <td className="py-2 pr-3 text-muted-foreground">{r.reservation_date} · {r.start_time?.slice(0,5)}–{r.end_time?.slice(0,5)}</td>
+                          <td className="py-2 pr-3 font-bold">{Number(r.hours_to_earn)}</td>
+                          <td className="hidden py-2 pr-3 md:table-cell text-muted-foreground truncate max-w-[180px]">{orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "—"}</td>
+                          <td className="py-2 pr-3"><span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LT[r.status] ?? r.status}</span></td>
+                          <td className="py-2 pr-3">
+                            {fl.length === 0 ? <span className="text-xs text-muted-foreground">—</span> : (
+                              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${sevTone}`} title={fl.map((x) => x.label).join("\n")}>
+                                <AlertTriangle className="h-3 w-3" /> {fl.length}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => s && setAuditing(s)} className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-accent" title="Auditas"><FileSearch className="h-3 w-3" /></button>
+                              <button onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "Organizacija" })} className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-accent" title="Pokalbis"><MessageSquare className="h-3 w-3" /></button>
+                              <button onClick={() => { const n = new Set(reviewed); n.has(r.id) ? n.delete(r.id) : n.add(r.id); persistReviewed(n); }} className={`rounded-full border px-2 py-1 text-[11px] ${isReviewed ? "border-success/40 bg-success/10 text-success" : "border-border bg-background hover:bg-accent"}`}>
+                                <CheckCircle2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
           {tab === "orgs" && (

@@ -26,6 +26,12 @@ type Mode = "student" | "org_request";
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
+// 5-7 klasės — fiksuota 20 val. 8+ — mokinys pasirenka pats (min. 8).
+function isLowerClass(cy: string) { return cy === "5" || cy === "6" || cy === "7"; }
+function hoursRuleFor(cy: string): { locked: boolean; min: number; default: number } {
+  if (isLowerClass(cy)) return { locked: true, min: 20, default: 20 };
+  return { locked: false, min: 8, default: 20 };
+}
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -72,8 +78,8 @@ function RegisterPage() {
       if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
       if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
-      // Verify school code BEFORE creating the account. This goes through the app backend
-      // so the private school code never needs broad browser database permissions.
+      const rule = hoursRuleFor(classYear);
+      if (!rule.locked && hoursNeeded < rule.min) { toast.error(`8+ klasėms — min. ${rule.min} val.`); return; }
       const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
       if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
@@ -86,7 +92,7 @@ function RegisterPage() {
           data: {
             role: mode,
             full_name: fullName,
-            hours_needed: mode === "student" ? hoursNeeded : 0,
+            hours_needed: mode === "student" ? (isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded)) : 0,
             school_id: mode === "student" ? schoolId : null,
             class_year: mode === "student" ? classYear : null,
           },
@@ -251,12 +257,20 @@ function RegisterPage() {
                       <label className="flex items-center gap-2 text-xs font-semibold text-primary">
                         <Clock className="h-4 w-4" /> Kiek valandų turi atlikti?
                       </label>
-                      <div className="mt-3 flex items-center gap-3">
-                        <input type="number" min={1} max={500} value={hoursNeeded} required
-                          onChange={(e) => setHoursNeeded(Math.max(0, Number(e.target.value)))}
-                          className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
-                        <span className="text-sm text-muted-foreground">val. per mokslo metus</span>
-                      </div>
+                      {classYear && isLowerClass(classYear) ? (
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-primary/40 bg-primary/10 text-sm font-bold">20</div>
+                          <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> nustatyta automatiškai ir keisti negalima.</span>
+                        </div>
+                      ) : (
+                        <div className="mt-3 flex items-center gap-3">
+                          <input type="number" min={classYear ? hoursRuleFor(classYear).min : 8} max={500}
+                            value={hoursNeeded} required
+                            onChange={(e) => setHoursNeeded(Math.max(classYear ? hoursRuleFor(classYear).min : 8, Number(e.target.value)))}
+                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
+                          <span className="text-xs text-muted-foreground">val. per mokslo metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</label>
