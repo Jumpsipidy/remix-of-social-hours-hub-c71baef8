@@ -8,8 +8,9 @@ import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { TiltCard } from "@/components/tilt-card";
 import { TasksBackgroundFX } from "@/components/tasks-background";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
+import { TAG_PRESETS } from "@/components/tags-input";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
