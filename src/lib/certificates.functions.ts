@@ -145,5 +145,21 @@ export const verifyCertificatePublic = createServerFn({ method: "POST" })
       _code: data.code.trim().toUpperCase(),
     });
     if (error) throw new Error(error.message);
-    return res as Record<string, unknown>;
+    return (res ?? { valid: false, reason: "not_found" }) as unknown as {
+      valid: boolean;
+      reason?: string;
+      code?: string;
+      student_name?: string;
+      student_class?: string;
+      school_name?: string;
+      total_hours_at_generation?: number;
+      current_hours_in_system?: number;
+      hours_needed?: number;
+      reservations?: Array<{ date: string; hours: number; organization: string; start_time?: string; end_time?: string; notes?: string }>;
+      generated_at?: string;
+      content_hash?: string;
+      revoked_at?: string;
+      revoked_reason?: string;
+    };
+
   });
