@@ -543,7 +543,17 @@ function StudentProfileSetup({ userId }: { userId: string }) {
             </label>
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">Valandų tikslas per mokslo metus</span>
-              <input type="number" min={1} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(1, Number(e.target.value)))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
+              {isLowerClass(classYear) ? (
+                <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 px-3 py-2.5 text-sm">
+                  <b className="text-lg">20 val.</b>
+                  <span className="text-xs text-muted-foreground">— <b>5–7 klasėms</b> nustatyta automatiškai.</span>
+                </div>
+              ) : (
+                <>
+                  <input type="number" min={8} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(8, Number(e.target.value)))} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
+                  <p className="mt-1 text-[11px] text-muted-foreground">8+ klasėms — minimalus tikslas 8 val. Pasirenkama pagal savo mokyklos reikalavimus.</p>
+                </>
+              )}
             </label>
             <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
               <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
