@@ -312,7 +312,7 @@ function Home() {
               "◆",
               "Kauno Jėzuitų gimnazija",
               "◆",
-              "Klaipėdos „Vėtrungės" gimnazija",
+              "Klaipėdos „Vėtrungės“ gimnazija",
               "◆",
               "Panevėžio 5-oji gimnazija",
               "◆",
