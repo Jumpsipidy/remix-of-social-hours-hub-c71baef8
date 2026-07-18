@@ -96,8 +96,14 @@ function RegisterPage() {
       if (mode === "student" && signUp.user) {
         await supabase.from("profiles").update({ school_id: schoolId, class_year: classYear }).eq("id", signUp.user.id);
       }
-      toast.success("Paskyra sukurta! Sveiki atvykę.");
-      navigate({ to: "/student" });
+      sessionStorage.setItem("sv_signup_email", email.trim());
+      if (!signUp.session) {
+        toast.success("Paskyra sukurta! Patvirtink el. paštą kodu.");
+        navigate({ to: "/verify-email" });
+      } else {
+        toast.success("Paskyra sukurta! Sveiki atvykę.");
+        navigate({ to: "/student" });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");
     } finally { setLoading(false); }

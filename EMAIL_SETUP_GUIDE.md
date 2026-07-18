@@ -1,100 +1,88 @@
 # 📧 Email Setup Guide — Socialinės Valandos
 
-Send beautiful branded emails (password resets, welcome emails, notifications) from **your own domain** — like `noreply@tavodomenas.lt` — instead of generic Supabase defaults.
+Send **branded** emails from your own domain via Resend (free 3k/month).
+Setup ≈ 10 min. Zero AI credits used.
 
 ---
 
-## What you'll get
+## Quick summary
 
-- ✅ Custom branded emails from your domain (`labas@tavodomenas.lt`)
-- ✅ Cool React-designed templates (password reset, signup confirm, magic links)
-- ✅ Free-tier friendly (Resend gives **3,000 emails/month free**)
-- ✅ No AI credits used — this is normal email infrastructure
-
----
-
-## Requirements
-
-1. **A real domain** you own (from Namecheap, Cloudflare, GoDaddy, `.lt` registrar, etc.). ~$10/year.
-   - ❌ There is no free shared sender domain. Every email service requires you to own a domain to prevent spam.
-   - ✅ Cheapest option: buy a `.xyz` or `.online` for ~$1/year for testing.
-
-2. **Access to your domain's DNS settings** (to add TXT/MX records).
+1. Buy a domain (~$1–10/yr) — can be different from your website domain.
+2. Add it to Resend, paste DNS records at your registrar.
+3. Get Resend API key (`re_...`) → paste into Supabase SMTP.
+4. Paste the two branded HTML templates below into Supabase → Auth → Emails.
+5. Done. Sign-up + password reset emails now come from your domain with **6-digit codes** the user can type into the site.
 
 ---
 
-## OPTION A — Resend (Recommended, Free 3k/month)
+## SMTP settings recap
 
-Resend has the cleanest free tier and best deliverability. Setup takes ~10 minutes.
+In **Supabase → Authentication → SMTP Settings**:
 
-### Step 1 — Create Resend account
-1. Go to **https://resend.com** → sign up (free).
-2. Dashboard → **Domains** → **Add Domain**.
-3. Enter your domain (e.g., `tavodomenas.lt`) → **Add**.
+| Field | Value |
+|---|---|
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | your `re_...` key from Resend → API Keys |
+| Sender email | `noreply@yourverifieddomain.com` |
+| Sender name | `Socialinės Valandos` |
 
-### Step 2 — Add DNS records
-Resend shows you 3–4 records (SPF, DKIM, DMARC, MX). At your domain registrar:
+---
 
-| Type | Name | Value |
-|------|------|-------|
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` |
-| TXT | `resend._domainkey` | (long key Resend provides) |
-| MX | `send` | `feedback-smtp.eu-west-1.amazonses.com` priority 10 |
-| TXT | `_dmarc` | `v=DMARC1; p=none;` |
+## Where to paste templates
 
-Click **Verify DNS Records** in Resend. Wait ~5 min (up to 72h for slow registrars).
+**Supabase → Authentication → Email Templates**
 
-### Step 3 — Get SMTP credentials
-1. Resend dashboard → **SMTP** (left sidebar) or **API Keys**.
-2. Copy:
-   - **Host**: `smtp.resend.com`
-   - **Port**: `465`
-   - **User**: `resend`
-   - **Password**: your API key (starts with `re_...`)
+Two templates matter:
+- **Confirm signup** → paste Template 1 below
+- **Reset password** → paste Template 2 below
 
-### Step 4 — Plug into Supabase Auth
-1. Supabase dashboard → **Authentication** → **Emails** → **SMTP Settings**.
-2. Toggle **Enable Custom SMTP** ON.
-3. Fill in:
-   - **Sender email**: `labas@tavodomenas.lt`
-   - **Sender name**: `Socialinės Valandos`
-   - **Host**: `smtp.resend.com`
-   - **Port**: `465`
-   - **Username**: `resend`
-   - **Password**: your `re_...` key
-4. **Save**.
+Available variables in templates:
+- `{{ .Token }}` — the 6-digit code (what users type on our website)
+- `{{ .ConfirmationURL }}` — the magic link
+- `{{ .SiteURL }}` — your site
+- `{{ .Email }}` — recipient email
 
-### Step 5 — Customize the email templates (the cool part 🎨)
+Set the **Subject** for each:
+- Signup: `Tavo Socialinių Valandų patvirtinimo kodas`
+- Reset: `Slaptažodžio atkūrimas — Socialinės Valandos`
 
-Supabase dashboard → **Authentication** → **Emails** → click each template (Confirm signup, Reset password, Magic link, etc.).
+---
 
-Paste this **branded template** for **Reset Password**:
+## 🎨 TEMPLATE 1 — Confirm signup (paste in "Confirm signup")
 
 ```html
 <!DOCTYPE html>
 <html lang="lt">
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0a1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0a0a1a 0%,#1a1a3e 100%);padding:48px 16px;">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#05060f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:radial-gradient(ellipse at top,#1e1b4b 0%,#05060f 60%);padding:56px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#12122a;border-radius:24px;overflow:hidden;box-shadow:0 20px 60px rgba(59,130,246,0.25);">
-        <tr><td style="padding:40px 40px 20px;text-align:center;">
-          <div style="display:inline-block;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);line-height:56px;font-size:28px;">💙</div>
-          <h1 style="color:#fff;font-size:24px;margin:20px 0 8px;font-weight:700;">Atkurk savo slaptažodį</h1>
-          <p style="color:#94a3b8;font-size:15px;margin:0;line-height:1.6;">Gavome prašymą atkurti tavo Socialinių Valandų paskyros slaptažodį.</p>
+      <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;background:linear-gradient(180deg,#0f1030 0%,#0a0b22 100%);border:1px solid rgba(99,102,241,0.25);border-radius:28px;overflow:hidden;box-shadow:0 40px 80px -20px rgba(59,130,246,0.45);">
+        <tr><td style="padding:8px;background:linear-gradient(90deg,#3b82f6,#8b5cf6,#ec4899);"></td></tr>
+        <tr><td style="padding:44px 44px 24px;text-align:center;">
+          <div style="display:inline-block;width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);line-height:64px;font-size:30px;box-shadow:0 12px 30px rgba(59,130,246,0.5);">💙</div>
+          <h1 style="color:#fff;font-size:26px;margin:22px 0 8px;font-weight:800;letter-spacing:-0.5px;">Sveiki atvykę!</h1>
+          <p style="color:#94a3b8;font-size:15px;margin:0;line-height:1.6;">Dar vienas žingsnis — patvirtink savo el. paštą, kad pradėtum kaupti savanorystės valandas.</p>
         </td></tr>
-        <tr><td style="padding:24px 40px;text-align:center;">
-          <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;text-decoration:none;padding:16px 40px;border-radius:999px;font-weight:600;font-size:15px;box-shadow:0 8px 24px rgba(59,130,246,0.4);">Nustatyti naują slaptažodį</a>
-        </td></tr>
-        <tr><td style="padding:0 40px 20px;">
-          <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0;">Arba nukopijuok kodą į atkūrimo puslapį:</p>
-          <div style="background:#0a0a1a;border:1px solid #1e293b;border-radius:12px;padding:16px;margin-top:12px;text-align:center;">
-            <code style="color:#3b82f6;font-size:22px;letter-spacing:4px;font-weight:700;">{{ .Token }}</code>
+
+        <tr><td style="padding:8px 44px 8px;">
+          <p style="color:#64748b;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-align:center;margin:0 0 12px;font-weight:600;">Tavo patvirtinimo kodas</p>
+          <div style="background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(139,92,246,0.15));border:1px solid rgba(99,102,241,0.4);border-radius:20px;padding:24px;text-align:center;">
+            <code style="color:#fff;font-size:38px;letter-spacing:12px;font-weight:800;font-family:'SF Mono',Consolas,monospace;text-shadow:0 0 20px rgba(59,130,246,0.6);">{{ .Token }}</code>
           </div>
+          <p style="color:#64748b;font-size:12px;text-align:center;margin:12px 0 0;">Įklijuok šį kodą svetainėje puslapyje <strong style="color:#94a3b8;">/verify-email</strong></p>
         </td></tr>
-        <tr><td style="padding:20px 40px 40px;border-top:1px solid #1e293b;">
-          <p style="color:#475569;font-size:12px;line-height:1.6;margin:0;">Jei to neprašei — ignoruok šį laišką. Nuoroda galioja 1 val.</p>
-          <p style="color:#475569;font-size:12px;margin:12px 0 0;">— Socialinės Valandos komanda</p>
+
+        <tr><td style="padding:24px 44px;text-align:center;">
+          <p style="color:#475569;font-size:12px;margin:0 0 12px;">arba paspausk mygtuką</p>
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;text-decoration:none;padding:14px 36px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:0 10px 25px rgba(59,130,246,0.5);">Patvirtinti automatiškai</a>
+        </td></tr>
+
+        <tr><td style="padding:24px 44px 40px;border-top:1px solid rgba(99,102,241,0.15);">
+          <p style="color:#475569;font-size:12px;line-height:1.6;margin:0;">Jei šio laiško neprašei — tiesiog ignoruok. Kodas galioja 1 valandą.</p>
+          <p style="color:#475569;font-size:12px;margin:12px 0 0;">💙 <strong style="color:#94a3b8;">Socialinės Valandos</strong> — savanorystės platforma Lietuvos moksleiviams</p>
         </td></tr>
       </table>
     </td></tr>
@@ -103,62 +91,88 @@ Paste this **branded template** for **Reset Password**:
 </html>
 ```
 
-Do the same for **Confirm signup** and **Magic Link** (change heading + button text).
+---
 
-Available variables:
-- `{{ .ConfirmationURL }}` — the magic link
-- `{{ .Token }}` — 6-digit code
-- `{{ .Email }}` — user's email
-- `{{ .SiteURL }}` — your site
+## 🎨 TEMPLATE 2 — Reset password (paste in "Reset password")
 
-### Step 6 — Test it
-1. Log out.
-2. Go to `/forgot-password` → enter your email.
-3. Check inbox — you should see the branded email from `labas@tavodomenas.lt`.
+```html
+<!DOCTYPE html>
+<html lang="lt">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#05060f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:radial-gradient(ellipse at top,#3b0764 0%,#05060f 60%);padding:56px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;background:linear-gradient(180deg,#1a0b2e 0%,#0a0b22 100%);border:1px solid rgba(236,72,153,0.25);border-radius:28px;overflow:hidden;box-shadow:0 40px 80px -20px rgba(236,72,153,0.35);">
+        <tr><td style="padding:8px;background:linear-gradient(90deg,#ec4899,#8b5cf6,#3b82f6);"></td></tr>
+        <tr><td style="padding:44px 44px 24px;text-align:center;">
+          <div style="display:inline-block;width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#ec4899,#8b5cf6);line-height:64px;font-size:30px;box-shadow:0 12px 30px rgba(236,72,153,0.5);">🔐</div>
+          <h1 style="color:#fff;font-size:26px;margin:22px 0 8px;font-weight:800;letter-spacing:-0.5px;">Slaptažodžio atkūrimas</h1>
+          <p style="color:#94a3b8;font-size:15px;margin:0;line-height:1.6;">Gavome prašymą atkurti tavo paskyros slaptažodį. Naudok kodą arba mygtuką žemiau.</p>
+        </td></tr>
 
-Done! 🎉
+        <tr><td style="padding:8px 44px 8px;">
+          <p style="color:#64748b;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-align:center;margin:0 0 12px;font-weight:600;">Atkūrimo kodas</p>
+          <div style="background:linear-gradient(135deg,rgba(236,72,153,0.15),rgba(139,92,246,0.15));border:1px solid rgba(236,72,153,0.4);border-radius:20px;padding:24px;text-align:center;">
+            <code style="color:#fff;font-size:38px;letter-spacing:12px;font-weight:800;font-family:'SF Mono',Consolas,monospace;text-shadow:0 0 20px rgba(236,72,153,0.6);">{{ .Token }}</code>
+          </div>
+          <p style="color:#64748b;font-size:12px;text-align:center;margin:12px 0 0;">Įklijuok kodą puslapyje <strong style="color:#94a3b8;">/update-password</strong></p>
+        </td></tr>
+
+        <tr><td style="padding:24px 44px;text-align:center;">
+          <p style="color:#475569;font-size:12px;margin:0 0 12px;">arba paspausk mygtuką ir iškart nustatyk naują slaptažodį</p>
+          <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;text-decoration:none;padding:14px 36px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:0 10px 25px rgba(236,72,153,0.5);">Nustatyti naują slaptažodį</a>
+        </td></tr>
+
+        <tr><td style="padding:24px 44px 40px;border-top:1px solid rgba(236,72,153,0.15);">
+          <p style="color:#475569;font-size:12px;line-height:1.6;margin:0;">⚠️ Jei šio laiško neprašei — kažkas įvedė tavo el. paštą. Gali ramiai ignoruoti. Nuoroda galioja 1 val.</p>
+          <p style="color:#475569;font-size:12px;margin:12px 0 0;">💙 <strong style="color:#94a3b8;">Socialinės Valandos</strong></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
+```
 
 ---
 
-## OPTION B — Brevo (formerly Sendinblue, 300/day free)
+## How it works on the website
 
-Same flow as Resend. Sign up at **https://brevo.com**, verify domain, get SMTP creds:
-- Host: `smtp-relay.brevo.com`
-- Port: `587`
-- User: your Brevo login email
-- Password: SMTP key from dashboard
+### Signup with code
+1. Student fills registration form → clicks **Sukurti paskyrą**.
+2. Website redirects to `/verify-email`.
+3. User gets branded email (Template 1) with **6-digit code**.
+4. Types code → account activated → sent to `/student` dashboard.
+5. Alternative: click the button in the email → auto-verified.
 
-Plug into Supabase the same way (Step 4 above).
+### Password reset with code
+1. User clicks **Pamiršai slaptažodį?** → enters email → gets Template 2.
+2. On `/update-password`:
+   - Option A: click the button in email → auto-authenticated → new password form.
+   - Option B: paste the 6-digit code manually → verified → new password form.
 
----
-
-## OPTION C — Cheapest possible (Gmail SMTP, 500/day)
-
-Only for testing — not for production.
-1. Enable 2FA on Gmail → create **App Password**.
-2. Supabase SMTP:
-   - Host: `smtp.gmail.com`, Port: `587`
-   - User: `yourgmail@gmail.com`, Password: app password
-3. Sender must be your Gmail address (can't fake a custom domain).
+Both flows already implemented in code.
 
 ---
 
-## Troubleshooting
+## Test checklist
 
-| Problem | Fix |
-|---------|-----|
-| "Domain not verified" | Wait longer or check DNS with https://dnschecker.org |
-| Emails go to spam | Add DMARC record, make sure SPF/DKIM verified |
-| "Rate limit exceeded" in Supabase | Custom SMTP raises the limit — make sure it's ON in Supabase |
-| Template variables show as `{{ .Token }}` literally | Wrong quotes — must be exactly `{{ .Token }}` with spaces |
-| Password reset link goes to wrong URL | Supabase → Auth → URL Configuration → set Site URL correctly |
+- [ ] Sign up new account → email arrives from `noreply@tavodomenas.lt`
+- [ ] Code from email works on `/verify-email`
+- [ ] Button in email also works (redirects to `/student`)
+- [ ] Click "Pamiršai slaptažodį?" → email arrives (Template 2)
+- [ ] Code works on `/update-password`
+- [ ] Set new password → login works
+
+If emails go to spam: check SPF/DKIM/DMARC records verified in Resend, and wait 24h for reputation to warm up.
 
 ---
 
-## Does this cost credits?
+## Cost
 
-**No.** SMTP + Supabase Auth is normal email infrastructure. Your only cost is:
-- Domain (~$10/year)
-- Email service (Resend free tier = 3,000/month = plenty)
+- Domain: ~$1–10/year
+- Resend: **free** up to 3,000 emails/month
+- Supabase SMTP: **free**
+- AI credits used: **0**
 
-Total: **~$1/month** if you actually go beyond free tier.
+Total: cheaper than a coffee. ☕
