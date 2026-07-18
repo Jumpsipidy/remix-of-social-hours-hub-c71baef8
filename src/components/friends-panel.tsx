@@ -19,6 +19,7 @@ export function FriendsPanel({ userId, schoolId }: Props) {
   const [results, setResults] = useState<FriendProfile[]>([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dmFriend, setDmFriend] = useState<{ id: string; name: string } | null>(null);
 
   const reload = async () => {
     try {
