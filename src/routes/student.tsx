@@ -475,6 +475,8 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     if (fullName.trim().split(/\s+/).length < 2) { setError("Įvesk tikrą vardą ir pavardę (bent du žodžius)."); return; }
     if (!schoolCode.trim()) { setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo)."); return; }
     if (!agree) { setError("Patvirtink, kad pateikta informacija yra tikra."); return; }
+    const effectiveHours = isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded);
+    if (!isLowerClass(classYear) && hoursNeeded < 8) { setError("8+ klasėms — minimalus tikslas 8 val."); return; }
     setBusy(true);
     const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
     if (!ok) {
@@ -489,7 +491,7 @@ function StudentProfileSetup({ userId }: { userId: string }) {
         full_name: fullName.trim(),
         school_id: schoolId,
         class_year: classYear,
-        hours_needed: hoursNeeded,
+        hours_needed: effectiveHours,
         role: "student",
       })
       .eq("id", userId);
