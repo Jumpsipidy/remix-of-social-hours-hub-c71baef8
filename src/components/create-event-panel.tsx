@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { CalendarPlus, MapPin, Clock, FileText, Users, Sparkles } from "lucide-react";
+import { TagsInput } from "@/components/tags-input";
 
 /**
  * School admins post one-time volunteer events (not tied to an organization).
@@ -22,6 +23,7 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
   const [spots, setSpots] = useState(5);
   const [location, setLocation] = useState("");
   const [desc, setDesc] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -46,12 +48,13 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
       spots_total: spots,
       location,
       is_open: true,
+      tags,
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Renginys paskelbtas!");
     setTitle(""); setHost(""); setDate(""); setStart(""); setEnd("");
-    setHours(2); setSpots(5); setLocation(""); setDesc("");
+    setHours(2); setSpots(5); setLocation(""); setDesc(""); setTags([]);
     onCreated?.();
   };
 
@@ -134,6 +137,9 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
               placeholder="Ką veiks savanoriai, ką atsinešti, kaip užsiregistruoti…" />
           </div>
         </label>
+        <div className="col-span-2">
+          <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams filtruoti tinkamus renginius" />
+        </div>
         <button type="submit" disabled={busy}
           className="col-span-2 mt-2 rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
           {busy ? "Skelbiama..." : "Paskelbti renginį"}

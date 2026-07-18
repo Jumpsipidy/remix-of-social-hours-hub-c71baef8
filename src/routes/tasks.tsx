@@ -8,8 +8,9 @@ import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { TiltCard } from "@/components/tilt-card";
 import { TasksBackgroundFX } from "@/components/tasks-background";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
+import { TAG_PRESETS } from "@/components/tags-input";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -41,6 +42,7 @@ type Task = {
   is_event?: boolean;
   event_host_name?: string | null;
   created_by?: string | null;
+  tags?: string[] | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
@@ -74,6 +76,7 @@ function TasksPage() {
   const [q, setQ] = useState("");
   const [town, setTown] = useState<string>("");
   const [cat, setCat] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
 
@@ -99,17 +102,31 @@ function TasksPage() {
     return Array.from(set).sort();
   }, [tasks]);
 
+  const availableTags = useMemo(() => {
+    const set = new Set<string>();
+    tasks.forEach((t) => (t.tags ?? []).forEach((x) => set.add(x)));
+    // Merge presets so filters are always useful even before orgs tag their tasks
+    TAG_PRESETS.forEach((p) => set.add(p));
+    return Array.from(set);
+  }, [tasks]);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((x) => {
       const org = orgs[x.organization_id];
       const orgName = org?.organization_name ?? org?.full_name ?? "";
-      const text = `${x.title} ${x.description} ${x.location} ${orgName}`.toLowerCase();
+      const tagsStr = (x.tags ?? []).join(" ");
+      const text = `${x.title} ${x.description} ${x.location} ${orgName} ${tagsStr}`.toLowerCase();
       if (q && !text.includes(q.toLowerCase())) return false;
       if (town && !x.location?.toLowerCase().includes(town.toLowerCase())) return false;
       if (cat && guessCategory(x) !== cat) return false;
+      if (selectedTags.length) {
+        const xt = x.tags ?? [];
+        const ok = selectedTags.every((s) => xt.includes(s));
+        if (!ok) return false;
+      }
       return true;
     });
-  }, [q, town, cat, tasks, orgs]);
+  }, [q, town, cat, selectedTags, tasks, orgs]);
 
   const filteredOrgs = useMemo(() => {
     if (!q) return allOrgs;
@@ -136,6 +153,7 @@ function TasksPage() {
         presetDate: task.task_date,
         presetStart: task.start_time?.slice(0, 5),
         presetEnd: task.end_time?.slice(0, 5),
+        tags: task.tags ?? [],
       },
     });
   };
@@ -152,13 +170,17 @@ function TasksPage() {
       hours_to_earn: details.hours,
       status: "pending",
       note: details.note || null,
-    });
+      tags: active.task.tags ?? [],
+    } as any);
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
     setActive(null);
   };
 
-  const clearFilters = () => { setQ(""); setTown(""); setCat(""); };
+  const toggleTag = (t: string) =>
+    setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+
+  const clearFilters = () => { setQ(""); setTown(""); setCat(""); setSelectedTags([]); };
 
   return (
     <PageShell>
@@ -213,7 +235,7 @@ function TasksPage() {
                 </div>
               </>
             )}
-            {(q || town || cat) && (
+            {(q || town || cat || selectedTags.length > 0) && (
               <button onClick={clearFilters} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-accent">
                 <X className="h-3 w-3" /> Išvalyti
               </button>
@@ -227,8 +249,40 @@ function TasksPage() {
               <Sparkles className="h-4 w-4" /> Pasiūlyk savo rezervaciją
             </button>
           </div>
+
+          {tab === "tasks" && (
+            <div className="mt-5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <TagIcon className="h-3.5 w-3.5" /> Žymos
+                {selectedTags.length > 0 && (
+                  <button onClick={() => setSelectedTags([])} className="ml-1 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] normal-case tracking-normal text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" /> Nuimti visas
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {availableTags.map((t) => {
+                  const on = selectedTags.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => toggleTag(t)}
+                      className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                        on
+                          ? "border-transparent bg-gradient-primary text-primary-foreground shadow-glow"
+                          : "border-border bg-card/70 text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      }`}
+                    >
+                      #{t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         </section>
+
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {tab === "tasks" ? (
@@ -274,6 +328,23 @@ function TasksPage() {
                           )}
                           {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
                         </div>
+                        {t.tags && t.tags.length > 0 && (
+                          <div className="relative mt-3 flex flex-wrap gap-1">
+                            {t.tags.slice(0, 5).map((tg) => (
+                              <button
+                                key={tg}
+                                onClick={(e) => { e.stopPropagation(); toggleTag(tg); }}
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition ${
+                                  selectedTags.includes(tg)
+                                    ? "bg-gradient-primary text-primary-foreground"
+                                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                                }`}
+                              >
+                                #{tg}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
                           onClick={() => handleReserve(t)}
                           className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">

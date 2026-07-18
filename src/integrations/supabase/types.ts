@@ -245,6 +245,7 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["reservation_status"]
           student_id: string
+          tags: string[]
           task_id: string | null
           updated_at: string
         }
@@ -260,6 +261,7 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id: string
+          tags?: string[]
           task_id?: string | null
           updated_at?: string
         }
@@ -275,6 +277,7 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id?: string
+          tags?: string[]
           task_id?: string | null
           updated_at?: string
         }
@@ -337,6 +340,7 @@ export type Database = {
           organization_id: string
           spots_total: number
           start_time: string | null
+          tags: string[]
           task_date: string
           title: string
           updated_at: string
@@ -355,6 +359,7 @@ export type Database = {
           organization_id: string
           spots_total?: number
           start_time?: string | null
+          tags?: string[]
           task_date: string
           title: string
           updated_at?: string
@@ -373,6 +378,7 @@ export type Database = {
           organization_id?: string
           spots_total?: number
           start_time?: string | null
+          tags?: string[]
           task_date?: string
           title?: string
           updated_at?: string

@@ -4,6 +4,7 @@ import { X, Calendar, Clock, Sparkles, Check, Info, Loader2, Search, Building2 }
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { TagsInput } from "@/components/tags-input";
 
 type OrgRow = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
 
@@ -36,6 +37,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
@@ -82,7 +84,8 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       hours_to_earn: hours,
       status: "pending",
       note: note || null,
-    });
+      tags,
+    } as any);
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
@@ -266,6 +269,13 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                   className="w-full resize-none rounded-xl border border-border bg-background p-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
+
+              {/* Tags */}
+              <div className="mt-5">
+                <TagsInput value={tags} onChange={setTags} hint="Kad mokytojai iš karto matytų, kokia tai veikla" />
+              </div>
+
+
 
               <div className="mt-5 flex items-start gap-3 rounded-2xl bg-accent/50 p-4 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
