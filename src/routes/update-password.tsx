@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Lock, Loader2, ShieldCheck, MailKey } from "lucide-react";
+import { Heart, Lock, Loader2, ShieldCheck, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -132,7 +132,7 @@ function UpdatePasswordPage() {
             <div className="mt-6 space-y-4">
               <form onSubmit={verifyCode} className="space-y-3 rounded-2xl border border-primary/25 bg-primary/5 p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                  <MailKey className="h-4 w-4" /> Turi kodą iš laiško?
+                  <KeyRound className="h-4 w-4" /> Turi kodą iš laiško?
                 </div>
                 <label className="block">
                   <span className="text-xs font-semibold text-muted-foreground">El. paštas</span>
