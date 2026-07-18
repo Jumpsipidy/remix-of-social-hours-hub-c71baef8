@@ -167,19 +167,57 @@ function ToolsPage() {
         })}
       </div>
 
-      {snap && (
-        <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-md backdrop-blur">
-          <h3 className="font-display text-lg font-bold">DB momentinė nuotrauka</h3>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 md:grid-cols-4">
-            {Object.entries(snap).map(([k, v]) => (
-              <div key={k} className="rounded-xl border border-border bg-background/60 px-3 py-2">
-                <div className="text-muted-foreground">{k}</div>
-                <div className="font-bold tabular-nums">{String(v)}</div>
+      {snap && (() => {
+        const entries = Object.entries(snap).filter(([, v]) => typeof v === "number");
+        const total = entries.reduce((a, [, v]) => a + Number(v), 0);
+        const max = Math.max(...entries.map(([, v]) => Number(v)), 1);
+        return (
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 font-display text-xl font-bold">
+                  <Database className="h-5 w-5 text-primary" /> DB sveikatos ataskaita
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Momentinė nuotrauka · {entries.length} lentelių · {total.toLocaleString("lt-LT")} įrašų
+                </p>
               </div>
-            ))}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Sistema veikia
+              </span>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {entries.map(([k, v]) => {
+                const meta = TABLE_META[k] ?? { label: k, icon: Database, tone: "from-primary/20 to-primary/0" };
+                const Icon = meta.icon;
+                const count = Number(v);
+                const pct = (count / max) * 100;
+                return (
+                  <div key={k} className="group relative overflow-hidden rounded-2xl border border-border bg-background/60 p-4 transition hover:border-primary/40 hover:shadow-glow">
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.tone} opacity-60`} />
+                    <div className="relative">
+                      <div className="flex items-center justify-between">
+                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-background/80 shadow-sm">
+                          <Icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <span className="rounded-full bg-background/80 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{k}</span>
+                      </div>
+                      <p className="mt-4 font-display text-3xl font-bold tabular-nums">{count.toLocaleString("lt-LT")}</p>
+                      <p className="text-xs font-semibold text-muted-foreground">{meta.label}</p>
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border/50">
+                        <div
+                          className="h-full rounded-full bg-gradient-primary transition-[width] duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
