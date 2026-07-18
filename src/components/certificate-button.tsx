@@ -187,11 +187,13 @@ export function CertificateButton({ className }: { className?: string }) {
   const goalReached = !!hours && hours.needed > 0 && hours.earned >= hours.needed;
   const canGenerate = goalReached || isAdmin;
 
-  async function generate(debug: boolean) {
+  async function generate(mode: "real" | "debug" | "fake") {
     if (busy) return;
     setBusy(true);
     try {
-      const cert = await gen({ data: { debug } });
+      const cert = await gen({
+        data: { debug: mode === "debug", fake: mode === "fake" },
+      });
       const origin =
         typeof window !== "undefined" ? window.location.origin : "https://socialinesvalandos.lt";
       const verifyUrl = `${origin}/verify/${cert.code}`;
@@ -205,11 +207,12 @@ export function CertificateButton({ className }: { className?: string }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success(
-        debug
-          ? `DEBUG sertifikatas sugeneruotas (neįrašomas į DB). Kodas: ${cert.code}`
-          : `Sertifikatas sugeneruotas! Kodas: ${cert.code}`,
-      );
+      const msgMap = {
+        real: `Sertifikatas sugeneruotas! Kodas: ${cert.code}`,
+        debug: `DEBUG sertifikatas sugeneruotas (neįrašomas į DB). Kodas: ${cert.code}`,
+        fake: `FAKE demo sertifikatas su išgalvotais duomenimis. Kodas: ${cert.code}`,
+      } as const;
+      toast.success(msgMap[mode]);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Nepavyko: ${msg}`);
