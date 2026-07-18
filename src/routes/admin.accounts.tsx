@@ -142,6 +142,43 @@ function CreateAccountPanel() {
         <Field label="Vardas Pavardė" value={fullName} onChange={setFullName} required={role === "school_admin"} />
         <Field label="El. paštas" value={email} onChange={setEmail} type="email" required />
         <Field label="Slaptažodis (min. 6)" value={password} onChange={setPassword} type="password" required />
+
+        {role === "school_admin" && (
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">Priskirtos klasės</span>
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="text-[11px] font-semibold text-primary hover:underline"
+              >
+                {assignedClasses.length === ALL_CLASSES.length ? "Nužymėti visas" : "Visos (principalas)"}
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {ALL_CLASSES.map((c) => {
+                const active = assignedClasses.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => toggleClass(c)}
+                    className={`rounded-lg border px-2 py-2 text-xs font-bold transition ${
+                      active
+                        ? "border-primary bg-gradient-primary text-primary-foreground shadow-glow"
+                        : "border-border bg-background/60 hover:border-primary/40"
+                    }`}
+                  >
+                    {c} kl.
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-[10px] text-muted-foreground">
+              Auklėtoja gali turėti kelias klases. Principalas – pasirenka visas.
+            </p>
+          </div>
+        )}
       </div>
 
       <button
@@ -154,6 +191,7 @@ function CreateAccountPanel() {
     </form>
   );
 }
+
 
 function Field({
   label,
