@@ -15,6 +15,9 @@ import {
   Wrench,
   Menu,
   X,
+  CalendarClock,
+  Trophy,
+  BarChart3,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -25,6 +28,9 @@ export const Route = createFileRoute("/admin")({
 type NavItem = { to: string; label: string; icon: typeof Shield; exact?: boolean };
 const NAV: NavItem[] = [
   { to: "/admin", label: "Apžvalga", icon: LayoutDashboard, exact: true },
+  { to: "/admin/analytics", label: "Analitika", icon: BarChart3 },
+  { to: "/admin/reservations", label: "Rezervacijos", icon: CalendarClock },
+  { to: "/admin/leaderboard", label: "Reitingas", icon: Trophy },
   { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
   { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
   { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },

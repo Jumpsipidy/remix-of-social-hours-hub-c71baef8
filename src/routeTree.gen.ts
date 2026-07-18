@@ -27,7 +27,9 @@ import { Route as AdminReservationsRouteImport } from './routes/admin.reservatio
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
+import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
 import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
 
@@ -121,9 +123,19 @@ const AdminManageRoute = AdminManageRouteImport.update({
   path: '/manage',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLeaderboardRoute = AdminLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBugsRoute = AdminBugsRouteImport.update({
   id: '/bugs',
   path: '/bugs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
@@ -151,7 +163,9 @@ export interface FileRoutesByFullPath {
   '/update-password': typeof UpdatePasswordRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -173,7 +187,9 @@ export interface FileRoutesByTo {
   '/update-password': typeof UpdatePasswordRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -197,7 +213,9 @@ export interface FileRoutesById {
   '/update-password': typeof UpdatePasswordRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
@@ -222,7 +240,9 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/admin/accounts'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/bugs'
+    | '/admin/leaderboard'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -244,7 +264,9 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/admin/accounts'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/bugs'
+    | '/admin/leaderboard'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -267,7 +289,9 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/admin/accounts'
     | '/admin/activity'
+    | '/admin/analytics'
     | '/admin/bugs'
+    | '/admin/leaderboard'
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
@@ -419,11 +443,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminManageRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/leaderboard': {
+      id: '/admin/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/admin/leaderboard'
+      preLoaderRoute: typeof AdminLeaderboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bugs': {
       id: '/admin/bugs'
       path: '/bugs'
       fullPath: '/admin/bugs'
       preLoaderRoute: typeof AdminBugsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/activity': {
@@ -446,7 +484,9 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAccountsRoute: typeof AdminAccountsRoute
   AdminActivityRoute: typeof AdminActivityRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBugsRoute: typeof AdminBugsRoute
+  AdminLeaderboardRoute: typeof AdminLeaderboardRoute
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
@@ -459,7 +499,9 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAccountsRoute: AdminAccountsRoute,
   AdminActivityRoute: AdminActivityRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBugsRoute: AdminBugsRoute,
+  AdminLeaderboardRoute: AdminLeaderboardRoute,
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
