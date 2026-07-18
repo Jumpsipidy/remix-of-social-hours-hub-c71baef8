@@ -4,7 +4,9 @@ import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { motion } from "framer-motion";
+
 
 
 const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | null> = {
