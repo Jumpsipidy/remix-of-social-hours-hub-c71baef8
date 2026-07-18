@@ -72,9 +72,14 @@ export function NotificationBell() {
   const goTo = useCallback(
     (n: { kind: string; hash?: string; status?: string }) => {
       const { to, hash } = routeForNotif(n, profile?.role);
-      // Use router navigate so nav + state stay consistent, then apply hash.
-      navigate({ to, hash: hash.startsWith("#") ? hash.slice(1) : hash }).catch(() => {
-        window.location.href = `${to}${hash}`;
+      // Only forward hashes that point to real anchors on the target page.
+      // Anything like "#notif/<random>" is a placeholder — drop it so we don't
+      // land the user on a valid page with a dead hash.
+      const meaningful =
+        hash && /^#(chat|reservation|bug)\//.test(hash) ? hash : "";
+      const hashArg = meaningful.startsWith("#") ? meaningful.slice(1) : meaningful;
+      navigate({ to, hash: hashArg || undefined }).catch(() => {
+        window.location.href = `${to}${meaningful}`;
       });
     },
     [navigate, profile?.role],
@@ -82,7 +87,9 @@ export function NotificationBell() {
 
   const push = (n: Omit<Notification, "id" | "at" | "read">) => {
     const id = crypto.randomUUID();
-    const hash = n.hash ?? `#notif/${id.slice(0, 8)}`;
+    // Only accept explicit deep-link hashes (#chat/…, #reservation/…, #bug/…).
+    // Don't invent a "#notif/<random>" hash — those go nowhere.
+    const hash = n.hash;
     const record = { id, at: new Date().toISOString(), read: false, hash, ...n };
     setItems((prev) => [record, ...prev].slice(0, 40));
     toast(n.title, {
