@@ -221,9 +221,18 @@ export function FriendsPanel({ userId, schoolId }: Props) {
                       <p className="truncate text-xs text-muted-foreground">{p?.class_year ?? "—"} · {p?.hours_earned ?? 0} val.</p>
                     </div>
                   </div>
-                  <button onClick={() => handleUnfriend(r.id, p?.full_name ?? "draugas")} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
-                    Pašalinti
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button
+                      onClick={() => setDmFriend({ id: otherId, name: p?.full_name ?? "Draugas" })}
+                      className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-glow"
+                      title="Žinutės (auto-ištrinamos po 2 d.)"
+                    >
+                      <MessageCircle className="h-3 w-3" /> Rašyti
+                    </button>
+                    <button onClick={() => handleUnfriend(r.id, p?.full_name ?? "draugas")} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                      Pašalinti
+                    </button>
+                  </div>
                 </div>
               );
             })}
