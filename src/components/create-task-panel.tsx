@@ -191,6 +191,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => toggleOpen(t)}
+                aria-label={t.is_open ? "Paslėpti užduotį" : "Rodyti užduotį"}
                 className="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-accent"
                 title={t.is_open ? "Paslėpti" : "Rodyti"}
               >
@@ -198,6 +199,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
               </button>
               <button
                 onClick={() => remove(t.id)}
+                aria-label="Pašalinti užduotį"
                 className="grid h-8 w-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                 title="Pašalinti"
               >

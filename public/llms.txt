@@ -1,0 +1,13 @@
+# Socialinės Valandos
+
+> Moksleivių savanorystės valandų valdymo platforma Lietuvos mokykloms — mokiniai randa organizacijas, rezervuoja valandas, o mokyklos administratoriai jas patvirtina.
+
+Socialinės Valandos jungia moksleivius, savanorystės organizacijas ir mokyklų administratorius į vieną erdvę. Platformoje galima naršyti realias užduotis, rezervuoti savanorystės laiką, bendrauti trišaliame pokalbyje ir automatiškai skaičiuoti surinktas valandas.
+
+## Pages
+
+- [Pradžia](/): Platformos apžvalga, kaip veikia socialinių valandų rinkimas.
+- [Užduotys ir organizacijos](/tasks): Realių organizacijų sąrašas ir atviros savanorystės užduotys.
+- [Registruotis](/register): Moksleivio paskyros kūrimas su mokyklos kodu ir klase.
+- [Prisijungti](/login): Prisijungimas su Google, Discord arba el. paštu.
+- [Naudojimosi taisyklės](/terms): Platformos taisyklės, privatumo politika ir atsakomybės.

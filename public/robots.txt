@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /organization
+Disallow: /school
+Disallow: /student
+Disallow: /forgot-password
+Disallow: /update-password
 
-Sitemap: https://socialines-valandos.lt/sitemap.xml
+Sitemap: https://socialinesvalandos.lovable.app/sitemap.xml

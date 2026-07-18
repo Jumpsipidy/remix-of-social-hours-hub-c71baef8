@@ -8,7 +8,8 @@ export const Route = createFileRoute("/forgot-password")({
   head: () => ({
     meta: [
       { title: "Atkurti slaptažodį — Socialinės Valandos" },
-      { name: "description", content: "Gauk slaptažodžio atkūrimo nuorodą el. paštu." },
+      { name: "description", content: "Gauk slaptažodžio atkūrimo nuorodą el. paštu ir atgauk prieigą prie Socialinių Valandų paskyros." },
+      { name: "robots", content: "noindex, follow" },
     ],
   }),
   component: ForgotPasswordPage,

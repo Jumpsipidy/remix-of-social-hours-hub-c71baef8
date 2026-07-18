@@ -227,7 +227,7 @@ function OrgDashboard() {
                   <button onClick={() => toggleTask(t)} className="flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
                   </button>
-                  <button onClick={() => deleteTask(t)} className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                  <button onClick={() => deleteTask(t)} aria-label="Ištrinti užduotį" className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -396,6 +396,7 @@ function OrgDashboard() {
                     <Icon className={`h-4 w-4 ${tone}`} />
                     <button
                       onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id })}
+                      aria-label="Atidaryti pokalbį su mokiniu"
                       className="grid h-8 w-8 place-items-center rounded-full border border-border bg-background text-muted-foreground transition hover:bg-accent hover:text-foreground"
                       title="Pokalbis"
                     >

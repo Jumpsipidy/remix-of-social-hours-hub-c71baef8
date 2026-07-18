@@ -10,8 +10,12 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Registruotis — Socialinės Valandos" },
-      { name: "description", content: "Sukurk paskyrą arba pateik organizacijos prieigos prašymą." },
+      { name: "description", content: "Sukurk moksleivio paskyrą su mokyklos kodu ir klase arba pateik organizacijos prieigos prašymą Socialinių Valandų platformoje." },
+      { property: "og:title", content: "Registruotis — Socialinės Valandos" },
+      { property: "og:description", content: "Sukurk paskyrą Socialinių Valandų platformoje ir pradėk rinkti savanorystės valandas." },
+      { property: "og:url", content: "https://socialinesvalandos.lovable.app/register" },
     ],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/register" }],
   }),
   component: RegisterPage,
 });
