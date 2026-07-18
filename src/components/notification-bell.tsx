@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock, Sparkles } from "lucide-react";
+import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
