@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { adminCreateAccount } from "@/lib/admin-actions.functions";
 import { toast } from "sonner";
-import { UserPlus, Loader2, Building2, GraduationCap } from "lucide-react";
+import { UserPlus, Loader2, Building2, GraduationCap, School, Check, ChevronDown, Search } from "lucide-react";
 
 export const Route = createFileRoute("/admin/accounts")({
   component: AccountsPage,
 });
+
 
 function AccountsPage() {
   return (
@@ -28,6 +30,8 @@ function AccountsPage() {
 
 const ALL_CLASSES = ["5", "6", "7", "8", "9", "10", "11", "12"];
 
+type SchoolRow = { id: string; name: string; city: string | null };
+
 function CreateAccountPanel() {
   const [role, setRole] = useState<"organization" | "school_admin">("organization");
   const [orgCategory, setOrgCategory] = useState<"organizacija" | "bendruomene">("organizacija");
@@ -36,7 +40,22 @@ function CreateAccountPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [assignedClasses, setAssignedClasses] = useState<string[]>([]);
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("schools")
+      .select("id, name, city")
+      .eq("is_active", true)
+      .order("name", { ascending: true })
+      .then(({ data }) => {
+        const list = (data ?? []) as SchoolRow[];
+        setSchools(list);
+        if (list.length === 1) setSchoolId(list[0].id);
+      });
+  }, []);
 
   const toggleClass = (c: string) => {
     setAssignedClasses((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
@@ -47,6 +66,10 @@ function CreateAccountPanel() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (role === "school_admin" && !schoolId) {
+      toast.error("Pasirink mokyklą");
+      return;
+    }
     setBusy(true);
     try {
       await adminCreateAccount({
@@ -57,6 +80,7 @@ function CreateAccountPanel() {
           role,
           organization_name: role === "organization" ? orgName.trim() : null,
           org_category: role === "organization" ? orgCategory : null,
+          school_id: schoolId,
           assigned_classes: role === "school_admin" ? assignedClasses : null,
         },
       });
@@ -72,6 +96,7 @@ function CreateAccountPanel() {
       setBusy(false);
     }
   }
+
 
 
   return (
@@ -144,6 +169,12 @@ function CreateAccountPanel() {
         <Field label="Slaptažodis (min. 6)" value={password} onChange={setPassword} type="password" required />
 
         {role === "school_admin" && (
+          <SchoolPicker schools={schools} value={schoolId} onChange={setSchoolId} />
+        )}
+
+
+
+        {role === "school_admin" && (
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground">Priskirtos klasės</span>
@@ -191,6 +222,125 @@ function CreateAccountPanel() {
     </form>
   );
 }
+
+function SchoolPicker({
+  schools,
+  value,
+  onChange,
+}: {
+  schools: SchoolRow[];
+  value: string | null;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = useMemo(() => schools.find((s) => s.id === value) ?? null, [schools, value]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return schools;
+    return schools.filter((s) => s.name.toLowerCase().includes(q) || (s.city ?? "").toLowerCase().includes(q));
+  }, [schools, query]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <span className="mb-1 block text-xs font-semibold text-muted-foreground">Mokykla</span>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`group relative flex h-11 w-full items-center gap-3 overflow-hidden rounded-xl border px-3 text-left text-sm transition ${
+          open ? "border-primary ring-1 ring-primary" : "border-border hover:border-primary/50"
+        } bg-background`}
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+          <School className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0 flex-1 truncate">
+          {selected ? (
+            <>
+              <span className="font-semibold">{selected.name}</span>
+              {selected.city && <span className="ml-1.5 text-xs text-muted-foreground">· {selected.city}</span>}
+            </>
+          ) : (
+            <span className="text-muted-foreground">Pasirink mokyklą…</span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition ${open ? "rotate-180 text-primary" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 z-30 mt-2 overflow-hidden rounded-xl border border-border bg-popover shadow-2xl backdrop-blur"
+          >
+            {schools.length > 4 && (
+              <div className="flex items-center gap-2 border-b border-border/70 px-3 py-2">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Ieškoti mokyklos…"
+                  className="h-7 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+            )}
+            <ul className="max-h-64 overflow-y-auto p-1">
+              {filtered.length === 0 && (
+                <li className="px-3 py-6 text-center text-xs text-muted-foreground">Nerasta.</li>
+              )}
+              {filtered.map((s) => {
+                const active = s.id === value;
+                return (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChange(s.id);
+                        setOpen(false);
+                        setQuery("");
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm transition ${
+                        active ? "bg-primary/15 text-primary" : "hover:bg-accent/60"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-6 w-6 items-center justify-center rounded-md border ${
+                          active ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                        }`}
+                      >
+                        {active && <Check className="h-3.5 w-3.5" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{s.name}</span>
+                        {s.city && <span className="block truncate text-[11px] text-muted-foreground">{s.city}</span>}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
 
 
 function Field({
