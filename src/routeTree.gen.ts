@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
+import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
@@ -100,6 +101,11 @@ const AdminSchoolsRoute = AdminSchoolsRouteImport.update({
   path: '/schools',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminReservationsRoute = AdminReservationsRouteImport.update({
+  id: '/reservations',
+  path: '/reservations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
   id: '/organizations',
   path: '/organizations',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/admin/': typeof AdminIndexRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/admin': typeof AdminIndexRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/admin/': typeof AdminIndexRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
     | '/admin/'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
     | '/admin'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
     | '/admin/'
@@ -379,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSchoolsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/reservations': {
+      id: '/admin/reservations'
+      path: '/reservations'
+      fullPath: '/admin/reservations'
+      preLoaderRoute: typeof AdminReservationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/organizations': {
       id: '/admin/organizations'
       path: '/organizations'
@@ -431,6 +450,7 @@ interface AdminRouteChildren {
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
+  AdminReservationsRoute: typeof AdminReservationsRoute
   AdminSchoolsRoute: typeof AdminSchoolsRoute
   AdminToolsRoute: typeof AdminToolsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -443,6 +463,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
+  AdminReservationsRoute: AdminReservationsRoute,
   AdminSchoolsRoute: AdminSchoolsRoute,
   AdminToolsRoute: AdminToolsRoute,
   AdminIndexRoute: AdminIndexRoute,
