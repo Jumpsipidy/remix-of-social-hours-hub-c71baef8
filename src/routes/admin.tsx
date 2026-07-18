@@ -112,13 +112,8 @@ function AdminLayout() {
     </nav>
   );
 
-  // Lock body scroll while mobile sheet is open
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [mobileOpen]);
+
+
 
   return (
     <PageShell>
