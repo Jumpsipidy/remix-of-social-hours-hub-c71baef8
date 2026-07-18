@@ -5,4 +5,5 @@
   <url><loc>https://socialinesvalandos.lovable.app/register</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://socialinesvalandos.lovable.app/login</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://socialinesvalandos.lovable.app/terms</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://socialinesvalandos.lovable.app/blog/kas-yra-socialines-valandos</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
