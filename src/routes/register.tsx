@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Heart, Mail, Lock, User, GraduationCap, School, Building2, Clock, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Auth3DBackground } from "@/components/auth-3d-background";
+import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 
 import { toast } from "sonner";
 
@@ -27,6 +29,7 @@ const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / I
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const verifyCode = useServerFn(verifySchoolSignupCode);
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
 
@@ -69,11 +72,10 @@ function RegisterPage() {
       if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
       if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
-      // Verify school code BEFORE creating the account
-      const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
-        _school_id: schoolId, _code: schoolCode.trim(),
-      });
-      if (rpcErr || !ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
+      // Verify school code BEFORE creating the account. This goes through the app backend
+      // so the private school code never needs broad browser database permissions.
+      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
+      if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
     }
     setLoading(true);
     try {

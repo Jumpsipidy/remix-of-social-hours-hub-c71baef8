@@ -38,6 +38,19 @@ type AuthState = {
 const MOCK_KEY = "sv_mock_session_v1";
 const ROLE_CACHE_KEY = "sv_last_role_v1";
 const AuthContext = createContext<AuthState | null>(null);
+const PROFILE_COLUMNS = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes";
+const PROFILE_COLUMNS_SAFE = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year";
+
+function isAssignedClassesSchemaError(error: unknown) {
+  const message = String((error as { message?: string } | null)?.message ?? "");
+  return message.includes("assigned_classes") && (message.includes("does not exist") || message.includes("schema cache") || message.includes("column"));
+}
+
+function normalizeProfile(profile: unknown): Profile | null {
+  if (!profile) return null;
+  const next = profile as Profile;
+  return { ...next, assigned_classes: next.assigned_classes ?? [] };
+}
 
 function makeMockUser(profile: Profile): User {
   return {
@@ -91,12 +104,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const fetchProfile = async () => {
-        const { data } = await supabase
+        const result = await supabase
           .from("profiles")
-          .select("id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes")
+          .select(PROFILE_COLUMNS)
           .eq("id", uid)
           .maybeSingle();
-        return (data as Profile | null) ?? null;
+        if (!result.error) return normalizeProfile(result.data);
+        if (!isAssignedClassesSchemaError(result.error)) throw result.error;
+
+        const fallback = await supabase
+          .from("profiles")
+          .select(PROFILE_COLUMNS_SAFE)
+          .eq("id", uid)
+          .maybeSingle();
+        if (fallback.error) throw fallback.error;
+        return normalizeProfile(fallback.data);
       };
 
       let nextProfile = await fetchProfile();

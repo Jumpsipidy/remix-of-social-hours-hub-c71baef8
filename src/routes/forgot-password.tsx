@@ -28,6 +28,7 @@ function ForgotPasswordPage() {
         redirectTo: `${window.location.origin}/update-password`,
       });
       if (error) throw error;
+      sessionStorage.setItem("sv_reset_email", email.trim());
       toast.success("Jei paskyra egzistuoja, atkūrimo nuoroda išsiųsta į el. paštą.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko išsiųsti atkūrimo nuorodos");
@@ -53,7 +54,7 @@ function ForgotPasswordPage() {
           </Link>
           <h1 className="text-2xl font-bold">Atkurti slaptažodį</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Įvesk el. paštą — atsiųsime saugią atkūrimo nuorodą. Paspaudus ją galėsi įvesti naują slaptažodį.
+            Įvesk el. paštą — atsiųsime saugią atkūrimo nuorodą ir kodą. Galėsi paspausti mygtuką laiške arba įklijuoti kodą ranka.
           </p>
           <div className="mt-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2 font-semibold text-primary">
@@ -61,8 +62,8 @@ function ForgotPasswordPage() {
             </div>
             <ol className="mt-2 list-decimal space-y-1 pl-4">
               <li>Gauni laišką į savo el. paštą.</li>
-              <li>Paspaudi saugią nuorodą laiške.</li>
-              <li>Šiame puslapyje susikuri naują slaptažodį.</li>
+              <li>Paspaudi saugią nuorodą arba nukopijuoji kodą.</li>
+              <li>Atidaromas naujo slaptažodžio puslapis.</li>
             </ol>
           </div>
 
