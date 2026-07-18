@@ -6,7 +6,12 @@ import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight, Loader2, Eye, Eye
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { Captcha } from "@/components/captcha";
 import { toast } from "sonner";
+
+const FAIL_KEY = "sv_login_fails_v1";
+const FAIL_THRESHOLD = 3;
+
 
 const DASH_BY_ROLE: Record<string, string> = {
   student: "/student",
@@ -39,6 +44,14 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
+  const [fails, setFails] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const n = Number(localStorage.getItem(FAIL_KEY) ?? "0");
+    return Number.isFinite(n) ? n : 0;
+  });
+  const [captchaProof, setCaptchaProof] = useState<string | null>(null);
+  const captchaRequired = fails >= FAIL_THRESHOLD;
+
 
   // Tilt effect for card
   const cardRef = useRef<HTMLDivElement>(null);
@@ -65,6 +78,10 @@ function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    if (captchaRequired && !captchaProof) {
+      toast.error("Prašome įrodyti, kad esate žmogus.");
+      return;
+    }
     setBusy(true);
     try {
       clearImpersonation();
@@ -75,12 +92,20 @@ function LoginPage() {
       const role = ensured.profile?.role ?? "student";
       const target = DASH_BY_ROLE[role] ?? "/";
       if (role) { try { localStorage.setItem("sv_last_role_v1", role); } catch {} }
+      try { localStorage.removeItem(FAIL_KEY); } catch {}
+      setFails(0);
+      setCaptchaProof(null);
       toast.success("Sveikas atvykęs!");
       navigate({ to: target });
     } catch (err) {
+      const next = fails + 1;
+      setFails(next);
+      setCaptchaProof(null);
+      try { localStorage.setItem(FAIL_KEY, String(next)); } catch {}
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
     } finally {
       setBusy(false);
+
     }
   }
 
@@ -299,9 +324,18 @@ function LoginPage() {
                     Pamiršai slaptažodį?
                   </Link>
                 </div>
+                {captchaRequired && (
+                  <div>
+                    <p className="mb-2 text-[11px] font-semibold text-amber-500">
+                      Per daug nesėkmingų bandymų. Įrodyk, kad esi žmogus.
+                    </p>
+                    <Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} />
+                  </div>
+                )}
                 <motion.button
                   type="submit"
-                  disabled={busy}
+                  disabled={busy || (captchaRequired && !captchaProof)}
+
                   whileHover={{ scale: busy ? 1 : 1.02 }}
                   whileTap={{ scale: busy ? 1 : 0.98 }}
                   className="group/submit relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-glow transition-all hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.8)] disabled:opacity-60"

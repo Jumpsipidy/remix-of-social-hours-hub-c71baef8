@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createHmac, timingSafeEqual, randomBytes } from "node:crypto";
+import { verifyCaptchaProof } from "./captcha.functions";
+
 
 // ─── Config ────────────────────────────────────────────────────────────────
 function bypassCode() {
@@ -82,9 +84,11 @@ function clientFingerprint(req: Request): string {
 
 // ─── Public server functions ───────────────────────────────────────────────
 export const verifyBypassCode = createServerFn({ method: "POST" })
-  .inputValidator((data: { code: string }) => ({ code: String(data?.code ?? "").slice(0, 32) }))
+  .inputValidator((data: { code: string; captchaProof?: string }) => ({
+    code: String(data?.code ?? "").slice(0, 32),
+    captchaProof: typeof data?.captchaProof === "string" ? data.captchaProof.slice(0, 512) : "",
+  }))
   .handler(async ({ data }) => {
-    // Access request via TanStack helper
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
     const fp = clientFingerprint(req);
@@ -100,17 +104,23 @@ export const verifyBypassCode = createServerFn({ method: "POST" })
     const delay = MIN_DELAY_MS + bucket.fails.length * PER_FAIL_DELAY_MS;
     await new Promise((r) => setTimeout(r, delay));
 
+    // After 3 recent fails, require a valid CAPTCHA proof for any further attempt
+    const requiresCaptcha = bucket.fails.length >= 3;
+    if (requiresCaptcha && !verifyCaptchaProof(data.captchaProof, req)) {
+      return { ok: false as const, captchaRequired: true as const };
+    }
+
     // Reject silly inputs before comparing
     if (!/^\d{3,10}$/.test(data.code)) {
       bucket.fails.push(Date.now());
       if (bucket.fails.length >= MAX_ATTEMPTS) bucket.lockedUntil = Date.now() + LOCKOUT_MS;
-      return { ok: false as const };
+      return { ok: false as const, captchaRequired: bucket.fails.length >= 3 };
     }
 
     if (!constantTimeEqualStrings(data.code, bypassCode())) {
       bucket.fails.push(Date.now());
       if (bucket.fails.length >= MAX_ATTEMPTS) bucket.lockedUntil = Date.now() + LOCKOUT_MS;
-      return { ok: false as const };
+      return { ok: false as const, captchaRequired: bucket.fails.length >= 3 };
     }
 
     // Success: clear bucket, mint IP-bound token
@@ -119,6 +129,20 @@ export const verifyBypassCode = createServerFn({ method: "POST" })
     const nonce = randomBytes(16).toString("hex");
     return { ok: true as const, token: sign(exp, nonce, fp), expiresAt: exp };
   });
+
+export const bypassStatus = createServerFn({ method: "GET" }).handler(async () => {
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const req = getRequest();
+  const fp = clientFingerprint(req);
+  const bucket = getBucket(fp);
+  return {
+    fails: bucket.fails.length,
+    locked: bucket.lockedUntil > Date.now(),
+    retryAfter: bucket.lockedUntil > Date.now() ? Math.ceil((bucket.lockedUntil - Date.now()) / 1000) : 0,
+    captchaRequired: bucket.fails.length >= 3,
+  };
+});
+
 
 export const verifyBypassToken = createServerFn({ method: "POST" })
   .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "").slice(0, 512) }))

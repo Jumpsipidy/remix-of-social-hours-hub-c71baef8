@@ -4,7 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { RefreshCw, X, Copy, Check, ShieldCheck, BookOpen, ChevronDown, Lock } from "lucide-react";
 import { readSiteSettings } from "@/lib/site-settings";
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
-import { verifyBypassCode, verifyBypassToken } from "@/lib/lockdown-bypass.functions";
+import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
+import { Captcha } from "@/components/captcha";
+
 
 const BYPASS_TOKEN_KEY = "sv_lockdown_bypass_token_v2";
 const TRIGGER_WORD = "jumpsipidy";
@@ -65,12 +67,16 @@ export function LockdownGate() {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaProof, setCaptchaProof] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshOk, setRefreshOk] = useState<null | boolean>(null);
   const [copied, setCopied] = useState(false);
   const [autoTick, setAutoTick] = useState(60);
   const bufferRef = useRef("");
   const verifyToken = useServerFn(verifyBypassToken);
+  const readBypassStatus = useServerFn(bypassStatus);
+
   const submitCodeFn = useServerFn(verifyBypassCode);
 
   useEffect(() => {
@@ -130,10 +136,14 @@ export function LockdownGate() {
 
   const submitCode = async () => {
     if (codeChecking) return;
+    if (captchaRequired && !captchaProof) {
+      setCodeError("Prašome įrodyti, kad esate žmogus.");
+      return;
+    }
     setCodeChecking(true);
     setCodeError(null);
     try {
-      const r = await submitCodeFn({ data: { code: code.trim() } });
+      const r = await submitCodeFn({ data: { code: code.trim(), captchaProof: captchaProof ?? "" } });
       if (r?.ok) {
         try { sessionStorage.setItem(BYPASS_TOKEN_KEY, r.token); } catch {}
         setBypassed(true); setShowCodeModal(false);
@@ -141,12 +151,27 @@ export function LockdownGate() {
         const secs = (r as { retryAfter?: number }).retryAfter ?? 900;
         setCodeError(`Užblokuota. Bandyk po ${Math.ceil(secs / 60)} min.`);
       } else {
+        if ((r as { captchaRequired?: boolean } | undefined)?.captchaRequired) {
+          setCaptchaRequired(true);
+          setCaptchaProof(null);
+        }
         setCodeError("Neteisingas kodas.");
       }
     } catch {
       setCodeError("Nepavyko patikrinti. Bandyk dar kartą.");
     } finally { setCodeChecking(false); }
   };
+
+  // When the code modal opens, sync failed-attempt state so captcha shows if needed
+  useEffect(() => {
+    if (!showCodeModal) return;
+    let alive = true;
+    readBypassStatus()
+      .then((r) => { if (alive && r) { setCaptchaRequired(Boolean(r.captchaRequired)); } })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [showCodeModal, readBypassStatus]);
+
 
   async function runCheck(auto = false) {
     setRefreshing(true); setRefreshOk(null);
@@ -483,10 +508,16 @@ export function LockdownGate() {
                     placeholder="••••"
                   />
                   {codeError && <p className="mt-2 text-center text-xs text-rose-300/90">{codeError}</p>}
+                  {captchaRequired && (
+                    <div className="mt-4">
+                      <Captcha tone="dark" onVerify={(proof) => setCaptchaProof(proof)} />
+                    </div>
+                  )}
                   <button
-                    onClick={submitCode} disabled={codeChecking}
+                    onClick={submitCode} disabled={codeChecking || (captchaRequired && !captchaProof)}
                     className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-white py-3 text-sm font-medium text-black hover:bg-white/90 disabled:opacity-70"
                   >
+
                     {codeChecking && (
                       <motion.span animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
                         <RefreshCw className="h-4 w-4" />
