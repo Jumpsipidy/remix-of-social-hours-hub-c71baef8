@@ -1,9 +1,36 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Bell, MessageSquare, CheckCircle2, XCircle, PlayCircle, Clock, Sparkles, Bug, Trash2, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+
+// Map a notification to the correct route (based on user role) + hash.
+function routeForNotif(
+  n: { kind: string; hash?: string; status?: string },
+  role?: string | null,
+): { to: string; hash: string } {
+  const hash = n.hash ?? "";
+  // Bug reports → admin bugs page
+  if (n.kind === "bug") return { to: "/admin/bugs", hash };
+  // Messages → role-specific dashboard (each dashboard listens for #chat/<id>)
+  if (n.kind === "message") {
+    if (role === "organization") return { to: "/organization", hash };
+    if (role === "school_admin") return { to: "/school", hash };
+    if (role === "admin") return { to: "/admin/messages", hash };
+    return { to: "/student", hash };
+  }
+  // Reservations → role dashboard
+  if (n.kind === "reservation") {
+    if (role === "organization") return { to: "/organization", hash };
+    if (role === "school_admin") return { to: "/school", hash };
+    if (role === "admin") return { to: "/admin/reservations", hash };
+    return { to: "/student", hash };
+  }
+  // Generic debug/test notif → home
+  return { to: "/", hash };
+}
 
 type Notification = {
   id: string;
@@ -21,6 +48,7 @@ type FilterKey = "all" | "message" | "reservation" | "bug";
 
 export function NotificationBell() {
   const { user, profile, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -41,17 +69,29 @@ export function NotificationBell() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items })); } catch { /* ignore */ }
   }, [items]);
 
+  const goTo = useCallback(
+    (n: { kind: string; hash?: string; status?: string }) => {
+      const { to, hash } = routeForNotif(n, profile?.role);
+      // Use router navigate so nav + state stay consistent, then apply hash.
+      navigate({ to, hash: hash.startsWith("#") ? hash.slice(1) : hash }).catch(() => {
+        window.location.href = `${to}${hash}`;
+      });
+    },
+    [navigate, profile?.role],
+  );
+
   const push = (n: Omit<Notification, "id" | "at" | "read">) => {
     const id = crypto.randomUUID();
     const hash = n.hash ?? `#notif/${id.slice(0, 8)}`;
-    setItems((prev) => [{ id, at: new Date().toISOString(), read: false, hash, ...n }, ...prev].slice(0, 40));
+    const record = { id, at: new Date().toISOString(), read: false, hash, ...n };
+    setItems((prev) => [record, ...prev].slice(0, 40));
     toast(n.title, {
       description: n.body,
       icon: n.kind === "message" ? "💬" : n.kind === "bug" ? "🐛" : n.status === "completed" ? "✅" : n.status === "declined" ? "❌" : "🔔",
       duration: 5000,
       action: {
         label: "Peržiūrėti",
-        onClick: () => { window.location.hash = hash; },
+        onClick: () => goTo(record),
       },
     });
   };
@@ -174,7 +214,7 @@ export function NotificationBell() {
 
   const openNotif = (n: Notification) => {
     setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-    if (n.hash) window.location.hash = n.hash;
+    goTo(n);
     setOpen(false);
   };
 
