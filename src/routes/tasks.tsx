@@ -162,7 +162,7 @@ function TasksPage() {
 
   const confirm = async (details: ReservationSubmit) => {
     if (!active || !user) return;
-    const { error } = await supabase.from("reservations").insert({
+    const { data: inserted, error } = await supabase.from("reservations").insert({
       student_id: user.id,
       organization_id: active.task.organization_id,
       task_id: active.task.id,
@@ -173,10 +173,12 @@ function TasksPage() {
       status: "pending",
       note: details.note || null,
       tags: active.task.tags ?? [],
-    } as any);
+    } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
+    const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
     setActive(null);
+    if (inserted?.id) setInvite({ id: inserted.id as string, label });
   };
 
   const toggleTag = (t: string) =>
