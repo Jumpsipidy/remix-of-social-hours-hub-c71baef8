@@ -76,6 +76,7 @@ function TasksPage() {
   const [q, setQ] = useState("");
   const [town, setTown] = useState<string>("");
   const [cat, setCat] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
 
