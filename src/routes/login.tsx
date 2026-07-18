@@ -6,7 +6,12 @@ import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight, Loader2, Eye, Eye
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { Captcha } from "@/components/captcha";
 import { toast } from "sonner";
+
+const FAIL_KEY = "sv_login_fails_v1";
+const FAIL_THRESHOLD = 3;
+
 
 const DASH_BY_ROLE: Record<string, string> = {
   student: "/student",
