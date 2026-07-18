@@ -48,7 +48,6 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
       spots_total: spots,
       location,
       is_open: true,
-      tags,
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }

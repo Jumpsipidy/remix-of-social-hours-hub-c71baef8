@@ -61,7 +61,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
     if (!title.trim() || !date) { toast.error("Užpildyk pavadinimą ir datą"); return; }
     setBusy(true);
     const weekday = new Date(date + "T00:00:00").getDay();
-    const { error } = await supabase.from("tasks").insert({
+    const baseTask = {
       organization_id: organizationId,
       title: title.trim(),
       description: description.trim(),
@@ -72,11 +72,11 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       location: location.trim(),
       spots_total: spots,
       is_open: true,
-      tags,
       recurrence,
       recurrence_weekday: recurrence === "weekly" || recurrence === "biweekly" ? weekday : null,
       recurrence_until: recurrenceUntil || null,
-    } as any);
+    };
+    const { error } = await supabase.from("tasks").insert(baseTask as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(recurrence === "none" ? "Užduotis paskelbta" : "Pasikartojanti užduotis paskelbta");

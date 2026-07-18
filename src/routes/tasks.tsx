@@ -57,6 +57,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   svietimas: "Švietimas",
 };
 
+const TASK_COLUMNS = "id, organization_id, title, description, task_date, start_time, end_time, available_hours, location, spots_total, is_open, is_event, event_host_name, created_by";
+
 function guessCategory(t: Task): string {
   const text = `${t.title} ${t.description}`.toLowerCase();
   if (/gyv[uū]n|prieglaud|katė|šuo/.test(text)) return "gyvunai";
@@ -85,7 +87,7 @@ function TasksPage() {
   useEffect(() => {
     (async () => {
       const [{ data: tData }, { data: oData }] = await Promise.all([
-        supabase.from("tasks").select("*").eq("is_open", true).order("task_date", { ascending: true }),
+        supabase.from("tasks").select(TASK_COLUMNS).eq("is_open", true).order("task_date", { ascending: true }),
         supabase.from("profiles").select("id, full_name, organization_name, email").eq("role", "organization"),
       ]);
       const list = (tData as Task[]) ?? [];
@@ -172,7 +174,6 @@ function TasksPage() {
       hours_to_earn: details.hours,
       status: "pending",
       note: details.note || null,
-      tags: active.task.tags ?? [],
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);

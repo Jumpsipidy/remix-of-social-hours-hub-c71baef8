@@ -573,18 +573,18 @@ function StudentProfileSetup({ userId }: { userId: string }) {
 }
 
 function OpenTasksFeed() {
-  const [tasks, setTasks] = useState<Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string; tags?: string[] | null }>>([]);
+  const [tasks, setTasks] = useState<Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>>([]);
   const [orgs, setOrgs] = useState<Record<string, { organization_name: string | null; full_name: string | null }>>({});
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("tasks")
-        .select("id, title, task_date, available_hours, location, organization_id, tags")
+        .select("id, title, task_date, available_hours, location, organization_id")
         .eq("is_open", true)
         .order("task_date", { ascending: true })
         .limit(4);
-      const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string; tags?: string[] | null }>) ?? [];
+      const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>) ?? [];
       setTasks(list);
       const ids = Array.from(new Set(list.map((t) => t.organization_id)));
       if (ids.length) {
@@ -617,13 +617,6 @@ function OpenTasksFeed() {
                   <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">{Number(t.available_hours)} val.</span>
                 </div>
                 <p className="mt-1 truncate text-xs text-muted-foreground">{orgLabel} · {t.task_date}{t.location ? ` · ${t.location}` : ""}</p>
-                {t.tags && t.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {t.tags.slice(0, 4).map((tg) => (
-                      <span key={tg} className="rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[9px] font-semibold text-primary">#{tg}</span>
-                    ))}
-                  </div>
-                )}
               </Link>
             );
           })}
