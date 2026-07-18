@@ -214,7 +214,7 @@ export function NotificationBell() {
 
   const openNotif = (n: Notification) => {
     setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-    if (n.hash) window.location.hash = n.hash;
+    goTo(n);
     setOpen(false);
   };
 
