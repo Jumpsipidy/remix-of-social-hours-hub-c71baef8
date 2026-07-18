@@ -39,10 +39,12 @@ function AuthCallbackPage() {
 
         if (code) {
           setMessage("Patvirtinamas prisijungimas…");
-          const { data: existing } = await supabase.auth.getSession();
-          if (!existing.session) {
+          try {
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) throw error;
+          } catch (exchangeError) {
+            const { data: existing } = await supabase.auth.getSession();
+            if (!existing.session) throw exchangeError;
           }
         }
 
