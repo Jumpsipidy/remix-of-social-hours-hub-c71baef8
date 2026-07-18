@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Search, Check, X, Users, Clock, Loader2, Send } from "lucide-react";
+import { UserPlus, Search, Check, X, Users, Clock, Loader2, Send, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,6 +8,7 @@ import {
   sendFriendRequest, respondToRequest, unfriend,
   type FriendshipRow, type FriendProfile,
 } from "@/lib/friends";
+import { DmDialog } from "./dm-dialog";
 
 type Props = { userId: string; schoolId: string | null };
 
