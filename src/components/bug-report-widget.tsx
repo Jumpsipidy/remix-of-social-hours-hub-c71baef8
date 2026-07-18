@@ -40,6 +40,7 @@ export function BugReportWidget() {
       {!open ? (
         <button onClick={() => setOpen(true)}
           title="Pranešti apie klaidą"
+          data-tour="bug"
           className="flex h-11 items-center gap-2 rounded-full border border-border bg-card/95 px-4 text-sm font-semibold shadow-lg backdrop-blur transition hover:scale-105">
           <Bug className="h-4 w-4 text-warning" /> <span className="hidden sm:inline">Pranešti apie klaidą</span>
         </button>
