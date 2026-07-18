@@ -84,7 +84,8 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       hours_to_earn: hours,
       status: "pending",
       note: note || null,
-    });
+      tags,
+    } as any);
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
