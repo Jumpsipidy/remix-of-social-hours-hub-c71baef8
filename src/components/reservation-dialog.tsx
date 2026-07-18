@@ -20,6 +20,7 @@ export type ReserveTarget = {
   presetDate?: string;
   presetStart?: string;
   presetEnd?: string;
+  tags?: string[];
 };
 
 type Props = {
