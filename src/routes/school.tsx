@@ -4,10 +4,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2, UserPlus } from "lucide-react";
+import { Search, ShieldCheck, Users, Clock, Target, FileSearch, X, CheckCircle2, XCircle, AlarmClock, MessageSquare, PlayCircle, ScrollText, Building2, UserPlus, AlertTriangle, Filter, ClipboardCheck, Download } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
+import { detectFlags, highestSeverity, type FraudFlag, type ReservationLike } from "@/lib/fraud-flags";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/school")({
   head: () => ({
