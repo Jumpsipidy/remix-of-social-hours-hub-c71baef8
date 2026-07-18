@@ -69,17 +69,29 @@ export function NotificationBell() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items })); } catch { /* ignore */ }
   }, [items]);
 
+  const goTo = useCallback(
+    (n: { kind: string; hash?: string; status?: string }) => {
+      const { to, hash } = routeForNotif(n, profile?.role);
+      // Use router navigate so nav + state stay consistent, then apply hash.
+      navigate({ to, hash: hash.startsWith("#") ? hash.slice(1) : hash }).catch(() => {
+        window.location.href = `${to}${hash}`;
+      });
+    },
+    [navigate, profile?.role],
+  );
+
   const push = (n: Omit<Notification, "id" | "at" | "read">) => {
     const id = crypto.randomUUID();
     const hash = n.hash ?? `#notif/${id.slice(0, 8)}`;
-    setItems((prev) => [{ id, at: new Date().toISOString(), read: false, hash, ...n }, ...prev].slice(0, 40));
+    const record = { id, at: new Date().toISOString(), read: false, hash, ...n };
+    setItems((prev) => [record, ...prev].slice(0, 40));
     toast(n.title, {
       description: n.body,
       icon: n.kind === "message" ? "💬" : n.kind === "bug" ? "🐛" : n.status === "completed" ? "✅" : n.status === "declined" ? "❌" : "🔔",
       duration: 5000,
       action: {
         label: "Peržiūrėti",
-        onClick: () => { window.location.hash = hash; },
+        onClick: () => goTo(record),
       },
     });
   };
