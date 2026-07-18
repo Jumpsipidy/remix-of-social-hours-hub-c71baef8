@@ -16,6 +16,7 @@ import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LockdownGate } from "@/components/lockdown-gate";
+import { ErrorMonitor } from "@/components/error-monitor";
 
 function NotFoundComponent() {
   return (
