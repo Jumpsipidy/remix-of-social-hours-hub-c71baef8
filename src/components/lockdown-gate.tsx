@@ -136,10 +136,14 @@ export function LockdownGate() {
 
   const submitCode = async () => {
     if (codeChecking) return;
+    if (captchaRequired && !captchaProof) {
+      setCodeError("Prašome įrodyti, kad esate žmogus.");
+      return;
+    }
     setCodeChecking(true);
     setCodeError(null);
     try {
-      const r = await submitCodeFn({ data: { code: code.trim() } });
+      const r = await submitCodeFn({ data: { code: code.trim(), captchaProof: captchaProof ?? "" } });
       if (r?.ok) {
         try { sessionStorage.setItem(BYPASS_TOKEN_KEY, r.token); } catch {}
         setBypassed(true); setShowCodeModal(false);
@@ -147,12 +151,27 @@ export function LockdownGate() {
         const secs = (r as { retryAfter?: number }).retryAfter ?? 900;
         setCodeError(`Užblokuota. Bandyk po ${Math.ceil(secs / 60)} min.`);
       } else {
+        if ((r as { captchaRequired?: boolean } | undefined)?.captchaRequired) {
+          setCaptchaRequired(true);
+          setCaptchaProof(null);
+        }
         setCodeError("Neteisingas kodas.");
       }
     } catch {
       setCodeError("Nepavyko patikrinti. Bandyk dar kartą.");
     } finally { setCodeChecking(false); }
   };
+
+  // When the code modal opens, sync failed-attempt state so captcha shows if needed
+  useEffect(() => {
+    if (!showCodeModal) return;
+    let alive = true;
+    readBypassStatus()
+      .then((r) => { if (alive && r) { setCaptchaRequired(Boolean(r.captchaRequired)); } })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [showCodeModal, readBypassStatus]);
+
 
   async function runCheck(auto = false) {
     setRefreshing(true); setRefreshOk(null);
