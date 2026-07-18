@@ -137,6 +137,9 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
               placeholder="Ką veiks savanoriai, ką atsinešti, kaip užsiregistruoti…" />
           </div>
         </label>
+        <div className="col-span-2">
+          <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams filtruoti tinkamus renginius" />
+        </div>
         <button type="submit" disabled={busy}
           className="col-span-2 mt-2 rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
           {busy ? "Skelbiama..." : "Paskelbti renginį"}
