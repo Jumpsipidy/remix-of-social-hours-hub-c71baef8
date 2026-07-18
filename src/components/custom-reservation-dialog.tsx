@@ -4,6 +4,7 @@ import { X, Calendar, Clock, Sparkles, Check, Info, Loader2, Search, Building2 }
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { TagsInput } from "@/components/tags-input";
 
 type OrgRow = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
 
