@@ -162,6 +162,33 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 </div>
               </div>
               <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams rasti tinkamiausią užduotį" />
+              <div className="rounded-xl border border-border bg-background/50 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pasikartojimas</p>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
+                  <select
+                    value={recurrence}
+                    onChange={(e) => setRecurrence(e.target.value as any)}
+                    className="h-10 rounded-lg border border-border bg-background px-2 text-sm"
+                  >
+                    <option value="none">Vienkartinė</option>
+                    <option value="weekly">Kas savaitę (tą pačią savaitės dieną)</option>
+                    <option value="biweekly">Kas antrą savaitę</option>
+                    <option value="monthly">Kas mėnesį (tą pačią datą)</option>
+                  </select>
+                  {recurrence !== "none" && (
+                    <input
+                      type="date"
+                      value={recurrenceUntil}
+                      onChange={(e) => setRecurrenceUntil(e.target.value)}
+                      placeholder="Iki (nebūtina)"
+                      className="h-10 rounded-lg border border-border bg-background px-2 text-sm"
+                    />
+                  )}
+                </div>
+                {recurrence !== "none" && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">Naujos kopijos bus generuojamos automatiškai kasdien 03:15 ateities 14 dienoms.</p>
+                )}
+              </div>
               <div className="flex justify-end">
                 <button
                   onClick={submit}
