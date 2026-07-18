@@ -99,6 +99,81 @@ export type Database = {
           },
         ]
       }
+      dm_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          room_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          room_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "dm_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          user_a: string
+          user_b: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_a: string
+          user_b: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_a?: string
+          user_b?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_rooms_user_a_fkey"
+            columns: ["user_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_rooms_user_b_fkey"
+            columns: ["user_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -436,10 +511,15 @@ export type Database = {
           is_open: boolean
           location: string
           organization_id: string
+          recurrence: string
+          recurrence_active: boolean
+          recurrence_until: string | null
+          recurrence_weekday: number | null
           spots_total: number
           start_time: string | null
           tags: string[]
           task_date: string
+          template_source_id: string | null
           title: string
           updated_at: string
         }
@@ -455,10 +535,15 @@ export type Database = {
           is_open?: boolean
           location?: string
           organization_id: string
+          recurrence?: string
+          recurrence_active?: boolean
+          recurrence_until?: string | null
+          recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
           tags?: string[]
           task_date: string
+          template_source_id?: string | null
           title: string
           updated_at?: string
         }
@@ -474,10 +559,15 @@ export type Database = {
           is_open?: boolean
           location?: string
           organization_id?: string
+          recurrence?: string
+          recurrence_active?: boolean
+          recurrence_until?: string | null
+          recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
           tags?: string[]
           task_date?: string
+          template_source_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -489,6 +579,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tasks_template_source_id_fkey"
+            columns: ["template_source_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -497,6 +594,7 @@ export type Database = {
     }
     Functions: {
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
+      auto_lockdown_if_unhealthy: { Args: never; Returns: Json }
       award_reservation_hours: {
         Args: { _reservation_id: string }
         Returns: {
@@ -506,6 +604,7 @@ export type Database = {
         }[]
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
+      generate_recurring_tasks: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -517,7 +616,14 @@ export type Database = {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
+      is_dm_room_member: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
+      open_dm_room: { Args: { _other: string }; Returns: string }
+      purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      run_deep_health_scan: { Args: never; Returns: Json }
       verify_school_signup_code: {
         Args: { _code: string; _school_id: string }
         Returns: boolean

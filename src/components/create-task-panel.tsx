@@ -37,6 +37,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [location, setLocation] = useState("");
   const [spots, setSpots] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
+  const [recurrence, setRecurrence] = useState<"none" | "weekly" | "biweekly" | "monthly">("none");
+  const [recurrenceUntil, setRecurrenceUntil] = useState<string>("");
 
   const refresh = async () => {
     const { data } = await supabase
@@ -58,6 +60,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const submit = async () => {
     if (!title.trim() || !date) { toast.error("Užpildyk pavadinimą ir datą"); return; }
     setBusy(true);
+    const weekday = new Date(date + "T00:00:00").getDay();
     const { error } = await supabase.from("tasks").insert({
       organization_id: organizationId,
       title: title.trim(),
@@ -70,10 +73,13 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       spots_total: spots,
       is_open: true,
       tags,
+      recurrence,
+      recurrence_weekday: recurrence === "weekly" || recurrence === "biweekly" ? weekday : null,
+      recurrence_until: recurrenceUntil || null,
     } as any);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Užduotis paskelbta");
+    toast.success(recurrence === "none" ? "Užduotis paskelbta" : "Pasikartojanti užduotis paskelbta");
     reset();
     setOpen(false);
     refresh();
@@ -156,6 +162,33 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 </div>
               </div>
               <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams rasti tinkamiausią užduotį" />
+              <div className="rounded-xl border border-border bg-background/50 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pasikartojimas</p>
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr]">
+                  <select
+                    value={recurrence}
+                    onChange={(e) => setRecurrence(e.target.value as any)}
+                    className="h-10 rounded-lg border border-border bg-background px-2 text-sm"
+                  >
+                    <option value="none">Vienkartinė</option>
+                    <option value="weekly">Kas savaitę (tą pačią savaitės dieną)</option>
+                    <option value="biweekly">Kas antrą savaitę</option>
+                    <option value="monthly">Kas mėnesį (tą pačią datą)</option>
+                  </select>
+                  {recurrence !== "none" && (
+                    <input
+                      type="date"
+                      value={recurrenceUntil}
+                      onChange={(e) => setRecurrenceUntil(e.target.value)}
+                      placeholder="Iki (nebūtina)"
+                      className="h-10 rounded-lg border border-border bg-background px-2 text-sm"
+                    />
+                  )}
+                </div>
+                {recurrence !== "none" && (
+                  <p className="mt-2 text-[11px] text-muted-foreground">Naujos kopijos bus generuojamos automatiškai kasdien 03:15 ateities 14 dienoms.</p>
+                )}
+              </div>
               <div className="flex justify-end">
                 <button
                   onClick={submit}

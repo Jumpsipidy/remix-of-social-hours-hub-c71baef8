@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Search, Check, X, Users, Clock, Loader2, Send } from "lucide-react";
+import { UserPlus, Search, Check, X, Users, Clock, Loader2, Send, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -8,6 +8,7 @@ import {
   sendFriendRequest, respondToRequest, unfriend,
   type FriendshipRow, type FriendProfile,
 } from "@/lib/friends";
+import { DmDialog } from "./dm-dialog";
 
 type Props = { userId: string; schoolId: string | null };
 
@@ -18,6 +19,7 @@ export function FriendsPanel({ userId, schoolId }: Props) {
   const [results, setResults] = useState<FriendProfile[]>([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dmFriend, setDmFriend] = useState<{ id: string; name: string } | null>(null);
 
   const reload = async () => {
     try {
@@ -219,9 +221,18 @@ export function FriendsPanel({ userId, schoolId }: Props) {
                       <p className="truncate text-xs text-muted-foreground">{p?.class_year ?? "—"} · {p?.hours_earned ?? 0} val.</p>
                     </div>
                   </div>
-                  <button onClick={() => handleUnfriend(r.id, p?.full_name ?? "draugas")} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
-                    Pašalinti
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button
+                      onClick={() => setDmFriend({ id: otherId, name: p?.full_name ?? "Draugas" })}
+                      className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-glow"
+                      title="Žinutės (auto-ištrinamos po 2 d.)"
+                    >
+                      <MessageCircle className="h-3 w-3" /> Rašyti
+                    </button>
+                    <button onClick={() => handleUnfriend(r.id, p?.full_name ?? "draugas")} className="rounded-full border border-border px-2.5 py-1 text-[11px] text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                      Pašalinti
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -248,6 +259,8 @@ export function FriendsPanel({ userId, schoolId }: Props) {
           </div>
         </section>
       )}
+
+      <DmDialog friend={dmFriend} me={userId} onClose={() => setDmFriend(null)} />
     </div>
   );
 }
