@@ -135,15 +135,21 @@ export const adminListReservations = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const limit = Math.min(Math.max(data.limit ?? 200, 10), 1000);
+    type Row = {
+      id: string; status: "pending" | "confirmed" | "declined" | "approved" | "completed";
+      hours_to_earn: number | null; reservation_date: string | null;
+      start_time: string | null; end_time: string | null; note: string | null;
+      organization_id: string | null; student_id: string | null; created_at: string;
+    };
     let q = sb
       .from("reservations")
-      .select("id, status, hours_to_earn, reservation_date, start_time, end_time, notes, organization_id, student_id, created_at")
+      .select("id, status, hours_to_earn, reservation_date, start_time, end_time, note, organization_id, student_id, created_at")
       .order("created_at", { ascending: false })
       .limit(limit);
-    if (data.status && data.status !== "all") q = q.eq("status", data.status);
+    if (data.status && data.status !== "all") q = q.eq("status", data.status as Row["status"]);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    const list = rows ?? [];
+    const list = (rows ?? []) as unknown as Row[];
     const ids = Array.from(new Set(list.flatMap((r) => [r.student_id, r.organization_id]).filter((v): v is string => !!v)));
     const { data: profs } = ids.length
       ? await sb.from("profiles").select("id, full_name, organization_name, email").in("id", ids)
@@ -160,7 +166,7 @@ export const adminListReservations = createServerFn({ method: "GET" })
 
 export const adminUpdateReservationStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; status: "pending" | "approved" | "completed" | "cancelled" }) => input)
+  .inputValidator((input: { id: string; status: "pending" | "approved" | "completed" | "declined" | "confirmed" }) => input)
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("reservations").update({ status: data.status }).eq("id", data.id);
