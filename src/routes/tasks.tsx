@@ -153,6 +153,7 @@ function TasksPage() {
         presetDate: task.task_date,
         presetStart: task.start_time?.slice(0, 5),
         presetEnd: task.end_time?.slice(0, 5),
+        tags: task.tags ?? [],
       },
     });
   };
@@ -169,13 +170,17 @@ function TasksPage() {
       hours_to_earn: details.hours,
       status: "pending",
       note: details.note || null,
-    });
+      tags: active.task.tags ?? [],
+    } as any);
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
     setActive(null);
   };
 
-  const clearFilters = () => { setQ(""); setTown(""); setCat(""); };
+  const toggleTag = (t: string) =>
+    setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+
+  const clearFilters = () => { setQ(""); setTown(""); setCat(""); setSelectedTags([]); };
 
   return (
     <PageShell>
