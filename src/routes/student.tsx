@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { FriendsPanel } from "@/components/friends-panel";
+import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
@@ -295,6 +297,22 @@ function StudentDashboard() {
       </section>
 
       <OpenTasksFeed />
+
+      {/* Group invites + Friends */}
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+          <div className="space-y-4">
+            <GroupInvitesInbox userId={user.id} />
+          </div>
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <h2 className="text-lg font-bold">Draugai</h2>
+              <span className="text-xs text-muted-foreground">Kviesk juos į grupines rezervacijas</span>
+            </div>
+            <FriendsPanel userId={user.id} schoolId={profile.school_id ?? null} />
+          </div>
+        </div>
+      </section>
 
       {/* Reservations list w/ filter */}
       <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">

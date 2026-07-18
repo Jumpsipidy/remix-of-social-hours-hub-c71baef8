@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { TiltCard } from "@/components/tilt-card";
 import { TasksBackgroundFX } from "@/components/tasks-background";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
@@ -79,6 +80,7 @@ function TasksPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
+  const [invite, setInvite] = useState<{ id: string; label: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -160,7 +162,7 @@ function TasksPage() {
 
   const confirm = async (details: ReservationSubmit) => {
     if (!active || !user) return;
-    const { error } = await supabase.from("reservations").insert({
+    const { data: inserted, error } = await supabase.from("reservations").insert({
       student_id: user.id,
       organization_id: active.task.organization_id,
       task_id: active.task.id,
@@ -171,10 +173,12 @@ function TasksPage() {
       status: "pending",
       note: details.note || null,
       tags: active.task.tags ?? [],
-    } as any);
+    } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
+    const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
     setActive(null);
+    if (inserted?.id) setInvite({ id: inserted.id as string, label });
   };
 
   const toggleTag = (t: string) =>
@@ -411,6 +415,13 @@ function TasksPage() {
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
       <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />
+      <InviteFriendsDialog
+        open={!!invite}
+        reservationId={invite?.id ?? null}
+        inviterId={user?.id ?? ""}
+        reservationLabel={invite?.label}
+        onClose={() => setInvite(null)}
+      />
     </PageShell>
   );
 }
