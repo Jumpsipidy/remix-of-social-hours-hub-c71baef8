@@ -35,7 +35,10 @@ function makeCode(): string {
 export const generateCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    z.object({ debug: z.boolean().optional() }).parse(input ?? {}),
+    z.object({
+      debug: z.boolean().optional(),
+      fake: z.boolean().optional(),
+    }).parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -51,13 +54,59 @@ export const generateCertificate = createServerFn({ method: "POST" })
     if (pErr || !profile) throw new Error("Profilis nerastas");
     // Debug bypass: only allow if caller is an admin (also bypasses student-role check)
     let debugMode = false;
-    if (data.debug) {
+    if (data.debug || data.fake) {
       const { data: isAdmin } = await supabase.rpc("has_role", {
         _user_id: userId,
         _role: "admin",
       });
       if (!isAdmin) throw new Error("Debug rėžimas leidžiamas tik super admin");
       debugMode = true;
+    }
+
+    // FAKE mode: fabricate a realistic student certificate for visual testing.
+    if (data.fake) {
+      const fakeName = "Jonas Petraitis";
+      const fakeClass = "11B";
+      const fakeSchool = "Šeduvos gimnazija";
+      const orgs = [
+        "Raudonojo Kryžiaus draugija",
+        "Panevėžio senelių namai",
+        "Miesto biblioteka",
+        "Gyvūnų prieglauda „Letenėlė“",
+        "Aplinkosaugos klubas",
+        "Vaikų dienos centras",
+      ];
+      const reservations = Array.from({ length: 8 }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (i + 1) * 4);
+        const h = 2 + (i % 3);
+        return {
+          date: d.toISOString().slice(0, 10),
+          start_time: "15:00",
+          end_time: `${15 + h}:00`,
+          hours: h,
+          notes: "",
+          organization: orgs[i % orgs.length],
+        };
+      });
+      const totalHours = reservations.reduce((s, r) => s + r.hours, 0);
+      const code = `DBG-${makeCode().slice(3)}`;
+      const payload = JSON.stringify({
+        code, student_id: userId, student_name: fakeName, total_hours: totalHours, reservations,
+      });
+      const content_hash = await sha256Hex(payload);
+      const signature = await hmacHex(secret, code + "|" + content_hash);
+      return {
+        code, content_hash, signature,
+        generated_at: new Date().toISOString(),
+        student_name: fakeName,
+        student_class: fakeClass,
+        school_name: fakeSchool,
+        total_hours: totalHours,
+        hours_needed: 20,
+        reservations,
+        debug: true,
+      };
     }
 
     if (!debugMode && profile.role !== "student") {
