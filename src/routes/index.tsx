@@ -116,49 +116,70 @@ function Home() {
 
   return (
     <PageShell>
-      {/* HERO — editorial */}
+      {/* HERO — editorial, magazine-style */}
       <section ref={heroRef} className="relative overflow-hidden">
+        {/* Soft warm halo */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <motion.div
+            animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
+            transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -left-40 top-10 h-[560px] w-[560px] rounded-full opacity-40 blur-3xl"
+            style={{ background: "radial-gradient(circle, oklch(0.65 0.15 240 / 0.35), transparent 65%)" }}
+          />
+          <motion.div
+            animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
+            transition={{ duration: 26, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -right-40 top-40 h-[520px] w-[520px] rounded-full opacity-30 blur-3xl"
+            style={{ background: "radial-gradient(circle, oklch(0.7 0.12 60 / 0.3), transparent 65%)" }}
+          />
+        </div>
+
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6 lg:pt-32"
+          className="relative mx-auto max-w-6xl px-4 pb-20 pt-20 sm:px-6 lg:pt-28"
         >
-          <div className="grid items-start gap-16 lg:grid-cols-[1.15fr_1fr]">
-            <div>
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground"
-              >
-                Nr. 01 · Lietuvos mokykloms
-              </motion.p>
+          {/* Top masthead rule */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="mb-14 flex items-center justify-between border-b border-border/60 pb-4 text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground"
+          >
+            <span>Nr. 01 · Leidimas 2026</span>
+            <span className="hidden sm:inline">Lietuvos mokykloms · nemokamai</span>
+            <span className="font-mono">SV / vol. 01</span>
+          </motion.div>
 
+          <div className="grid items-start gap-16 lg:grid-cols-[1.2fr_1fr]">
+            <div>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.05 }}
-                className="mt-6 font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl"
+                transition={{ duration: 0.8, delay: 0.05 }}
+                className="font-display font-semibold leading-[0.98] tracking-[-0.02em] text-[52px] sm:text-[72px] lg:text-[92px]"
               >
-                Socialinės valandos,
+                Socialinės
                 <br />
-                <span className="text-gradient italic">taip, kaip turėtų būti.</span>
+                valandos,
+                <br />
+                <span className="text-gradient italic">tvarkingai.</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground"
+                transition={{ duration: 0.7, delay: 0.2 }}
+                className="mt-8 max-w-xl text-[17px] leading-[1.65] text-muted-foreground"
               >
-                Vienas ramus, tvarkingas įrankis mokyklai, moksleiviui ir organizacijai.
-                Be popieriaus, be skambučių, be pamestų sąrašų — tik aiški apskaita ir
-                prasminga savanorystė.
+                Vienas ramus įrankis mokyklai, moksleiviui ir organizacijai.
+                Be popieriaus, be skambučių, be pamestų sąrašų — tik aiški apskaita
+                ir prasminga savanorystė.
               </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.25 }}
+                transition={{ duration: 0.7, delay: 0.3 }}
                 className="mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
@@ -179,17 +200,17 @@ function Home() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
                 className="mt-14 grid max-w-lg grid-cols-3 gap-8 border-t border-border/70 pt-8"
               >
                 {[
                   { v: fmt(counts.schools), l: "Mokyklos" },
                   { v: fmt(counts.orgs), l: "Organizacijos" },
-                  { v: fmt(counts.hours), l: "Atliktos valandos" },
+                  { v: fmt(counts.hours), l: "Atliktos val." },
                 ].map((s) => (
                   <div key={s.l}>
-                    <p className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{s.v}</p>
-                    <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">{s.l}</p>
+                    <p className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{s.v}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{s.l}</p>
                   </div>
                 ))}
               </motion.div>
@@ -199,28 +220,41 @@ function Home() {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.2 }}
-              className="lg:mt-6"
+              transition={{ duration: 0.9, delay: 0.35 }}
+              className="lg:mt-8"
               style={{ perspective: 1400 }}
             >
-              <TiltCard intensity={14}>
+              <TiltCard intensity={12}>
                 <div className="relative rounded-3xl">
-                  {/* Blue neon halo */}
-                  <div className="absolute -inset-4 rounded-3xl bg-gradient-primary opacity-30 blur-2xl" aria-hidden />
-                  <div className="relative rounded-3xl border border-border bg-gradient-card/90 p-6 shadow-elegant backdrop-blur-xl sm:p-8">
+                  <div className="absolute -inset-4 rounded-3xl bg-gradient-primary opacity-25 blur-2xl" aria-hidden />
+                  <div className="relative rounded-3xl border border-border bg-gradient-card/95 p-6 shadow-elegant backdrop-blur-xl sm:p-8">
+                    {/* Simulated app chrome */}
+                    <div className="mb-5 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-rose-400/70" />
+                      <span className="h-2 w-2 rounded-full bg-amber-400/70" />
+                      <span className="h-2 w-2 rounded-full bg-emerald-400/70" />
+                      <span className="ml-auto text-[10px] uppercase tracking-widest text-muted-foreground">tavo pažanga · live</span>
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
                           {isStudent ? "Tavo pažanga" : "Kaip atrodo pažanga"}
                         </p>
-                        <p className="mt-3 font-display text-4xl font-semibold tracking-tight">
-                          {myEarned}
+                        <p className="mt-3 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
+                          <motion.span
+                            key={myEarned}
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                          >
+                            {myEarned}
+                          </motion.span>
                           <span className="text-2xl text-muted-foreground"> / {myNeeded} val.</span>
                         </p>
                       </div>
                       <motion.div
-                        animate={{ rotate: [0, 8, -8, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        animate={{ rotate: [0, 6, -6, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                         className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow"
                       >
                         <Award className="h-5 w-5" />
@@ -231,7 +265,7 @@ function Home() {
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${myPct}%` }}
-                        transition={{ duration: 1.4, delay: 0.5, ease: "easeOut" }}
+                        transition={{ duration: 1.6, delay: 0.6, ease: "easeOut" }}
                         className="h-full rounded-full bg-gradient-primary"
                       />
                     </div>
@@ -253,7 +287,7 @@ function Home() {
 
                     <div className="mt-6 border-t border-border/70 pt-5 text-xs text-muted-foreground">
                       <p className="italic leading-relaxed">
-                        „Pirmą kartą matau, kur nueina mokinių valandos. Viskas viename lange.”
+                        „Pirmą kartą matau, kur nueina mokinių valandos. Viskas viename lange."
                       </p>
                       <p className="mt-2 not-italic">— Mokyklos administratorius, pilotinė mokykla</p>
                     </div>
@@ -263,10 +297,36 @@ function Home() {
             </motion.div>
           </div>
         </motion.div>
+
+        {/* Marquee band */}
+        <div className="border-y border-border/60 bg-card/20 py-4">
+          <motion.div
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+            className="flex whitespace-nowrap gap-14 text-[12px] uppercase tracking-[0.32em] text-muted-foreground/70"
+          >
+            {Array.from({ length: 2 }).flatMap((_, k) => [
+              "Šeduvos gimnazija",
+              "◆",
+              "Vilniaus Licėjus",
+              "◆",
+              "Kauno Jėzuitų gimnazija",
+              "◆",
+              "Klaipėdos „Vėtrungės“ gimnazija",
+              "◆",
+              "Panevėžio 5-oji gimnazija",
+              "◆",
+              "Alytaus Adolfo Ramanausko-Vanago gimnazija",
+              "◆",
+            ].map((t, i) => (
+              <span key={`${k}-${i}`}>{t}</span>
+            )))}
+          </motion.div>
+        </div>
       </section>
 
       {/* MANIFESTO / PULL QUOTE */}
-      <section className="relative mx-auto max-w-4xl px-4 py-24 sm:px-6">
+      <section className="relative mx-auto max-w-4xl px-4 py-28 sm:px-6">
         <motion.blockquote
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -279,7 +339,7 @@ function Home() {
         </motion.blockquote>
       </section>
 
-      {/* THREE AUDIENCES */}
+      {/* THREE AUDIENCES — editorial cards */}
       <section className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <div className="mb-14 flex flex-wrap items-end justify-between gap-4 border-b border-border/70 pb-6">
           <div>
@@ -291,29 +351,32 @@ function Home() {
             </h2>
           </div>
           <p className="max-w-md text-sm text-muted-foreground">
-            Nuo pirmos rezervacijos iki oficialaus valandų patvirtinimo — kiekviena pusė
-            mato tik tai, ko jai reikia.
+            Nuo pirmos rezervacijos iki oficialaus valandų patvirtinimo — kiekviena
+            pusė mato tik tai, ko jai reikia.
           </p>
         </div>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-border/70 bg-border/70 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           {[
             {
               icon: GraduationCap,
+              n: "01",
               tag: "Moksleiviams",
               title: "Aiškus tikslas, aiškus progresas",
               body: "Rezervuok, dalyvauk, gauk patvirtinimą. Valandos atsiranda tavo mokyklos apskaitoje automatiškai — nereikia rankomis rinkti pažymų.",
             },
             {
               icon: Building2,
+              n: "02",
               tag: "Organizacijoms",
               title: "Rimti savanoriai, ne pamiršti pranešimai",
               body: "Skelbk užduotis, tvirtink dalyvavimą per kelis paspaudimus. Bendrauk su moksleiviu ir jo mokykla vienoje saugioje vietoje.",
             },
             {
               icon: ShieldCheck,
+              n: "03",
               tag: "Mokykloms",
-              title: "Auditas be Excel’io",
+              title: "Auditas be Excel'io",
               body: "Realaus laiko vaizdas: kas ką padarė, kada ir kur. Priedas — galimybė pridėti savo patikrintus renginius ir organizacijas.",
             },
           ].map((c, i) => (
@@ -323,24 +386,31 @@ function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ delay: i * 0.08, duration: 0.6 }}
-              className="group relative bg-background p-8 transition-colors hover:bg-card/60"
+              whileHover={{ y: -4 }}
+              className="group relative rounded-2xl border border-border/70 bg-card/40 p-8 transition-colors hover:border-border hover:bg-card/70"
             >
-              <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full border border-border">
+              <div className="flex items-center justify-between">
+                <span className="font-display text-3xl font-semibold text-muted-foreground/40">{c.n}</span>
+                <div className="grid h-10 w-10 place-items-center rounded-full border border-border">
                   <c.icon className="h-4 w-4" />
                 </div>
-                <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                  {c.tag}
-                </span>
               </div>
-              <h3 className="mt-8 font-display text-xl font-semibold leading-snug tracking-tight">
+              <span className="mt-6 inline-block text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
+                {c.tag}
+              </span>
+              <h3 className="mt-3 font-display text-xl font-semibold leading-snug tracking-tight">
                 {c.title}
               </h3>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{c.body}</p>
+              <div className="mt-6 flex items-center gap-2 text-xs font-medium text-foreground opacity-0 transition group-hover:opacity-100">
+                Sužinoti daugiau <ArrowRight className="h-3.5 w-3.5" />
+              </div>
             </motion.article>
           ))}
         </div>
       </section>
+
+
 
       {/* HOW IT WORKS — editorial numbered list */}
       <section className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6">
