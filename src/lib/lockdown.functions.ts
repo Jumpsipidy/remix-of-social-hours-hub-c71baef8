@@ -2,54 +2,31 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const SETTINGS_COLUMNS = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
-const LOCKDOWN_SETUP_MESSAGE =
-  "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
-
-type LockdownSettingsDto = {
-  id: boolean;
-  lockdown_enabled: boolean;
-  lockdown_message: string | null;
-  updated_at: string | null;
-  updated_by: string | null;
-};
-
-function isSiteSettingsSchemaError(error: unknown) {
-  const message = String((error as { message?: string } | null)?.message ?? "");
-  const code = String((error as { code?: string } | null)?.code ?? "");
-  return (
-    code === "PGRST205" ||
-    code === "PGRST204" ||
-    (message.includes("site_settings") && (message.includes("schema cache") || message.includes("Could not find")))
-  );
-}
-
-function normalizeLockdownSettings(row: any): LockdownSettingsDto {
-  return {
-    id: Boolean(row?.id ?? true),
-    lockdown_enabled: Boolean(row?.lockdown_enabled),
-    lockdown_message: row?.lockdown_message ?? null,
-    updated_at: row?.updated_at ?? null,
-    updated_by: row?.updated_by ?? null,
-  };
-}
-
-async function requireAdminClient(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-
-  if (error || data !== true) {
-    throw new Error("Reikia sistemos administratoriaus teisių");
-  }
-
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
 
 export const adminGetLockdownSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const setupMessage =
+      "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
+    const isSchemaError = (error: unknown) => {
+      const message = String((error as { message?: string } | null)?.message ?? "");
+      const code = String((error as { code?: string } | null)?.code ?? "");
+      return (
+        code === "PGRST205" ||
+        code === "PGRST204" ||
+        (message.includes("site_settings") && (message.includes("schema cache") || message.includes("Could not find")))
+      );
+    };
+    const normalize = (row: any) => ({
+      id: Boolean(row?.id ?? true),
+      lockdown_enabled: Boolean(row?.lockdown_enabled),
+      lockdown_message: row?.lockdown_message ?? null,
+      updated_at: row?.updated_at ?? null,
+      updated_by: row?.updated_by ?? null,
+    });
+    const roleCheck = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (roleCheck.error || roleCheck.data !== true) throw new Error("Reikia sistemos administratoriaus teisių");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = await requireAdminClient(context);
     const { data, error } = await supabaseAdmin
       .from("site_settings")
@@ -58,10 +35,10 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (error) {
-      if (isSiteSettingsSchemaError(error)) throw new Error(LOCKDOWN_SETUP_MESSAGE);
+      if (isSchemaError(error)) throw new Error(setupMessage);
       throw new Error(`Lockdown nustatymai nepasiekiami: ${error.message}`);
     }
-    if (data) return { settings: normalizeLockdownSettings(data) };
+    if (data) return { settings: normalize(data) };
 
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from("site_settings")
@@ -70,17 +47,37 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
       .single();
 
     if (insertError) {
-      if (isSiteSettingsSchemaError(insertError)) throw new Error(LOCKDOWN_SETUP_MESSAGE);
+      if (isSchemaError(insertError)) throw new Error(setupMessage);
       throw new Error(`Nepavyko sukurti Lockdown nustatymų: ${insertError.message}`);
     }
-    return { settings: normalizeLockdownSettings(inserted) };
+    return { settings: normalize(inserted) };
   });
 
 export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { lockdown_enabled?: boolean; lockdown_message?: string | null }) => input)
   .handler(async ({ data, context }) => {
-    const supabaseAdmin = await requireAdminClient(context);
+    const setupMessage =
+      "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
+    const isSchemaError = (error: unknown) => {
+      const message = String((error as { message?: string } | null)?.message ?? "");
+      const code = String((error as { code?: string } | null)?.code ?? "");
+      return (
+        code === "PGRST205" ||
+        code === "PGRST204" ||
+        (message.includes("site_settings") && (message.includes("schema cache") || message.includes("Could not find")))
+      );
+    };
+    const normalize = (row: any) => ({
+      id: Boolean(row?.id ?? true),
+      lockdown_enabled: Boolean(row?.lockdown_enabled),
+      lockdown_message: row?.lockdown_message ?? null,
+      updated_at: row?.updated_at ?? null,
+      updated_by: row?.updated_by ?? null,
+    });
+    const roleCheck = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (roleCheck.error || roleCheck.data !== true) throw new Error("Reikia sistemos administratoriaus teisių");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = {
       id: true,
       updated_at: new Date().toISOString(),
@@ -100,16 +97,29 @@ export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
       .single();
 
     if (error) {
-      if (isSiteSettingsSchemaError(error)) throw new Error(LOCKDOWN_SETUP_MESSAGE);
+      if (isSchemaError(error)) throw new Error(setupMessage);
       throw new Error(`Nepavyko išsaugoti Lockdown nustatymų: ${error.message}`);
     }
-    return { settings: normalizeLockdownSettings(updated) };
+    return { settings: normalize(updated) };
   });
 
 export const adminRunLockdownHealth = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const supabaseAdmin = await requireAdminClient(context);
+    const setupMessage =
+      "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
+    const isSchemaError = (error: unknown) => {
+      const message = String((error as { message?: string } | null)?.message ?? "");
+      const code = String((error as { code?: string } | null)?.code ?? "");
+      return (
+        code === "PGRST205" ||
+        code === "PGRST204" ||
+        (message.includes("site_settings") && (message.includes("schema cache") || message.includes("Could not find")))
+      );
+    };
+    const roleCheck = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (roleCheck.error || roleCheck.data !== true) throw new Error("Reikia sistemos administratoriaus teisių");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const checks: Array<{ label: string; ok: boolean; detail: string }> = [];
 
     const settings = await supabaseAdmin.from("site_settings").select("id", { count: "exact", head: true });
@@ -117,8 +127,8 @@ export const adminRunLockdownHealth = createServerFn({ method: "GET" })
       label: "Lockdown lentelė",
       ok: !settings.error,
       detail: settings.error
-        ? isSiteSettingsSchemaError(settings.error)
-          ? LOCKDOWN_SETUP_MESSAGE
+        ? isSchemaError(settings.error)
+          ? setupMessage
           : settings.error.message
         : `${settings.count ?? 0} nustatymų įrašas`,
     });
