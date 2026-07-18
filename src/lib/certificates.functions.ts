@@ -49,9 +49,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
     if (pErr || !profile) throw new Error("Profilis nerastas");
-    if (profile.role !== "student") throw new Error("Tik moksleiviai gali generuoti sertifikatą");
-
-    // Debug bypass: only allow if caller is an admin
+    // Debug bypass: only allow if caller is an admin (also bypasses student-role check)
     let debugMode = false;
     if (data.debug) {
       const { data: isAdmin } = await supabase.rpc("has_role", {
@@ -61,6 +59,11 @@ export const generateCertificate = createServerFn({ method: "POST" })
       if (!isAdmin) throw new Error("Debug rėžimas leidžiamas tik super admin");
       debugMode = true;
     }
+
+    if (!debugMode && profile.role !== "student") {
+      throw new Error("Tik moksleiviai gali generuoti sertifikatą");
+    }
+
 
     // Fetch school name
     let schoolName: string | null = null;
