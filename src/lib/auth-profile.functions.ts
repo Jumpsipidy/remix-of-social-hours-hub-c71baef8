@@ -4,6 +4,46 @@ import type { AppRole, Profile } from "@/hooks/use-auth";
 
 const PROFILE_COLUMNS =
   "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes";
+const PROFILE_COLUMNS_SAFE =
+  "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year";
+
+function isAssignedClassesSchemaError(error: unknown) {
+  const message = error instanceof Error ? error.message : String((error as { message?: string } | null)?.message ?? error ?? "");
+  return message.includes("assigned_classes") && (message.includes("does not exist") || message.includes("schema cache") || message.includes("column"));
+}
+
+function withAssignedClassFallback(profile: unknown) {
+  if (!profile) return profile;
+  return { ...(profile as Record<string, unknown>), assigned_classes: (profile as Profile).assigned_classes ?? [] } as Profile;
+}
+
+async function selectProfileById(supabaseAdmin: any, id: string) {
+  const full = await supabaseAdmin.from("profiles").select(PROFILE_COLUMNS).eq("id", id).maybeSingle();
+  if (!full.error) return { data: full.data ? withAssignedClassFallback(full.data) : null, error: null };
+  if (!isAssignedClassesSchemaError(full.error)) return full;
+
+  const safe = await supabaseAdmin.from("profiles").select(PROFILE_COLUMNS_SAFE).eq("id", id).maybeSingle();
+  return { data: safe.data ? withAssignedClassFallback(safe.data) : null, error: safe.error };
+}
+
+async function selectFirstProfileByEmail(supabaseAdmin: any, email: string) {
+  const full = await supabaseAdmin
+    .from("profiles")
+    .select(PROFILE_COLUMNS)
+    .ilike("email", email)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  if (!full.error) return { data: full.data?.[0] ? withAssignedClassFallback(full.data[0]) : null, error: null };
+  if (!isAssignedClassesSchemaError(full.error)) return full;
+
+  const safe = await supabaseAdmin
+    .from("profiles")
+    .select(PROFILE_COLUMNS_SAFE)
+    .ilike("email", email)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return { data: safe.data?.[0] ? withAssignedClassFallback(safe.data[0]) : null, error: safe.error };
+}
 
 function displayNameFromMetadata(meta: Record<string, unknown>, email: string | null) {
   const fullName = meta.full_name;
@@ -28,6 +68,24 @@ function copyProfileForCurrentUser(profile: Profile, id: string, email: string |
   };
 }
 
+async function upsertProfileSafely(supabaseAdmin: any, payload: Record<string, unknown>) {
+  const first = await supabaseAdmin
+    .from("profiles")
+    .upsert(payload, { onConflict: "id" })
+    .select(PROFILE_COLUMNS)
+    .single();
+  if (!first.error) return first;
+  if (!isAssignedClassesSchemaError(first.error)) return first;
+
+  const { assigned_classes: _assignedClasses, ...safePayload } = payload;
+  const retry = await supabaseAdmin
+    .from("profiles")
+    .upsert(safePayload, { onConflict: "id" })
+    .select(PROFILE_COLUMNS_SAFE)
+    .single();
+  return { data: retry.data ? withAssignedClassFallback(retry.data) : null, error: retry.error };
+}
+
 export const ensureSignedInProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -40,46 +98,44 @@ export const ensureSignedInProfile = createServerFn({ method: "POST" })
     const email = user.email?.toLowerCase() ?? null;
     const fullName = displayNameFromMetadata(user.user_metadata ?? {}, email);
 
-    const { data: exactProfile, error: exactError } = await supabaseAdmin
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .eq("id", context.userId)
-      .maybeSingle();
+    const { data: exactProfile, error: exactError } = await selectProfileById(supabaseAdmin, context.userId);
     if (exactError) throw new Error(exactError.message);
 
     if (exactProfile) {
       const profile = exactProfile as Profile;
       if ((email && profile.email !== email) || !profile.full_name) {
-        const { data: updated, error: updateError } = await supabaseAdmin
+        const updatedResult = await supabaseAdmin
           .from("profiles")
           .update({ email, full_name: profile.full_name ?? fullName })
           .eq("id", context.userId)
           .select(PROFILE_COLUMNS)
           .single();
+        const { data: updated, error: updateError } = updatedResult.error && isAssignedClassesSchemaError(updatedResult.error)
+          ? await supabaseAdmin
+              .from("profiles")
+              .update({ email, full_name: profile.full_name ?? fullName })
+              .eq("id", context.userId)
+              .select(PROFILE_COLUMNS_SAFE)
+              .single()
+          : updatedResult;
         if (updateError) throw new Error(updateError.message);
-        return { profile: updated as Profile, created: false };
+        return { profile: withAssignedClassFallback(updated) as Profile, created: false };
       }
       return { profile, created: false };
     }
 
     let emailMatchedProfile: Profile | null = null;
     if (email) {
-      const { data: matches, error: matchError } = await supabaseAdmin
-        .from("profiles")
-        .select(PROFILE_COLUMNS)
-        .ilike("email", email)
-        .order("created_at", { ascending: true })
-        .limit(1);
+      const { data: match, error: matchError } = await selectFirstProfileByEmail(supabaseAdmin, email);
       if (matchError) throw new Error(matchError.message);
-      emailMatchedProfile = ((matches?.[0] as Profile | undefined) ?? null);
+      emailMatchedProfile = (match as Profile | null) ?? null;
     }
 
     if (emailMatchedProfile) {
-      const { data: copied, error: copyError } = await supabaseAdmin
-        .from("profiles")
-        .upsert(copyProfileForCurrentUser(emailMatchedProfile, context.userId, email, fullName), { onConflict: "id" })
-        .select(PROFILE_COLUMNS)
-        .single();
+      const { data: copied, error: copyError } = await upsertProfileSafely(
+        supabaseAdmin,
+        copyProfileForCurrentUser(emailMatchedProfile, context.userId, email, fullName),
+      );
       if (copyError) throw new Error(copyError.message);
       return { profile: copied as Profile, created: true };
     }
@@ -91,9 +147,7 @@ export const ensureSignedInProfile = createServerFn({ method: "POST" })
     if (countError) throw new Error(countError.message);
 
     const role: AppRole = (count ?? 0) === 0 ? "admin" : "student";
-    const { data: created, error: createError } = await supabaseAdmin
-      .from("profiles")
-      .insert({
+    const { data: created, error: createError } = await upsertProfileSafely(supabaseAdmin, {
         id: context.userId,
         email,
         full_name: fullName,
@@ -102,9 +156,7 @@ export const ensureSignedInProfile = createServerFn({ method: "POST" })
         hours_needed: role === "student" ? 20 : 0,
         hours_earned: 0,
         assigned_classes: [],
-      })
-      .select(PROFILE_COLUMNS)
-      .single();
+      });
     if (createError) throw new Error(createError.message);
 
     return { profile: created as Profile, created: true };
