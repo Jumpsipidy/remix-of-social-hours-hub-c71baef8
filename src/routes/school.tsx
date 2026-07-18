@@ -360,6 +360,98 @@ function SchoolDashboard() {
               </table>
             </div>
           )}
+          {tab === "queue" && (
+            <div className="mt-6 space-y-4">
+              <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-background/60 p-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                  <Filter className="h-3.5 w-3.5" /> Klasė:
+                </div>
+                <button onClick={() => setClassFilter("all")} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${classFilter === "all" ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>Visos</button>
+                {availableClasses.map((c) => (
+                  <button key={c} onClick={() => setClassFilter(c)} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${classFilter === c ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>{c}</button>
+                ))}
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <input type="checkbox" checked={onlyFlagged} onChange={(e) => setOnlyFlagged(e.target.checked)} /> Tik įtartinos
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <input type="checkbox" checked={onlyUnreviewed} onChange={(e) => setOnlyUnreviewed(e.target.checked)} /> Tik neperžiūrėtos
+                  </label>
+                </div>
+              </div>
+
+              {selected.size > 0 && (
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-3">
+                  <span className="text-xs font-semibold">Pažymėta: <b>{selected.size}</b></span>
+                  <button onClick={bulkMarkReviewed} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"><CheckCircle2 className="h-3.5 w-3.5" /> Pažymėti peržiūrėtomis</button>
+                  <button onClick={bulkUnreview} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent">Nuimti peržiūrą</button>
+                  <button onClick={exportSelected} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent"><Download className="h-3.5 w-3.5" /> Eksportuoti CSV</button>
+                  <button onClick={clearSel} className="ml-auto text-xs text-muted-foreground hover:text-foreground">Atšaukti</button>
+                </div>
+              )}
+
+              <div className="overflow-x-auto rounded-2xl border border-border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-background/50 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                      <th className="w-10 py-3 pl-3">
+                        <input type="checkbox" checked={selected.size > 0 && selected.size === queueRows.length} onChange={(e) => e.target.checked ? selectAll() : clearSel()} />
+                      </th>
+                      <th className="py-3 pr-3">Mokinys</th>
+                      <th className="hidden py-3 pr-3 md:table-cell">Klasė</th>
+                      <th className="py-3 pr-3">Data · laikas</th>
+                      <th className="py-3 pr-3">Val.</th>
+                      <th className="hidden py-3 pr-3 md:table-cell">Organizacija</th>
+                      <th className="py-3 pr-3">Statusas</th>
+                      <th className="py-3 pr-3">Įtarimai</th>
+                      <th className="py-3 pr-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {queueRows.length === 0 && (
+                      <tr><td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">Nieko nerasta pagal filtrus.</td></tr>
+                    )}
+                    {queueRows.map((r) => {
+                      const s = studentById[r.student_id];
+                      const fl = flagsByRes[r.id] ?? [];
+                      const sev = highestSeverity(fl);
+                      const sevTone = sev === "high" ? "bg-destructive/15 text-destructive border-destructive/30"
+                        : sev === "medium" ? "bg-warning/15 text-warning-foreground border-warning/30"
+                        : sev === "low" ? "bg-primary/10 text-primary border-primary/20" : "";
+                      const isReviewed = reviewed.has(r.id);
+                      return (
+                        <tr key={r.id} className={`border-b border-border/50 transition hover:bg-accent/30 ${isReviewed ? "opacity-60" : ""}`}>
+                          <td className="py-2 pl-3"><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSel(r.id)} /></td>
+                          <td className="py-2 pr-3 font-semibold">{s?.full_name ?? "—"}</td>
+                          <td className="hidden py-2 pr-3 md:table-cell text-muted-foreground">{s?.class_year ?? "—"}</td>
+                          <td className="py-2 pr-3 text-muted-foreground">{r.reservation_date} · {r.start_time?.slice(0,5)}–{r.end_time?.slice(0,5)}</td>
+                          <td className="py-2 pr-3 font-bold">{Number(r.hours_to_earn)}</td>
+                          <td className="hidden py-2 pr-3 md:table-cell text-muted-foreground truncate max-w-[180px]">{orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "—"}</td>
+                          <td className="py-2 pr-3"><span className="rounded-full bg-accent px-2 py-0.5 text-xs">{STATUS_LT[r.status] ?? r.status}</span></td>
+                          <td className="py-2 pr-3">
+                            {fl.length === 0 ? <span className="text-xs text-muted-foreground">—</span> : (
+                              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${sevTone}`} title={fl.map((x) => x.label).join("\n")}>
+                                <AlertTriangle className="h-3 w-3" /> {fl.length}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => s && setAuditing(s)} className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-accent" title="Auditas"><FileSearch className="h-3 w-3" /></button>
+                              <button onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgMap[r.organization_id]?.organization_name ?? orgMap[r.organization_id]?.full_name ?? "Organizacija" })} className="rounded-full border border-border bg-background px-2 py-1 text-[11px] hover:bg-accent" title="Pokalbis"><MessageSquare className="h-3 w-3" /></button>
+                              <button onClick={() => { const n = new Set(reviewed); n.has(r.id) ? n.delete(r.id) : n.add(r.id); persistReviewed(n); }} className={`rounded-full border px-2 py-1 text-[11px] ${isReviewed ? "border-success/40 bg-success/10 text-success" : "border-border bg-background hover:bg-accent"}`}>
+                                <CheckCircle2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
           {tab === "orgs" && (
             <div className="mt-6 grid gap-3 md:grid-cols-2">
               {filteredOrgs.map((o) => (
