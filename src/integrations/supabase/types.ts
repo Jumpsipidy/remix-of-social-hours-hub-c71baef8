@@ -392,6 +392,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_reservation_hours: {
+        Args: { _reservation_id: string }
+        Returns: {
+          hours_awarded: number
+          new_total: number
+          student_id: string
+        }[]
+      }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       has_role: {
         Args: {
