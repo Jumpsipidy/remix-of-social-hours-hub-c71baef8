@@ -100,17 +100,17 @@ function AdminLayout() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-3 py-6 lg:hidden">
-          <div>
+      <div className="mx-auto max-w-7xl px-3 sm:px-6">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 lg:hidden">
+          <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
               Super Admin
             </p>
-            <h1 className="mt-1 font-display text-2xl font-bold tracking-tight">Valdymo skydas</h1>
+            <h1 className="mt-1 truncate font-display text-xl font-bold tracking-tight">Valdymo skydas</h1>
           </div>
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur"
             aria-label="Meniu"
           >
             {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -123,17 +123,17 @@ function AdminLayout() {
           </div>
         )}
 
-        <div className="grid gap-6 pb-16 lg:grid-cols-[240px_1fr] lg:py-10">
+        <div className="grid gap-6 pb-16 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-10">
           <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur lg:block">
             <div className="mb-4 flex items-center gap-2 px-1">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
                 <Shield className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
                   Super Admin
                 </p>
-                <p className="text-xs text-muted-foreground">{profile.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{profile.email}</p>
               </div>
             </div>
             <NavList />
