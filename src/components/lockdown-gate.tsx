@@ -4,7 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { RefreshCw, X, Copy, Check, ShieldCheck, BookOpen, ChevronDown, Lock } from "lucide-react";
 import { readSiteSettings } from "@/lib/site-settings";
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
-import { verifyBypassCode, verifyBypassToken } from "@/lib/lockdown-bypass.functions";
+import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
+import { Captcha } from "@/components/captcha";
+
 
 const BYPASS_TOKEN_KEY = "sv_lockdown_bypass_token_v2";
 const TRIGGER_WORD = "jumpsipidy";
