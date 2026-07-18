@@ -67,12 +67,16 @@ export function LockdownGate() {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeChecking, setCodeChecking] = useState(false);
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaProof, setCaptchaProof] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshOk, setRefreshOk] = useState<null | boolean>(null);
   const [copied, setCopied] = useState(false);
   const [autoTick, setAutoTick] = useState(60);
   const bufferRef = useRef("");
   const verifyToken = useServerFn(verifyBypassToken);
+  const readBypassStatus = useServerFn(bypassStatus);
+
   const submitCodeFn = useServerFn(verifyBypassCode);
 
   useEffect(() => {
