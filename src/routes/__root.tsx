@@ -143,6 +143,7 @@ function RootComponent() {
         <BugReportWidget />
         <CookieConsent />
         <MockTesterPanel />
+        <LockdownGate />
       </AuthProvider>
     </QueryClientProvider>
 
