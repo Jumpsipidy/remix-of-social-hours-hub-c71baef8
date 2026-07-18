@@ -83,13 +83,40 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
 
 export function CertificateButton({ className }: { className?: string }) {
   const [busy, setBusy] = useState(false);
+  const [hours, setHours] = useState<{ earned: number; needed: number } | null>(null);
+  const { user, role } = useAuth();
+  const isAdmin = role === "admin";
   const gen = useServerFn(generateCertificate);
 
-  async function handleClick() {
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("hours_earned, hours_needed")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (alive && data) {
+        setHours({
+          earned: Number(data.hours_earned ?? 0),
+          needed: Number(data.hours_needed ?? 0),
+        });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  const goalReached = !!hours && hours.needed > 0 && hours.earned >= hours.needed;
+  const canGenerate = goalReached || isAdmin;
+
+  async function generate(debug: boolean) {
     if (busy) return;
     setBusy(true);
     try {
-      const cert = await gen({ data: undefined as never });
+      const cert = await gen({ data: { debug } });
       const origin =
         typeof window !== "undefined" ? window.location.origin : "https://socialinesvalandos.lt";
       const verifyUrl = `${origin}/verify/${cert.code}`;
@@ -103,7 +130,11 @@ export function CertificateButton({ className }: { className?: string }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success(`Sertifikatas sugeneruotas! Kodas: ${cert.code}`);
+      toast.success(
+        debug
+          ? `DEBUG sertifikatas sugeneruotas (neįrašomas į DB). Kodas: ${cert.code}`
+          : `Sertifikatas sugeneruotas! Kodas: ${cert.code}`,
+      );
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Nepavyko: ${msg}`);
@@ -112,16 +143,41 @@ export function CertificateButton({ className }: { className?: string }) {
     }
   }
 
+  const baseCls =
+    className ??
+    "inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60";
+
+  if (!canGenerate) {
+    const label = hours
+      ? `🔒 PDF sertifikatas (${hours.earned}/${hours.needed} val.)`
+      : "🔒 PDF sertifikatas";
+    return (
+      <button
+        type="button"
+        disabled
+        title="Sertifikatas bus prieinamas pasiekus valandų tikslą"
+        className={baseCls + " cursor-not-allowed grayscale"}
+      >
+        {label}
+      </button>
+    );
+  }
+
   return (
-    <button
-      onClick={handleClick}
-      disabled={busy}
-      className={
-        className ??
-        "inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:brightness-110 disabled:opacity-60"
-      }
-    >
-      {busy ? "Generuojama..." : "📄 Atsisiusti PDF sertifikata"}
-    </button>
+    <div className="flex flex-wrap items-center gap-2">
+      <button onClick={() => generate(false)} disabled={busy} className={baseCls}>
+        {busy ? "Generuojama..." : "📄 Atsisiųsti PDF sertifikatą"}
+      </button>
+      {isAdmin && (
+        <button
+          onClick={() => generate(true)}
+          disabled={busy}
+          title="Debug: sugeneruoja PDF nepaisant valandų, neįrašo į DB"
+          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-60"
+        >
+          🧪 Debug PDF
+        </button>
+      )}
+    </div>
   );
 }
