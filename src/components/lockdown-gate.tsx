@@ -14,30 +14,24 @@ const ALLOWED_PATHS = ["/status"];
 
 const SEVERITY_STYLES = {
   info: {
-    grad: "from-sky-400 via-cyan-300 to-blue-500",
-    glow: "shadow-[0_0_120px_-20px_rgba(56,189,248,0.7)]",
-    ring: "border-sky-400/40",
-    text: "text-sky-200",
-    orb: "from-sky-500/30 to-blue-600/20",
-    accent: "bg-sky-400",
+    accent: "#7ea8d1",
+    ring: "border-slate-300/25",
+    text: "text-slate-200",
+    dot: "bg-slate-300",
     label: "Techninė priežiūra",
   },
   warn: {
-    grad: "from-amber-300 via-orange-400 to-rose-500",
-    glow: "shadow-[0_0_120px_-20px_rgba(251,146,60,0.7)]",
-    ring: "border-amber-400/40",
-    text: "text-amber-200",
-    orb: "from-amber-500/30 to-rose-500/20",
-    accent: "bg-amber-400",
+    accent: "#d4a574",
+    ring: "border-amber-300/30",
+    text: "text-amber-100/90",
+    dot: "bg-amber-300",
     label: "Sistemos gedimas",
   },
   critical: {
-    grad: "from-rose-400 via-fuchsia-500 to-red-600",
-    glow: "shadow-[0_0_140px_-20px_rgba(244,63,94,0.8)]",
-    ring: "border-rose-400/50",
-    text: "text-rose-200",
-    orb: "from-rose-600/30 to-fuchsia-600/20",
-    accent: "bg-rose-500",
+    accent: "#d47a7a",
+    ring: "border-rose-300/30",
+    text: "text-rose-100/90",
+    dot: "bg-rose-400",
     label: "Kritinis įvykis",
   },
 } as const;
@@ -133,16 +127,11 @@ export function LockdownGate() {
     setRefreshOk(null);
     try {
       const { data, error } = await readSiteSettings();
-      await new Promise((r) => setTimeout(r, 1400));
-      if (!error && !data?.lockdown_enabled) {
-        setBypassed(true);
-        setRefreshOk(true);
-      } else {
-        setRefreshOk(false);
-      }
-    } catch {
-      setRefreshOk(false);
-    } finally {
+      await new Promise((r) => setTimeout(r, 1200));
+      if (!error && !data?.lockdown_enabled) { setBypassed(true); setRefreshOk(true); }
+      else setRefreshOk(false);
+    } catch { setRefreshOk(false); }
+    finally {
       setRefreshing(false);
       setTimeout(() => setRefreshOk(null), 2500);
     }
@@ -153,81 +142,67 @@ export function LockdownGate() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[#04030d]">
-      {/* Aurora orbs */}
+    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[oklch(0.11_0.015_250)]">
+      {/* Editorial base wash */}
       <div className="pointer-events-none absolute inset-0">
-        <motion.div
-          className={`absolute -left-40 -top-40 h-[620px] w-[620px] rounded-full blur-3xl bg-gradient-to-br ${styles.orb}`}
-          animate={{ x: [0, 80, 0], y: [0, 50, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        <div
+          className="absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full opacity-40 blur-3xl"
+          style={{ background: `radial-gradient(circle, ${styles.accent}22, transparent 65%)` }}
         />
-        <motion.div
-          className="absolute -right-40 bottom-0 h-[620px] w-[620px] rounded-full bg-gradient-to-tr from-violet-600/25 to-cyan-500/15 blur-3xl"
-          animate={{ x: [0, -60, 0], y: [0, -40, 0] }}
-          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+        <div
+          className="absolute -right-40 bottom-0 h-[560px] w-[560px] rounded-full opacity-30 blur-3xl"
+          style={{ background: "radial-gradient(circle, oklch(0.55 0.06 240 / 0.5), transparent 65%)" }}
         />
       </div>
 
-      {/* Grid */}
+      {/* Faint grid */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.6) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
+            "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
           maskImage: "radial-gradient(ellipse at center, #000 40%, transparent 80%)",
           WebkitMaskImage: "radial-gradient(ellipse at center, #000 40%, transparent 80%)",
         }}
       />
 
-      {/* Scanline */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-        animate={{ top: ["0%", "100%"] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-      />
-
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5 py-10">
         {/* Top badge */}
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`mb-8 inline-flex items-center gap-2 rounded-full border ${styles.ring} bg-black/40 px-4 py-1.5 backdrop-blur-xl`}
+          className={`mb-10 inline-flex items-center gap-2 rounded-full border ${styles.ring} bg-white/[0.03] px-4 py-1.5 backdrop-blur-xl`}
         >
-          <span className={`relative flex h-2 w-2`}>
-            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${styles.accent} opacity-75`} />
-            <span className={`relative inline-flex h-2 w-2 rounded-full ${styles.accent}`} />
+          <span className="relative flex h-2 w-2">
+            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${styles.dot} opacity-60`} />
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${styles.dot}`} />
           </span>
           <span className={`text-[10px] font-semibold uppercase tracking-[0.32em] ${styles.text}`}>
             {styles.label}
           </span>
         </motion.div>
 
-        {/* HERO: giant error code */}
+        {/* Giant editorial code */}
         <motion.button
           onClick={copyCode}
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="group relative select-none"
           title="Kopijuoti kodą"
         >
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={`h-[80%] w-[110%] rounded-full bg-gradient-to-r ${styles.grad} opacity-20 blur-3xl`} />
-          </div>
           <div className="relative flex items-center justify-center gap-1 sm:gap-2">
             {codeChars.map((ch, i) => (
               <motion.span
                 key={i}
-                initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.15 + i * 0.06, duration: 0.5, ease: "easeOut" }}
-                className={`font-display font-black leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-b ${styles.grad} ${styles.glow} ${
-                  ch === "-" ? "text-6xl sm:text-8xl md:text-9xl opacity-40" : "text-7xl sm:text-9xl md:text-[10rem]"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.05, duration: 0.5, ease: "easeOut" }}
+                className={`font-display font-semibold leading-none tracking-tight text-white/95 ${
+                  ch === "-" ? "text-6xl sm:text-8xl md:text-9xl text-white/25" : "text-7xl sm:text-9xl md:text-[10rem]"
                 }`}
-                style={{ WebkitTextStroke: "1px rgba(255,255,255,0.04)" }}
               >
                 {ch}
               </motion.span>
@@ -236,8 +211,8 @@ export function LockdownGate() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.32em] text-white/40 group-hover:text-white/70"
+            transition={{ delay: 0.7 }}
+            className="mt-3 flex items-center justify-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.32em] text-white/35 group-hover:text-white/60"
           >
             {copied ? <><Check className="h-3 w-3" /> Nukopijuota</> : <><Copy className="h-3 w-3" /> Kopijuoti kodą</>}
           </motion.div>
@@ -245,46 +220,43 @@ export function LockdownGate() {
 
         {/* Title */}
         <motion.h1
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="mt-10 text-center font-display text-2xl font-bold tracking-tight text-white sm:text-3xl"
+          transition={{ delay: 0.45, duration: 0.5 }}
+          className="mt-10 max-w-2xl text-balance text-center font-display text-2xl font-medium tracking-tight text-white sm:text-3xl"
         >
           {errInfo?.title ?? "Sistema laikinai neveikia"}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.65, duration: 0.5 }}
-          className="mt-3 max-w-xl text-center text-sm leading-relaxed text-white/60 sm:text-base"
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="mt-4 max-w-xl text-center text-[15px] leading-relaxed text-white/55"
         >
           {message?.trim() || errInfo?.description || "Šiuo metu tvarkome sistemą. Grįžk po kelių minučių."}
         </motion.p>
 
-        {/* Meta row */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.75, duration: 0.5 }}
-          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.24em] text-white/40"
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[11px] uppercase tracking-[0.24em] text-white/35"
         >
-          {errInfo?.eta && (
-            <span>Trukmė · <strong className="text-white/70">{errInfo.eta}</strong></span>
-          )}
-          <span className="inline-flex items-center gap-1.5"><ShieldCheck className={`h-3.5 w-3.5 ${styles.text}`} /> Duomenys saugūs</span>
+          {errInfo?.eta && (<span>Trukmė · <strong className="text-white/70">{errInfo.eta}</strong></span>)}
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Duomenys saugūs</span>
         </motion.div>
 
         {/* Actions */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.5 }}
+          transition={{ delay: 0.85, duration: 0.5 }}
           className="mt-10 flex flex-wrap items-center justify-center gap-3"
         >
           <button
             onClick={runCheck}
             disabled={refreshing}
-            className={`group inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${styles.grad} px-6 py-3 text-sm font-bold text-black transition hover:brightness-110 disabled:opacity-70`}
+            className="group inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[oklch(0.11_0.015_250)] transition hover:bg-white/90 disabled:opacity-70"
           >
             <motion.span
               animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
@@ -298,7 +270,7 @@ export function LockdownGate() {
 
           <a
             href="/status"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white/80 backdrop-blur transition hover:bg-white/[0.09] hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.03] px-6 py-3 text-sm font-medium text-white/75 backdrop-blur transition hover:bg-white/[0.07] hover:text-white"
           >
             Klaidų kodų gidas <ExternalLink className="h-3.5 w-3.5" />
           </a>
@@ -306,25 +278,23 @@ export function LockdownGate() {
 
         <AnimatePresence>
           {refreshOk === false && (
-            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 text-xs font-medium text-amber-300/90">
+            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 text-xs font-medium text-amber-200/85">
               Dar tvarkoma. Netrukus.
             </motion.span>
           )}
           {refreshOk === true && (
-            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-emerald-300">
+            <motion.span initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-emerald-200">
               <ShieldCheck className="h-3.5 w-3.5" /> Viskas veikia!
             </motion.span>
           )}
         </AnimatePresence>
 
-        {/* Footer */}
         <div className="absolute bottom-6 left-0 right-0 mx-auto flex max-w-2xl items-center justify-between px-6 text-[10px] uppercase tracking-widest text-white/25">
           <span className="inline-flex items-center gap-2"><Lock className="h-3 w-3" /> Socialinės Valandos</span>
-          <span className="font-mono">status.page</span>
+          <span className="font-mono">status</span>
         </div>
       </div>
 
-      {/* Bypass modal */}
       <AnimatePresence>
         {showCodeModal && (
           <motion.div
@@ -335,17 +305,17 @@ export function LockdownGate() {
             onClick={() => setShowCodeModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.94, y: 12 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.94, y: 12 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-2xl border border-white/15 bg-[#0b0820] p-6 shadow-2xl"
+              className="relative w-full max-w-sm rounded-2xl border border-white/12 bg-[oklch(0.14_0.015_250)] p-6 shadow-2xl"
             >
               <button onClick={() => setShowCodeModal(false)} className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-white/50 hover:bg-white/10 hover:text-white">
                 <X className="h-4 w-4" />
               </button>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-300">Slaptas įėjimas</p>
-              <h2 className="mt-1 font-display text-xl font-bold text-white">Įvesk kodą</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/50">Slaptas įėjimas</p>
+              <h2 className="mt-1 font-display text-xl font-medium text-white">Įvesk kodą</h2>
               <input
                 autoFocus
                 type="password"
@@ -354,13 +324,13 @@ export function LockdownGate() {
                 onChange={(e) => setCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitCode()}
                 className={`mt-4 w-full rounded-xl border bg-black/40 px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] text-white outline-none transition ${
-                  codeError ? "border-rose-500 animate-shake" : "border-white/15 focus:border-violet-400"
+                  codeError ? "border-rose-500 animate-shake" : "border-white/12 focus:border-white/50"
                 }`}
                 placeholder="••••"
               />
               <button
                 onClick={submitCode}
-                className="mt-4 w-full rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:opacity-90"
+                className="mt-4 w-full rounded-xl bg-white py-3 text-sm font-semibold text-[oklch(0.11_0.015_250)] hover:bg-white/90"
               >
                 Patvirtinti
               </button>
