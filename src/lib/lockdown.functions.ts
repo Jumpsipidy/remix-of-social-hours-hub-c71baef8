@@ -1,11 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SETTINGS_COLUMNS = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
-
 export const adminGetLockdownSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const settingsColumns = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
     const setupMessage =
       "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
     const isSchemaError = (error: unknown) => {
@@ -29,7 +28,7 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("site_settings")
-      .select(SETTINGS_COLUMNS)
+      .select(settingsColumns)
       .eq("id", true)
       .maybeSingle();
 
@@ -42,7 +41,7 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from("site_settings")
       .upsert({ id: true, lockdown_enabled: false }, { onConflict: "id" })
-      .select(SETTINGS_COLUMNS)
+      .select(settingsColumns)
       .single();
 
     if (insertError) {
@@ -56,6 +55,7 @@ export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { lockdown_enabled?: boolean; lockdown_message?: string | null }) => input)
   .handler(async ({ data, context }) => {
+    const settingsColumns = "id, lockdown_enabled, lockdown_message, updated_at, updated_by";
     const setupMessage =
       "Lockdown lentelė dar nesukurta tavo duomenų bazėje. Nukopijuok SQL iš docs/LOCKDOWN_SQL_SETUP.md ir paleisk savo duomenų bazėje.";
     const isSchemaError = (error: unknown) => {
@@ -92,7 +92,7 @@ export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
     const { data: updated, error } = await supabaseAdmin
       .from("site_settings")
       .upsert(patch, { onConflict: "id" })
-      .select(SETTINGS_COLUMNS)
+      .select(settingsColumns)
       .single();
 
     if (error) {
