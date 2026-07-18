@@ -192,6 +192,13 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 {t.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {t.location}</span>}
                 <span>· {Number(t.available_hours)} val.</span>
               </div>
+              {t.tags && t.tags.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {t.tags.map((tg) => (
+                    <span key={tg} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{tg}</span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-1">
               <button
