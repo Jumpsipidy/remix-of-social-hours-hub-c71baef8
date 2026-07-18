@@ -6,6 +6,7 @@ import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight, Loader2, Eye, Eye
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { checkOAuthProvider } from "@/lib/oauth-preflight.functions";
 import { toast } from "sonner";
 
 const DASH_BY_ROLE: Record<string, string> = {
@@ -34,6 +35,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { profile, isAuthenticated, loading, clearImpersonation } = useAuth();
   const ensureProfile = useServerFn(ensureSignedInProfile);
+  const checkOAuth = useServerFn(checkOAuthProvider);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -89,10 +91,17 @@ function LoginPage() {
     setOauthBusy(provider);
     clearImpersonation();
     try { localStorage.removeItem("sv_last_role_v1"); } catch {}
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const preflight = await checkOAuth({ data: { provider, redirectTo } });
+    if (!preflight.ok) {
+      setOauthBusy(null);
+      toast.error(preflight.message ?? `Nepavyko patikrinti ${provider} prisijungimo`);
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
         queryParams: provider === "google" ? { prompt: "select_account" } : undefined,
       },
     });

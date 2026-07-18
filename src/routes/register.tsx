@@ -5,6 +5,7 @@ import { Heart, Mail, Lock, User, GraduationCap, School, Building2, Clock, Send 
 import { supabase } from "@/integrations/supabase/client";
 import { Auth3DBackground } from "@/components/auth-3d-background";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+import { checkOAuthProvider } from "@/lib/oauth-preflight.functions";
 
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / I
 function RegisterPage() {
   const navigate = useNavigate();
   const verifyCode = useServerFn(verifySchoolSignupCode);
+  const checkOAuth = useServerFn(checkOAuthProvider);
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
 
@@ -141,17 +143,23 @@ function RegisterPage() {
   }
 
   async function handleGoogle() {
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const preflight = await checkOAuth({ data: { provider: "google", redirectTo } });
+    if (!preflight.ok) return toast.error(preflight.message ?? "Google prisijungimas dar neparuoštas");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback`, queryParams: { prompt: "select_account" } },
+      options: { redirectTo, queryParams: { prompt: "select_account" } },
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
 
   async function handleDiscord() {
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const preflight = await checkOAuth({ data: { provider: "discord", redirectTo } });
+    if (!preflight.ok) return toast.error(preflight.message ?? "Discord prisijungimas dar neparuoštas");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "discord",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo },
     });
     if (error) toast.error("Nepavyko prisijungti per Discord");
   }
