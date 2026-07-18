@@ -27,7 +27,6 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
     const roleCheck = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (roleCheck.error || roleCheck.data !== true) throw new Error("Reikia sistemos administratoriaus teisių");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const supabaseAdmin = await requireAdminClient(context);
     const { data, error } = await supabaseAdmin
       .from("site_settings")
       .select(SETTINGS_COLUMNS)
