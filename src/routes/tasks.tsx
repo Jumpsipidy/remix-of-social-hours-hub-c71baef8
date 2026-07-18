@@ -235,7 +235,7 @@ function TasksPage() {
                 </div>
               </>
             )}
-            {(q || town || cat) && (
+            {(q || town || cat || selectedTags.length > 0) && (
               <button onClick={clearFilters} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-accent">
                 <X className="h-3 w-3" /> Išvalyti
               </button>
