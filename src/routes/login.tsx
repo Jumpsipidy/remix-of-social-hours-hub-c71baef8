@@ -78,6 +78,10 @@ function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    if (captchaRequired && !captchaProof) {
+      toast.error("Prašome įrodyti, kad esate žmogus.");
+      return;
+    }
     setBusy(true);
     try {
       clearImpersonation();
@@ -88,12 +92,20 @@ function LoginPage() {
       const role = ensured.profile?.role ?? "student";
       const target = DASH_BY_ROLE[role] ?? "/";
       if (role) { try { localStorage.setItem("sv_last_role_v1", role); } catch {} }
+      try { localStorage.removeItem(FAIL_KEY); } catch {}
+      setFails(0);
+      setCaptchaProof(null);
       toast.success("Sveikas atvykęs!");
       navigate({ to: target });
     } catch (err) {
+      const next = fails + 1;
+      setFails(next);
+      setCaptchaProof(null);
+      try { localStorage.setItem(FAIL_KEY, String(next)); } catch {}
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
     } finally {
       setBusy(false);
+
     }
   }
 
