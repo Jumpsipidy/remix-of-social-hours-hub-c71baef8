@@ -7,6 +7,14 @@ import { generateCertificate } from "@/lib/certificates.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
+// WinAnsi (StandardFonts) can't encode Lithuanian diacritics — strip them.
+function ascii(s: string | null | undefined): string {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?");
+}
+
 async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, verifyUrl: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([595.28, 841.89]); // A4
@@ -37,18 +45,18 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   // Small eyebrow
   const eyebrow = "SOCIALINES VALANDOS  ·  socialinesvalandos.lt";
   const ew = font.widthOfTextAtSize(eyebrow, 8);
-  page.drawText(eyebrow, { x: (width - ew) / 2, y: height - M - 6, size: 8, font, color: muted });
+  page.drawText(ascii(eyebrow), x: (width - ew) / 2, y: height - M - 6, size: 8, font, color: muted });
 
   // Title (editorial serif, centered)
   const title = "Sertifikatas";
   const tSize = 42;
   const tw = serif.widthOfTextAtSize(title, tSize);
-  page.drawText(title, { x: (width - tw) / 2, y: height - M - 56, size: tSize, font: serif, color: ink });
+  page.drawText(ascii(title), x: (width - tw) / 2, y: height - M - 56, size: tSize, font: serif, color: ink });
 
   const sub = "apie atliktas socialines valandas";
   const sSize = 12;
   const sw = serifItalic.widthOfTextAtSize(sub, sSize);
-  page.drawText(sub, { x: (width - sw) / 2, y: height - M - 78, size: sSize, font: serifItalic, color: muted });
+  page.drawText(ascii(sub), x: (width - sw) / 2, y: height - M - 78, size: sSize, font: serifItalic, color: muted });
 
   // Single hairline accent under title
   page.drawLine({
@@ -60,19 +68,19 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   // Preamble
   const preamble = "Sis dokumentas patvirtina, kad";
   const pw = font.widthOfTextAtSize(preamble, 10);
-  page.drawText(preamble, { x: (width - pw) / 2, y: height - M - 128, size: 10, font, color: muted });
+  page.drawText(ascii(preamble), x: (width - pw) / 2, y: height - M - 128, size: 10, font, color: muted });
 
   // Student name (large centered)
   const name = cert.student_name || "-";
   const nSize = 26;
   const nw = serifBold.widthOfTextAtSize(name, nSize);
-  page.drawText(name, { x: (width - nw) / 2, y: height - M - 160, size: nSize, font: serifBold, color: ink });
+  page.drawText(ascii(name), x: (width - nw) / 2, y: height - M - 160, size: nSize, font: serifBold, color: ink });
 
   // Class + school line
   const meta = [cert.student_class, cert.school_name].filter(Boolean).join("  ·  ") || "";
   if (meta) {
     const mw = font.widthOfTextAtSize(meta, 10);
-    page.drawText(meta, { x: (width - mw) / 2, y: height - M - 180, size: 10, font, color: muted });
+    page.drawText(ascii(meta), x: (width - mw) / 2, y: height - M - 180, size: 10, font, color: muted });
   }
 
   // Body statement
@@ -80,12 +88,12 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const stmt2 = `is reikalaujamu ${cert.hours_needed} val.`;
   const s1w = font.widthOfTextAtSize(stmt1, 12);
   const s2w = font.widthOfTextAtSize(stmt2, 11);
-  page.drawText(stmt1, { x: (width - s1w) / 2, y: height - M - 214, size: 12, font, color: ink });
-  page.drawText(stmt2, { x: (width - s2w) / 2, y: height - M - 232, size: 11, font, color: muted });
+  page.drawText(ascii(stmt1), x: (width - s1w) / 2, y: height - M - 214, size: 12, font, color: ink });
+  page.drawText(ascii(stmt2), x: (width - s2w) / 2, y: height - M - 232, size: 11, font, color: muted });
 
   // Reservations table (thin hairline, no fills)
   const tableTop = height - M - 274;
-  page.drawText("REZERVACIJU ISKLOTINE", { x: M, y: tableTop, size: 8, font: bold, color: ink });
+  page.drawText(ascii("REZERVACIJU ISKLOTINE"), x: M, y: tableTop, size: 8, font: bold, color: ink });
   page.drawLine({ start: { x: M, y: tableTop - 6 }, end: { x: width - M, y: tableTop - 6 }, thickness: 0.6, color: ink });
 
   // Column headers
@@ -93,9 +101,9 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const colHours = M + 90;
   const colOrg = M + 150;
   let y = tableTop - 22;
-  page.drawText("Data", { x: colDate, y, size: 8, font: bold, color: muted });
-  page.drawText("Val.", { x: colHours, y, size: 8, font: bold, color: muted });
-  page.drawText("Organizacija", { x: colOrg, y, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Data"), x: colDate, y, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Val."), x: colHours, y, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Organizacija"), x: colOrg, y, size: 8, font: bold, color: muted });
   y -= 6;
   page.drawLine({ start: { x: M, y }, end: { x: width - M, y }, thickness: 0.3, color: hair });
   y -= 12;
@@ -103,13 +111,13 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const rows = cert.reservations.slice(0, 18);
   for (const r of rows) {
     if (y < 260) break;
-    page.drawText(String(r.date ?? ""), { x: colDate, y, size: 9, font, color: ink });
-    page.drawText(String(r.hours ?? ""), { x: colHours, y, size: 9, font, color: ink });
-    page.drawText((r.organization || "").slice(0, 62), { x: colOrg, y, size: 9, font, color: ink });
+    page.drawText(ascii(String(r.date ?? "")), x: colDate, y, size: 9, font, color: ink });
+    page.drawText(ascii(String(r.hours ?? "")), x: colHours, y, size: 9, font, color: ink });
+    page.drawText(ascii((r.organization || "").slice(0, 62)), x: colOrg, y, size: 9, font, color: ink });
     y -= 14;
   }
   if (cert.reservations.length > rows.length) {
-    page.drawText(`... ir dar ${cert.reservations.length - rows.length}`, {
+    page.drawText(ascii(`... ir dar ${cert.reservations.length - rows.length}`),
       x: colDate, y, size: 8, font: serifItalic, color: muted,
     });
     y -= 14;
@@ -125,30 +133,30 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const qrX = width - M - qrSize;
   const qrY = M + 8;
   page.drawImage(qrImg, { x: qrX, y: qrY, width: qrSize, height: qrSize });
-  page.drawText("Nuskaityk QR", { x: qrX, y: qrY - 12, size: 8, font, color: muted });
+  page.drawText(ascii("Nuskaityk QR"), x: qrX, y: qrY - 12, size: 8, font, color: muted });
 
   // Signature block (left)
   const sigTop = M + qrSize + 4;
   page.drawLine({ start: { x: M, y: sigTop }, end: { x: qrX - 16, y: sigTop }, thickness: 0.4, color: hair });
-  page.drawText("ELEKTRONINIS PARASAS  ·  eIDAS Nr. 910/2014", {
+  page.drawText(ascii("ELEKTRONINIS PARASAS  ·  eIDAS Nr. 910/2014"),
     x: M, y: sigTop - 12, size: 8, font: bold, color: ink,
   });
-  page.drawText("Sis dokumentas pasirasytas elektroniskai ir verifikuojamas realiu laiku.", {
+  page.drawText(ascii("Sis dokumentas pasirasytas elektroniskai ir verifikuojamas realiu laiku."),
     x: M, y: sigTop - 26, size: 8, font, color: muted,
   });
-  page.drawText(`Verifikacijos kodas:  ${cert.code}`, {
+  page.drawText(ascii(`Verifikacijos kodas:  ${cert.code}`),
     x: M, y: sigTop - 42, size: 10, font: bold, color: ink,
   });
-  page.drawText(`SHA-256  ${cert.content_hash.slice(0, 40)}...`, {
+  page.drawText(ascii(`SHA-256  ${cert.content_hash.slice(0, 40)}...`),
     x: M, y: sigTop - 56, size: 7, font, color: muted,
   });
-  page.drawText(`HMAC     ${cert.signature.slice(0, 40)}...`, {
+  page.drawText(ascii(`HMAC     ${cert.signature.slice(0, 40)}...`),
     x: M, y: sigTop - 68, size: 7, font, color: muted,
   });
-  page.drawText(verifyUrl, {
+  page.drawText(ascii(verifyUrl),
     x: M, y: sigTop - 84, size: 8, font: bold, color: ink,
   });
-  page.drawText(`Isduota: ${new Date(cert.generated_at).toLocaleString("lt-LT")}`, {
+  page.drawText(ascii(`Isduota: ${new Date(cert.generated_at).toLocaleString("lt-LT")}`),
     x: M, y: sigTop - 96, size: 7, font, color: muted,
   });
 
