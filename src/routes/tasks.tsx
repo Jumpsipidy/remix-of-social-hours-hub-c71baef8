@@ -249,8 +249,40 @@ function TasksPage() {
               <Sparkles className="h-4 w-4" /> Pasiūlyk savo rezervaciją
             </button>
           </div>
+
+          {tab === "tasks" && (
+            <div className="mt-5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <TagIcon className="h-3.5 w-3.5" /> Žymos
+                {selectedTags.length > 0 && (
+                  <button onClick={() => setSelectedTags([])} className="ml-1 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] normal-case tracking-normal text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" /> Nuimti visas
+                  </button>
+                )}
+              </div>
+              <div className="mt-2 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {availableTags.map((t) => {
+                  const on = selectedTags.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => toggleTag(t)}
+                      className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                        on
+                          ? "border-transparent bg-gradient-primary text-primary-foreground shadow-glow"
+                          : "border-border bg-card/70 text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      }`}
+                    >
+                      #{t}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
         </section>
+
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {tab === "tasks" ? (
