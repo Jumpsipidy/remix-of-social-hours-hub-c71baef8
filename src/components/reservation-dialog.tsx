@@ -119,6 +119,13 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
                     {target.rating != null && <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" fill="currentColor" /> {target.rating}</span>}
                     {target.category && <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-medium">{target.category}</span>}
                   </div>
+                  {target.tags && target.tags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {target.tags.map((t) => (
+                        <span key={t} className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">#{t}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
