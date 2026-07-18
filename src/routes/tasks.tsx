@@ -15,8 +15,12 @@ export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
       { title: "Užduotys ir organizacijos — Socialinės Valandos" },
-      { name: "description", content: "Realios organizacijų užduotys ir profiliai." },
+      { name: "description", content: "Naršyk realias savanorystės užduotis ir organizacijų profilius: filtruok pagal kategoriją, datą bei valandas ir rezervuok savo socialines valandas per kelias sekundes." },
+      { property: "og:title", content: "Savanorystės užduotys ir organizacijos" },
+      { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
+      { property: "og:url", content: "https://socialinesvalandos.lovable.app/tasks" },
     ],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/tasks" }],
   }),
   component: TasksPage,
 });
@@ -256,7 +260,7 @@ function TasksPage() {
                             {Number(t.available_hours)} val.
                           </span>
                         </div>
-                        <h3 className="relative mt-4 font-display text-lg font-bold leading-tight">{t.title}</h3>
+                        <h2 className="relative mt-4 font-display text-lg font-bold leading-tight">{t.title}</h2>
                         <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                           {CATEGORY_LABELS[guessCategory(t)]}
                         </span>
@@ -308,7 +312,7 @@ function TasksPage() {
                             {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
                           </motion.div>
                           <div className="min-w-0">
-                            <h3 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h3>
+                            <h2 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h2>
                             <p className="truncate text-xs text-muted-foreground">{o.email}</p>
                           </div>
                         </div>

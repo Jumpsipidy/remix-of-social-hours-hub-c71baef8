@@ -12,8 +12,12 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Socialinės Valandos — moksleivių savanorystės platforma" },
-      { name: "description", content: "Rask organizacijas, rezervuok savanorystės valandas ir stebėk pažangą vienoje vietoje." },
+      { name: "description", content: "Rask patikimas organizacijas, rezervuok savanorystės valandas, bendrauk su mokyklos administratoriumi ir automatiškai stebėk surinktas socialines valandas vienoje vietoje." },
+      { property: "og:title", content: "Socialinės Valandos — moksleivių savanorystės platforma" },
+      { property: "og:description", content: "Moderni platforma Lietuvos moksleiviams: rezervuok savanorystės valandas, gauk automatinę apskaitą ir bendrauk su mokykla bei organizacijomis." },
+      { property: "og:url", content: "https://socialinesvalandos.lovable.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/" }],
   }),
   component: Home,
 });
