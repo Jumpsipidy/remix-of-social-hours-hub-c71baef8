@@ -7,6 +7,14 @@ import { generateCertificate } from "@/lib/certificates.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
+// WinAnsi (StandardFonts) can't encode Lithuanian diacritics — strip them.
+function ascii(s: string | null | undefined): string {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?");
+}
+
 async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, verifyUrl: string): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([595.28, 841.89]); // A4
