@@ -15,14 +15,11 @@ export const verifySchoolSignupCode = createServerFn({ method: "POST" })
     if (!normalizedCode) return { ok: false };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: school, error } = await supabaseAdmin
-      .from("schools")
-      .select("id")
-      .eq("id", data.schoolId)
-      .eq("is_active", true)
-      .eq("signup_code", normalizedCode)
-      .maybeSingle();
+    const { data: valid, error } = await supabaseAdmin.rpc("verify_school_signup_code", {
+      _school_id: data.schoolId,
+      _code: normalizedCode,
+    });
 
     if (error) throw new Error(error.message);
-    return { ok: !!school };
+    return { ok: !!valid };
   });

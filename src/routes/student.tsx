@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
+import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
 export const Route = createFileRoute("/student")({
@@ -414,6 +416,7 @@ function Pill({ icon: Icon, tone, children }: { icon: typeof Flame; tone: "warn"
 
 function StudentProfileSetup({ userId }: { userId: string }) {
   const { user, profile } = useAuth();
+  const verifyCode = useServerFn(verifySchoolSignupCode);
   const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [fullName, setFullName] = useState("");
   const [schoolId, setSchoolId] = useState("");
@@ -450,11 +453,8 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     if (!schoolCode.trim()) { setError("Įvesk mokyklos prisijungimo kodą (gauk iš klasės auklėtojo)."); return; }
     if (!agree) { setError("Patvirtink, kad pateikta informacija yra tikra."); return; }
     setBusy(true);
-    const { data: ok, error: rpcErr } = await supabase.rpc("verify_school_signup_code", {
-      _school_id: schoolId,
-      _code: schoolCode.trim(),
-    });
-    if (rpcErr || !ok) {
+    const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
+    if (!ok) {
       setBusy(false);
       setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
       return;
