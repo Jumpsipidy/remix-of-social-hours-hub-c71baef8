@@ -22,7 +22,9 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     organization_name?: string | null;
     org_category?: OrgCategory | null;
     school_id?: string | null;
+    assigned_classes?: string[] | null;
   }) => input)
+
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
