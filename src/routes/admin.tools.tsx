@@ -25,7 +25,9 @@ import {
   MessagesSquare,
   KeyRound,
   CheckCircle2,
+  FileText,
 } from "lucide-react";
+import { CertificateButton } from "@/components/certificate-button";
 
 const TABLE_META: Record<string, { label: string; icon: typeof Database; tone: string }> = {
   profiles: { label: "Profiliai", icon: Users, tone: "from-blue-500/30 to-blue-500/5" },
@@ -171,6 +173,30 @@ function ToolsPage() {
           );
         })}
       </div>
+
+
+      {/* PDF Certificate Testing */}
+      <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-500/20 text-blue-300">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-xl font-bold">PDF sertifikatų testavimas</h3>
+              <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                Kaip super admin gali generuoti <b>Debug PDF</b> — QR kodas, HMAC parašas, viskas veikia,
+                bet <b>neįrašoma</b> į <code>certificates</code> lentelę. Puikiai tinka testuoti be tikrų valandų.
+                Vieša paaiškinimo puslapis: <a href="/verify" className="font-semibold text-blue-300 underline">/verify</a>.
+              </p>
+              <div className="mt-4">
+                <CertificateButton />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       {snap && (() => {
         const entries = Object.entries(snap).filter(([, v]) => typeof v === "number");
