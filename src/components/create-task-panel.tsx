@@ -36,6 +36,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [hours, setHours] = useState(3);
   const [location, setLocation] = useState("");
   const [spots, setSpots] = useState(1);
+  const [tags, setTags] = useState<string[]>([]);
 
   const refresh = async () => {
     const { data } = await supabase
