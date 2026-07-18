@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AlertTriangle, RefreshCw, Lock, ShieldCheck, X } from "lucide-react";
+import { readSiteSettings } from "@/lib/site-settings";
 
 const BYPASS_KEY = "sv_lockdown_bypass_v1";
 const TRIGGER_WORD = "jumpsipidy";
@@ -31,8 +32,13 @@ export function LockdownGate() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data } = await supabase.from("site_settings").select("lockdown_enabled, lockdown_message").eq("id", true).maybeSingle();
+      const { data, error } = await readSiteSettings();
       if (!mounted) return;
+      if (error) {
+        setLockdown(false);
+        setMessage(null);
+        return;
+      }
       setLockdown(Boolean(data?.lockdown_enabled));
       setMessage(data?.lockdown_message ?? null);
     };
@@ -90,9 +96,9 @@ export function LockdownGate() {
     setRefreshing(true);
     setRefreshOk(null);
     try {
-      const { data } = await supabase.from("site_settings").select("lockdown_enabled").eq("id", true).maybeSingle();
+      const { data, error } = await readSiteSettings();
       await new Promise((r) => setTimeout(r, 1400));
-      if (!data?.lockdown_enabled) {
+      if (!error && !data?.lockdown_enabled) {
         setBypassed(true);
         setRefreshOk(true);
       } else {
