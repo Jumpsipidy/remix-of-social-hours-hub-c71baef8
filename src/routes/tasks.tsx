@@ -42,6 +42,7 @@ type Task = {
   is_event?: boolean;
   event_host_name?: string | null;
   created_by?: string | null;
+  tags?: string[] | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
