@@ -126,3 +126,100 @@ export const adminOverviewData = createServerFn({ method: "GET" })
       schools_total: schRes.count ?? 0,
     };
   });
+
+// -------- RESERVATIONS MANAGEMENT -------------------------------------------
+
+export const adminListReservations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { status?: string; limit?: number }) => input ?? {})
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const limit = Math.min(Math.max(data.limit ?? 200, 10), 1000);
+    let q = sb
+      .from("reservations")
+      .select("id, status, hours_to_earn, reservation_date, start_time, end_time, notes, organization_id, student_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (data.status && data.status !== "all") q = q.eq("status", data.status);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    const list = rows ?? [];
+    const ids = Array.from(new Set(list.flatMap((r) => [r.student_id, r.organization_id]).filter((v): v is string => !!v)));
+    const { data: profs } = ids.length
+      ? await sb.from("profiles").select("id, full_name, organization_name, email").in("id", ids)
+      : { data: [] as { id: string; full_name: string | null; organization_name: string | null; email: string | null }[] };
+    const map = new Map((profs ?? []).map((p) => [p.id, p]));
+    return {
+      reservations: list.map((r) => ({
+        ...r,
+        student: r.student_id ? map.get(r.student_id) ?? null : null,
+        organization: r.organization_id ? map.get(r.organization_id) ?? null : null,
+      })),
+    };
+  });
+
+export const adminUpdateReservationStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; status: "pending" | "approved" | "completed" | "cancelled" }) => input)
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { error } = await sb.from("reservations").update({ status: data.status }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteReservation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { error } = await sb.from("reservations").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// -------- LEADERBOARD -------------------------------------------------------
+
+export const adminLeaderboard = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await assertAdmin(context.userId);
+    const { data, error } = await sb
+      .from("profiles")
+      .select("id, full_name, email, hours_earned, hours_needed, school_id")
+      .eq("role", "student")
+      .order("hours_earned", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    const rows = data ?? [];
+    const schoolIds = Array.from(new Set(rows.map((r) => (r as { school_id?: string | null }).school_id).filter((v): v is string => !!v)));
+    const { data: sch } = schoolIds.length
+      ? await sb.from("schools").select("id, name").in("id", schoolIds)
+      : { data: [] as { id: string; name: string }[] };
+    const smap = new Map((sch ?? []).map((s) => [s.id, s.name]));
+    return {
+      students: rows.map((r) => ({
+        ...r,
+        school_name: (r as { school_id?: string | null }).school_id ? smap.get((r as { school_id: string }).school_id) ?? null : null,
+      })),
+    };
+  });
+
+// -------- ANALYTICS TRENDS --------------------------------------------------
+
+export const adminAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await assertAdmin(context.userId);
+    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+    const [rRes, pRes, mRes] = await Promise.all([
+      sb.from("reservations").select("id, status, hours_to_earn, created_at").gte("created_at", since),
+      sb.from("profiles").select("id, role, created_at").gte("created_at", since),
+      sb.from("messages").select("id, created_at").gte("created_at", since),
+    ]);
+    return {
+      reservations: rRes.data ?? [],
+      profiles: pRes.data ?? [],
+      messages: mRes.data ?? [],
+    };
+  });
