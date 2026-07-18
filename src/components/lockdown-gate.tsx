@@ -152,7 +152,7 @@ export function LockdownGate() {
 
   return (
     <AnimatePresence>
-      {(visible || lockdown === null ? false : false) || visible ? (
+      {visible ? (
         <motion.div
           key="lockdown"
           initial={{ opacity: 0 }}
