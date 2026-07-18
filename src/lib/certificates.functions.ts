@@ -58,31 +58,42 @@ export const generateCertificate = createServerFn({ method: "POST" })
     // Fetch completed reservations
     const { data: rs } = await supabase
       .from("reservations")
-      .select("id, date, start_time, end_time, hours_to_earn, notes, organization_id")
+      .select("id, reservation_date, start_time, end_time, hours_to_earn, note, organization_id")
       .eq("student_id", userId)
       .eq("status", "completed")
-      .order("date", { ascending: false });
+      .order("reservation_date", { ascending: false });
 
-    const orgIds = Array.from(new Set((rs ?? []).map((r) => r.organization_id).filter(Boolean)));
-    let orgMap: Record<string, string> = {};
+    const rows = (rs ?? []) as Array<{
+      id: string;
+      reservation_date: string;
+      start_time: string | null;
+      end_time: string | null;
+      hours_to_earn: number | null;
+      note: string | null;
+      organization_id: string | null;
+    }>;
+
+    const orgIds = Array.from(new Set(rows.map((r) => r.organization_id).filter(Boolean))) as string[];
+    const orgMap: Record<string, string> = {};
     if (orgIds.length) {
       const { data: orgs } = await supabase
         .from("profiles")
         .select("id, organization_name, full_name")
-        .in("id", orgIds as string[]);
+        .in("id", orgIds);
       (orgs ?? []).forEach((o) => {
         orgMap[o.id] = o.organization_name ?? o.full_name ?? "Organizacija";
       });
     }
 
-    const reservations = (rs ?? []).map((r) => ({
-      date: r.date,
-      start_time: r.start_time,
-      end_time: r.end_time,
-      hours: r.hours_to_earn ?? 0,
-      notes: r.notes ?? "",
-      organization: orgMap[r.organization_id as string] ?? "Organizacija",
+    const reservations = rows.map((r) => ({
+      date: r.reservation_date,
+      start_time: r.start_time ?? "",
+      end_time: r.end_time ?? "",
+      hours: Number(r.hours_to_earn ?? 0),
+      notes: r.note ?? "",
+      organization: (r.organization_id && orgMap[r.organization_id]) || "Organizacija",
     }));
+
 
     const totalHours = reservations.reduce((s, r) => s + Number(r.hours ?? 0), 0);
     const code = makeCode();
