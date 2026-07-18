@@ -22,6 +22,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
@@ -100,6 +101,12 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const BlogKasYraSocialinesValandosRoute =
+  BlogKasYraSocialinesValandosRouteImport.update({
+    id: '/blog/kas-yra-socialines-valandos',
+    path: '/blog/kas-yra-socialines-valandos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -186,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -240,6 +249,7 @@ export interface FileRoutesById {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kas-yra-socialines-valandos'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kas-yra-socialines-valandos'
     | '/admin'
   id:
     | '__root__'
@@ -322,6 +334,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kas-yra-socialines-valandos'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -339,6 +352,7 @@ export interface RootRouteChildren {
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -433,6 +447,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/blog/kas-yra-socialines-valandos': {
+      id: '/blog/kas-yra-socialines-valandos'
+      path: '/blog/kas-yra-socialines-valandos'
+      fullPath: '/blog/kas-yra-socialines-valandos'
+      preLoaderRoute: typeof BlogKasYraSocialinesValandosRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -567,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   UpdatePasswordRoute: UpdatePasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
