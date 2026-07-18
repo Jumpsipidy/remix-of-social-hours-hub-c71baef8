@@ -50,6 +50,15 @@ function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
 
+  // Lock body scroll while mobile sheet is open (must run before any early return)
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
+
+
   if (loading) {
     return (
       <PageShell>
@@ -103,13 +112,8 @@ function AdminLayout() {
     </nav>
   );
 
-  // Lock body scroll while mobile sheet is open
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [mobileOpen]);
+
+
 
   return (
     <PageShell>
