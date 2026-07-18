@@ -1,10 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const providerNames = {
-  google: "Google",
-  discord: "Discord",
-} as const;
-
 export const checkOAuthProvider = createServerFn({ method: "GET" })
   .inputValidator((input: { provider: "google" | "discord"; redirectTo: string }) => input)
   .handler(async ({ data }) => {
@@ -23,7 +18,7 @@ export const checkOAuthProvider = createServerFn({ method: "GET" })
       let raw = "";
       try { raw = await response.text(); } catch {}
       const lowered = raw.toLowerCase();
-      const name = providerNames[data.provider];
+      const name = data.provider === "google" ? "Google" : "Discord";
 
       if (lowered.includes("missing oauth secret")) {
         return { ok: false, message: `${name} prisijungimas dar neturi OAuth Client Secret nustatymo.` };
