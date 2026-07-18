@@ -71,25 +71,26 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   page.drawText(ascii(preamble),  { x: (width - pw) / 2, y: height - M - 128, size: 10, font, color: muted });
 
   // Student name (large centered)
-  const name = cert.student_name || "-";
+  const name = ascii(cert.student_name || "-");
   const nSize = 26;
   const nw = serifBold.widthOfTextAtSize(name, nSize);
-  page.drawText(ascii(name),  { x: (width - nw) / 2, y: height - M - 160, size: nSize, font: serifBold, color: ink });
+  page.drawText(name,  { x: (width - nw) / 2, y: height - M - 160, size: nSize, font: serifBold, color: ink });
 
   // Class + school line
-  const meta = [cert.student_class, cert.school_name].filter(Boolean).join("  ·  ") || "";
+  const meta = ascii([cert.student_class, cert.school_name].filter(Boolean).join("  ·  ") || "");
   if (meta) {
     const mw = font.widthOfTextAtSize(meta, 10);
-    page.drawText(ascii(meta),  { x: (width - mw) / 2, y: height - M - 180, size: 10, font, color: muted });
+    page.drawText(meta,  { x: (width - mw) / 2, y: height - M - 180, size: 10, font, color: muted });
   }
 
   // Body statement
-  const stmt1 = `atliko ${cert.total_hours} val. socialines veiklos`;
-  const stmt2 = `is reikalaujamu ${cert.hours_needed} val.`;
+  const stmt1 = ascii(`atliko ${cert.total_hours} val. socialines veiklos`);
+  const stmt2 = ascii(`is reikalaujamu ${cert.hours_needed} val.`);
   const s1w = font.widthOfTextAtSize(stmt1, 12);
   const s2w = font.widthOfTextAtSize(stmt2, 11);
-  page.drawText(ascii(stmt1),  { x: (width - s1w) / 2, y: height - M - 214, size: 12, font, color: ink });
-  page.drawText(ascii(stmt2),  { x: (width - s2w) / 2, y: height - M - 232, size: 11, font, color: muted });
+  page.drawText(stmt1,  { x: (width - s1w) / 2, y: height - M - 214, size: 12, font, color: ink });
+  page.drawText(stmt2,  { x: (width - s2w) / 2, y: height - M - 232, size: 11, font, color: muted });
+
 
   // Reservations table (thin hairline, no fills)
   const tableTop = height - M - 274;
