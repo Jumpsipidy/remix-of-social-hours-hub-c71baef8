@@ -16,7 +16,9 @@ export type Profile = {
   organization_name: string | null;
   school_id?: string | null;
   class_year?: string | null;
+  assigned_classes?: string[] | null;
 };
+
 
 type MockSession = { user: User; profile: Profile };
 
