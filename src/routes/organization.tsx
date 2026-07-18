@@ -143,11 +143,9 @@ function OrgDashboard() {
   };
 
   const finalizeCompleted = async (r: Reservation) => {
-    const { error } = await supabase.from("reservations").update({ status: "completed" }).eq("id", r.id);
+    // Atomic: verifies caller, sets completed, credits hours (bypasses profiles RLS safely)
+    const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
     if (error) { toast.error(error.message); return; }
-    const { data: stu } = await supabase.from("profiles").select("hours_earned").eq("id", r.student_id).maybeSingle();
-    const next = Number(stu?.hours_earned ?? 0) + Number(r.hours_to_earn);
-    await supabase.from("profiles").update({ hours_earned: next }).eq("id", r.student_id);
     await ensureRoomAndNotify(
       r,
       `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`,
