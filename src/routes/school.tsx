@@ -279,6 +279,12 @@ function SchoolDashboard() {
                   className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "students" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                   Mokiniai
                 </button>
+                <button onClick={() => setTab("queue")}
+                  className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "queue" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
+                  <ClipboardCheck className="mr-1 inline h-3.5 w-3.5" /> Peržiūros eilė
+                  {unreviewedCount > 0 && <span className="ml-1.5 rounded-full bg-warning/20 px-1.5 text-[10px] font-bold text-warning-foreground">{unreviewedCount}</span>}
+                  {flaggedCount > 0 && <span className="ml-1 rounded-full bg-destructive/20 px-1.5 text-[10px] font-bold text-destructive">{flaggedCount}⚠</span>}
+                </button>
                 <button onClick={() => setTab("orgs")}
                   className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition sm:px-4 sm:text-sm ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}>
                   Organizacijos partneriai
