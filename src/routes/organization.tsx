@@ -1,13 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, CheckCircle2, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle, PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays } from "lucide-react";
+import {
+  Clock, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
+  PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays, CheckCircle2,
+  BarChart3, Target, Repeat, Percent,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
+import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
@@ -28,34 +33,32 @@ type Reservation = {
   end_time: string;
   hours_to_earn: number;
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
+  created_at?: string;
+  tags?: string[] | null;
 };
 
 type StudentLite = { id: string; full_name: string | null; email: string | null; hours_earned: number };
+type TaskRow = { id: string; title: string; task_date: string; available_hours: number; location: string | null; is_open: boolean; created_at: string };
 
 async function ensureRoomAndNotify(reservation: Reservation, content: string, senderId: string) {
-  const { data: existing } = await supabase
-    .from("chat_rooms")
-    .select("id")
-    .eq("reservation_id", reservation.id)
-    .maybeSingle();
+  const { data: existing } = await supabase.from("chat_rooms").select("id").eq("reservation_id", reservation.id).maybeSingle();
   let roomId = existing?.id;
   if (!roomId) {
-    const { data: created, error } = await supabase
-      .from("chat_rooms")
-      .insert({
-        reservation_id: reservation.id,
-        student_id: reservation.student_id,
-        organization_id: reservation.organization_id,
-      })
-      .select("id")
-      .maybeSingle();
+    const { data: created, error } = await supabase.from("chat_rooms").insert({
+      reservation_id: reservation.id, student_id: reservation.student_id, organization_id: reservation.organization_id,
+    }).select("id").maybeSingle();
     if (error || !created) return;
     roomId = created.id;
   }
   await supabase.from("messages").insert({ chat_room_id: roomId, sender_id: senderId, content });
 }
 
-type TaskRow = { id: string; title: string; task_date: string; available_hours: number; location: string | null; is_open: boolean; created_at: string };
+const STATUS_COLORS: Record<string, string> = {
+  pending: "hsl(45 100% 60%)",
+  approved: "hsl(var(--primary))",
+  completed: "hsl(140 60% 45%)",
+  declined: "hsl(0 70% 55%)",
+};
 
 function OrgDashboard() {
   const { user, profile, loading } = useAuth();
@@ -75,19 +78,14 @@ function OrgDashboard() {
     setTasks((tData as TaskRow[]) ?? []);
     const ids = Array.from(new Set(rs.map((r) => r.student_id)));
     if (ids.length) {
-      const { data: ps } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, hours_earned")
-        .in("id", ids);
+      const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
       const map: Record<string, StudentLite> = {};
       (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
       setStudents(map);
     }
   };
 
-  useEffect(() => {
-    if (user) refresh(user.id);
-  }, [user]);
+  useEffect(() => { if (user) refresh(user.id); }, [user]);
 
   const toggleTask = async (t: TaskRow) => {
     const { error } = await supabase.from("tasks").update({ is_open: !t.is_open }).eq("id", t.id);
@@ -103,6 +101,54 @@ function OrgDashboard() {
     if (user) refresh(user.id);
   };
 
+  // -------------- ANALYTICS ---------------
+  const pending = reservations.filter((r) => r.status === "pending");
+  const approved = reservations.filter((r) => r.status === "approved");
+  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
+  const declined = reservations.filter((r) => r.status === "declined");
+  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
+  const uniqueStudents = new Set(reservations.map((r) => r.student_id)).size;
+  const returningStudents = (() => {
+    const byS: Record<string, number> = {};
+    completed.forEach((r) => (byS[r.student_id] = (byS[r.student_id] ?? 0) + 1));
+    return Object.values(byS).filter((n) => n >= 2).length;
+  })();
+  const totalHandled = completed.length + declined.length;
+  const acceptanceRate = totalHandled ? Math.round((completed.length / totalHandled) * 100) : 0;
+  const avgHours = completed.length ? (hoursDelivered / completed.length) : 0;
+
+  const chartData = useMemo(() => {
+    const days: { label: string; hrs: number; count: number; iso: string }[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const iso = d.toISOString().slice(0, 10);
+      days.push({ iso, label: `${d.getDate()}.${d.getMonth() + 1}`, hrs: 0, count: 0 });
+    }
+    const idx: Record<string, number> = Object.fromEntries(days.map((d, i) => [d.iso, i]));
+    completed.forEach((r) => {
+      const i = idx[r.reservation_date];
+      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn); days[i].count += 1; }
+    });
+    return days;
+  }, [completed]);
+
+  const pieData = [
+    { name: "Užbaigtos", value: completed.length, color: STATUS_COLORS.completed },
+    { name: "Vykdomos", value: approved.length, color: STATUS_COLORS.approved },
+    { name: "Laukia", value: pending.length, color: STATUS_COLORS.pending },
+    { name: "Atmesta", value: declined.length, color: STATUS_COLORS.declined },
+  ].filter((s) => s.value > 0);
+
+  // Busiest weekday
+  const weekdayCounts = [0, 0, 0, 0, 0, 0, 0];
+  completed.forEach((r) => {
+    const d = new Date(r.reservation_date);
+    weekdayCounts[(d.getDay() + 6) % 7] += 1;
+  });
+  const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
+  const maxWD = Math.max(...weekdayCounts, 1);
+  const busiestIdx = weekdayCounts.indexOf(Math.max(...weekdayCounts));
+
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "organization") {
     return (
@@ -115,21 +161,12 @@ function OrgDashboard() {
     );
   }
 
-  const pending = reservations.filter((r) => r.status === "pending");
-  const approved = reservations.filter((r) => r.status === "approved");
-  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
-  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
-
   const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
 
   const approveInitial = async (r: Reservation) => {
     const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
     if (error) { toast.error(error.message); return; }
-    await ensureRoomAndNotify(
-      r,
-      `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`,
-      user.id,
-    );
+    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`, user.id);
     toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
     refresh(user.id);
   };
@@ -143,19 +180,13 @@ function OrgDashboard() {
   };
 
   const finalizeCompleted = async (r: Reservation) => {
-    // Atomic: verifies caller, sets completed, credits hours (bypasses profiles RLS safely)
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
     if (error) { toast.error(error.message); return; }
-    await ensureRoomAndNotify(
-      r,
-      `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`,
-      user.id,
-    );
+    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
     toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
     setVerifyRes(null);
     refresh(user.id);
   };
-
 
   return (
     <PageShell>
@@ -163,20 +194,21 @@ function OrgDashboard() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Organizacijos sritis</p>
-            <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">{profile.organization_name ?? profile.full_name ?? "Organizacija"}</h1>
+            <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">{orgLabel}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
           </div>
           <span className="shrink-0 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
         </div>
       </section>
 
+      {/* Primary stats */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length },
-            { icon: PlayCircle, label: "Vykdomos", value: approved.length },
-            { icon: Clock, label: "Suteikta valandų", value: hoursDelivered },
-            { icon: Users, label: "Skirtingų savanorių", value: new Set(reservations.map((r) => r.student_id)).size },
+            { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length, sub: pending.length ? "Reikia dėmesio" : "Viskas apdorota" },
+            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: "In progress" },
+            { icon: Clock, label: "Suteikta valandų", value: hoursDelivered, sub: `${completed.length} užbaigti vizitai` },
+            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių` },
           ].map((s) => (
             <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
               <div className="flex items-center justify-between">
@@ -187,8 +219,89 @@ function OrgDashboard() {
               </div>
               <p className="mt-5 font-display text-3xl font-bold">{s.value}</p>
               <p className="text-sm text-muted-foreground">{s.label}</p>
+              {s.sub && <p className="text-xs text-muted-foreground/70">{s.sub}</p>}
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Analytics */}
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" /> Valandų srautas (30 d.)</h2>
+                <p className="text-xs text-muted-foreground">Užbaigtos savanorystės valandos pagal dieną.</p>
+              </div>
+              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
+                {chartData.reduce((a, d) => a + d.hrs, 0)} val. per 30 d.
+              </span>
+            </div>
+            <div className="mt-4 h-60">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="ohrs" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={4} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                  <Area type="monotone" dataKey="hrs" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#ohrs)" name="Valandos" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <h2 className="text-lg font-bold">Rezervacijų būsenos</h2>
+            <p className="text-xs text-muted-foreground">Visos gautos užklausos.</p>
+            {pieData.length > 0 ? (
+              <div className="mt-2 h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" innerRadius={38} outerRadius={70} paddingAngle={3} stroke="none">
+                      {pieData.map((e) => <Cell key={e.name} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Nėra duomenų</div>
+            )}
+          </div>
+        </div>
+
+        {/* KPI row */}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <KPI icon={Percent} label="Priėmimo lygis" value={`${acceptanceRate}%`} sub={`${completed.length} / ${totalHandled} apdorotos`} />
+          <KPI icon={Target} label="Vid. valandos / vizitui" value={avgHours.toFixed(1)} sub={`iš ${completed.length} vizitų`} />
+          <KPI icon={Repeat} label="Grįžtantys savanoriai" value={returningStudents} sub={`iš ${uniqueStudents} visų`} />
+          <KPI icon={CalendarDays} label="Aktyviausia diena" value={weekdays[busiestIdx] ?? "—"} sub={`${weekdayCounts[busiestIdx] ?? 0} vizitai`} />
+        </div>
+
+        {/* Weekday distribution */}
+        <div className="mt-4 rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+          <h2 className="text-lg font-bold">Vizitai pagal savaitės dieną</h2>
+          <div className="mt-4 grid grid-cols-7 gap-2 sm:gap-3">
+            {weekdays.map((w, i) => {
+              const h = 8 + (weekdayCounts[i] / maxWD) * 80;
+              const isMax = i === busiestIdx && weekdayCounts[i] > 0;
+              return (
+                <div key={w} className="flex flex-col items-center gap-1.5">
+                  <div className="flex h-24 w-full items-end">
+                    <div className={`w-full rounded-t-lg transition ${isMax ? "bg-gradient-primary shadow-glow" : "bg-primary/30"}`} style={{ height: `${h}%` }} />
+                  </div>
+                  <p className="text-[10px] font-semibold text-muted-foreground">{w}</p>
+                  <p className="text-xs font-bold tabular-nums">{weekdayCounts[i]}</p>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -196,10 +309,10 @@ function OrgDashboard() {
         <CreateTaskPanel organizationId={user.id} />
       </section>
 
-      {/* Published tasks list */}
+      {/* Published tasks */}
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold flex items-center gap-2"><ListTodo className="h-5 w-5 text-primary" /> Mano paskelbtos užduotys</h2>
               <p className="text-xs text-muted-foreground">Įjunk / išjunk matomumą mokiniams arba pašalink užduotį.</p>
@@ -267,7 +380,6 @@ function OrgDashboard() {
         );
       })()}
 
-
       <section className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-5">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">
           <div className="flex items-center justify-between">
@@ -302,17 +414,18 @@ function OrgDashboard() {
                       <MessageSquare className="h-3 w-3" /> Pokalbis
                     </button>
                   </div>
+                  {r.tags && r.tags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {r.tags.slice(0, 6).map((t) => (
+                        <span key={t} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold text-primary">#{t}</span>
+                      ))}
+                    </div>
+                  )}
                   <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => approveInitial(r)}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                    >
+                    <button onClick={() => approveInitial(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
                       <Check className="h-4 w-4" /> Patvirtinti ir pradėti darbą
                     </button>
-                    <button
-                      onClick={() => decline(r)}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-                    >
+                    <button onClick={() => decline(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                       <X className="h-4 w-4" /> Atmesti
                     </button>
                   </div>
@@ -321,7 +434,7 @@ function OrgDashboard() {
             })}
           </div>
 
-          {/* On Work list */}
+          {/* Vykdomos */}
           <div className="mt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -368,7 +481,6 @@ function OrgDashboard() {
               })}
             </div>
           </div>
-
         </div>
 
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-2">
@@ -419,5 +531,17 @@ function OrgDashboard() {
         onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
       />
     </PageShell>
+  );
+}
+
+function KPI({ icon: Icon, label, value, sub }: { icon: typeof Percent; label: string; value: React.ReactNode; sub?: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/70 p-5 shadow-sm backdrop-blur">
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+        <Icon className="h-4 w-4 text-primary" /> {label}
+      </div>
+      <p className="mt-2 font-display text-2xl font-bold tabular-nums">{value}</p>
+      {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+    </div>
   );
 }
