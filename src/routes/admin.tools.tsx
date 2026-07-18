@@ -37,6 +37,7 @@ const TABLE_META: Record<string, { label: string; icon: typeof Database; tone: s
   bug_reports: { label: "Bug reports", icon: Bug, tone: "from-red-500/30 to-red-500/5" },
   organization_access_requests: { label: "Org. užklausos", icon: Building2, tone: "from-indigo-500/30 to-indigo-500/5" },
   user_roles: { label: "Rolės", icon: KeyRound, tone: "from-fuchsia-500/30 to-fuchsia-500/5" },
+  site_settings: { label: "Svetainės nustatymai", icon: Wrench, tone: "from-emerald-500/30 to-emerald-500/5" },
 };
 
 export const Route = createFileRoute("/admin/tools")({

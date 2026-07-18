@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, Unlock, AlertTriangle, RefreshCw, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { readSiteSettings } from "@/lib/site-settings";
+import {
+  adminGetLockdownSettings,
+  adminRunLockdownHealth,
+  adminUpdateLockdownSettings,
+} from "@/lib/lockdown.functions";
 
 export const Route = createFileRoute("/admin/lockdown")({
   head: () => ({ meta: [{ title: "Lockdown — Socialinės Valandos" }] }),
@@ -11,72 +19,119 @@ export const Route = createFileRoute("/admin/lockdown")({
 });
 
 function LockdownPage() {
+  const { user, profile } = useAuth();
+  const getLockdownSettings = useServerFn(adminGetLockdownSettings);
+  const updateLockdownSettings = useServerFn(adminUpdateLockdownSettings);
+  const runLockdownHealth = useServerFn(adminRunLockdownHealth);
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
-  const [health, setHealth] = useState<null | { db: boolean; auth: boolean; realtime: boolean }>(null);
+  const [health, setHealth] = useState<null | Array<{ label: string; ok: boolean; detail: string }>>(null);
 
   const load = async () => {
-    const { data } = await supabase.from("site_settings").select("lockdown_enabled, lockdown_message").eq("id", true).maybeSingle();
-    setEnabled(Boolean(data?.lockdown_enabled));
-    setMessage(data?.lockdown_message ?? "");
+    try {
+      const { settings } = await getLockdownSettings();
+      setEnabled(Boolean(settings.lockdown_enabled));
+      setMessage(settings.lockdown_message ?? "");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nepavyko užkrauti Lockdown nustatymų");
+    }
   };
 
   useEffect(() => { load(); }, []);
 
   const toggle = async (next: boolean) => {
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from("site_settings")
-      .update({
-        lockdown_enabled: next,
-        lockdown_message: message || null,
-        updated_at: new Date().toISOString(),
-        updated_by: u.user?.id ?? null,
-      })
-      .eq("id", true);
-    setSaving(false);
-    if (error) return toast.error("Nepavyko: " + error.message);
-    setEnabled(next);
-    toast.success(next ? "🔒 Lockdown ĮJUNGTAS" : "🔓 Lockdown išjungtas");
+    try {
+      const { settings } = await updateLockdownSettings({
+        data: { lockdown_enabled: next, lockdown_message: message || null },
+      });
+      setEnabled(settings.lockdown_enabled);
+      setMessage(settings.lockdown_message ?? "");
+      toast.success(next ? "🔒 Lockdown ĮJUNGTAS" : "🔓 Lockdown išjungtas");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nepavyko pakeisti Lockdown būsenos");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const saveMessage = async () => {
     setSaving(true);
-    const { error } = await supabase.from("site_settings").update({ lockdown_message: message || null }).eq("id", true);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Žinutė išsaugota");
+    try {
+      const { settings } = await updateLockdownSettings({ data: { lockdown_message: message || null } });
+      setMessage(settings.lockdown_message ?? "");
+      toast.success("Žinutė išsaugota");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nepavyko išsaugoti žinutės");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const runHealthCheck = async () => {
     setChecking(true);
     setHealth(null);
-    const results = { db: false, auth: false, realtime: false };
+    const results: Array<{ label: string; ok: boolean; detail: string }> = [];
+
+    results.push({
+      label: "Naršyklės sesija",
+      ok: Boolean(user),
+      detail: user ? user.email ?? user.id : "vartotojas neprisijungęs",
+    });
+    results.push({
+      label: "Admin rolė UI būsenoje",
+      ok: profile?.role === "admin",
+      detail: profile?.role ? `rolė: ${profile.role}` : "profilis dar neužkrautas",
+    });
+
     try {
-      const { error } = await supabase.from("site_settings").select("id").limit(1);
-      results.db = !error;
-    } catch {}
+      const { error, schemaMissing } = await readSiteSettings();
+      results.push({
+        label: "Viešas Lockdown API",
+        ok: !error,
+        detail: error
+          ? schemaMissing
+            ? "schemos talpykla dar nemato site_settings — pabandyk po kelių sekundžių"
+            : error.message
+          : "lentelė pasiekiama lankytojams",
+      });
+    } catch (error) {
+      results.push({ label: "Viešas Lockdown API", ok: false, detail: error instanceof Error ? error.message : "nežinoma klaida" });
+    }
+
     try {
-      const { data } = await supabase.auth.getSession();
-      results.auth = !!data.session;
-    } catch {}
+      const serverHealth = await runLockdownHealth();
+      results.push(...serverHealth.checks);
+    } catch (error) {
+      results.push({
+        label: "Admin serverio patikra",
+        ok: false,
+        detail: error instanceof Error ? error.message : "nepavyko paleisti serverio patikros",
+      });
+    }
+
     try {
       const ch = supabase.channel("healthcheck_" + Date.now());
       await new Promise<void>((resolve) => {
         const timer = setTimeout(() => resolve(), 2500);
         ch.subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            results.realtime = true;
+            results.push({ label: "Realtime kanalas", ok: true, detail: "kanalas prisijungė" });
             clearTimeout(timer);
             resolve();
           }
         });
       });
       supabase.removeChannel(ch);
-    } catch {}
+      if (!results.some((r) => r.label === "Realtime kanalas")) {
+        results.push({ label: "Realtime kanalas", ok: false, detail: "kanalas neprisijungė per 2.5 s" });
+      }
+    } catch (error) {
+      results.push({ label: "Realtime kanalas", ok: false, detail: error instanceof Error ? error.message : "nežinoma klaida" });
+    }
+
     // Simulate a moment for the animation
     await new Promise((r) => setTimeout(r, 900));
     setHealth(results);
@@ -183,21 +238,20 @@ function LockdownPage() {
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 grid gap-2 sm:grid-cols-3"
+            className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {[
-              { label: "Duomenų bazė", ok: health.db },
-              { label: "Autentifikacija", ok: health.auth },
-              { label: "Realtime", ok: health.realtime },
-            ].map((r) => (
+            {health.map((r) => (
               <div
                 key={r.label}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${
+                className={`rounded-xl border px-4 py-3 text-sm ${
                   r.ok ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200" : "border-rose-500/40 bg-rose-500/10 text-rose-200"
                 }`}
               >
-                <span className="font-medium">{r.label}</span>
-                <span className="text-xs font-bold uppercase">{r.ok ? "OK" : "FAIL"}</span>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-medium">{r.label}</span>
+                  <span className="shrink-0 text-xs font-bold uppercase">{r.ok ? "OK" : "FAIL"}</span>
+                </div>
+                <p className="mt-1 break-words text-[11px] opacity-80">{r.detail}</p>
               </div>
             ))}
           </motion.div>

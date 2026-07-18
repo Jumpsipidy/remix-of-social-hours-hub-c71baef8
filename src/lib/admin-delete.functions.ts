@@ -81,13 +81,15 @@ export const adminPlatformHealth = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
-    const [p, r, t, m, b, a] = await Promise.all([
+    const [p, r, t, m, b, a, s, ss] = await Promise.all([
       supabaseAdmin.from("profiles").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("reservations").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("tasks").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("messages").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("bug_reports").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("organization_access_requests").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("schools").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("site_settings").select("id", { count: "exact", head: true }),
     ]);
     return {
       profiles: p.count ?? 0,
@@ -96,6 +98,8 @@ export const adminPlatformHealth = createServerFn({ method: "GET" })
       messages: m.count ?? 0,
       bug_reports: b.count ?? 0,
       access_requests: a.count ?? 0,
+      schools: s.count ?? 0,
+      site_settings: ss.count ?? 0,
     };
   });
 
