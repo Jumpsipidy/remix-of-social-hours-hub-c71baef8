@@ -102,17 +102,31 @@ function TasksPage() {
     return Array.from(set).sort();
   }, [tasks]);
 
+  const availableTags = useMemo(() => {
+    const set = new Set<string>();
+    tasks.forEach((t) => (t.tags ?? []).forEach((x) => set.add(x)));
+    // Merge presets so filters are always useful even before orgs tag their tasks
+    TAG_PRESETS.forEach((p) => set.add(p));
+    return Array.from(set);
+  }, [tasks]);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((x) => {
       const org = orgs[x.organization_id];
       const orgName = org?.organization_name ?? org?.full_name ?? "";
-      const text = `${x.title} ${x.description} ${x.location} ${orgName}`.toLowerCase();
+      const tagsStr = (x.tags ?? []).join(" ");
+      const text = `${x.title} ${x.description} ${x.location} ${orgName} ${tagsStr}`.toLowerCase();
       if (q && !text.includes(q.toLowerCase())) return false;
       if (town && !x.location?.toLowerCase().includes(town.toLowerCase())) return false;
       if (cat && guessCategory(x) !== cat) return false;
+      if (selectedTags.length) {
+        const xt = x.tags ?? [];
+        const ok = selectedTags.every((s) => xt.includes(s));
+        if (!ok) return false;
+      }
       return true;
     });
-  }, [q, town, cat, tasks, orgs]);
+  }, [q, town, cat, selectedTags, tasks, orgs]);
 
   const filteredOrgs = useMemo(() => {
     if (!q) return allOrgs;
