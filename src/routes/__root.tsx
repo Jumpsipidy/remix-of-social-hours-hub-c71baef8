@@ -16,6 +16,7 @@ import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LockdownGate } from "@/components/lockdown-gate";
+import { ErrorMonitor } from "@/components/error-monitor";
 
 function NotFoundComponent() {
   return (
@@ -79,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" },
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [
@@ -144,6 +145,7 @@ function RootComponent() {
         <CookieConsent />
         <MockTesterPanel />
         <LockdownGate />
+        <ErrorMonitor />
       </AuthProvider>
     </QueryClientProvider>
 
