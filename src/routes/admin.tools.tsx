@@ -17,7 +17,27 @@ import {
   RefreshCw,
   Loader2,
   AlertTriangle,
+  Database,
+  Users,
+  Building2,
+  School,
+  Bug,
+  MessagesSquare,
+  KeyRound,
+  CheckCircle2,
 } from "lucide-react";
+
+const TABLE_META: Record<string, { label: string; icon: typeof Database; tone: string }> = {
+  profiles: { label: "Profiliai", icon: Users, tone: "from-blue-500/30 to-blue-500/5" },
+  reservations: { label: "Rezervacijos", icon: ClipboardList, tone: "from-emerald-500/30 to-emerald-500/5" },
+  tasks: { label: "Užduotys", icon: ListTodo, tone: "from-amber-500/30 to-amber-500/5" },
+  messages: { label: "Žinutės", icon: MessagesSquare, tone: "from-purple-500/30 to-purple-500/5" },
+  chat_rooms: { label: "Pokalbių kambariai", icon: MessageSquare, tone: "from-pink-500/30 to-pink-500/5" },
+  schools: { label: "Mokyklos", icon: School, tone: "from-cyan-500/30 to-cyan-500/5" },
+  bug_reports: { label: "Bug reports", icon: Bug, tone: "from-red-500/30 to-red-500/5" },
+  organization_access_requests: { label: "Org. užklausos", icon: Building2, tone: "from-indigo-500/30 to-indigo-500/5" },
+  user_roles: { label: "Rolės", icon: KeyRound, tone: "from-fuchsia-500/30 to-fuchsia-500/5" },
+};
 
 export const Route = createFileRoute("/admin/tools")({
   component: ToolsPage,
