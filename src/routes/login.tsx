@@ -324,9 +324,18 @@ function LoginPage() {
                     Pamiršai slaptažodį?
                   </Link>
                 </div>
+                {captchaRequired && (
+                  <div>
+                    <p className="mb-2 text-[11px] font-semibold text-amber-500">
+                      Per daug nesėkmingų bandymų. Įrodyk, kad esi žmogus.
+                    </p>
+                    <Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} />
+                  </div>
+                )}
                 <motion.button
                   type="submit"
-                  disabled={busy}
+                  disabled={busy || (captchaRequired && !captchaProof)}
+
                   whileHover={{ scale: busy ? 1 : 1.02 }}
                   whileTap={{ scale: busy ? 1 : 0.98 }}
                   className="group/submit relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-glow transition-all hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.8)] disabled:opacity-60"
