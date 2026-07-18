@@ -110,6 +110,13 @@ export const generateCertificate = createServerFn({ method: "POST" })
 
 
     const totalHours = reservations.reduce((s, r) => s + Number(r.hours ?? 0), 0);
+    const hoursNeeded = Number(profile.hours_needed ?? 0);
+    const goalReached = hoursNeeded > 0 && totalHours >= hoursNeeded;
+    if (!goalReached && !debugMode) {
+      throw new Error(
+        `Sertifikatas dar negalimas — surinkta ${totalHours}/${hoursNeeded} val. Užbaik visas reikalingas valandas.`,
+      );
+    }
     const code = makeCode();
     const payload = JSON.stringify({
       code,
