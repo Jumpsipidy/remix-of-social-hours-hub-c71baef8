@@ -182,7 +182,7 @@ export const resetDevData = createServerFn({ method: "POST" })
 
 export const createTestAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     role: "student" | "organization" | "school_admin" | "admin";
     school_id?: string | null;
   }) => input)
@@ -233,7 +233,7 @@ export const listSchoolCodes = createServerFn({ method: "GET" })
 
 export const testSignupCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { school_id: string; code: string }) => input)
+  .validator((input: { school_id: string; code: string }) => input)
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -246,7 +246,7 @@ export const testSignupCode = createServerFn({ method: "POST" })
 
 export const verifyAccountDeleted = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { userId: string }) => input)
+  .validator((input: { userId: string }) => input)
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

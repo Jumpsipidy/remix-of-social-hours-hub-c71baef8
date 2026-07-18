@@ -9,7 +9,7 @@ function bypassCode() {
 }
 
 export const verifyBypassCode = createServerFn({ method: "POST" })
-  .inputValidator((data: { code: string; captchaProof?: string }) => ({
+  .validator((data: { code: string; captchaProof?: string }) => ({
     code: String(data?.code ?? "").slice(0, 32),
     captchaProof:
       typeof data?.captchaProof === "string" ? data.captchaProof.slice(0, 512) : "",
@@ -84,7 +84,7 @@ export const bypassStatus = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const verifyBypassToken = createServerFn({ method: "POST" })
-  .inputValidator((data: { token: string }) => ({
+  .validator((data: { token: string }) => ({
     token: String(data?.token ?? "").slice(0, 512),
   }))
   .handler(async ({ data }) => {

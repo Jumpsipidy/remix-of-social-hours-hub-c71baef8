@@ -34,7 +34,7 @@ function makeCode(): string {
 
 export const generateCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
+  .validator((input: unknown) =>
     z.object({
       debug: z.boolean().optional(),
       fake: z.boolean().optional(),
@@ -214,7 +214,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
   });
 
 export const verifyCertificatePublic = createServerFn({ method: "POST" })
-  .inputValidator((input) => z.object({ code: z.string().min(6).max(64) }).parse(input))
+  .validator((input) => z.object({ code: z.string().min(6).max(64) }).parse(input))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: res, error } = await supabaseAdmin.rpc("verify_certificate", {

@@ -30,7 +30,7 @@ export const adminListSchools = createServerFn({ method: "GET" })
 
 export const adminUpsertSchool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: {
+  .validator((input: {
     id?: string | null;
     name: string;
     signup_code: string;
@@ -58,7 +58,7 @@ export const adminUpsertSchool = createServerFn({ method: "POST" })
 
 export const adminDeleteSchool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("schools").delete().eq("id", data.id);
@@ -70,7 +70,7 @@ export const adminDeleteSchool = createServerFn({ method: "POST" })
 
 export const adminListRecentMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { limit?: number }) => input ?? {})
+  .validator((input: { limit?: number }) => input ?? {})
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const limit = Math.min(Math.max(data.limit ?? 100, 10), 500);
@@ -96,7 +96,7 @@ export const adminListRecentMessages = createServerFn({ method: "GET" })
 
 export const adminDeleteMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("messages").delete().eq("id", data.id);
@@ -131,7 +131,7 @@ export const adminOverviewData = createServerFn({ method: "GET" })
 
 export const adminListReservations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { status?: string; limit?: number }) => input ?? {})
+  .validator((input: { status?: string; limit?: number }) => input ?? {})
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const limit = Math.min(Math.max(data.limit ?? 200, 10), 1000);
@@ -166,7 +166,7 @@ export const adminListReservations = createServerFn({ method: "GET" })
 
 export const adminUpdateReservationStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; status: "pending" | "approved" | "completed" | "declined" | "confirmed" }) => input)
+  .validator((input: { id: string; status: "pending" | "approved" | "completed" | "declined" | "confirmed" }) => input)
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("reservations").update({ status: data.status }).eq("id", data.id);
@@ -176,7 +176,7 @@ export const adminUpdateReservationStatus = createServerFn({ method: "POST" })
 
 export const adminDeleteReservation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("reservations").delete().eq("id", data.id);
