@@ -26,6 +26,12 @@ type Mode = "student" | "org_request";
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
+// 5-7 klasės — fiksuota 20 val. 8+ — mokinys pasirenka pats (min. 8).
+function isLowerClass(cy: string) { return cy === "5" || cy === "6" || cy === "7"; }
+function hoursRuleFor(cy: string): { locked: boolean; min: number; default: number } {
+  if (isLowerClass(cy)) return { locked: true, min: 20, default: 20 };
+  return { locked: false, min: 8, default: 20 };
+}
 
 function RegisterPage() {
   const navigate = useNavigate();
