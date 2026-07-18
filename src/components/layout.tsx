@@ -76,6 +76,8 @@ export function Navbar() {
   }
 
   const handleSignOut = async () => {
+    try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
+    setCachedRole(null);
     await signOut();
     setOpen(false);
     navigate({ to: "/" });
