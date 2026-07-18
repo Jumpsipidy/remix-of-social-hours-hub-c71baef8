@@ -14,7 +14,9 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
+import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
 export const Route = createFileRoute("/student")({
@@ -162,8 +164,10 @@ function StudentDashboard() {
             >
               <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
             </button>
+            <CertificateButton />
             <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
           </div>
+
         </div>
       </section>
 
