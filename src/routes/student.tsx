@@ -162,8 +162,10 @@ function StudentDashboard() {
             >
               <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
             </button>
+            <CertificateButton />
             <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
           </div>
+
         </div>
       </section>
 
