@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { CalendarPlus, MapPin, Clock, FileText, Users, Sparkles } from "lucide-react";
+import { TagsInput } from "@/components/tags-input";
 
 /**
  * School admins post one-time volunteer events (not tied to an organization).
