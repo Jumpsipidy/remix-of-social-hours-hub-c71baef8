@@ -34,7 +34,10 @@ function makeCode(): string {
 
 export const generateCertificate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) =>
+    z.object({ debug: z.boolean().optional() }).parse(input ?? {}),
+  )
+  .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const secret = process.env.CERT_SIGNING_SECRET;
     if (!secret) throw new Error("Missing CERT_SIGNING_SECRET");
@@ -47,6 +50,17 @@ export const generateCertificate = createServerFn({ method: "POST" })
       .maybeSingle();
     if (pErr || !profile) throw new Error("Profilis nerastas");
     if (profile.role !== "student") throw new Error("Tik moksleiviai gali generuoti sertifikatą");
+
+    // Debug bypass: only allow if caller is an admin
+    let debugMode = false;
+    if (data.debug) {
+      const { data: isAdmin } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+      if (!isAdmin) throw new Error("Debug rėžimas leidžiamas tik super admin");
+      debugMode = true;
+    }
 
     // Fetch school name
     let schoolName: string | null = null;
