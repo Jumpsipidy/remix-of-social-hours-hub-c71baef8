@@ -48,6 +48,7 @@ type FilterKey = "all" | "message" | "reservation" | "bug";
 
 export function NotificationBell() {
   const { user, profile, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterKey>("all");
