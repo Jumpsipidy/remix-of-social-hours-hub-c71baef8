@@ -20,12 +20,16 @@ function tomorrowISO() {
   return d.toISOString().slice(0, 10);
 }
 
+const MAX_HOURS_PER_SESSION = 8;
+
 function calcHours(s: string, e: string) {
   if (!s || !e) return 0;
   const [sh, sm] = s.split(":").map(Number);
   const [eh, em] = e.split(":").map(Number);
   const m = eh * 60 + em - (sh * 60 + sm);
-  return m > 0 ? Math.round((m / 60) * 100) / 100 : 0;
+  if (m <= 0) return 0;
+  const h = Math.round((m / 60) * 100) / 100;
+  return Math.min(MAX_HOURS_PER_SESSION, h);
 }
 
 export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
