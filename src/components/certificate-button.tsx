@@ -243,18 +243,28 @@ export function CertificateButton({ className }: { className?: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button onClick={() => generate(false)} disabled={busy} className={baseCls}>
+      <button onClick={() => generate("real")} disabled={busy} className={baseCls}>
         {busy ? "Generuojama..." : "📄 Atsisiųsti PDF sertifikatą"}
       </button>
       {isAdmin && (
-        <button
-          onClick={() => generate(true)}
-          disabled={busy}
-          title="Debug: sugeneruoja PDF nepaisant valandų, neįrašo į DB"
-          className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-60"
-        >
-          🧪 Debug PDF
-        </button>
+        <>
+          <button
+            onClick={() => generate("debug")}
+            disabled={busy}
+            title="Debug: sugeneruoja PDF su TAVO paskyros duomenimis, nepaisant valandų"
+            className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-60"
+          >
+            🧪 Debug PDF
+          </button>
+          <button
+            onClick={() => generate("fake")}
+            disabled={busy}
+            title="Fake: sugeneruoja PDF su išgalvotu moksleiviu (Jonas Petraitis, 11B, ~20 val.) — matai kaip atrodo pilnas sertifikatas"
+            className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/60 bg-fuchsia-500/10 px-4 py-2.5 text-sm font-semibold text-fuchsia-300 hover:bg-fuchsia-500/20 disabled:opacity-60"
+          >
+            🎭 Fake Demo PDF
+          </button>
+        </>
       )}
     </div>
   );
