@@ -414,7 +414,14 @@ function TasksPage() {
       </div>
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
-      <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />
+      <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} onCreated={(id, label) => { if (id) setInvite({ id, label: label ?? "Rezervacija" }); }} />
+      <InviteFriendsDialog
+        open={!!invite}
+        reservationId={invite?.id ?? null}
+        inviterId={user?.id ?? ""}
+        reservationLabel={invite?.label}
+        onClose={() => setInvite(null)}
+      />
     </PageShell>
   );
 }
