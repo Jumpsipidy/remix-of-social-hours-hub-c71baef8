@@ -46,6 +46,7 @@ type OrgLite = { id: string; organization_name: string | null; full_name: string
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
+function isLowerClass(cy: string) { return cy === "5" || cy === "6" || cy === "7"; }
 
 function StudentDashboard() {
   const { user, profile, loading } = useAuth();
