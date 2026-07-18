@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS assigned_classes text[] NOT NULL DEFAULT '{}';
+CREATE INDEX IF NOT EXISTS profiles_assigned_classes_idx ON public.profiles USING GIN (assigned_classes);

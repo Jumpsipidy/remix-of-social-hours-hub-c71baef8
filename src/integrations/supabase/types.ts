@@ -178,6 +178,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          assigned_classes: string[]
           associated_school_id: string | null
           class_year: string | null
           created_at: string
@@ -193,6 +194,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_classes?: string[]
           associated_school_id?: string | null
           class_year?: string | null
           created_at?: string
@@ -208,6 +210,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_classes?: string[]
           associated_school_id?: string | null
           class_year?: string | null
           created_at?: string
