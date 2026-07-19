@@ -16,6 +16,7 @@ import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+import { LeafletMap } from "@/components/leaflet-map";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
