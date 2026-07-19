@@ -14,6 +14,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { AddressPicker, type AddressValue } from "@/components/address-picker";
+import { LeafletMap } from "@/components/leaflet-map";
 
 type OrgRow = {
   id: string;
