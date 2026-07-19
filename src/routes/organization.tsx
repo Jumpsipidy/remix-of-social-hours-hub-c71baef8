@@ -556,6 +556,7 @@ function OrgDashboard() {
           </div>
         </div>
       </section>
+      </>}
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <VerifyCloseDialog
