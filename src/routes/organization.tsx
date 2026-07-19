@@ -14,6 +14,7 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+import { sendHoursConfirmedEmail } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
