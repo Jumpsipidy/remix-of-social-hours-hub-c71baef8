@@ -25,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
+import { Route as OrgIdRouteImport } from './routes/org.$id'
 import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
@@ -118,6 +119,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const VerifyCodeRoute = VerifyCodeRouteImport.update({
   id: '/verify/$code',
   path: '/verify/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgIdRoute = OrgIdRouteImport.update({
+  id: '/org/$id',
+  path: '/org/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogKasYraSocialinesValandosRoute =
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/org/$id'
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/org/$id'
     | '/verify/$code'
     | '/admin'
     | '/verify'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kas-yra-socialines-valandos'
+    | '/org/$id'
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
@@ -402,6 +414,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
+  OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   VerifyIndexRoute: typeof VerifyIndexRoute
 }
@@ -518,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/verify/$code'
       fullPath: '/verify/$code'
       preLoaderRoute: typeof VerifyCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$id': {
+      id: '/org/$id'
+      path: '/org/$id'
+      fullPath: '/org/$id'
+      preLoaderRoute: typeof OrgIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/kas-yra-socialines-valandos': {
@@ -671,6 +691,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
+  OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   VerifyIndexRoute: VerifyIndexRoute,
 }
