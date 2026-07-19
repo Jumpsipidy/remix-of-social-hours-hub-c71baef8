@@ -4,8 +4,11 @@ import { createServerFn } from "@tanstack/react-start";
 // from the client bundle). Handlers dynamic-import it so this .functions file
 // stays safe for client bundling.
 
-function bypassCode() {
-  return process.env.LOCKDOWN_BYPASS_CODE || "7851";
+function bypassCode(): string | null {
+  const v = process.env.LOCKDOWN_BYPASS_CODE;
+  // Fail closed: no hardcoded fallback. If the operator hasn't configured a
+  // bypass secret, all bypass attempts are rejected.
+  return v && v.length >= 4 ? v : null;
 }
 
 export const verifyBypassCode = createServerFn({ method: "POST" })
