@@ -337,7 +337,8 @@ function SchoolDashboard() {
   const toggleSel = (id: string) =>
     setSelected((prev) => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
   const selectAll = () => setSelected(new Set(queueRows.map((r) => r.id)));
@@ -1221,7 +1222,8 @@ function QueueTable({
                     <button
                       onClick={() => {
                         const n = new Set(reviewed);
-                        n.has(r.id) ? n.delete(r.id) : n.add(r.id);
+                        if (n.has(r.id)) n.delete(r.id);
+                        else n.add(r.id);
                         persistReviewed(n);
                       }}
                       className={`rounded-full border px-2 py-1 text-[11px] ${isReviewed ? "border-success/40 bg-success/10 text-success" : "border-border bg-background hover:bg-accent"}`}

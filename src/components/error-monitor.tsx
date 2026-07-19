@@ -73,8 +73,8 @@ export function ErrorMonitor() {
       pushEvent(e.message || "unknown error");
     };
     const onRejection = (e: PromiseRejectionEvent) => {
-      const reason: any = e.reason;
-      const msg = reason?.message ?? String(reason ?? "");
+      const reason = e.reason as unknown;
+      const msg = reason instanceof Error ? reason.message : String(reason ?? "");
       if (shouldIgnore(msg)) return;
       pushEvent(msg || "unhandled rejection");
     };
