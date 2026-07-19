@@ -43,8 +43,10 @@ async function uploadImage(bucket: "org-logos" | "org-photos", userId: string, f
     contentType: file.type,
   });
   if (error) throw error;
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
+  // Buckets are private (workspace policy blocks public buckets) — use long-lived signed URL (~1 year).
+  const { data, error: signErr } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365);
+  if (signErr || !data) throw signErr ?? new Error("Signed URL failed");
+  return data.signedUrl;
 }
 
 export function OrgProfileEditor({ userId }: { userId: string }) {
