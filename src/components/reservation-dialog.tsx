@@ -222,6 +222,21 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
                 />
               </div>
 
+              {target.latitude != null && target.longitude != null && (
+                <div className="mt-5">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-primary">
+                      <MapPin className="h-4 w-4" />
+                    </span>
+                    Vieta žemėlapyje
+                  </div>
+                  {target.address && (
+                    <p className="mb-2 text-xs text-muted-foreground">{target.address}</p>
+                  )}
+                  <LeafletMap lat={target.latitude} lng={target.longitude} height={200} interactive={false} />
+                </div>
+              )}
+
               {/* Helper text */}
               <div className="mt-5 flex items-start gap-3 rounded-2xl bg-accent/50 p-4 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
