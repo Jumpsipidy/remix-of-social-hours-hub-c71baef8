@@ -1,0 +1,2 @@
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT '{}';
+NOTIFY pgrst, 'reload schema';
