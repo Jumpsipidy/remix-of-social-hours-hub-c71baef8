@@ -151,7 +151,7 @@ export function MockTesterPanel() {
           </div>
 
           <div className="flex border-b border-border text-xs">
-            {([["accounts","Paskyros"],["create","Kurti"],["codes","Kodai"],["email","Email"]] as [Tab,string][]).map(([k,l]) => (
+            {([["accounts","Paskyros"],["create","Kurti"],["codes","Kodai"],["email","Email"],["location","Vieta"]] as [Tab,string][]).map(([k,l]) => (
               <button key={k} onClick={() => { setTab(k); if (k==="codes" && schools.length===0) refreshSchools(); }}
                 className={`flex-1 py-2 font-semibold transition ${tab===k ? "bg-primary/10 text-primary border-b-2 border-primary" : "text-muted-foreground hover:bg-accent"}`}>
                 {l}
