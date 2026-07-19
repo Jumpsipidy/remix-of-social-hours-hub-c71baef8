@@ -14,6 +14,7 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+import { sendHoursConfirmedEmail } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
@@ -185,6 +186,9 @@ function OrgDashboard() {
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
     if (error) { toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
+    // Fire-and-forget email — never block the UI on Resend
+    sendHoursConfirmedEmail({ data: { reservationId: r.id } })
+      .catch((e) => console.warn("[email] hours-confirmed failed", e));
     toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
     setVerifyRes(null);
     refresh(user.id);
