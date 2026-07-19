@@ -8,6 +8,7 @@ import {
   createTestAccount, listSchoolCodes, testSignupCode, verifyAccountDeleted,
 } from "@/lib/dev-tools.functions";
 import { adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { previewHoursConfirmedEmail, sendTestHoursConfirmedEmail } from "@/lib/email.functions";
 import { useAuth, type Profile } from "@/hooks/use-auth";
 
 const DASH_BY_ROLE: Record<string, string> = {
