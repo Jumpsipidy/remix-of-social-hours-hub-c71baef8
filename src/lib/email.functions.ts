@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { renderHoursConfirmedEmail } from "./email-templates/hours-confirmed";
 
-const FROM = "Socialinės Valandos <noreply@socialinesvalandos.lt>";
+const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
 
 async function sendResend(payload: {
   to: string;
