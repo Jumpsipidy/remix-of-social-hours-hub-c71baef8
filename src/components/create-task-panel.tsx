@@ -4,6 +4,8 @@ import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff }
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TagsInput } from "@/components/tags-input";
+import { AddressPicker, type AddressValue } from "@/components/address-picker";
+import { LeafletMap } from "@/components/leaflet-map";
 
 type Task = {
   id: string;
