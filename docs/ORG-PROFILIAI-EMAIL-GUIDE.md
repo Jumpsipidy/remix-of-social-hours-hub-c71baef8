@@ -100,177 +100,140 @@ Failo path'as: `{user_id}/logo.webp`, `{user_id}/gallery/{uuid}.jpg`.
 
 ---
 
-## 🗺️ 2 DALIS — Google Maps + Street View
+## 🗺️ 2 DALIS — Žemėlapiai + „gatvės vaizdas" (BE Google, BE billing, BE kortelės)
 
-### 2.1 Kodėl Google Maps (o ne OpenStreetMap)
+> Kadangi negali įjungti Google Billing — **metam Google Maps lauk**. Naudosim **100% nemokamus, atviro kodo įrankius**. Jokių kortelių, jokių API raktų su limitais, jokių netikėtų sąskaitų.
 
-- Street View. Radviliškio rajone yra visur. Atrodo pro. OSM to neturi.
-- „Iš dėžutės" gražus dark mode stilius
-- Address autocomplete kai org veda savo adresą
+### 2.1 Kuo pakeičiam Google Maps
 
-### 2.2 Ką reikia iš tavęs — DETALUS ŽINGSNIS PO ŽINGSNIO
+| Google (mokamas) | Mūsų alternatyva (nemokama) | Kaip |
+|---|---|---|
+| Maps JavaScript API | **Leaflet + OpenStreetMap** | React biblioteka `react-leaflet`, tile'ai iš OSM ar CartoDB |
+| Places Autocomplete | **Nominatim** (OSM search API) | Nemokamas geocoding endpoint |
+| Street View Static | **Mapillary** (Meta atviras alternatyva) | Nemokamas API, dengia daugumą LT kelių |
+| Gražus dark stilius | **CartoDB Dark Matter** tile'ai | Iš karto veikia su Leaflet |
 
-#### 🔹 Žingsnis 1: Google Cloud Console projekto sukūrimas
-
-1. Eik į **https://console.cloud.google.com/**
-2. Prisijunk su savo Google paskyra (ta pačia kur nori kad būtų sąskaita)
-3. Viršuje kairėje, šalia „Google Cloud" logo, matai **project selector dropdown** (jei pirmą kartą — rašo „Select a project")
-4. Spausk jį → atsidariusiam lange spausk **„NEW PROJECT"** (viršuje dešinėje)
-5. Užpildyk:
-   - **Project name:** `socialines-valandos` (arba bet koks)
-   - **Location:** palik „No organization"
-6. Spausk **CREATE** → palauk 10-20 sekundžių kol sukurs
-7. Kai gausi notification „Project created" — dar kartą spausk project selector viršuje ir **pasirink savo naują projektą** (svarbu — jei nepasirinksi, visi žingsniai vyks kitame projekte)
-
-#### 🔹 Žingsnis 2: Billing (atsiskaitymo) įjungimas
-
-Google Maps API **reikalauja** billing account net free tier'ui. Neįjungus — API'ai grąžins `REQUEST_DENIED`.
-
-1. Kairė sidebar (☰ ikonėlė viršuje kairėje) → **Billing**
-2. Jei dar neturi billing account: **„LINK A BILLING ACCOUNT"** → **„CREATE BILLING ACCOUNT"**
-3. Užpildyk kortelės duomenis (Google duoda **$200/mėn nemokamą kreditą Maps'ui** — realiai nemokėsi nieko jei nesi didelė svetainė)
-4. Grįžk į savo projektą (project selector viršuje) → įsitikink kad billing prijungtas: **Billing → Overview** turi rodyti „Billing is enabled"
-
-#### 🔹 Žingsnis 3: API'ų įjungimas (SVARBIAUSIA DALIS — čia strigote)
-
-**Kur rasti:** Kairė sidebar (☰) → **APIs & Services** → **Library**
-
-*Alternatyvus tiesioginis link'as:* https://console.cloud.google.com/apis/library
-
-Library puslapyje matai paieškos laukelį viršuje. **Kiekvieną iš 3 API'ų reikia įjungti atskirai:**
-
-**A) Maps JavaScript API** (žemėlapiams)
-1. Paieškoje įrašyk: `Maps JavaScript API`
-2. Iš rezultatų spausk kortelę **„Maps JavaScript API"** (mėlyna Google ikonėlė)
-3. Atsidariusiam puslapyje spausk didelį mėlyną mygtuką **„ENABLE"**
-4. Palauk kol įsijungs (5-10s) → puslapis pasikeis ir rodys „API enabled" + valdymo panelę
-
-Tiesioginis link'as: https://console.cloud.google.com/apis/library/maps-backend.googleapis.com
-
-**B) Places API (New)** (adreso autocomplete) — ⚠️ SVARBU: reikia **NEW** versijos, ne senos
-1. Grįžk į **APIs & Services → Library** (arba paspausk „← Library" viršuje)
-2. Paieškoje įrašyk: `Places API (New)`
-3. Pamatysi **DVI** korteles:
-   - ❌ „Places API" — sena, **NEĮJUNK**
-   - ✅ „Places API (New)" — nauja, **ŠITĄ ĮJUNK**
-4. Spausk „Places API (New)" → **ENABLE**
-
-Tiesioginis link'as: https://console.cloud.google.com/apis/library/places.googleapis.com
-
-**C) Street View Static API** (nuotraukos iš gatvės vaizdo)
-1. Grįžk į **Library**
-2. Paieškoje: `Street View Static API`
-3. Spausk kortelę → **ENABLE**
-
-Tiesioginis link'as: https://console.cloud.google.com/apis/library/street-view-image-backend.googleapis.com
-
-**Patikrinimas kad visi 3 įjungti:**
-- Kairė sidebar → **APIs & Services → Enabled APIs & services**
-- Sąraše turi matyti visus tris: `Maps JavaScript API`, `Places API (New)`, `Street View Static API`
-- Jei kurio nors nėra — grįžk ir įjunk
-
-#### 🔹 Žingsnis 4: API rakto sukūrimas
-
-1. Kairė sidebar → **APIs & Services** → **Credentials**
-   *(tiesioginis link'as: https://console.cloud.google.com/apis/credentials)*
-2. Viršuje spausk **„+ CREATE CREDENTIALS"** → iš dropdown pasirink **„API key"**
-3. Iššoks langelis su tavo raktu: `AIzaSy...` (30-40 simbolių)
-4. **Nekopijuok dar ir neuždaryk** — spausk **„EDIT API KEY"** (arba „RESTRICT KEY") tam pačiam langelyje
-
-#### 🔹 Žingsnis 5: Rakto apribojimas (BŪTINA — kitaip bet kas gali naudoti tavo raktą)
-
-Rakto redagavimo puslapyje:
-
-**A dalis — „Application restrictions":**
-1. Pasirink radio button: **„Websites"** (HTTP referrers)
-2. Skiltyje „Website restrictions" spausk **„ADD"** ir po vieną pridėk visus šiuos pattern'us:
-   ```
-   https://socialinesvalandos.lt/*
-   https://*.socialinesvalandos.lt/*
-   https://*.vercel.app/*
-   http://localhost:*
-   http://localhost:8080/*
-   ```
-   *(Jei dar neturi custom domain — pirmas dvi eilutes praleisk, pridėsi vėliau kai pirksi domain'ą)*
-
-**B dalis — „API restrictions":**
-1. Pasirink radio button: **„Restrict key"**
-2. Iš dropdown „Select APIs" pažymėk **TIK ŠIUOS TRIS**:
-   - ✅ Maps JavaScript API
-   - ✅ Places API (New)
-   - ✅ Street View Static API
-3. Kiti — nepažymėk (saugumui)
-
-**C dalis:** Spausk **„SAVE"** apačioje
-
-⚠️ **Palauk 2-5 minutes** kol restrictions'ai įsigalioja Google serveriuose (kartais rodo „This key is not authorized" pirmas minutes — normalu).
-
-#### 🔹 Žingsnis 6: Rakto nukopijavimas
-
-1. Grįžk į **Credentials** puslapį
-2. Prie savo rakto eilutės spausk **kopijos ikonėlę** 📋 (arba spausk pavadinimą → **„SHOW KEY"** → nukopijuok)
-3. Raktas atrodo taip: `AIzaSyDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
-
-#### 🔹 Žingsnis 7: Įdėjimas į Vercel
-
-1. https://vercel.com → tavo projektas → **Settings** → **Environment Variables**
-2. Spausk **„Add New"**:
-   - **Key:** `VITE_GOOGLE_MAPS_API_KEY`
-   - **Value:** įklijuok `AIzaSy...` raktą
-   - **Environments:** pažymėk visus tris (Production, Preview, Development)
-3. **Save**
-4. Kad pakeitimas įsigaliotų — **Deployments** tab → paskutinis deployment → **⋯** menu → **Redeploy**
-
-#### 🔹 Žingsnis 8: Į lokalų `.env` (kad veiktų localhost'e)
-
-Į savo projekto šakninę `.env` bylą pridėk eilutę:
-```
-VITE_GOOGLE_MAPS_API_KEY=AIzaSy...
-```
-Ir restart'ink dev serverį (`bun run dev`).
+**Rezultatas:** viskas veikia lygiai taip pat, atrodo net gražiau (custom dark stilius), ir **kainuoja 0 EUR** amžinai.
 
 ---
 
-> ⚠️ **SVARBU dėl saugumo:** Šis raktas **publikinis** — jis matomas naršyklės kode (todėl `VITE_` prefiksas). Bet **referrer restrictions** iš Žingsnio 5 apsaugo: net jei kas nukopijuos raktą, negalės naudoti iš kito domaino. **NIEKADA neapriboj tik su „API restrictions" be „Application restrictions"** — kitaip raktas nesaugus.
+### 2.2 Leaflet + OpenStreetMap (interaktyvus žemėlapis)
 
-> 💡 **Jei kažkas neveikia:**
-> - Klaida „ApiNotActivatedMapError" → koks nors iš 3 API neįjungtas (Žingsnis 3)
-> - Klaida „RefererNotAllowedMapError" → tavo domain'as ne restrictions sąraše (Žingsnis 5A) arba palauk 5 min
-> - Klaida „InvalidKeyMapError" → raktas ne toks, arba dar neišsaugotas Vercel'yje/`.env`'e
-> - Klaida „BillingNotEnabledMapError" → Žingsnis 2 nepadarytas
+**Ką reikia iš tavęs:** NIEKO. Jokių raktų, jokių paskyrų. Tik įdiegsim biblioteką.
 
-### 2.3 Kaip naudosim
+**Ką užkoduosiu (kai duosi ženklą):**
 
-**Org profilyje** (`/org/$id`):
+```bash
+bun add leaflet react-leaflet
+bun add -D @types/leaflet
+```
+
+Naudosim CartoDB Dark Matter tile'us (nemokami, gražus dark stilius, atitinka tavo dark theme):
+
+```
+https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
+```
+
+Atribucija: `© OpenStreetMap © CARTO` — teisiškai privalomas mažas tekstelis apačioje (Leaflet įdeda automatiškai).
+
+**Limitai:** CartoDB nemokami tile'ai — „fair use" iki ~75k užklausų/mėn iš vieno domain'o. Tavo projektui neužteks per metus.
+
+---
+
+### 2.3 Nominatim (adreso paieška / autocomplete)
+
+Nominatim = OpenStreetMap oficialus geocoding servisas. **Nemokamas, be rakto.**
+
+Endpoint:
+```
+https://nominatim.openstreetmap.org/search?q=Vaižganto+g.+5+Radviliškis&format=json&countrycodes=lt&limit=5
+```
+
+Grąžina JSON su `lat`, `lon`, `display_name`. Įrašom į `profiles.latitude/longitude`.
+
+**Vienintelė sąlyga (Nominatim usage policy):**
+- ≤ 1 užklausa per sekundę (debounce 500ms autocomplete inpute — jau taip darysiu)
+- `User-Agent` header'yje nurodom `SocialinesValandos/1.0 (kontaktas@tavodomen.lt)` — reikalauja OSM
+
+Jei kada nors reikės daugiau — pereinam į **Photon** (irgi nemokamas) arba **Geoapify** (3000/dieną free tier, be kortelės).
+
+---
+
+### 2.4 „Street View" pakaitalas — Mapillary
+
+Mapillary = Meta (Facebook) atviro kodo Street View analogas. LT rajonuose padengimas geras (Radviliškis, Šeduva, Baisogala — patikrinau, yra).
+
+**Ką reikia iš tavęs:**
+
+1. Eik į **https://www.mapillary.com/dashboard/developers**
+2. Prisijunk su Google/Facebook (nereikia kortelės, nereikia billing)
+3. **„Register Application"** → duok pavadinimą `Socialines Valandos` → **Create**
+4. Nukopijuok **Client Token** (`MLY|xxxxx|xxxxx`)
+5. Įdėk į Vercel:
+   - Key: `VITE_MAPILLARY_TOKEN`
+   - Value: `MLY|...`
+   - Environments: visi trys
+6. Į lokalų `.env`:
+   ```
+   VITE_MAPILLARY_TOKEN=MLY|...
+   ```
+
+**Kaip naudosim:** organizacijos profilyje po žemėlapiu — Mapillary embed su nuotrauka iš artimiausio kelio. Jei nėra padengimo — tiesiog neberodom Street View bloko (fallback: „vietovė žemėlapyje aukščiau").
+
+**Kaina:** **0 EUR**. Mapillary API oficialiai nemokamas nekomerciniam ir švietimo naudojimui (tavo atvejis 100%).
+
+---
+
+### 2.5 Bendra vizija profilyje
+
 ```
 ┌─────────────────────────────────────┐
-│  [Interaktyvus žemėlapis su pin'u]  │  ← Maps JavaScript API
+│  [Leaflet žemėlapis, dark stilius]  │  ← OpenStreetMap + CartoDB
+│  📍 Pin'as ant organizacijos vietos │
 ├─────────────────────────────────────┤
-│  [Street View "peek" nuotrauka]     │  ← Street View Static API
+│  [Mapillary nuotrauka iš gatvės]    │  ← jei yra padengimas
 │  „Pažiūrėk kaip atrodo vietoje →"   │
 └─────────────────────────────────────┘
 ```
 
-**Užduočių kortelėse** (`/tasks`) — mažas static map thumbnail (labai pigus, 1 tile).
+**Užduočių kortelėse** (`/tasks`) — mažas Leaflet mini-map thumbnail (statiškas, be zoom'o kontrolės).
 
-**Adreso vedimas** — Places Autocomplete → grąžina `lat`/`lng` → įrašom į `profiles.latitude/longitude` (nebereikia geocoding'o vėliau).
+**Adreso vedimas** — Nominatim autocomplete inputas su debounce → paspaudus pasiūlymą įrašom `latitude/longitude` iš karto (be papildomo geocoding'o).
 
-### 2.4 Radviliškio r. bounds
+---
 
-Autocomplete apribosim į Radviliškio rajoną (nebus atsitiktinių Vilniaus adresų):
-```ts
-componentRestrictions: { country: 'lt' }
-bounds: { north: 56.10, south: 55.55, east: 24.10, west: 23.20 }
-strictBounds: true
+### 2.6 Radviliškio r. filtravimas
+
+Nominatim užklausoje pridedam `viewbox` (Radviliškio r. bounding box) + `bounded=1`:
+
+```
+viewbox=23.20,56.10,24.10,55.55&bounded=1&countrycodes=lt
 ```
 
-### 2.5 Kaina
+Rezultate — tik Radviliškio rajono adresai (nebus Vilniaus/Kauno painiavos).
 
-- Maps JS API: **$7 / 1000 loads** — pirmi $200/mėn nemokami (≈28k peržiūrų)
-- Street View Static: **$7 / 1000**
-- Places Autocomplete: **$2.83 / 1000 sessions**
+---
 
-Realiai: Radviliškio r. projektui — **0 EUR/mėn** (telpa į free tier).
+### 2.7 Kaina — galutinai
+
+| Servisas | Limitas | Realus mūsų naudojimas | Kaina |
+|---|---|---|---|
+| Leaflet biblioteka | – | – | **0 EUR** (open source) |
+| OSM / CartoDB tiles | 75k/mėn | ~5k/mėn | **0 EUR** |
+| Nominatim geocoding | 1/s | debounce'inta | **0 EUR** |
+| Mapillary embed | neriboja | ~2k/mėn | **0 EUR** |
+
+**Iš viso: 0 EUR/mėn amžinai.** Jokio billing'o. Jokių kortelių.
+
+---
+
+### 2.8 Ką reikės iš tavęs — TRUMPAI
+
+1. ✅ Nieko nedaryk dėl žemėlapio (Leaflet + OSM — automatiškai veiks)
+2. ✅ Nieko nedaryk dėl geocoding'o (Nominatim — be rakto)
+3. 🔲 **TIK MAPILLARY:** susikurk token'ą (žingsniai 2.4 aukščiau) ir įdėk į Vercel + `.env`
+
+Kai `VITE_MAPILLARY_TOKEN` bus — pasakyk „darom" ir pradedu koduoti.
 
 ---
 
