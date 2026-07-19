@@ -82,3 +82,45 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       html,
     });
   });
+
+// ---------------- Debug helpers (admin-only) ----------------
+
+function demoHtml(overrides?: Partial<Parameters<typeof renderHoursConfirmedEmail>[0]>) {
+  return renderHoursConfirmedEmail({
+    studentName: "Jonas Jonaitis",
+    orgName: "Radviliškio Senjorų Namai",
+    hours: 4,
+    date: new Date().toISOString().slice(0, 10),
+    totalHours: 12,
+    neededHours: 20,
+    location: "Vaižganto g. 5, Radviliškis",
+    ...overrides,
+  });
+}
+
+export const previewHoursConfirmedEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Tik super admin");
+    return { html: demoHtml() };
+  });
+
+export const sendTestHoursConfirmedEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v) => z.object({ to: z.string().email() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Tik super admin");
+    return sendResend({
+      to: data.to,
+      subject: "🧪 TEST — Valandos patvirtintos (Socialinės Valandos)",
+      html: demoHtml({ studentName: "Testinis Vartotojas" }),
+    });
+  });

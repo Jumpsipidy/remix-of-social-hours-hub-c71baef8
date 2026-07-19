@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus } from "lucide-react";
+import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
   seedDevEcosystem, resetDevData, listDevProfiles,
   createTestAccount, listSchoolCodes, testSignupCode, verifyAccountDeleted,
 } from "@/lib/dev-tools.functions";
 import { adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { previewHoursConfirmedEmail, sendTestHoursConfirmedEmail } from "@/lib/email.functions";
 import { useAuth, type Profile } from "@/hooks/use-auth";
 
 const DASH_BY_ROLE: Record<string, string> = {
@@ -17,7 +18,7 @@ const ROLE_LABEL: Record<string, string> = {
   student: "Mokinys", organization: "Organizacija", school_admin: "Mokyklos admin.", admin: "Super Admin",
 };
 
-type Tab = "accounts" | "create" | "codes";
+type Tab = "accounts" | "create" | "codes" | "email";
 type School = { id: string; name: string; signup_code: string | null; is_active: boolean };
 
 export function MockTesterPanel() {
@@ -39,6 +40,9 @@ export function MockTesterPanel() {
   const runCodeTest = useServerFn(testSignupCode);
   const deleteAcc = useServerFn(adminDeleteAccount);
   const verifyDel = useServerFn(verifyAccountDeleted);
+  const previewEmail = useServerFn(previewHoursConfirmedEmail);
+  const sendTestEmail = useServerFn(sendTestHoursConfirmedEmail);
+  const [emailTo, setEmailTo] = useState("");
   const { impersonate, impersonateReal, isImpersonating, clearImpersonation, profile } = useAuth();
 
   if (profile?.role !== "admin") return null;
@@ -143,7 +147,7 @@ export function MockTesterPanel() {
           </div>
 
           <div className="flex border-b border-border text-xs">
-            {([["accounts","Paskyros"],["create","Kurti"],["codes","Kodai"]] as [Tab,string][]).map(([k,l]) => (
+            {([["accounts","Paskyros"],["create","Kurti"],["codes","Kodai"],["email","Email"]] as [Tab,string][]).map(([k,l]) => (
               <button key={k} onClick={() => { setTab(k); if (k==="codes" && schools.length===0) refreshSchools(); }}
                 className={`flex-1 py-2 font-semibold transition ${tab===k ? "bg-primary/10 text-primary border-b-2 border-primary" : "text-muted-foreground hover:bg-accent"}`}>
                 {l}
@@ -265,6 +269,63 @@ export function MockTesterPanel() {
                       {codeResult ? <><CheckCircle2 className="h-3.5 w-3.5"/> Kodas galioja</> : <><XCircle className="h-3.5 w-3.5"/> Kodas neteisingas</>}
                     </div>
                   )}
+                </div>
+              </>
+            )}
+
+            {tab === "email" && (
+              <>
+                <p className="text-[11px] text-muted-foreground">
+                  Testuok „Valandos patvirtintos" email šabloną. Siunčia iš{" "}
+                  <code className="rounded bg-muted px-1">noreply@jumpsipidy.online</code> per Resend.
+                </p>
+                <button
+                  onClick={async () => {
+                    setBusy("email-preview");
+                    try {
+                      const { html } = await previewEmail();
+                      const w = window.open("", "_blank", "width=720,height=900");
+                      if (w) { w.document.write(html); w.document.close(); }
+                      else toast.error("Pop-up užblokuotas");
+                    } catch (e: any) { toast.error(e?.message ?? "Klaida"); }
+                    finally { setBusy(null); }
+                  }}
+                  disabled={busy === "email-preview"}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10 disabled:opacity-50"
+                >
+                  <Eye className="h-3.5 w-3.5" /> {busy === "email-preview" ? "Kraunama…" : "Peržiūrėti HTML naujame lange"}
+                </button>
+
+                <div className="space-y-1.5">
+                  <label className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Siųsti į el. paštą</label>
+                  <input
+                    type="email"
+                    value={emailTo}
+                    onChange={(e) => setEmailTo(e.target.value)}
+                    placeholder="tavo@email.lt"
+                    className="w-full rounded border border-border bg-background px-2 py-1.5 text-xs"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!emailTo) return;
+                      setBusy("email-send");
+                      try {
+                        await sendTestEmail({ data: { to: emailTo } });
+                        toast.success("Išsiųsta! Patikrink pašto dėžutę (ir spam).");
+                      } catch (e: any) { toast.error(e?.message ?? "Nepavyko"); }
+                      finally { setBusy(null); }
+                    }}
+                    disabled={busy === "email-send" || !emailTo}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-glow disabled:opacity-50"
+                  >
+                    <Send className="h-3.5 w-3.5" /> {busy === "email-send" ? "Siunčiama…" : "Siųsti test email"}
+                  </button>
+                </div>
+
+                <div className="rounded-lg border border-dashed border-border p-3 text-[10px] leading-relaxed text-muted-foreground">
+                  <div className="mb-1 font-semibold text-foreground">Kaip veikia realiai:</div>
+                  Kai organizacija paspaus <span className="text-primary">„Patvirtinti ir uždaryti užduotį"</span>,
+                  mokinys automatiškai gauna šį email'ą su savo tikrais duomenimis (vardas, valandos, progresas).
                 </div>
               </>
             )}
