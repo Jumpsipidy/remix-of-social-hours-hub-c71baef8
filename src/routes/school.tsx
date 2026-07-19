@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -126,10 +126,10 @@ function SchoolDashboard() {
     }
   });
 
-  const assignedClasses = profile?.assigned_classes ?? [];
+  const assignedClasses = useMemo(() => profile?.assigned_classes ?? [], [profile?.assigned_classes]);
   const classRestricted = assignedClasses.length > 0;
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!user || profile?.role !== "school_admin") return;
     const [{ data: st, error: stError }, { data: og, error: ogError }] = await Promise.all([
       supabase
@@ -175,11 +175,11 @@ function SchoolDashboard() {
     } else {
       setAllRes([]);
     }
-  };
+  }, [assignedClasses, classRestricted, profile?.role, user]);
 
   useEffect(() => {
     refresh();
-  }, [user, profile?.role, profile?.assigned_classes?.join("|")]);
+  }, [refresh]);
 
   useEffect(() => {
     if (!auditing) return;
