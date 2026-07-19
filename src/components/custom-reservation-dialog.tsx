@@ -328,6 +328,23 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 />
               </div>
 
+              {/* Address picker */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold">
+                  Siūloma vieta{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(nebūtina)</span>
+                </label>
+                <AddressPicker
+                  onChange={(v: AddressValue) => { setAddress(v.address); setLat(v.latitude); setLng(v.longitude); }}
+                />
+                {lat != null && lng != null && (
+                  <div className="mt-2">
+                    <LeafletMap lat={lat} lng={lng} height={180} interactive={false} />
+                  </div>
+                )}
+              </div>
+
+
               <div className="mt-5 flex items-start gap-3 rounded-2xl bg-accent/50 p-4 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <p>Patvirtinus, valandos bus automatiškai pridėtos prie tavo profilio.</p>
