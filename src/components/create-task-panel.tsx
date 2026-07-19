@@ -37,6 +37,9 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [end, setEnd] = useState("17:00");
   const [hours, setHours] = useState(3);
   const [location, setLocation] = useState("");
+  const [address, setAddress] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [spots, setSpots] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "biweekly" | "monthly">("none");
