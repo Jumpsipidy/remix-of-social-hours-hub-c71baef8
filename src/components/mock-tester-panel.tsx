@@ -46,6 +46,7 @@ export function MockTesterPanel() {
   const previewEmail = useServerFn(previewHoursConfirmedEmail);
   const sendTestEmail = useServerFn(sendTestHoursConfirmedEmail);
   const [emailTo, setEmailTo] = useState("");
+  const [loc, setLoc] = useState<AddressValue | null>(null);
   const { impersonate, impersonateReal, isImpersonating, clearImpersonation, profile } = useAuth();
 
   if (profile?.role !== "admin") return null;
