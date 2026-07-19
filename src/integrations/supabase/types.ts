@@ -673,6 +673,15 @@ export type Database = {
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       generate_recurring_tasks: { Args: never; Returns: number }
+      get_lockdown_public: {
+        Args: never
+        Returns: {
+          lockdown_code: string
+          lockdown_enabled: boolean
+          lockdown_message: string
+          updated_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

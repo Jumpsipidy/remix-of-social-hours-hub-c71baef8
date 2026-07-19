@@ -20,6 +20,19 @@ export const reportCriticalIncident = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Only administrators may auto-trigger site-wide lockdown. Any other
+    // authenticated caller (student / organization / school admin) is denied
+    // to prevent low-privilege accounts from taking the platform offline.
+    const roleCheck = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (roleCheck.error || roleCheck.data !== true) {
+      return { ok: false, reason: "forbidden" };
+    }
+
+
+
     const current = await supabaseAdmin
       .from("site_settings")
       .select("id, lockdown_enabled, lockdown_message, updated_at")
