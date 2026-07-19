@@ -40,6 +40,10 @@ type Reservation = {
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
   tags?: string[] | null;
   note?: string | null;
+  address?: string | null;
+  location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
