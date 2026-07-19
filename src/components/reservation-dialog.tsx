@@ -22,6 +22,9 @@ export type ReserveTarget = {
   presetStart?: string;
   presetEnd?: string;
   tags?: string[];
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type Props = {
