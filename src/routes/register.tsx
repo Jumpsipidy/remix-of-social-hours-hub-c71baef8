@@ -1,11 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Heart, Mail, Lock, User, GraduationCap, School, Building2, Clock, Send } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2, Clock, Send, Sparkles, Rocket, Award, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Auth3DBackground } from "@/components/auth-3d-background";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
-
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/register")({
@@ -26,7 +25,6 @@ type Mode = "student" | "org_request";
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
-// 5-7 klasės — fiksuota 20 val. 8+ — mokinys pasirenka pats (min. 8).
 function isLowerClass(cy: string) { return cy === "5" || cy === "6" || cy === "7"; }
 function hoursRuleFor(cy: string): { locked: boolean; min: number; default: number } {
   if (isLowerClass(cy)) return { locked: true, min: 20, default: 20 };
@@ -39,27 +37,37 @@ function RegisterPage() {
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
 
-  // Common
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Student
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
   const [schoolCode, setSchoolCode] = useState("");
   const [agree, setAgree] = useState(false);
 
-
-  // Org request
   const [orgName, setOrgName] = useState("");
   const [legalCode, setLegalCode] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   const [confirmReal, setConfirmReal] = useState(false);
+
+  // Tilt effect for card
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const rx = useSpring(useTransform(my, [-1, 1], [4, -4]), { stiffness: 120, damping: 14 });
+  const ry = useSpring(useTransform(mx, [-1, 1], [-4, 4]), { stiffness: 120, damping: 14 });
+  function handleMove(e: React.MouseEvent) {
+    const r = cardRef.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set(((e.clientX - r.left) / r.width) * 2 - 1);
+    my.set(((e.clientY - r.top) / r.height) * 2 - 1);
+  }
+  function handleLeave() { mx.set(0); my.set(0); }
 
   useEffect(() => {
     supabase.from("schools").select("id, name, city").eq("is_active", true).order("name")
@@ -115,17 +123,12 @@ function RegisterPage() {
     } finally { setLoading(false); }
   }
 
-
   async function handleOrgRequest(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (!confirmReal) {
-      toast.error("Patvirtink, kad pateikta informacija yra tikra.");
-      return;
-    }
+    if (!confirmReal) { toast.error("Patvirtink, kad pateikta informacija yra tikra."); return; }
     if (orgName.trim().length < 3 || description.trim().length < 30) {
-      toast.error("Užpildyk visus laukelius (aprašymas – bent 30 simbolių).");
-      return;
+      toast.error("Užpildyk visus laukelius (aprašymas – bent 30 simbolių)."); return;
     }
     setLoading(true);
     try {
@@ -154,176 +157,285 @@ function RegisterPage() {
     });
     if (error) toast.error("Nepavyko prisijungti per Google");
   }
-
   async function handleDiscord() {
     const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "discord",
-      options: { redirectTo },
-    });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "discord", options: { redirectTo } });
     if (error) toast.error("Nepavyko prisijungti per Discord");
   }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      <Auth3DBackground />
-      <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center px-4 py-10 sm:px-6">
-        <Link to="/" className="mb-8 inline-flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-          </div>
-          <span className="font-display text-xl font-bold">Socialinės Valandos</span>
-        </Link>
+      {/* Aurora background — emerald/teal tint (unique vibe vs. login) */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(160_80%_45%/0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.22),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))]" />
+        <motion.div
+          className="absolute -left-32 bottom-10 h-[520px] w-[520px] rounded-full bg-emerald-500/25 blur-[140px]"
+          animate={{ x: [0, 60, -20, 0], y: [0, -40, 30, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute -right-40 top-10 h-[460px] w-[460px] rounded-full bg-primary/25 blur-[140px]"
+          animate={{ x: [0, -50, 30, 0], y: [0, 30, -20, 0] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[140px]"
+          animate={{ x: [0, 30, -40, 0], y: [0, -20, 20, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(hsl(var(--foreground))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--foreground))_1px,transparent_1px)] [background-size:44px_44px]" />
+        {Array.from({ length: 14 }).map((_, i) => (
+          <motion.span
+            key={i}
+            className="absolute h-1 w-1 rounded-full bg-emerald-400/70 shadow-[0_0_10px_hsl(160_80%_50%)]"
+            style={{ left: `${(i * 53) % 100}%`, top: `${(i * 37) % 100}%` }}
+            animate={{ y: [0, -18, 0], opacity: [0.2, 1, 0.2] }}
+            transition={{ duration: 4 + (i % 5), repeat: Infinity, delay: i * 0.3 }}
+          />
+        ))}
+      </div>
 
-        <div className="w-full rounded-3xl border border-border bg-gradient-card p-8 shadow-elegant">
-          <h1 className="text-2xl font-bold">Sukurk paskyrą</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi</p>
+      <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
+        {/* Left — journey narrative */}
+        <div className="hidden flex-col justify-center lg:flex">
+          <Link to="/" className="group inline-flex items-center gap-2">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary shadow-glow transition-transform group-hover:scale-110">
+              <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+            </div>
+            <span className="font-display text-2xl font-bold">Socialinės Valandos</span>
+          </Link>
 
-          <div className="mt-6 grid gap-2 sm:grid-cols-2">
-            {([
-              { k: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk valandas" },
-              { k: "org_request", label: "Organizacija", icon: Building2, hint: "Pateik prašymą" },
-            ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
-              const active = mode === opt.k;
-              return (
-                <button key={opt.k} type="button" onClick={() => setMode(opt.k)}
-                  className={`group flex flex-col items-start gap-1 rounded-2xl border p-3 text-left transition ${active ? "border-primary bg-gradient-primary text-primary-foreground shadow-glow" : "border-border bg-background/60 hover:border-primary/50"}`}>
-                  <opt.icon className="h-5 w-5" />
-                  <span className="text-sm font-semibold">{opt.label}</span>
-                  <span className={`text-[11px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.hint}</span>
-                </button>
-              );
-            })}
-          </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mt-14">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 backdrop-blur">
+              <Rocket className="h-3 w-3" /> Pradžia · 60 sekundžių
+            </div>
+            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tight">
+              Pradėk savo<br />
+              <span className="bg-[linear-gradient(120deg,hsl(160_80%_55%),hsl(var(--primary)),hsl(160_80%_55%))] bg-[length:200%_100%] bg-clip-text text-transparent [animation:gradient-shift_6s_ease_infinite]">
+                valandų kelionę
+              </span><br />
+              šiandien.
+            </h1>
+            <p className="mt-6 max-w-md text-base text-muted-foreground">
+              Sukurk paskyrą per minutę. Įrašyk mokyklos kodą, pasirink klasę — ir jau gali rezervuoti pirmąją savanorystę.
+            </p>
+          </motion.div>
 
-          {mode === "org_request" ? (
-            <>
-              <div className="mt-4 rounded-2xl border border-warning/40 bg-warning/5 p-3 text-xs text-warning-foreground">
-                ⚠️ Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
-                Fiktyvūs prašymai (išgalvoti pavadinimai, netikri kodai) yra atmetami ir gali užtraukti atsakomybę.
-              </div>
-              <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
-                <Field label="Organizacijos pavadinimas (tikslus, kaip Registrų centre)" icon={Building2} value={orgName} onChange={setOrgName} placeholder="VšĮ „Žalioji Karta“" required />
-                <Field label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={setLegalCode} placeholder="123456789" />
-                <Field label="Kontaktinis asmuo (vardas pavardė)" icon={User} value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required />
-                <Field label="Kontaktinis el. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="info@organizacija.lt" required />
-                <Field label="Telefonas" icon={Mail} value={contactPhone} onChange={setContactPhone} placeholder="+370 6xx xxxxx" />
-                <Field label="Interneto svetainė / socialiniai" icon={Mail} value={website} onChange={setWebsite} placeholder="https://…" />
-                <div>
-                  <label className="text-xs font-semibold text-muted-foreground">Trumpas veiklos aprašymas (min. 30 simb.)</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
-                    placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
-                    className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-primary" />
+          <ol className="mt-10 grid max-w-md gap-3">
+            {[
+              { n: "01", icon: SchoolIcon, title: "Įvesk mokyklos kodą", body: "Gauk iš klasės auklėtojo — patvirtina, kad esi tikras mokinys." },
+              { n: "02", icon: GraduationCap, title: "Pasirink klasę", body: "5–7 kl. — 20 val. 8+ kl. — bent 8 val. per metus." },
+              { n: "03", icon: Award, title: "Rink valandas", body: "Rezervuok užduotis, atlik, gauk patvirtinimą — viskas skaidru." },
+            ].map((s, i) => (
+              <motion.li
+                key={s.n}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 * i + 0.3 }}
+                whileHover={{ x: 4 }}
+                className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-card/40 p-4 backdrop-blur-xl transition-colors hover:border-emerald-400/50 hover:bg-card/70"
+              >
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.6)] transition-transform group-hover:rotate-6">
+                  <s.icon className="h-5 w-5" />
                 </div>
-                <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-                  <input type="checkbox" checked={confirmReal} onChange={(e) => setConfirmReal(e.target.checked)} className="mt-0.5" />
-                  <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi. Suprantu, kad melagingos informacijos pateikimas užtraukia atsakomybę.</span>
-                </label>
-                <button type="submit" disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60">
-                  <Send className="h-4 w-4" /> {loading ? "Siunčiama…" : "Pateikti prašymą"}
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="mt-4 rounded-2xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-                Mokyklos administratorių paskyras kuria tik Super Admin per administravimo skydą.
-              </div>
-              <form className="mt-5 space-y-4" onSubmit={handleAccountSignup}>
-                <Field label="Vardas Pavardė" icon={User} value={fullName} onChange={setFullName} placeholder="Emilija Kazlauskaitė" required />
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-[10px] font-bold tracking-widest text-emerald-400/80">{s.n}</span>
+                    <p className="text-sm font-semibold">{s.title}</p>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{s.body}</p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
+        </div>
 
-                {mode === "student" && (
-                  <>
+        {/* Right — form card */}
+        <div className="mx-auto w-full max-w-md">
+          <Link to="/" className="mb-8 inline-flex items-center gap-2 lg:hidden">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary shadow-glow">
+              <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
+            </div>
+            <span className="font-display text-lg font-bold">Socialinės Valandos</span>
+          </Link>
+
+          <motion.div
+            ref={cardRef}
+            onMouseMove={handleMove}
+            onMouseLeave={handleLeave}
+            style={{ rotateX: rx, rotateY: ry, transformPerspective: 1200 }}
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="group relative rounded-[2rem] p-[1.5px]"
+          >
+            <div className="absolute inset-0 rounded-[2rem] bg-[conic-gradient(from_0deg,hsl(160_80%_50%),hsl(var(--primary)),hsl(160_80%_50%/0.3),hsl(160_80%_50%))] opacity-70 blur-[1px] [animation:spin_10s_linear_infinite]" aria-hidden />
+            <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black tracking-tight">Sukurk paskyrą</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi.</p>
+                </div>
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)]">
+                  <Sparkles className="h-5 w-5 text-primary-foreground" />
+                </div>
+              </div>
+
+              {/* Mode switch */}
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                {([
+                  { k: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk valandas" },
+                  { k: "org_request", label: "Organizacija", icon: Building2, hint: "Pateik prašymą" },
+                ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
+                  const active = mode === opt.k;
+                  return (
+                    <button key={opt.k} type="button" onClick={() => setMode(opt.k)}
+                      className={`group/mode relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)]" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-emerald-400/50"}`}>
+                      <opt.icon className="h-5 w-5" />
+                      <span className="text-sm font-semibold">{opt.label}</span>
+                      <span className={`text-[11px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {mode === "org_request" ? (
+                <>
+                  <div className="mt-4 rounded-2xl border border-amber-400/40 bg-amber-400/5 p-3 text-xs text-amber-200">
+                    ⚠️ Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
+                  </div>
+                  <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
+                    <Field label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={setOrgName} placeholder="VšĮ „Žalioji Karta“" required />
+                    <Field label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={setLegalCode} placeholder="123456789" />
+                    <Field label="Kontaktinis asmuo" icon={User} value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required />
+                    <Field label="Kontaktinis el. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="info@organizacija.lt" required />
+                    <Field label="Telefonas" icon={Mail} value={contactPhone} onChange={setContactPhone} placeholder="+370 6xx xxxxx" />
+                    <Field label="Interneto svetainė" icon={Mail} value={website} onChange={setWebsite} placeholder="https://…" />
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Mokykla</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Trumpas veiklos aprašymas (min. 30 simb.)</label>
+                      <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
+                        placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
+                        className="mt-1.5 w-full rounded-xl border border-border bg-background/60 p-3 text-sm outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]" />
+                    </div>
+                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+                      <input type="checkbox" checked={confirmReal} onChange={(e) => setConfirmReal(e.target.checked)} className="mt-0.5" />
+                      <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi.</span>
+                    </label>
+                    <motion.button
+                      type="submit" disabled={loading}
+                      whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.98 }}
+                      className="group/submit relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] py-3.5 text-sm font-bold text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)] transition-all hover:shadow-[0_20px_60px_-15px_hsl(160_80%_50%/0.9)] disabled:opacity-60"
+                    >
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
+                      {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Siunčiama…</> : <><Send className="h-4 w-4" /> Pateikti prašymą</>}
+                    </motion.button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  {/* OAuth first — parity with login */}
+                  <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                    <button onClick={handleGoogle} type="button"
+                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
+                      <GoogleIcon /> Google
+                    </button>
+                    <button onClick={handleDiscord} type="button"
+                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
+                      <DiscordIcon /> Discord
+                    </button>
+                  </div>
+
+                  <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
+                    arba el. paštu
+                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border" />
+                  </div>
+
+                  <form className="space-y-4" onSubmit={handleAccountSignup}>
+                    <Field label="Vardas Pavardė" icon={User} value={fullName} onChange={setFullName} placeholder="Emilija Kazlauskaitė" required />
+
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokykla</label>
                       <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary">
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
                         {schools.length === 0 && <option value="">Kraunama…</option>}
                         {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
                       </select>
-                      <p className="mt-1 text-[11px] text-muted-foreground">Kol kas prieinama tik viena mokykla. Kitos bus pridedamos administratoriaus.</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Klasė</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Klasė</label>
                       <select value={classYear} onChange={(e) => setClassYear(e.target.value)} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary">
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
                         <option value="">Pasirink…</option>
                         {CLASS_YEARS.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
-                    <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
-                      <label className="flex items-center gap-2 text-xs font-semibold text-primary">
+
+                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/5 p-4 backdrop-blur">
+                      <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
                         <Clock className="h-4 w-4" /> Kiek valandų turi atlikti?
                       </label>
                       {classYear && isLowerClass(classYear) ? (
                         <div className="mt-3 flex items-center gap-3">
-                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-primary/40 bg-primary/10 text-sm font-bold">20</div>
-                          <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> nustatyta automatiškai ir keisti negalima.</span>
+                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-emerald-400/40 bg-emerald-400/10 text-sm font-bold text-emerald-200">20</div>
+                          <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> fiksuota.</span>
                         </div>
                       ) : (
                         <div className="mt-3 flex items-center gap-3">
                           <input type="number" min={classYear ? hoursRuleFor(classYear).min : 8} max={500}
                             value={hoursNeeded} required
                             onChange={(e) => setHoursNeeded(Math.max(classYear ? hoursRuleFor(classYear).min : 8, Number(e.target.value)))}
-                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
-                          <span className="text-xs text-muted-foreground">val. per mokslo metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
+                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-emerald-400" />
+                          <span className="text-xs text-muted-foreground">val. per metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
                         </div>
                       )}
                     </div>
+
                     <div>
-                      <label className="text-xs font-semibold text-muted-foreground">Mokyklos prisijungimo kodas</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokyklos kodas</label>
                       <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
                         autoComplete="off" placeholder="Pvz.: SEDUVOS2026"
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm tracking-wider outline-none focus:border-primary" />
-                      <p className="mt-1 text-[11px] text-muted-foreground">🔑 Gauk iš klasės auklėtojo arba mokyklos administratoriaus. Be jo paskyros neaktyvuosime.</p>
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm tracking-wider outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]" />
+                      <p className="mt-1 text-[11px] text-muted-foreground">🔑 Iš klasės auklėtojo / mokyklos administratoriaus.</p>
                     </div>
-                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-[11px] text-muted-foreground">
+
+                    <Field label="El. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" required />
+                    <Field label="Slaptažodis" icon={Lock} type="password" value={password} onChange={setPassword} placeholder="Bent 8 simboliai" required />
+
+                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-[11px] text-muted-foreground backdrop-blur">
                       <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-                      <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje ir pateikti duomenys yra teisingi. Melagingi duomenys — paskyros pašalinimas.</span>
+                      <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje. Melagingi duomenys — paskyros pašalinimas.</span>
                     </label>
-                  </>
-                )}
 
-
-                <Field label="El. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" required />
-                <Field label="Slaptažodis" icon={Lock} type="password" value={password} onChange={setPassword} placeholder="Bent 8 simboliai" required />
-
-                <button type="submit" disabled={loading}
-                  className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-60">
-                  {loading ? "Kuriama paskyra..." : "Sukurti paskyrą"}
-                </button>
-              </form>
-
-              {mode === "student" && (
-                <>
-                  <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    <div className="h-px flex-1 bg-border" /> arba <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <button onClick={handleGoogle} type="button"
-                      className="relative flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold hover:bg-muted">
-                      <GoogleIcon /> Tęsti su Google
-                      <span className="absolute -top-2 right-3 rounded-full bg-amber-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-black">Beta</span>
-                    </button>
-                    <button onClick={handleDiscord} type="button"
-                      className="flex items-center justify-center gap-2 rounded-full border border-border bg-background py-3 text-sm font-semibold hover:bg-muted">
-                      <DiscordIcon /> Tęsti su Discord
-                    </button>
-                  </div>
-                  <p className="mt-2 text-center text-[11px] text-muted-foreground">Po pirmo prisijungimo galėsi pakeisti savo vardą profilyje.</p>
+                    <motion.button
+                      type="submit" disabled={loading}
+                      whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.98 }}
+                      className="group/submit relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] py-3.5 text-sm font-bold text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)] transition-all hover:shadow-[0_20px_60px_-15px_hsl(160_80%_50%/0.9)] disabled:opacity-60"
+                    >
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
+                      {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Kuriama…</> : <>Sukurti paskyrą <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-1" /></>}
+                    </motion.button>
+                  </form>
                 </>
               )}
-            </>
-          )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Jau turi paskyrą?{" "}
-            <Link to="/login" className="font-semibold text-primary hover:underline">Prisijungti</Link>
-          </p>
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                Jau turi paskyrą?{" "}
+                <Link to="/login" className="font-semibold text-emerald-300 hover:underline">Prisijunk</Link>
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes gradient-shift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -334,11 +446,11 @@ function Field({ label, icon: Icon, value, onChange, placeholder, type = "text",
 }) {
   return (
     <div>
-      <label className="text-xs font-semibold text-muted-foreground">{label}</label>
-      <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background px-3 focus-within:border-primary">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+      <div className="group/f mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 backdrop-blur transition-all focus-within:border-emerald-400 focus-within:bg-background focus-within:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
+        <Icon className="h-4 w-4 text-muted-foreground transition-colors group-focus-within/f:text-emerald-300" />
         <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required}
-          className="h-11 w-full bg-transparent text-sm outline-none" placeholder={placeholder} />
+          className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" placeholder={placeholder} />
       </div>
     </div>
   );
@@ -351,7 +463,6 @@ function DiscordIcon() {
     </svg>
   );
 }
-
 function GoogleIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
