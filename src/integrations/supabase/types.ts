@@ -348,52 +348,97 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_tags: string[] | null
+          address: string | null
           assigned_classes: string[]
           associated_school_id: string | null
+          bio: string | null
+          city: string | null
           class_year: string | null
+          cover_url: string | null
           created_at: string
           email: string | null
+          facebook_url: string | null
           full_name: string | null
+          gallery_urls: string[] | null
           hours_earned: number
           hours_needed: number
           id: string
+          instagram_url: string | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
           org_category: Database["public"]["Enums"]["org_category"] | null
           organization_name: string | null
+          phone: string | null
+          profile_verified: boolean
+          public_email: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
+          activity_tags?: string[] | null
+          address?: string | null
           assigned_classes?: string[]
           associated_school_id?: string | null
+          bio?: string | null
+          city?: string | null
           class_year?: string | null
+          cover_url?: string | null
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           full_name?: string | null
+          gallery_urls?: string[] | null
           hours_earned?: number
           hours_needed?: number
           id: string
+          instagram_url?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
           org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
+          phone?: string | null
+          profile_verified?: boolean
+          public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
+          activity_tags?: string[] | null
+          address?: string | null
           assigned_classes?: string[]
           associated_school_id?: string | null
+          bio?: string | null
+          city?: string | null
           class_year?: string | null
+          cover_url?: string | null
           created_at?: string
           email?: string | null
+          facebook_url?: string | null
           full_name?: string | null
+          gallery_urls?: string[] | null
           hours_earned?: number
           hours_needed?: number
           id?: string
+          instagram_url?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
           org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
+          phone?: string | null
+          profile_verified?: boolean
+          public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: [
           {
