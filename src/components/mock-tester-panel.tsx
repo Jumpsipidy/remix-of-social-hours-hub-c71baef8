@@ -40,6 +40,9 @@ export function MockTesterPanel() {
   const runCodeTest = useServerFn(testSignupCode);
   const deleteAcc = useServerFn(adminDeleteAccount);
   const verifyDel = useServerFn(verifyAccountDeleted);
+  const previewEmail = useServerFn(previewHoursConfirmedEmail);
+  const sendTestEmail = useServerFn(sendTestHoursConfirmedEmail);
+  const [emailTo, setEmailTo] = useState("");
   const { impersonate, impersonateReal, isImpersonating, clearImpersonation, profile } = useAuth();
 
   if (profile?.role !== "admin") return null;
