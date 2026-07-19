@@ -21,7 +21,7 @@ const ROLE_LABEL: Record<string, string> = {
   student: "Mokinys", organization: "Organizacija", school_admin: "Mokyklos admin.", admin: "Super Admin",
 };
 
-type Tab = "accounts" | "create" | "codes" | "email";
+type Tab = "accounts" | "create" | "codes" | "email" | "location";
 type School = { id: string; name: string; signup_code: string | null; is_active: boolean };
 
 export function MockTesterPanel() {
