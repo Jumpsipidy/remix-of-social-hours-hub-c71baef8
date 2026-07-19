@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -22,7 +22,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Target,
   TrendingUp,
   UserPlus,
   Users,
@@ -597,7 +596,7 @@ function Metric({ icon: Icon, label, value, hint }: { icon: typeof Users; label:
   );
 }
 
-function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function Panel({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return <section className="rounded-[2rem] border border-border bg-gradient-card p-5 shadow-elegant backdrop-blur sm:p-6"><div className="mb-5"><h3 className="font-display text-2xl font-bold">{title}</h3><p className="text-sm text-muted-foreground">{subtitle}</p></div>{children}</section>;
 }
 
