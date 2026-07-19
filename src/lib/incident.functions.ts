@@ -23,15 +23,14 @@ export const reportCriticalIncident = createServerFn({ method: "POST" })
     // Only administrators may auto-trigger site-wide lockdown. Any other
     // authenticated caller (student / organization / school admin) is denied
     // to prevent low-privilege accounts from taking the platform offline.
-    const roleCheck = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", context.userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (roleCheck.error || !roleCheck.data) {
+    const roleCheck = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (roleCheck.error || roleCheck.data !== true) {
       return { ok: false, reason: "forbidden" };
     }
+
 
 
     const current = await supabaseAdmin

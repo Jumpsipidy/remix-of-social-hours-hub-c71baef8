@@ -58,7 +58,8 @@ export const verifyBypassCode = createServerFn({ method: "POST" })
       return { ok: false as const, captchaRequired: bucket.fails.length >= 3 };
     }
 
-    if (!constantTimeEqualStrings(data.code, bypassCode())) {
+    const configured = bypassCode();
+    if (!configured || !constantTimeEqualStrings(data.code, configured)) {
       bucket.fails.push(Date.now());
       if (bucket.fails.length >= MAX_ATTEMPTS) bucket.lockedUntil = Date.now() + LOCKOUT_MS;
       return { ok: false as const, captchaRequired: bucket.fails.length >= 3 };
