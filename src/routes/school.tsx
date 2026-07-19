@@ -126,7 +126,10 @@ function SchoolDashboard() {
     }
   });
 
-  const assignedClasses = useMemo(() => profile?.assigned_classes ?? [], [profile?.assigned_classes]);
+  const assignedClasses = useMemo(
+    () => profile?.assigned_classes ?? [],
+    [profile?.assigned_classes],
+  );
   const classRestricted = assignedClasses.length > 0;
 
   const refresh = useCallback(async () => {
