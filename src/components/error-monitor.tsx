@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
  * The report server function has its own cooldown so this can't spam.
  */
 const CRITICAL_WINDOW_MS = 60_000;
-const CRITICAL_THRESHOLD = 4;   // burst of runtime errors
+const CRITICAL_THRESHOLD = 4; // burst of runtime errors
 
 // Console noise / third-party junk we should not treat as critical
 const IGNORED = [
@@ -51,7 +51,9 @@ export function ErrorMonitor() {
       } catch {
         // Server rejected (cooldown / already locked / auth expired) — reset so
         // we can try again next time it's genuinely bad.
-        setTimeout(() => { reportedRef.current = false; }, 60_000);
+        setTimeout(() => {
+          reportedRef.current = false;
+        }, 60_000);
       }
     };
 

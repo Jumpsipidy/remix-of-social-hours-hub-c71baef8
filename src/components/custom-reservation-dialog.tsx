@@ -1,11 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, Sparkles, Check, Info, Loader2, Search, Building2 } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Clock,
+  Sparkles,
+  Check,
+  Info,
+  Loader2,
+  Search,
+  Building2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
-type OrgRow = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
+type OrgRow = {
+  id: string;
+  full_name: string | null;
+  organization_name: string | null;
+  email: string | null;
+};
 
 type Props = {
   open: boolean;
@@ -133,9 +148,15 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
               >
                 <X className="h-4 w-4" />
               </button>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">Pasiūlyk savo rezervaciją</p>
-              <h2 className="mt-1 text-[22px] font-bold leading-tight">Pasirink organizaciją ir laiką</h2>
-              <p className="mt-1 text-xs text-white/80">Tavo užklausa bus išsiųsta organizacijai patvirtinimui.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                Pasiūlyk savo rezervaciją
+              </p>
+              <h2 className="mt-1 text-[22px] font-bold leading-tight">
+                Pasirink organizaciją ir laiką
+              </h2>
+              <p className="mt-1 text-xs text-white/80">
+                Tavo užklausa bus išsiųsta organizacijai patvirtinimui.
+              </p>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto px-7 py-6">
@@ -171,7 +192,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                     </div>
                     <div className="max-h-56 overflow-y-auto">
                       {filtered.length === 0 && (
-                        <p className="px-3 py-6 text-center text-xs text-muted-foreground">Nieko nerasta</p>
+                        <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                          Nieko nerasta
+                        </p>
                       )}
                       {filtered.map((o) => (
                         <button
@@ -214,7 +237,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
               <div className="mt-5 grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-primary"><Clock className="h-4 w-4" /></span>
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-primary">
+                      <Clock className="h-4 w-4" />
+                    </span>
                     Pradžia
                   </label>
                   <input
@@ -226,7 +251,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 </div>
                 <div>
                   <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-primary"><Clock className="h-4 w-4" /></span>
+                    <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-primary">
+                      <Clock className="h-4 w-4" />
+                    </span>
                     Pabaiga
                   </label>
                   <input
@@ -247,25 +274,42 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`grid h-11 w-11 place-items-center rounded-xl ${hours > 0 ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-destructive/20 text-destructive"}`}>
+                  <div
+                    className={`grid h-11 w-11 place-items-center rounded-xl ${hours > 0 ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-destructive/20 text-destructive"}`}
+                  >
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Numatomos valandos</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Numatomos valandos
+                    </p>
                     <p className="font-display text-lg font-bold">
-                      {hours > 0 ? <>{start} → {end} <span className="text-gradient">= {hours} val.</span></> : "Neteisingas laiko intervalas"}
+                      {hours > 0 ? (
+                        <>
+                          {start} → {end} <span className="text-gradient">= {hours} val.</span>
+                        </>
+                      ) : (
+                        "Neteisingas laiko intervalas"
+                      )}
                     </p>
                   </div>
                 </div>
                 <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
                   <Info className="mt-0.5 h-3 w-3 shrink-0" />
-                  <span>Valandas <b>skaičiuoja tik laiko intervalas</b> (max. {MAX_HOURS_PER_SESSION} val. vienai rezervacijai). Organizacija turi <b>patvirtinti</b> laiką prieš įskaičiuojant į tavo balansą — negalima „susikurti“ valandų be jos sutikimo.</span>
+                  <span>
+                    Valandas <b>skaičiuoja tik laiko intervalas</b> (max. {MAX_HOURS_PER_SESSION}{" "}
+                    val. vienai rezervacijai). Organizacija turi <b>patvirtinti</b> laiką prieš
+                    įskaičiuojant į tavo balansą — negalima „susikurti“ valandų be jos sutikimo.
+                  </span>
                 </p>
               </div>
 
               {/* Note */}
               <div className="mt-5">
-                <label className="mb-2 block text-sm font-semibold">Žinutė organizacijai <span className="text-xs font-normal text-muted-foreground">(nebūtina)</span></label>
+                <label className="mb-2 block text-sm font-semibold">
+                  Žinutė organizacijai{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(nebūtina)</span>
+                </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
@@ -296,7 +340,11 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 disabled={!valid || submitting}
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
                 {submitting ? "Siunčiama..." : "Siųsti pasiūlymą"}
               </motion.button>
             </div>
