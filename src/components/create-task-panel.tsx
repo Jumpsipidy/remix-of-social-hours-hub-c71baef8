@@ -59,7 +59,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const reset = () => {
     setTitle(""); setDescription(""); setDate(todayISO());
     setStart("14:00"); setEnd("17:00"); setHours(3);
-    setLocation(""); setSpots(1); setTags([]);
+    setLocation(""); setAddress(null); setLat(null); setLng(null);
+    setSpots(1); setTags([]);
   };
 
   const submit = async () => {
@@ -74,7 +75,10 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       start_time: start || null,
       end_time: end || null,
       available_hours: hours,
-      location: location.trim(),
+      location: location.trim() || address || "",
+      address: address,
+      latitude: lat,
+      longitude: lng,
       spots_total: spots,
       is_open: true,
       recurrence,
