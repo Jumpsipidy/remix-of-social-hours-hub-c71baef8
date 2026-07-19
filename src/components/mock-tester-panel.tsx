@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus } from "lucide-react";
+import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
   seedDevEcosystem, resetDevData, listDevProfiles,
