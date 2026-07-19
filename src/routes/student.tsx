@@ -16,6 +16,7 @@ import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+import { LeafletMap } from "@/components/leaflet-map";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
@@ -40,6 +41,10 @@ type Reservation = {
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
   tags?: string[] | null;
   note?: string | null;
+  address?: string | null;
+  location?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
@@ -384,6 +389,14 @@ function StudentDashboard() {
                       {r.note && <span className="ml-1 flex items-center gap-1 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3" /> {r.note.slice(0, 80)}</span>}
                     </div>
                   ) : null}
+                  {r.latitude != null && r.longitude != null && (
+                    <div className="mt-3 space-y-1.5 border-t border-border/60 pt-3">
+                      {r.address && (
+                        <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground"><MapPin className="h-3 w-3 text-primary" /> {r.address}</p>
+                      )}
+                      <LeafletMap lat={r.latitude} lng={r.longitude} height={140} interactive={false} />
+                    </div>
+                  )}
                 </div>
               );
             })}

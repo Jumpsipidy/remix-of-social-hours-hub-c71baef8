@@ -493,11 +493,15 @@ export type Database = {
       }
       reservations: {
         Row: {
+          address: string | null
           created_at: string
           end_time: string
           hours_to_earn: number
           id: string
+          latitude: number | null
           legal_disclosure: string | null
+          location: string | null
+          longitude: number | null
           note: string | null
           organization_id: string
           reservation_date: string
@@ -509,11 +513,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
           end_time: string
           hours_to_earn?: number
           id?: string
+          latitude?: number | null
           legal_disclosure?: string | null
+          location?: string | null
+          longitude?: number | null
           note?: string | null
           organization_id: string
           reservation_date: string
@@ -525,11 +533,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
           end_time?: string
           hours_to_earn?: number
           id?: string
+          latitude?: number | null
           legal_disclosure?: string | null
+          location?: string | null
+          longitude?: number | null
           note?: string | null
           organization_id?: string
           reservation_date?: string
@@ -613,6 +625,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          address: string | null
           available_hours: number
           created_at: string
           created_by: string | null
@@ -622,7 +635,9 @@ export type Database = {
           id: string
           is_event: boolean
           is_open: boolean
+          latitude: number | null
           location: string
+          longitude: number | null
           organization_id: string
           recurrence: string
           recurrence_active: boolean
@@ -637,6 +652,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           available_hours?: number
           created_at?: string
           created_by?: string | null
@@ -646,7 +662,9 @@ export type Database = {
           id?: string
           is_event?: boolean
           is_open?: boolean
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           organization_id: string
           recurrence?: string
           recurrence_active?: boolean
@@ -661,6 +679,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           available_hours?: number
           created_at?: string
           created_by?: string | null
@@ -670,7 +689,9 @@ export type Database = {
           id?: string
           is_event?: boolean
           is_open?: boolean
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           organization_id?: string
           recurrence?: string
           recurrence_active?: boolean

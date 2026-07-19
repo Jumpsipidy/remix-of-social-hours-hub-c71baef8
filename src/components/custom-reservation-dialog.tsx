@@ -14,6 +14,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { AddressPicker, type AddressValue } from "@/components/address-picker";
+import { LeafletMap } from "@/components/leaflet-map";
 
 type OrgRow = {
   id: string;
@@ -55,6 +57,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
+  const [address, setAddress] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
@@ -101,7 +106,11 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       hours_to_earn: hours,
       status: "pending",
       note: note || null,
-    });
+      address: address,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+    } as any);
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
@@ -318,6 +327,23 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                   className="w-full resize-none rounded-xl border border-border bg-background p-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
+
+              {/* Address picker */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold">
+                  Siūloma vieta{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(nebūtina)</span>
+                </label>
+                <AddressPicker
+                  onChange={(v: AddressValue) => { setAddress(v.address); setLat(v.latitude); setLng(v.longitude); }}
+                />
+                {lat != null && lng != null && (
+                  <div className="mt-2">
+                    <LeafletMap lat={lat} lng={lng} height={180} interactive={false} />
+                  </div>
+                )}
+              </div>
+
 
               <div className="mt-5 flex items-start gap-3 rounded-2xl bg-accent/50 p-4 text-xs text-muted-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

@@ -4,6 +4,8 @@ import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff }
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TagsInput } from "@/components/tags-input";
+import { AddressPicker, type AddressValue } from "@/components/address-picker";
+import { LeafletMap } from "@/components/leaflet-map";
 
 type Task = {
   id: string;
@@ -35,6 +37,9 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [end, setEnd] = useState("17:00");
   const [hours, setHours] = useState(3);
   const [location, setLocation] = useState("");
+  const [address, setAddress] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [spots, setSpots] = useState(1);
   const [tags, setTags] = useState<string[]>([]);
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "biweekly" | "monthly">("none");
@@ -54,7 +59,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const reset = () => {
     setTitle(""); setDescription(""); setDate(todayISO());
     setStart("14:00"); setEnd("17:00"); setHours(3);
-    setLocation(""); setSpots(1); setTags([]);
+    setLocation(""); setAddress(null); setLat(null); setLng(null);
+    setSpots(1); setTags([]);
   };
 
   const submit = async () => {
@@ -69,7 +75,10 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       start_time: start || null,
       end_time: end || null,
       available_hours: hours,
-      location: location.trim(),
+      location: location.trim() || address || "",
+      address: address,
+      latitude: lat,
+      longitude: lng,
       spots_total: spots,
       is_open: true,
       recurrence,
@@ -147,7 +156,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Vieta / adresas"
+                  placeholder="Vietos pavadinimas (pvz., Miesto biblioteka)"
                   className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3">
@@ -160,6 +169,16 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                     className="h-11 w-16 bg-transparent text-sm outline-none"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tikslus adresas žemėlapyje</p>
+                <AddressPicker
+                  initial={{ address: address ?? undefined, latitude: lat ?? undefined, longitude: lng ?? undefined }}
+                  onChange={(v: AddressValue) => { setAddress(v.address); setLat(v.latitude); setLng(v.longitude); if (!location) setLocation(v.city ?? v.address); }}
+                />
+                {lat != null && lng != null && (
+                  <LeafletMap lat={lat} lng={lng} height={180} interactive={false} />
+                )}
               </div>
               <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams rasti tinkamiausią užduotį" />
               <div className="rounded-xl border border-border bg-background/50 p-3">
