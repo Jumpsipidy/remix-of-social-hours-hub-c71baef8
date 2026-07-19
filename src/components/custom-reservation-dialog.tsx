@@ -106,7 +106,11 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       hours_to_earn: hours,
       status: "pending",
       note: note || null,
-    });
+      address: address,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+    } as any);
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
