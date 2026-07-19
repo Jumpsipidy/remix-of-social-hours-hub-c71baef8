@@ -333,6 +333,48 @@ export function MockTesterPanel() {
                 </div>
               </>
             )}
+
+            {tab === "location" && (
+              <>
+                <p className="text-[11px] text-muted-foreground">
+                  Testuok adresų paiešką (Nominatim/OSM), žemėlapį (Leaflet + CartoDB Dark Matter) ir gatvės vaizdą (Mapillary). Tas pats stack'as, kuris naudojamas užduočių/rezervacijų kūrime.
+                </p>
+                <AddressPicker
+                  initial={loc ?? undefined}
+                  onChange={(v) => setLoc(v)}
+                />
+                {loc && (
+                  <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-2">
+                    <div className="text-[10px] font-mono leading-tight text-muted-foreground">
+                      <div><span className="text-foreground">addr:</span> {loc.address}</div>
+                      <div><span className="text-foreground">city:</span> {loc.city ?? "—"}</div>
+                      <div><span className="text-foreground">lat/lng:</span> {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}</div>
+                    </div>
+                    <div className="overflow-hidden rounded">
+                      <LeafletMap lat={loc.latitude} lng={loc.longitude} height={180} interactive={false} />
+                    </div>
+                    <div className="overflow-hidden rounded">
+                      <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        <MapPin className="h-3 w-3" /> Mapillary gatvės vaizdas
+                      </div>
+                      <MapillaryPreview lat={loc.latitude} lng={loc.longitude} height={200} />
+                    </div>
+                    <a
+                      href={`https://www.openstreetmap.org/?mlat=${loc.latitude}&mlon=${loc.longitude}#map=18/${loc.latitude}/${loc.longitude}`}
+                      target="_blank" rel="noreferrer"
+                      className="block text-center text-[10px] text-primary underline underline-offset-2"
+                    >
+                      Atidaryti OpenStreetMap naujame lange →
+                    </a>
+                  </div>
+                )}
+                {!loc && (
+                  <div className="rounded-lg border border-dashed border-border p-3 text-[10px] text-muted-foreground">
+                    Įrašyk adresą (pvz. „Vaižganto g. 5, Radviliškis") — pasirodys žemėlapis + gatvės vaizdas.
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
