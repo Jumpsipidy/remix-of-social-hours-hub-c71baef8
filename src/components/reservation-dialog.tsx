@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2 } from "lucide-react";
+import { LeafletMap } from "@/components/leaflet-map";
 
 export type ReservationSubmit = {
   date: string;
