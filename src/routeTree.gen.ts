@@ -15,6 +15,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SchoolRouteImport } from './routes/school'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as LoginRouteImport } from './routes/login'
@@ -67,6 +68,11 @@ const StudentRoute = StudentRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchoolRoute = SchoolRouteImport.update({
+  id: '/school',
+  path: '/school',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/register': typeof RegisterRoute
+  '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/register': typeof RegisterRoute
+  '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/register': typeof RegisterRoute
+  '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -288,6 +297,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/register'
+    | '/school'
     | '/status'
     | '/student'
     | '/tasks'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/register'
+    | '/school'
     | '/status'
     | '/student'
     | '/tasks'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/register'
+    | '/school'
     | '/status'
     | '/student'
     | '/tasks'
@@ -381,6 +393,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OrganizationRoute: typeof OrganizationRoute
   RegisterRoute: typeof RegisterRoute
+  SchoolRoute: typeof SchoolRoute
   StatusRoute: typeof StatusRoute
   StudentRoute: typeof StudentRoute
   TasksRoute: typeof TasksRoute
@@ -435,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/school': {
+      id: '/school'
+      path: '/school'
+      fullPath: '/school'
+      preLoaderRoute: typeof SchoolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -642,6 +662,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OrganizationRoute: OrganizationRoute,
   RegisterRoute: RegisterRoute,
+  SchoolRoute: SchoolRoute,
   StatusRoute: StatusRoute,
   StudentRoute: StudentRoute,
   TasksRoute: TasksRoute,
