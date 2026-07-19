@@ -44,6 +44,9 @@ type Task = {
   event_host_name?: string | null;
   created_by?: string | null;
   tags?: string[] | null;
+  address?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
