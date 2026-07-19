@@ -156,7 +156,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Vieta / adresas"
+                  placeholder="Vietos pavadinimas (pvz., Miesto biblioteka)"
                   className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3">
@@ -169,6 +169,16 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                     className="h-11 w-16 bg-transparent text-sm outline-none"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tikslus adresas žemėlapyje</p>
+                <AddressPicker
+                  initial={{ address: address ?? undefined, latitude: lat ?? undefined, longitude: lng ?? undefined }}
+                  onChange={(v: AddressValue) => { setAddress(v.address); setLat(v.latitude); setLng(v.longitude); if (!location) setLocation(v.city ?? v.address); }}
+                />
+                {lat != null && lng != null && (
+                  <LeafletMap lat={lat} lng={lng} height={180} interactive={false} />
+                )}
               </div>
               <TagsInput value={tags} onChange={setTags} hint="Padeda mokiniams ir mokytojams rasti tinkamiausią užduotį" />
               <div className="rounded-xl border border-border bg-background/50 p-3">
