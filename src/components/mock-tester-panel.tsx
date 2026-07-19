@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus, Eye, Send } from "lucide-react";
+import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus, Eye, Send, MapPin } from "lucide-react";
+import { AddressPicker, type AddressValue } from "@/components/address-picker";
+import { LeafletMap } from "@/components/leaflet-map";
+import { MapillaryPreview } from "@/components/mapillary-preview";
 import { toast } from "sonner";
 import {
   seedDevEcosystem, resetDevData, listDevProfiles,
