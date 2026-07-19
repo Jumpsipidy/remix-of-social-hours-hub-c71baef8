@@ -57,6 +57,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
+  const [address, setAddress] = useState<string | null>(null);
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
