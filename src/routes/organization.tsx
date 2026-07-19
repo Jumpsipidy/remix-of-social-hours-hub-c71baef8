@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
+import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const Route = createFileRoute("/organization")({
@@ -67,6 +68,7 @@ function OrgDashboard() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
+  const [view, setView] = useState<"dashboard" | "profile">("dashboard");
 
   const refresh = async (uid: string) => {
     const [{ data: rData }, { data: tData }] = await Promise.all([
@@ -199,7 +201,40 @@ function OrgDashboard() {
           </div>
           <span className="shrink-0 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
         </div>
+
+        {/* View switcher */}
+        <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
+          <button
+            onClick={() => setView("dashboard")}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${view === "dashboard" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            📊 Ataskaita
+          </button>
+          <button
+            onClick={() => setView("profile")}
+            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${view === "profile" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            🏢 Mano profilis
+          </button>
+          <Link
+            to="/org/$id"
+            params={{ id: user.id }}
+            target="_blank"
+            className="rounded-full px-4 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+          >
+            👁 Peržiūrėti viešą
+          </Link>
+        </div>
       </section>
+
+      {view === "profile" && (
+        <section className="mx-auto mt-8 max-w-5xl px-4 pb-16 sm:px-6">
+          <OrgProfileEditor userId={user.id} />
+        </section>
+      )}
+
+      {view === "dashboard" && <>
+
 
       {/* Primary stats */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
@@ -521,6 +556,7 @@ function OrgDashboard() {
           </div>
         </div>
       </section>
+      </>}
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <VerifyCloseDialog
