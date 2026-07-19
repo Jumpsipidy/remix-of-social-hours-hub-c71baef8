@@ -161,6 +161,9 @@ function TasksPage() {
         presetStart: task.start_time?.slice(0, 5),
         presetEnd: task.end_time?.slice(0, 5),
         tags: task.tags ?? [],
+        address: task.address ?? null,
+        latitude: task.latitude ?? null,
+        longitude: task.longitude ?? null,
       },
     });
   };
@@ -177,6 +180,10 @@ function TasksPage() {
       hours_to_earn: details.hours,
       status: "pending",
       note: details.note || null,
+      location: active.task.location ?? null,
+      address: active.task.address ?? null,
+      latitude: active.task.latitude ?? null,
+      longitude: active.task.longitude ?? null,
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
