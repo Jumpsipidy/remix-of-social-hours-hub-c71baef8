@@ -148,12 +148,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await loadProfile(u.id);
           if (mounted) setLoading(false);
           if (event === "SIGNED_IN") {
-            try { logActivity("auth.signed_in", { entityType: "user", entityId: u.id }); } catch {}
+            try {
+              const { deviceMeta } = await import("@/lib/device-meta");
+              logActivity("auth.signed_in", { entityType: "user", entityId: u.id, meta: deviceMeta() });
+            } catch {}
           }
         }, 0);
       } else {
         if (event === "SIGNED_OUT") {
-          try { logActivity("auth.signed_out"); } catch {}
+          (async () => {
+            try {
+              const { deviceMeta } = await import("@/lib/device-meta");
+              logActivity("auth.signed_out", { meta: deviceMeta() });
+            } catch {}
+          })();
         }
         setProfile(null);
         setLoading(false);

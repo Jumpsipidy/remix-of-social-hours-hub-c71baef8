@@ -1,30 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { logActivity } from "@/lib/activity-log";
+import { deviceMeta } from "@/lib/device-meta";
 
 /**
- * Logs a `page.view` row into `activity_log` on every route change.
- * - For signed-in users: uses logActivity (writes user_id).
- * - For anonymous visitors: writes an anon row with a stable session id so
- *   admins still see traffic volume without exposing identity.
- * Throttled to 1 event per unique path per 10 s to avoid double-counting on
- * fast client-side navigations.
+ * Logs a `page.view` row into `activity_log` on every route change with rich
+ * device metadata (device kind, browser, OS, screen size, viewport, language,
+ * timezone, referrer host, session id).
+ *
+ * Admin console paths (`/admin/*`) are intentionally skipped — the analytics
+ * dashboard reports admin traffic as a single "super admin" bucket instead.
+ * Throttled per unique path to avoid double-counting on fast SPA transitions.
  */
-const SESSION_KEY = "sv_anon_session";
-const THROTTLE_MS = 10_000;
-
-function anonId(): string {
-  try {
-    const cur = localStorage.getItem(SESSION_KEY);
-    if (cur) return cur;
-    const id = `anon_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    localStorage.setItem(SESSION_KEY, id);
-    return id;
-  } catch {
-    return "anon_ephemeral";
-  }
-}
+const THROTTLE_MS = 8_000;
 
 export function PageViewTracker() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -32,6 +20,9 @@ export function PageViewTracker() {
 
   useEffect(() => {
     if (!pathname) return;
+    // Skip admin console — analytics show it as an aggregated "super admin" bucket.
+    if (pathname.startsWith("/admin")) return;
+
     const now = Date.now();
     if (lastRef.current && lastRef.current.path === pathname && now - lastRef.current.at < THROTTLE_MS) {
       return;
@@ -41,20 +32,16 @@ export function PageViewTracker() {
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();
-        if (data.user?.id) {
-          await logActivity("page.view", { entityType: "route", meta: { path: pathname } });
-        } else {
-          // Anonymous — RLS may block; ignore errors silently.
-          await supabase.from("activity_log").insert({
-            user_id: null,
-            action: "page.view",
-            entity_type: "route",
-            entity_id: null,
-            meta: { path: pathname, anon: anonId() },
-          } as any);
-        }
+        const meta = deviceMeta({ path: pathname });
+        await supabase.from("activity_log").insert({
+          user_id: data.user?.id ?? null,
+          action: "page.view",
+          entity_type: "route",
+          entity_id: null,
+          meta: meta as never,
+        } as never);
       } catch {
-        // ignore
+        // ignore — analytics is best-effort
       }
     })();
   }, [pathname]);
