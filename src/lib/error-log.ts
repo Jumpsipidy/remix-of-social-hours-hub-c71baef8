@@ -17,6 +17,16 @@ const IGNORE_SUBSTRINGS = [
   // React hydration mismatch warnings are noisy; they're not user-facing outages.
   "Minified React error #418",
   "hydrated but some attributes",
+  // WebGL context creation/loss — decorative background only, we already fall back
+  "THREE.WebGLRenderer",
+  "WebGL context",
+  "Web page caused context loss",
+  "context lost",
+  // Vite HMR transient messages
+  "[vite] Failed to reload",
+  "[vite]",
+  // Manual test errors triggered from /admin/errors "Trigger test error" button
+  "[TEST]",
 ];
 
 // Patterns that indicate a serious runtime failure worth auto-lockdown.
@@ -44,12 +54,19 @@ async function maybeEscalate(level: "critical" | "warning", message: string, sta
     const last = escalated.get(key);
     if (last && now - last < ESCALATE_MS) return;
     escalated.set(key, now);
+    let userEmail: string | undefined;
+    try {
+      const { data } = await supabase.auth.getUser();
+      userEmail = data.user?.email ?? undefined;
+    } catch { /* ignore */ }
     await escalateAppError({
       data: {
         level,
         message: message.slice(0, 500),
         stack: stack ? stack.slice(0, 2000) : undefined,
         path: typeof window !== "undefined" ? window.location.pathname : undefined,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+        userEmail,
       },
     });
   } catch {

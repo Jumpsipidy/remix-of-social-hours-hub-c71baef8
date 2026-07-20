@@ -26,7 +26,11 @@ export function TasksBackgroundFX() {
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      const probe = document.createElement("canvas").getContext("webgl2") ||
+        document.createElement("canvas").getContext("webgl");
+      if (!probe) { setFallback(true); return; }
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
+      renderer.domElement.addEventListener("webglcontextlost", (e) => { e.preventDefault(); setFallback(true); }, false);
     } catch { setFallback(true); return; }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;

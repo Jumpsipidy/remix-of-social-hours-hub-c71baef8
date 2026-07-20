@@ -1,9 +1,10 @@
 // Public server fn: receives client-side error escalations.
-// Behavior:
+// Behavior tiers:
 //  - `critical`: if ≥ CRITICAL_THRESHOLD critical errors happen inside CRITICAL_WINDOW_MIN,
-//    auto-enable Lockdown with code E-5001 and email all admins.
-//  - `warning`: just email all admins (rate-limited, no lockdown).
-// Uses service role (server-side, no auth needed — but heavily rate-limited).
+//    auto-enable Lockdown with code E-5001 and email all admins with HIGH priority headers.
+//    A single critical also emails an urgent alert (dedup'd, so noisy pages don't spam).
+//  - `warning`: rate-limited email; no lockdown.
+// Skips test / hot-reload / decorative-WebGL noise so real signal isn't buried.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -12,25 +13,47 @@ const CRITICAL_THRESHOLD = 3;
 const CRITICAL_WINDOW_MIN = 5;
 const EMAIL_DEDUPE_MIN = 15;
 
+// Server-side ignore list (belt + braces alongside client filter)
+const IGNORE_RX = [
+  /\[TEST\]/i,
+  /THREE\.WebGLRenderer/i,
+  /WebGL context/i,
+  /Web page caused context loss/i,
+  /\[vite\]/i,
+  /Minified React error #418/i,
+  /ResizeObserver loop/i,
+];
+
 const payloadSchema = z.object({
   level: z.enum(["critical", "warning"]),
   message: z.string().min(1).max(500),
   path: z.string().max(200).optional(),
   stack: z.string().max(2000).optional(),
+  userAgent: z.string().max(300).optional(),
+  userEmail: z.string().max(200).optional(),
 });
 
-async function sendResendEmail(to: string, subject: string, html: string) {
+async function sendResendEmail(to: string, subject: string, html: string, opts: { urgent?: boolean } = {}) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
   try {
+    const headers: Record<string, string> = {};
+    if (opts.urgent) {
+      headers["X-Priority"] = "1";
+      headers["X-MSMail-Priority"] = "High";
+      headers["Importance"] = "High";
+    }
     await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({
-        from: "Socialinės Valandos <noreply@jumpsipidy.online>",
+        from: "Socialinės Valandos Alerts <alerts@jumpsipidy.online>",
         to,
         subject,
         html,
+        reply_to: "noreply@jumpsipidy.online",
+        headers,
+        tags: [{ name: "kind", value: opts.urgent ? "alert-urgent" : "alert" }],
       }),
     });
   } catch (err) {
@@ -38,37 +61,69 @@ async function sendResendEmail(to: string, subject: string, html: string) {
   }
 }
 
-function alertEmailHtml(opts: { level: string; message: string; path?: string; stack?: string; lockdown?: boolean }) {
-  const color = opts.lockdown ? "#f43f5e" : opts.level === "critical" ? "#f97316" : "#facc15";
-  const title = opts.lockdown ? "🔒 LOCKDOWN AKTYVUOTAS" : opts.level === "critical" ? "🚨 Kritinė klaida" : "⚠️ Įspėjimas";
-  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#0b1220;font-family:system-ui,sans-serif;color:#e5e7eb">
-<div style="max-width:560px;margin:0 auto;background:#111827;border:1px solid ${color}44;border-radius:20px;overflow:hidden">
-  <div style="padding:24px;background:linear-gradient(135deg,${color}22,transparent);border-bottom:1px solid ${color}33">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:${color}">Socialinės Valandos · Auto-monitoringas</div>
-    <div style="margin-top:8px;font-size:22px;font-weight:900;color:#fff">${title}</div>
-  </div>
-  <div style="padding:24px">
-    ${opts.lockdown ? `<p style="margin:0 0 16px;padding:12px;background:#f43f5e22;border:1px solid #f43f5e44;border-radius:10px;color:#fecaca;font-size:13px">
-      Sistema aptiko ${CRITICAL_THRESHOLD}+ kritines klaidas per ${CRITICAL_WINDOW_MIN} min. Svetainė automatiškai užrakinta lankytojams (kodas E-5001). Prisijunk kaip super admin ir spausk „Išjungti“ /admin/lockdown puslapyje.
-    </p>` : ""}
-    <div style="font-size:11px;font-weight:700;color:#9ca3af;letter-spacing:.1em;text-transform:uppercase">Klaidos žinutė</div>
-    <pre style="margin:4px 0 16px;padding:12px;background:#0b1220;border:1px solid #1f2937;border-radius:10px;white-space:pre-wrap;font-size:12px;color:#e5e7eb">${escapeHtml(opts.message)}</pre>
-    ${opts.path ? `<div style="font-size:12px;color:#9ca3af">Puslapis: <code style="color:#e5e7eb">${escapeHtml(opts.path)}</code></div>` : ""}
-    <a href="https://socialinesvalandos.vercel.app/admin/errors" style="display:inline-block;margin-top:20px;padding:12px 20px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#000;font-weight:700;text-decoration:none;border-radius:999px;font-size:13px">Atidaryti klaidų žurnalą →</a>
-  </div>
-</div></body></html>`;
-}
-
 function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function alertEmailHtml(opts: {
+  level: string;
+  message: string;
+  path?: string;
+  stack?: string;
+  userAgent?: string;
+  userEmail?: string;
+  lockdown?: boolean;
+  criticalCount?: number;
+}) {
+  const isLock = !!opts.lockdown;
+  const isCrit = opts.level === "critical";
+  const accent = isLock ? "#f43f5e" : isCrit ? "#f97316" : "#facc15";
+  const banner = isLock ? "🔒 LOCKDOWN AKTYVUOTAS" : isCrit ? "🚨 KRITINĖ KLAIDA" : "⚠️ ĮSPĖJIMAS";
+  const subtitle = isLock
+    ? `Sistema aptiko ${opts.criticalCount ?? CRITICAL_THRESHOLD}+ kritines klaidas per ${CRITICAL_WINDOW_MIN} min. Svetainė automatiškai užrakinta.`
+    : isCrit
+      ? "Viena kritinė kliento klaida — jei jų susikaups per 5 min, svetainė automatiškai užsirakins."
+      : "Ne kritinė klaida — signalas archyvui.";
+  const time = new Date().toLocaleString("lt-LT", { timeZone: "Europe/Vilnius" });
+
+  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#0b1220;font-family:'SF Pro Display',system-ui,sans-serif;color:#e5e7eb">
+<div style="max-width:600px;margin:0 auto;background:#0f172a;border:1px solid ${accent}55;border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+  <div style="padding:28px 28px 24px;background:linear-gradient(135deg,${accent}33,transparent 70%);border-bottom:1px solid ${accent}33">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:${accent}">Socialinės Valandos · Auto-monitoringas · ${escapeHtml(time)} LT</div>
+    <div style="margin-top:10px;font-size:26px;font-weight:900;color:#fff;letter-spacing:-.02em">${banner}</div>
+    <div style="margin-top:8px;font-size:13px;color:#cbd5e1;line-height:1.5">${escapeHtml(subtitle)}</div>
+  </div>
+  <div style="padding:24px 28px">
+    ${isLock ? `<div style="margin:0 0 18px;padding:14px 16px;background:#f43f5e1a;border:1px solid #f43f5e55;border-radius:12px;color:#fecaca;font-size:13px;line-height:1.5">
+      <b style="color:#fca5a5">Reikalingas veiksmas:</b> Prisijunk kaip super admin ir eik į <b>/admin/lockdown</b>, kad išjungtum. Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b>E-5001</b>).
+    </div>` : ""}
+    <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px">Klaidos žinutė</div>
+    <pre style="margin:0 0 16px;padding:14px;background:#020617;border:1px solid #1e293b;border-radius:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55;color:#f1f5f9;font-family:'JetBrains Mono',ui-monospace,monospace">${escapeHtml(opts.message)}</pre>
+    ${opts.path ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">📄 <b style="color:#e2e8f0">Puslapis:</b> <code style="color:#f1f5f9;background:#0b1220;padding:2px 8px;border-radius:6px">${escapeHtml(opts.path)}</code></div>` : ""}
+    ${opts.userEmail ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">👤 <b style="color:#e2e8f0">Vartotojas:</b> <code style="color:#f1f5f9">${escapeHtml(opts.userEmail)}</code></div>` : ""}
+    ${opts.userAgent ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">🖥️ <b style="color:#e2e8f0">Įrenginys:</b> <code style="color:#cbd5e1;font-size:11px">${escapeHtml(opts.userAgent.slice(0, 180))}</code></div>` : ""}
+    ${opts.stack ? `<details style="margin-top:14px"><summary style="cursor:pointer;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Stack trace</summary><pre style="margin-top:8px;padding:12px;background:#020617;border:1px solid #1e293b;border-radius:10px;font-size:11px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto">${escapeHtml(opts.stack)}</pre></details>` : ""}
+    <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap">
+      <a href="https://socialinesvalandos.vercel.app/admin/errors" style="display:inline-block;padding:13px 22px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#0b1220;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px">Atidaryti klaidų žurnalą →</a>
+      ${isLock ? `<a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="display:inline-block;padding:13px 22px;background:linear-gradient(135deg,#f43f5e,#ef4444);color:#fff;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px">Išjungti Lockdown →</a>` : ""}
+    </div>
+  </div>
+  <div style="padding:14px 28px;background:#020617;border-top:1px solid #1e293b;font-size:11px;color:#64748b">
+    Šis pranešimas išsiųstas automatiškai iš klaidų monitoringo sistemos. Nekartojamas per ${EMAIL_DEDUPE_MIN} min.
+  </div>
+</div></body></html>`;
 }
 
 export const escalateAppError = createServerFn({ method: "POST" })
   .validator((v: unknown) => payloadSchema.parse(v))
   .handler(async ({ data }) => {
+    // Filter noise server-side too
+    if (IGNORE_RX.some((rx) => rx.test(data.message))) {
+      return { ok: true, ignored: true };
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Insert into activity_log
     await supabaseAdmin.from("activity_log").insert({
       action: data.level === "critical" ? "app.critical" : "app.warning",
       entity_type: "auto-monitor",
@@ -76,11 +131,12 @@ export const escalateAppError = createServerFn({ method: "POST" })
         message: data.message,
         path: data.path ?? null,
         stack: data.stack?.slice(0, 500) ?? null,
+        userAgent: data.userAgent ?? null,
       },
     });
 
-    // Check for critical threshold
     let lockdownTriggered = false;
+    let criticalCount = 0;
     if (data.level === "critical") {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
       const { count } = await supabaseAdmin
@@ -88,9 +144,9 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .select("*", { count: "exact", head: true })
         .eq("action", "app.critical")
         .gte("created_at", since);
+      criticalCount = count ?? 0;
 
-      if ((count ?? 0) >= CRITICAL_THRESHOLD) {
-        // Check current lockdown state — don't retrigger if already on
+      if (criticalCount >= CRITICAL_THRESHOLD) {
         const { data: ss } = await supabaseAdmin
           .from("site_settings")
           .select("lockdown_enabled")
@@ -101,7 +157,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
             id: true,
             lockdown_enabled: true,
             lockdown_code: "E-5001",
-            lockdown_message: `[auto] Aptiktos ${count} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`,
+            lockdown_message: `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`,
             updated_at: new Date().toISOString(),
           });
           lockdownTriggered = true;
@@ -109,36 +165,47 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
-    // Dedupe: don't email same message twice in EMAIL_DEDUPE_MIN
-    const dedupeSince = new Date(Date.now() - EMAIL_DEDUPE_MIN * 60_000).toISOString();
-    const { count: emailedCount } = await supabaseAdmin
-      .from("activity_log")
-      .select("*", { count: "exact", head: true })
-      .eq("action", "app.email_sent")
-      .gte("created_at", dedupeSince)
-      .ilike("meta->>message", data.message.slice(0, 80));
+    // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
+    let shouldEmail = lockdownTriggered;
+    if (!shouldEmail) {
+      const dedupeSince = new Date(Date.now() - EMAIL_DEDUPE_MIN * 60_000).toISOString();
+      const { count: emailedCount } = await supabaseAdmin
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .eq("action", "app.email_sent")
+        .gte("created_at", dedupeSince)
+        .ilike("meta->>message", data.message.slice(0, 80));
+      shouldEmail = (emailedCount ?? 0) === 0;
+    }
 
-    if ((emailedCount ?? 0) === 0) {
+    if (shouldEmail) {
       const { data: admins } = await supabaseAdmin
         .from("profiles")
         .select("email")
         .eq("role", "admin");
-      const recipients = (admins ?? []).map((a: { email: string | null }) => a.email).filter((e): e is string => !!e);
+      const recipients = (admins ?? [])
+        .map((a: { email: string | null }) => a.email)
+        .filter((e): e is string => !!e);
       if (recipients.length) {
         const subject = lockdownTriggered
-          ? "🔒 [Socialinės Valandos] LOCKDOWN aktyvuotas"
+          ? `🔒 URGENT — LOCKDOWN AKTYVUOTAS · Socialinės Valandos`
           : data.level === "critical"
-            ? "🚨 [Socialinės Valandos] Kritinė klaida"
-            : "⚠️ [Socialinės Valandos] Įspėjimas";
-        const html = alertEmailHtml({ ...data, lockdown: lockdownTriggered });
-        await Promise.all(recipients.map((to) => sendResendEmail(to, subject, html)));
+            ? `🚨 Kritinė klaida svetainėje · ${data.path ?? "/"}`
+            : `⚠️ Klaidos įspėjimas · ${data.path ?? "/"}`;
+        const html = alertEmailHtml({ ...data, lockdown: lockdownTriggered, criticalCount });
+        await Promise.all(recipients.map((to) => sendResendEmail(to, subject, html, { urgent: lockdownTriggered || data.level === "critical" })));
         await supabaseAdmin.from("activity_log").insert({
           action: "app.email_sent",
           entity_type: "auto-monitor",
-          meta: { message: data.message.slice(0, 80), recipients: recipients.length, lockdown: lockdownTriggered },
+          meta: {
+            message: data.message.slice(0, 80),
+            recipients: recipients.length,
+            lockdown: lockdownTriggered,
+            level: data.level,
+          },
         });
       }
     }
 
-    return { ok: true, lockdownTriggered };
+    return { ok: true, lockdownTriggered, criticalCount };
   });

@@ -31,7 +31,10 @@ export function Auth3DBackground() {
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      const probe = document.createElement("canvas").getContext("webgl2") ||
+        document.createElement("canvas").getContext("webgl");
+      if (!probe) return;
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
     } catch {
       return;
     }
@@ -41,6 +44,8 @@ export function Auth3DBackground() {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     mount.appendChild(renderer.domElement);
+    const onCtxLost = (e: Event) => { e.preventDefault(); try { mount.removeChild(renderer.domElement); } catch { /* ignore */ } };
+    renderer.domElement.addEventListener("webglcontextlost", onCtxLost as EventListener, false);
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x0a0a1a, 0.045);

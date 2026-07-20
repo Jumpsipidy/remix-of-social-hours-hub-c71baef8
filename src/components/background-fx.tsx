@@ -20,7 +20,11 @@ export function BackgroundFX() {
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      // Pre-flight: some browsers/hardware refuse WebGL. Silently fall back instead of throwing.
+      const probe = document.createElement("canvas").getContext("webgl2") ||
+        document.createElement("canvas").getContext("webgl");
+      if (!probe) { setFallback(true); return; }
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
     } catch { setFallback(true); return; }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
@@ -35,6 +39,10 @@ export function BackgroundFX() {
     renderer.toneMappingExposure = 0.85;
     mount.appendChild(renderer.domElement);
     renderer.domElement.style.cssText = "position:absolute;inset:0;width:100%;height:100%;display:block";
+
+    // If the browser drops the WebGL context (tab throttled, GPU reset, blocked), quietly fall back.
+    const onContextLost = (e: Event) => { e.preventDefault(); setFallback(true); };
+    renderer.domElement.addEventListener("webglcontextlost", onContextLost as EventListener, false);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, width() / height(), 0.1, 200);
