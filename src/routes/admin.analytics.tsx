@@ -465,6 +465,9 @@ function Page() {
             <button onClick={exportAll} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-white hover:from-violet-500/30 hover:to-cyan-500/30">
               <Download className="h-3.5 w-3.5" /> CSV
             </button>
+            <button onClick={resetAnalytics} title="Ištrinti visą activity_log istoriją" className="flex items-center gap-1.5 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
+              <Trash2 className="h-3.5 w-3.5" /> Reset
+            </button>
           </div>
         </div>
       </div>
