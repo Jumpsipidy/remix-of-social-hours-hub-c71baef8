@@ -303,6 +303,53 @@ function Page() {
     return rows.sort((a, b) => b.end.localeCompare(a.end));
   }, [sessionMap]);
 
+  // Unique visitors — deduped by persistent visitor_id (localStorage), with
+  // a device-fingerprint fallback for legacy rows that predate visitor_id.
+  // Same person on same browser is ONE visitor no matter how many tabs/sessions.
+  const visitors = useMemo(() => {
+    if (!data) return [] as {
+      key: string; first: string; last: string; hits: number; pages: number;
+      device: string; browser: string; os: string; tz: string; lang: string;
+      last_path: string; ref_host: string; user_id: string | null;
+      paths: Set<string>;
+    }[];
+    type RawRow = NonNullable<Data>["rawActivity"][number];
+    const fp = (r: RawRow) =>
+      (r.visitor_id && r.visitor_id.length > 3)
+        ? `v:${r.visitor_id}`
+        : `fp:${r.device}|${r.browser}|${r.os}|${(r as unknown as { screen?: string }).screen ?? ""}|${r.tz}|${r.lang}`;
+    const m = new Map<string, RawRow[]>();
+    for (const r of data.rawActivity) {
+      if (r.action !== "page.view") continue;
+      const k = fp(r);
+      const arr = m.get(k) ?? [];
+      arr.push(r);
+      m.set(k, arr);
+    }
+    const out: {
+      key: string; first: string; last: string; hits: number; pages: number;
+      device: string; browser: string; os: string; tz: string; lang: string;
+      last_path: string; ref_host: string; user_id: string | null;
+      paths: Set<string>;
+    }[] = [];
+    for (const [key, arr] of m) {
+      arr.sort((x, y) => x.created_at.localeCompare(y.created_at));
+      const last = arr[arr.length - 1];
+      const paths = new Set(arr.map((r) => r.path));
+      const uid = arr.map((r) => r.user_id).find(Boolean) ?? null;
+      out.push({
+        key, first: arr[0].created_at, last: last.created_at,
+        hits: arr.length, pages: paths.size,
+        device: last.device, browser: last.browser, os: last.os,
+        tz: last.tz, lang: last.lang, last_path: last.path,
+        ref_host: last.ref_host, user_id: uid, paths,
+      });
+    }
+    return out.sort((a, b) => b.last.localeCompare(a.last));
+  }, [data]);
+
+
+
   // Heatmap (day-of-week × hour) from rawActivity
   const heat = useMemo(() => {
     const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
