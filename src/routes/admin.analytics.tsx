@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   Activity, Eye, Users, LogIn, LogOut, RefreshCw, Download, Maximize2, Minimize2,
   Zap, Clock, Globe2, MonitorSmartphone, Chrome, Languages, MapPin, ArrowUp, ArrowDown,
-  Sparkles, Radio, Search, Filter, ChevronRight, Layers, Fingerprint, Timer,
+  Sparkles, Radio, Search, Filter, ChevronRight, Layers, Fingerprint, Timer, Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
@@ -390,6 +390,25 @@ function Page() {
       })));
   };
 
+  const resetAnalytics = async () => {
+    const ok = window.confirm(
+      "Ar tikrai nori IŠTRINTI VISUS analitikos duomenis (activity_log)?\n\n" +
+      "Šis veiksmas negrįžtamas. Visos peržiūros, prisijungimai ir sesijų istorija bus panaikinti."
+    );
+    if (!ok) return;
+    const confirmTxt = window.prompt('Įrašyk "RESET" kad patvirtintum:');
+    if (confirmTxt !== "RESET") return;
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: n, error } = await supabase.rpc("analytics_reset");
+      if (error) throw error;
+      alert(`Ištrinta ${n ?? 0} įrašų. Analitika iš naujo.`);
+      load();
+    } catch (e: any) {
+      alert("Nepavyko: " + (e?.message ?? String(e)));
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       <FloatingTooltip p={tip} />
@@ -445,6 +464,9 @@ function Page() {
             </button>
             <button onClick={exportAll} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-white hover:from-violet-500/30 hover:to-cyan-500/30">
               <Download className="h-3.5 w-3.5" /> CSV
+            </button>
+            <button onClick={resetAnalytics} title="Ištrinti visą activity_log istoriją" className="flex items-center gap-1.5 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
+              <Trash2 className="h-3.5 w-3.5" /> Reset
             </button>
           </div>
         </div>
