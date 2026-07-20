@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 
 export type FriendshipStatus = "pending" | "accepted" | "declined" | "blocked";
 
