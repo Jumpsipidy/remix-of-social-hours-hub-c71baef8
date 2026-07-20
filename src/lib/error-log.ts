@@ -32,7 +32,7 @@ function shouldIgnore(msg: string) {
 
 async function insert(action: "client.error" | "supabase.error", payload: ErrPayload) {
   try {
-    const dev = getDeviceMeta();
+    const dev = deviceMeta();
     const key = `${action}:${payload.message.slice(0, 120)}`;
     const now = Date.now();
     const last = seen.get(key);
