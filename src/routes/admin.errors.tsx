@@ -1250,7 +1250,7 @@ function IgnoreRuleEditor({ onAdd }: { onAdd: (p: string) => void }) {
         <Input
           value={v}
           onChange={(e) => setV(e.target.value)}
-          placeholder="Įrašyk fragmentą, pvz. „ResizeObserver" arba „/admin/errors""
+          placeholder={'Įrašyk fragmentą, pvz. „ResizeObserver" arba „/admin/errors"'}
           className="pl-8 font-mono text-xs"
         />
       </div>
