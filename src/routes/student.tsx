@@ -17,6 +17,7 @@ import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { LeafletMap } from "@/components/leaflet-map";
+import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
