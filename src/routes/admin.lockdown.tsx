@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Lock, Unlock, AlertTriangle, RefreshCw, ShieldCheck, Radio, Info } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { readSiteSettings } from "@/lib/site-settings";
 import { LOCKDOWN_CODES } from "@/lib/lockdown-codes";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import {
   adminGetLockdownSettings,
   adminRunLockdownHealth,
@@ -33,6 +33,7 @@ function LockdownPage() {
   const getLockdownSettings = useServerFn(adminGetLockdownSettings);
   const updateLockdownSettings = useServerFn(adminUpdateLockdownSettings);
   const runLockdownHealth = useServerFn(adminRunLockdownHealth);
+  const readPublicSettings = useServerFn(getPublicSiteSettings);
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [message, setMessage] = useState("");
   const [selectedCode, setSelectedCode] = useState<string>("E-1001");
@@ -98,7 +99,7 @@ function LockdownPage() {
     results.push({ label: "Naršyklės sesija", ok: Boolean(user), detail: user ? user.email ?? user.id : "vartotojas neprisijungęs" });
     results.push({ label: "Admin rolė UI būsenoje", ok: profile?.role === "admin", detail: profile?.role ? `rolė: ${profile.role}` : "profilis dar neužkrautas" });
     try {
-      const { error, schemaMissing } = await readSiteSettings();
+      const { error, schemaMissing } = await readPublicSettings();
       results.push({
         label: "Viešas Lockdown API", ok: !error,
         detail: error ? (schemaMissing ? "schemos talpykla dar nemato site_settings" : error.message) : "lentelė pasiekiama lankytojams",
