@@ -720,21 +720,20 @@ function Card({ title, icon: Icon, tools, children }: {
 }
 
 function HeroStat({
-  label, value, delta, icon: Icon, color, spark, active = true, onClick, hideDelta, sub,
+  label, value, delta, icon: Icon, color, spark, active = true, onClick, hideDelta, sub, onExpand,
 }: {
   label: string; value: number; delta: number;
   icon: React.ComponentType<{ className?: string }>;
   color: string; spark: number[]; active?: boolean; onClick?: () => void;
-  hideDelta?: boolean; sub?: string;
+  hideDelta?: boolean; sub?: string; onExpand?: () => void;
 }) {
   const isUp = delta >= 0;
   return (
     <Tilt3D intensity={7} className="rounded-2xl">
-      <motion.button
-        type="button"
-        onClick={onClick}
+      <motion.div
         whileTap={{ scale: 0.98 }}
-        className={`group relative w-full overflow-hidden rounded-2xl border p-3 text-left backdrop-blur-xl transition-all sm:p-4 ${
+        onClick={onClick}
+        className={`group relative w-full cursor-pointer overflow-hidden rounded-2xl border p-3 text-left backdrop-blur-xl transition-all sm:p-4 ${
           active ? "border-white/15 bg-card/70" : "border-white/5 bg-card/30 opacity-60"
         }`}
         style={{ boxShadow: active ? `0 20px 60px -30px ${color}` : "none" }}
@@ -743,6 +742,17 @@ function HeroStat({
           className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-2xl transition-opacity group-hover:opacity-70"
           style={{ background: color }}
         />
+        {onExpand && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onExpand(); }}
+            className="absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-lg border border-white/10 bg-black/30 text-white/70 opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-white/10 hover:text-white"
+            aria-label="Išplėsti"
+            title="Išsamiau"
+          >
+            <Maximize2 className="h-3 w-3" />
+          </button>
+        )}
         <div className="relative flex items-start justify-between">
           <div className="min-w-0">
             <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:text-[10px]">
