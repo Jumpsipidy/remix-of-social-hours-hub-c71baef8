@@ -274,7 +274,8 @@ function Page() {
 
   // Session index: sessionId -> full journey
   const sessionMap = useMemo(() => {
-    const m = new Map<string, typeof data.rawActivity>();
+    type RawRow = NonNullable<Data>["rawActivity"][number];
+    const m = new Map<string, RawRow[]>();
     if (!data) return m;
     for (const r of data.rawActivity) {
       if (!r.session_id) continue;
