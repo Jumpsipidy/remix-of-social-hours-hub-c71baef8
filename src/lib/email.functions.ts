@@ -33,7 +33,7 @@ async function sendResend(payload: {
 
 export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v) =>
+  .validator((v) =>
     z
       .object({
         reservationId: z.string().uuid(),
@@ -111,7 +111,7 @@ export const previewHoursConfirmedEmail = createServerFn({ method: "POST" })
 
 export const sendTestHoursConfirmedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((v) => z.object({ to: z.string().email() }).parse(v))
+  .validator((v) => z.object({ to: z.string().email() }).parse(v))
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
