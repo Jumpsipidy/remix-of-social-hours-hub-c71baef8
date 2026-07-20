@@ -27,7 +27,7 @@ export const SceneReserve: React.FC = () => {
   const idx = path.findIndex((p, i) => frame < p.f || i === path.length - 1);
   const from = path[Math.max(0, idx - 1)];
   const to = path[idx];
-  const t = interpolate(frame, [from.f, to.f], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const t = interpolate(frame, [from.f, Math.max(from.f + 1, to.f)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const e = 1 - Math.pow(1 - t, 3);
   const cx = from.x + (to.x - from.x) * e;
   const cy = from.y + (to.y - from.y) * e;

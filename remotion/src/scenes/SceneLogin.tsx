@@ -30,7 +30,7 @@ export const SceneLogin: React.FC = () => {
   const seg = path.findIndex((p, i) => frame < p.f || i === path.length - 1);
   const from = path[Math.max(0, seg - 1)];
   const to = path[seg];
-  const t = interpolate(frame, [from.f, to.f], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const t = interpolate(frame, [from.f, Math.max(from.f + 1, to.f)], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ease = 1 - Math.pow(1 - t, 3);
   const cursorX = from.x + (to.x - from.x) * ease;
   const cursorY = from.y + (to.y - from.y) * ease;
