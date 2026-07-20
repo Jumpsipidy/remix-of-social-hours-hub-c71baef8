@@ -245,6 +245,7 @@ function AdminErrorsPage() {
     }
     const fl = f.toLowerCase();
     return rows.filter((r) => {
+      if (!showIgnored && matchesIgnore(r)) return false;
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
