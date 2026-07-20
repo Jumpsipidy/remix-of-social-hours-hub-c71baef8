@@ -19,6 +19,8 @@ import {
   ListOrdered,
   Settings2,
   Menu,
+  Copy,
+  Check,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -96,12 +98,15 @@ function AdminErrorsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [kind, setKind] = useState<"all" | ErrAction>("all");
+  const [regexMode, setRegexMode] = useState(false);
+  const [timeWindow, setTimeWindow] = useState<"5m" | "1h" | "24h" | "all">("all");
   const [selected, setSelected] = useState<ErrRow | null>(null);
   const [site, setSite] = useState<SiteSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(true);
   const [section, setSection] = useState<Section>("overview");
   const [mobileNav, setMobileNav] = useState(false);
+  const [copied, setCopied] = useState(false);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
 
@@ -163,17 +168,27 @@ function AdminErrorsPage() {
   }, [live]);
 
   const filtered = useMemo(() => {
-    const f = filter.trim().toLowerCase();
+    const f = filter.trim();
+    const windowMs =
+      timeWindow === "5m" ? 5 * 60_000 :
+      timeWindow === "1h" ? 60 * 60_000 :
+      timeWindow === "24h" ? 24 * 60 * 60_000 : Infinity;
+    const cutoff = Date.now() - windowMs;
+    let rx: RegExp | null = null;
+    if (f && regexMode) {
+      try { rx = new RegExp(f, "i"); } catch { rx = null; }
+    }
+    const fl = f.toLowerCase();
     return rows.filter((r) => {
       if (kind !== "all" && r.action !== kind) return false;
+      if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
-      return (
-        (r.meta?.message ?? "").toLowerCase().includes(f) ||
-        (r.meta?.source ?? "").toLowerCase().includes(f) ||
-        (r.meta?.path ?? "").toLowerCase().includes(f)
-      );
+      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack]
+        .filter(Boolean).join(" \n ");
+      if (rx) return rx.test(haystack);
+      return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind]);
+  }, [rows, filter, kind, regexMode, timeWindow]);
 
   const now = Date.now();
   const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
@@ -264,6 +279,34 @@ function AdminErrorsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const formatRowsForCopy = (list: ErrRow[]) => {
+    const header = `# Socialinės Valandos — klaidų eksportas\n# ${new Date().toLocaleString("lt-LT")} · ${list.length} įrašų\n\n`;
+    return header + list.map((r) => {
+      const m = r.meta ?? {};
+      return [
+        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")}`,
+        `msg:    ${m.message ?? "(no message)"}`,
+        m.path ? `path:   ${m.path}` : null,
+        m.source ? `source: ${m.source}` : null,
+        [m.browser, m.os, m.device].filter(Boolean).length ? `device: ${[m.browser, m.os, m.device].filter(Boolean).join(" · ")}` : null,
+        m.stack ? `stack:\n${String(m.stack).split("\n").slice(0, 10).map((l) => "  " + l).join("\n")}` : null,
+      ].filter(Boolean).join("\n");
+    }).join("\n\n");
+  };
+
+  const copyAll = async (list: ErrRow[] = filtered) => {
+    try {
+      const text = formatRowsForCopy(list);
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(`Nukopijuota ${list.length} įrašų — įklijuok į pokalbį`);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      toast.error("Naršyklė neleido kopijuoti");
+    }
+  };
+
+
   return (
     <>
       <AdminAurora />
@@ -308,6 +351,16 @@ function AdminErrorsPage() {
                 Live
               </span>
             </label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyAll(filtered)}
+              disabled={rows.length === 0}
+              title="Kopijuoti klaidas AI'ui / debug'ui"
+            >
+              {copied ? <Check className="mr-1 h-4 w-4 text-emerald-400" /> : <Copy className="mr-1 h-4 w-4" />}
+              <span className="hidden sm:inline">{copied ? "Nukopijuota" : "Kopijuoti"}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Atnaujinti</span>
@@ -483,16 +536,38 @@ function AdminErrorsPage() {
                       <div className="relative min-w-[200px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Ieškoti pagal žinutę, šaltinį, kelią…"
+                          placeholder={regexMode ? "Regex, pvz. ^Cannot read|is not a function" : "Ieškoti žinutėje, kelyje, stack…"}
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
-                          className="pl-8"
+                          className="pl-8 pr-20 font-mono text-sm"
                         />
-                        {filter && (
-                          <button onClick={() => setFilter("")} className="absolute right-2 top-2 text-muted-foreground hover:text-foreground">
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
+                        <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
+                          <button
+                            onClick={() => setRegexMode((v) => !v)}
+                            title="Regex režimas"
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase transition ${
+                              regexMode ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >.*</button>
+                          {filter && (
+                            <button onClick={() => setFilter("")} className="text-muted-foreground hover:text-foreground">
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {(["5m", "1h", "24h", "all"] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTimeWindow(t)}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                              timeWindow === t
+                                ? "border-primary/60 bg-primary/15 text-primary"
+                                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >{t === "all" ? "Visos" : t}</button>
+                        ))}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(["all", "client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"] as const).map((k) => {
@@ -667,6 +742,22 @@ function AdminErrorsPage() {
                 <SaaSPanel>
                   <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Priežiūra</div>
                   <div className="mt-3 space-y-3">
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">Kopijuoti visas klaidas (tekstas)</p>
+                          <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį, kad greičiau debuginčiau.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => copyAll(rows)}>
+                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti visas ({rows.length})
+                          </Button>
+                          <Button size="sm" onClick={() => copyAll(filtered)}>
+                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti filtruotas ({filtered.length})
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                     <div className="rounded-xl border border-border/50 bg-background/40 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>

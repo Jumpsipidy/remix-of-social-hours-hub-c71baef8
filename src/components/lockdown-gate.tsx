@@ -98,12 +98,28 @@ export function LockdownGate() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data, error } = await readPublicSettings();
-      if (!mounted) return;
-      if (error) { setLockdown(false); return; }
-      setLockdown(Boolean(data?.lockdown_enabled));
-      setMessage(data?.lockdown_message ?? null);
-      setCodeId(data?.lockdown_code ?? null);
+      try {
+        const { data, error } = await readPublicSettings();
+        if (!mounted) return;
+        if (error) throw new Error(error.message);
+        setLockdown(Boolean(data?.lockdown_enabled));
+        setMessage(data?.lockdown_message ?? null);
+        setCodeId(data?.lockdown_code ?? null);
+      } catch {
+        // Server function not reachable (e.g. Lovable preview / cold worker) →
+        // fall back to the public RPC exposed on the database directly.
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data } = await supabase.rpc("get_lockdown_public");
+          const row = Array.isArray(data) ? data[0] : data;
+          if (!mounted) return;
+          setLockdown(Boolean(row?.lockdown_enabled));
+          setMessage(row?.lockdown_message ?? null);
+          setCodeId(row?.lockdown_code ?? null);
+        } catch {
+          if (mounted) setLockdown(false);
+        }
+      }
     };
     load();
     const poll = setInterval(load, 60_000);
@@ -182,15 +198,31 @@ export function LockdownGate() {
   async function runCheck(auto = false) {
     setRefreshing(true); setRefreshOk(null);
     try {
-      const { data, error } = await readPublicSettings();
+      let enabled = false;
+      let msg: string | null = null;
+      let cid: string | null = null;
+      try {
+        const { data, error } = await readPublicSettings();
+        if (error) throw new Error(error.message);
+        enabled = Boolean(data?.lockdown_enabled);
+        msg = data?.lockdown_message ?? null;
+        cid = data?.lockdown_code ?? null;
+      } catch {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.rpc("get_lockdown_public");
+        const row = Array.isArray(data) ? data[0] : data;
+        enabled = Boolean(row?.lockdown_enabled);
+        msg = row?.lockdown_message ?? null;
+        cid = row?.lockdown_code ?? null;
+      }
       await new Promise((r) => setTimeout(r, auto ? 400 : 900));
-      if (!error && !data?.lockdown_enabled) {
+      if (!enabled) {
         setRefreshOk(true);
         setTimeout(() => setLockdown(false), 550);
       } else {
-        setLockdown(Boolean(data?.lockdown_enabled));
-        setMessage(data?.lockdown_message ?? null);
-        setCodeId(data?.lockdown_code ?? null);
+        setLockdown(true);
+        setMessage(msg);
+        setCodeId(cid);
         setRefreshOk(false);
       }
     } catch { setRefreshOk(false); }

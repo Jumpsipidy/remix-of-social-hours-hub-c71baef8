@@ -77,16 +77,24 @@ export function SaaSPanel({
   );
 }
 
-/** Inline mini sparkline for KPI cards. */
+/** Inline mini sparkline for KPI cards. Uses explicit rgba (not CSS vars) so
+ *  the gradient renders identically in every browser and can't collapse to
+ *  near-black when a token is missing. */
+let __sparkSeq = 0;
 export function Sparkline({
   values,
   className = "",
-  stroke = "url(#spark-grad)",
+  stroke,
 }: {
   values: number[];
   className?: string;
   stroke?: string;
 }) {
+  // Stable per-instance IDs prevent Safari cross-SVG gradient collisions.
+  const uidRef = useRef<string | null>(null);
+  if (!uidRef.current) uidRef.current = `sp${++__sparkSeq}`;
+  const uid = uidRef.current;
+
   const clean = (values ?? []).map((v) => (Number.isFinite(v) ? Number(v) : 0));
   const safe = clean.length ? clean : [0, 0];
   const w = 100;
@@ -102,26 +110,27 @@ export function Sparkline({
   });
   const pts = coords.map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
   const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
-  // Only build an area fill when we have ≥2 points; otherwise a single-vertex
-  // area produces a stray triangle from the SVG's bottom-left corner.
+  // Draw area only when we actually have variation AND ≥2 points, otherwise it
+  // renders as a huge solid block against the dark card and looks like a bug.
+  const hasVariation = max > min && safe.some((v) => v > 0);
   const area =
-    coords.length >= 2
+    coords.length >= 2 && hasVariation
       ? `M${coords[0].x.toFixed(2)},${h} L${linePath.slice(1)} L${coords[coords.length - 1].x.toFixed(2)},${h} Z`
       : null;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={`h-7 w-full ${className}`}>
       <defs>
-        <linearGradient id="spark-grad" x1="0" x2="1">
-          <stop offset="0%" stopColor="hsl(var(--primary))" />
-          <stop offset="100%" stopColor="hsl(var(--primary) / 0.6)" />
+        <linearGradient id={`${uid}-line`} x1="0" x2="1">
+          <stop offset="0%" stopColor="rgb(129,140,248)" />
+          <stop offset="100%" stopColor="rgb(34,211,238)" />
         </linearGradient>
-        <linearGradient id="spark-fill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="hsl(var(--primary) / 0.35)" />
-          <stop offset="100%" stopColor="hsl(var(--primary) / 0)" />
+        <linearGradient id={`${uid}-fill`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="rgba(129,140,248,0.28)" />
+          <stop offset="100%" stopColor="rgba(129,140,248,0)" />
         </linearGradient>
       </defs>
-      {area && <path d={area} fill="url(#spark-fill)" />}
-      <polyline points={pts} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {area && <path d={area} fill={`url(#${uid}-fill)`} />}
+      <polyline points={pts} fill="none" stroke={stroke ?? `url(#${uid}-line)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
