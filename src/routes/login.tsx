@@ -29,10 +29,10 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Prisijunk prie Socialinių Valandų platformos su Google, Discord arba el. pašto paskyra ir tęsk savanorystės valandų rinkimą." },
       { property: "og:title", content: "Prisijungti — Socialinės Valandos" },
       { property: "og:description", content: "Prisijunk prie moksleivių savanorystės platformos su Google, Discord arba el. paštu." },
-      { property: "og:url", content: "https://socialinesvalandos.lovable.app/login" },
+      { property: "og:url", content: "https://socialinesvalandos.vercel.app/login" },
       { name: "robots", content: "noindex, follow" },
     ],
-    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/login" }],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.vercel.app/login" }],
   }),
   component: LoginPage,
 });

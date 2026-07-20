@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { GraduationCap, Clock, Heart, CheckCircle2, ArrowRight, BookOpen, Users, Trophy, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/layout";
 
-const URL = "https://socialinesvalandos.lovable.app/blog/kas-yra-socialines-valandos";
+const URL = "https://socialinesvalandos.vercel.app/blog/kas-yra-socialines-valandos";
 const TITLE = "Kas yra socialinės valandos? Pilnas gidas moksleiviams (2026)";
 const DESC = "Socialinės-pilietinės valandos Lietuvos mokyklose: kiek valandų reikia, kaip jas surinkti, kodėl svarbu stojant į universitetą ir kaip viską sekti vienoje vietoje.";
 
