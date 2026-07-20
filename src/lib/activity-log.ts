@@ -19,7 +19,8 @@ export type ActivityAction =
   | "profile.updated"
   | "certificate.generated"
   | "auth.signed_in"
-  | "auth.signed_out";
+  | "auth.signed_out"
+  | "page.view";
 
 /** Fire-and-forget activity logger. Silently ignores errors. */
 export async function logActivity(
