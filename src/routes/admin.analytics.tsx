@@ -262,6 +262,34 @@ function Page() {
   const referrers = useMemo(() => analytics?.referrers ?? [], [analytics]);
   const languages = useMemo(() => analytics?.languages ?? [], [analytics]);
 
+  // Deep device breakdowns from raw meta
+  const raw = data?.rawActivity ?? [];
+  const groupTop = (fn: (r: typeof raw[number]) => string, min = 1) => {
+    const map: Record<string, number> = {};
+    for (const r of raw) {
+      if (r.action !== "page.view") continue;
+      const k = fn(r);
+      if (!k) continue;
+      map[k] = (map[k] ?? 0) + 1;
+    }
+    return Object.entries(map).filter(([, n]) => n >= min).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  };
+  const timezones = useMemo(() => groupTop((r) => r.tz), [raw]);
+  const screens = useMemo(() => groupTop((r) => r.screen), [raw]);
+  const viewports = useMemo(() => groupTop((r) => bucketViewport(r.vp)), [raw]);
+  // Data shaped for the KpiDetailModal (needs .meta shape)
+  const activityForModal = useMemo(
+    () => raw.map((r) => ({
+      id: r.id, created_at: r.created_at, action: r.action, user_id: r.user_id,
+      meta: { path: r.path, device: r.device, browser: r.browser, os: r.os, lang: r.lang, ref_host: r.ref_host, session_id: r.session_id, screen: r.screen, vp: r.vp, tz: r.tz },
+    })),
+    [raw],
+  );
+  const rangeSince = useMemo(
+    () => new Date(Date.now() - range * 86400000).toISOString().slice(0, 10),
+    [range],
+  );
+
   const rolePie = useMemo(() => {
     if (!data) return [];
     const map: Record<string, number> = {};
