@@ -446,7 +446,7 @@ function Page() {
         </div>
       </header>
 
-      {/* Hero KPI row */}
+      {/* Hero KPI row — CLICK to isolate/toggle a metric on the traffic chart */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <HeroStat
           label="Peržiūros"
@@ -456,6 +456,8 @@ function Page() {
           gradient="from-cyan-500/25 via-cyan-500/5 to-transparent"
           color={C.cyan}
           spark={traffic.map((t) => t.Peržiūros)}
+          active={activeMetrics.has("Peržiūros")}
+          onClick={() => toggleMetric("Peržiūros")}
         />
         <HeroStat
           label="Unikalūs"
@@ -465,6 +467,8 @@ function Page() {
           gradient="from-violet-500/25 via-violet-500/5 to-transparent"
           color={C.violet}
           spark={traffic.map((t) => t.Unikalūs)}
+          active={activeMetrics.has("Unikalūs")}
+          onClick={() => toggleMetric("Unikalūs")}
         />
         <HeroStat
           label="Prisijungimai"
@@ -474,6 +478,8 @@ function Page() {
           gradient="from-emerald-500/25 via-emerald-500/5 to-transparent"
           color={C.emerald}
           spark={traffic.map((t) => t.Prisijungimai)}
+          active={activeMetrics.has("Prisijungimai")}
+          onClick={() => toggleMetric("Prisijungimai")}
         />
         <HeroStat
           label="Atsijungimai"
@@ -484,45 +490,77 @@ function Page() {
           color={C.rose}
           spark={traffic.map((t) => t.Atsijungimai)}
           hideDelta
+          active={activeMetrics.has("Atsijungimai")}
+          onClick={() => toggleMetric("Atsijungimai")}
         />
+      </div>
+
+      {/* Hint bar */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground">
+        <MousePointerClick className="h-3.5 w-3.5 text-primary" />
+        <span>Spausk kortelę virš — izoliuoji rodiklį. Grafike tempk apatinę juostelę — priartini laiką. Spausk stulpelį / puslapį — atsidaro detalus vaizdas.</span>
+        {activeMetrics.size !== ALL_METRICS.length && (
+          <button
+            onClick={() => setActiveMetrics(new Set(ALL_METRICS))}
+            className="ml-auto rounded-full border border-border bg-background/40 px-2 py-0.5 font-semibold text-foreground hover:bg-accent"
+          >
+            Rodyti visus
+          </button>
+        )}
       </div>
 
       {/* Main split: traffic chart + goal ring */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card delay={0} title="Svetainės srautas" icon={Globe} action={
-          <button onClick={exportTraffic} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-3 py-1.5 text-[11px] font-semibold hover:bg-accent">
-            <Download className="h-3 w-3" /> CSV
-          </button>
+          <div className="flex items-center gap-1.5">
+            <div className="inline-flex rounded-full border border-border/60 bg-background/40 p-0.5">
+              {([
+                ["area", AreaIcon, "Sritis"],
+                ["line", LineIcon, "Linija"],
+                ["bar", BarChart2, "Stulpeliai"],
+              ] as const).map(([k, Ico, lbl]) => (
+                <button
+                  key={k}
+                  onClick={() => setChartKind(k)}
+                  title={lbl}
+                  className={`relative grid h-6 w-7 place-items-center rounded-full text-[11px] transition ${
+                    chartKind === k ? "text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {chartKind === k && (
+                    <motion.span
+                      layoutId="chart-kind-pill"
+                      className="absolute inset-0 rounded-full bg-gradient-primary"
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <Ico className="relative h-3 w-3" />
+                </button>
+              ))}
+            </div>
+            <button onClick={exportTraffic} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-3 py-1.5 text-[11px] font-semibold hover:bg-accent">
+              <Download className="h-3 w-3" /> CSV
+            </button>
+          </div>
         }>
           <div className="h-80 w-full">
             <ResponsiveContainer>
-              <AreaChart data={traffic} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="g-views" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.cyan} stopOpacity={0.9} />
-                    <stop offset="100%" stopColor={C.cyan} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="g-uni" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.violet} stopOpacity={0.7} />
-                    <stop offset="100%" stopColor={C.violet} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.emerald} stopOpacity={0.7} />
-                    <stop offset="100%" stopColor={C.emerald} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.25} />
-                <XAxis dataKey="label" fontSize={10} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
-                <YAxis fontSize={10} stroke="hsl(var(--muted-foreground))" allowDecimals={false} tickLine={false} axisLine={false} />
-                <Tooltip content={<GlassTooltip />} cursor={{ stroke: C.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                <Area type="monotone" dataKey="Peržiūros" stroke={C.cyan} strokeWidth={2.5} fill="url(#g-views)" animationDuration={900} />
-                <Area type="monotone" dataKey="Unikalūs" stroke={C.violet} strokeWidth={2} fill="url(#g-uni)" animationDuration={1100} />
-                <Area type="monotone" dataKey="Prisijungimai" stroke={C.emerald} strokeWidth={2} fill="url(#g-in)" animationDuration={1300} />
-              </AreaChart>
+              <TrafficChart
+                kind={chartKind}
+                data={traffic}
+                active={activeMetrics}
+                onBrushChange={(r) => setBrushRange(r)}
+              />
             </ResponsiveContainer>
           </div>
+          {brushRange && traffic[brushRange.start] && traffic[brushRange.end] && (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Priartinta: <span className="font-semibold text-foreground">{traffic[brushRange.start].label}</span> → <span className="font-semibold text-foreground">{traffic[brushRange.end].label}</span>
+            </p>
+          )}
         </Card>
+
+
 
         <Card delay={0.05} title="Auditorija" icon={Target}>
           <div className="relative h-56">
