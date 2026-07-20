@@ -54,12 +54,19 @@ async function maybeEscalate(level: "critical" | "warning", message: string, sta
     const last = escalated.get(key);
     if (last && now - last < ESCALATE_MS) return;
     escalated.set(key, now);
+    let userEmail: string | undefined;
+    try {
+      const { data } = await supabase.auth.getUser();
+      userEmail = data.user?.email ?? undefined;
+    } catch { /* ignore */ }
     await escalateAppError({
       data: {
         level,
         message: message.slice(0, 500),
         stack: stack ? stack.slice(0, 2000) : undefined,
         path: typeof window !== "undefined" ? window.location.pathname : undefined,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+        userEmail,
       },
     });
   } catch {
