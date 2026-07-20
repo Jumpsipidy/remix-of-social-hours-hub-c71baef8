@@ -848,6 +848,64 @@ function Page() {
         </Card>
       </div>
 
+      {/* Live activity feed — newest events, updates with auto-refresh */}
+      <Card
+        delay={0.4}
+        title="Gyvas veiklos srautas"
+        icon={ActivityIcon}
+        action={
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-2 py-0.5 text-[10px] font-semibold">
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRefresh ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"}`} />
+            {autoRefresh ? "Live 15s" : "Sustabdytas"}
+          </span>
+        }
+      >
+        <div className="max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            {(data?.activity ?? []).slice(0, 40).map((e, i) => {
+              const isView = e.action === "page.view";
+              const isIn = e.action === "auth.signed_in";
+              const isOut = e.action === "auth.signed_out";
+              const color = isIn ? C.emerald : isOut ? C.rose : C.cyan;
+              const label = isIn ? "Prisijungimas" : isOut ? "Atsijungimas" : "Peržiūra";
+              return (
+                <motion.div
+                  key={e.id}
+                  layout
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: Math.min(i * 0.01, 0.3) }}
+                  className="group flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 px-2.5 py-1.5 text-[11px] hover:border-primary/40"
+                >
+                  <span
+                    className="inline-block h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+                  />
+                  <span className="w-24 shrink-0 font-semibold" style={{ color }}>{label}</span>
+                  <span className="truncate font-mono text-muted-foreground">
+                    {(e.meta?.path as string | undefined) ?? (isView ? "/" : "—")}
+                  </span>
+                  <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                    e.user_id ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {e.user_id ? "reg" : "anon"}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {new Date(e.created_at).toLocaleTimeString("lt-LT")}
+                  </span>
+                </motion.div>
+              );
+            })}
+            {!(data?.activity ?? []).length && (
+              <p className="rounded-lg border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
+                Kol kas įvykių nėra. Kai lankytojai naršys svetainę, čia atsiras srautas realiu laiku.
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
+
       {/* Drill-down drawer: opens when a top-page row is clicked */}
       <DrilldownDrawer
         path={drilldownPath}
