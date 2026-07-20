@@ -318,14 +318,17 @@ function StudentDashboard() {
 
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
             <h2 className="text-lg font-bold flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Pasiekimai</h2>
-            <p className="text-xs text-muted-foreground">Atrakinta {achievements.filter((a) => a.got).length} iš {achievements.length}</p>
+            <p className="text-xs text-muted-foreground">Atrakinta {ACHIEVEMENTS.filter((a) => unlockedKeys.has(a.key)).length} iš {ACHIEVEMENTS.length}</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {achievements.map((a) => (
-                <div key={a.key} className={`rounded-xl border p-3 text-xs transition ${a.got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
-                  <a.icon className={`h-4 w-4 ${a.got ? "text-primary" : "text-muted-foreground"}`} />
-                  <p className="mt-2 font-semibold leading-tight">{a.label}</p>
-                </div>
-              ))}
+              {ACHIEVEMENTS.map((a) => {
+                const got = unlockedKeys.has(a.key);
+                return (
+                  <div key={a.key} title={a.description} className={`rounded-xl border p-3 text-xs transition ${got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
+                    <a.icon className={`h-4 w-4 ${got ? "text-primary" : "text-muted-foreground"}`} />
+                    <p className="mt-2 font-semibold leading-tight">{a.label}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
