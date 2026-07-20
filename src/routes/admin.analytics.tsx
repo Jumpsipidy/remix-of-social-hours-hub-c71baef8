@@ -45,7 +45,9 @@ import {
   AreaChart as AreaIcon,
   BarChart2,
   MousePointerClick,
+  Maximize2,
 } from "lucide-react";
+import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
