@@ -141,7 +141,7 @@ export const NavBar: React.FC<{ active?: "home" | "tasks" | "dash"; user?: boole
                 color: "#c9d3e6",
               }}
             >
-              🔔
+              ◈
             </div>
             <div
               style={{

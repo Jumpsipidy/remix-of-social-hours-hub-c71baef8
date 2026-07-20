@@ -52,7 +52,7 @@ export const SceneDashboard: React.FC = () => {
         >
           <div>
             <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 68, color: "#fff", letterSpacing: -1 }}>
-              Sveika, Lukas Stankevičius 👋
+              Sveika, Lukas Stankevičius 
             </div>
             <div style={{ color: COLORS.muted, marginTop: 6, fontSize: 15 }}>lukas.stankevicius@dev.local</div>
           </div>
@@ -176,10 +176,10 @@ export const SceneDashboard: React.FC = () => {
         {/* Stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 20, marginTop: 22 }}>
           {[
-            { icon: "🕒", val: doneH, label: "Užbaigtos valandos", sub: "iš 20 reikalingų", d: 60 },
-            { icon: "◎", val: leftH, label: "Liko valandų", sub: `${Math.round(progress * 100)}% iki tikslo`, d: 72 },
-            { icon: "🗓", val: activeR, label: "Aktyvios rezervacijos", sub: "—", d: 84 },
-            { icon: "🏢", val: orgs, label: "Organizacijos", sub: "kur savanoriavai", d: 96 },
+            { icon: "◷", val: doneH, label: "Užbaigtos valandos", sub: "iš 20 reikalingų", d: 60 },
+            { icon: "◉", val: leftH, label: "Liko valandų", sub: `${Math.round(progress * 100)}% iki tikslo`, d: 72 },
+            { icon: "▢", val: activeR, label: "Aktyvios rezervacijos", sub: "—", d: 84 },
+            { icon: "▤", val: orgs, label: "Organizacijos", sub: "kur savanoriavai", d: 96 },
           ].map((c) => {
             const s = stat(c.d);
             const float = Math.sin(frame / 20 + c.d) * 3;

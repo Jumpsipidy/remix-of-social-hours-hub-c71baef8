@@ -158,7 +158,7 @@ export const SceneLogin: React.FC = () => {
             gap: 10,
           }}
         >
-          <span style={{ color: COLORS.muted }}>✉</span>
+          <span style={{ color: COLORS.muted }}>@</span>
           {EMAIL.slice(0, emailChars)}
           {emailChars < EMAIL.length && Math.floor(frame / 8) % 2 === 0 && (
             <span style={{ width: 2, height: 20, background: COLORS.cyan, display: "inline-block" }} />
@@ -183,7 +183,7 @@ export const SceneLogin: React.FC = () => {
             gap: 10,
           }}
         >
-          <span style={{ color: COLORS.muted, fontSize: 14 }}>🔒</span>
+          <span style={{ color: COLORS.muted, fontSize: 14 }}>*</span>
           {PASS.slice(0, passChars)}
         </div>
 

@@ -77,10 +77,10 @@ export const SceneTasks: React.FC = () => {
         {/* Filter row */}
         <div style={{ display: "flex", gap: 14, marginTop: 22, alignItems: "center", opacity: filtersIn, transform: `translateY(${(1 - filtersIn) * 15}px)` }}>
           <div style={{ flex: 1, padding: "16px 20px", borderRadius: 999, background: COLORS.panel, border: `1px solid ${COLORS.border}`, color: COLORS.muted, fontSize: 15 }}>
-            🔍 Paieška: pavadinimas, vieta, organizacija…
+            ○ Paieška: pavadinimas, vieta, organizacija…
           </div>
-          <div style={{ padding: "16px 22px", borderRadius: 999, background: COLORS.panel, border: `1px solid ${COLORS.border}`, color: "#c9d3e6", fontSize: 15 }}>📍 Visi miestai ▾</div>
-          <div style={{ padding: "16px 22px", borderRadius: 999, background: COLORS.panel, border: `1px solid ${COLORS.border}`, color: "#c9d3e6", fontSize: 15 }}>▽ Visos kategorijos ▾</div>
+          <div style={{ padding: "16px 22px", borderRadius: 999, background: COLORS.panel, border: `1px solid ${COLORS.border}`, color: "#c9d3e6", fontSize: 15 }}>◆ Visi miestai ▾</div>
+          <div style={{ padding: "16px 22px", borderRadius: 999, background: COLORS.panel, border: `1px solid ${COLORS.border}`, color: "#c9d3e6", fontSize: 15 }}>≡ Visos kategorijos ▾</div>
           <div
             style={{
               padding: "16px 26px",
@@ -146,7 +146,7 @@ export const SceneTasks: React.FC = () => {
                   <div style={{ padding: "4px 10px", borderRadius: 999, background: COLORS.cyanSoft, color: COLORS.cyan, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>
                     #{t.tag}
                   </div>
-                  <div style={{ color: COLORS.muted, fontSize: 12 }}>📍 {t.city}</div>
+                  <div style={{ color: COLORS.muted, fontSize: 12 }}>◆ {t.city}</div>
                 </div>
                 <div style={{ color: "#fff", fontSize: 19, fontWeight: 700, marginTop: 14, lineHeight: 1.3 }}>{t.title}</div>
                 <div style={{ color: COLORS.muted, fontSize: 13, marginTop: 8 }}>{t.org}</div>
@@ -209,7 +209,7 @@ export const SceneTasks: React.FC = () => {
                     </div>
                     <div style={{ marginTop: 10, padding: "14px 16px", borderRadius: 12, background: "#0b1020", border: `1px solid ${COLORS.border}`, color: "#fff", fontSize: 18, fontWeight: 600, display: "flex", justifyContent: "space-between" }}>
                       <span>{f.val}</span>
-                      <span style={{ color: COLORS.muted }}>🕓</span>
+                      <span style={{ color: COLORS.muted }}>◷</span>
                     </div>
                   </div>
                 ))}
