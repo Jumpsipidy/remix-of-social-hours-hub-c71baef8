@@ -5,6 +5,8 @@ import { Heart, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { deviceMeta } from "@/lib/device-meta";
+import { insertActivityLogRow } from "@/lib/activity-log";
 
 const DASH_BY_ROLE: Record<string, string> = {
   student: "/student",
@@ -54,6 +56,13 @@ function AuthCallbackPage() {
 
         setMessage("Kraunamas tavo vaidmuo…");
         const ensured = await ensureProfile();
+        await insertActivityLogRow({
+          user_id: data.session.user.id,
+          action: "auth.signed_in",
+          entity_type: "user",
+          entity_id: data.session.user.id,
+          meta: deviceMeta({ method: "oauth", path: "/auth/callback" }),
+        });
         const role = ensured.profile?.role ?? "student";
         try { localStorage.setItem("sv_last_role_v1", role); } catch {}
         if (!cancelled) navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
