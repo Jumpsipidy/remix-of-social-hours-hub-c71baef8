@@ -112,6 +112,7 @@ export async function inviteFriendsToReservation(
   }));
   const { error } = await supabase.from("reservation_participants").insert(rows as any);
   if (error) throw error;
+  logActivity("group.invited", { entityType: "reservation", entityId: reservationId, meta: { count: friendIds.length } });
 }
 
 export async function listMyInvites(userId: string): Promise<ParticipantRow[]> {
