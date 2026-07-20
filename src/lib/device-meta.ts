@@ -4,6 +4,7 @@
  */
 
 const SID_KEY = "sv_session_id";
+const VID_KEY = "sv_visitor_id";
 
 export function sessionId(): string {
   if (typeof window === "undefined") return "ssr";
@@ -17,6 +18,25 @@ export function sessionId(): string {
     return "ephemeral";
   }
 }
+
+/**
+ * Persistent per-device/browser visitor id (localStorage). Survives across
+ * tabs, sessions and reloads — used to deduplicate "who clicked on my site"
+ * so the same person from the same browser is counted once.
+ */
+export function visitorId(): string {
+  if (typeof window === "undefined") return "ssr";
+  try {
+    const cur = localStorage.getItem(VID_KEY);
+    if (cur) return cur;
+    const id = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+    localStorage.setItem(VID_KEY, id);
+    return id;
+  } catch {
+    return "ephemeral";
+  }
+}
+
 
 function parseUA(ua: string): { device: string; browser: string; os: string } {
   const u = ua.toLowerCase();
@@ -54,7 +74,9 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
   } catch { /* noop */ }
   return {
     session_id: sessionId(),
+    visitor_id: visitorId(),
     ua: ua.slice(0, 220),
+
     device,
     browser,
     os,

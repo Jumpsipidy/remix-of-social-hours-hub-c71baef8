@@ -303,6 +303,53 @@ function Page() {
     return rows.sort((a, b) => b.end.localeCompare(a.end));
   }, [sessionMap]);
 
+  // Unique visitors — deduped by persistent visitor_id (localStorage), with
+  // a device-fingerprint fallback for legacy rows that predate visitor_id.
+  // Same person on same browser is ONE visitor no matter how many tabs/sessions.
+  const visitors = useMemo(() => {
+    if (!data) return [] as {
+      key: string; first: string; last: string; hits: number; pages: number;
+      device: string; browser: string; os: string; tz: string; lang: string;
+      last_path: string; ref_host: string; user_id: string | null;
+      paths: Set<string>;
+    }[];
+    type RawRow = NonNullable<Data>["rawActivity"][number];
+    const fp = (r: RawRow) =>
+      (r.visitor_id && r.visitor_id.length > 3)
+        ? `v:${r.visitor_id}`
+        : `fp:${r.device}|${r.browser}|${r.os}|${(r as unknown as { screen?: string }).screen ?? ""}|${r.tz}|${r.lang}`;
+    const m = new Map<string, RawRow[]>();
+    for (const r of data.rawActivity) {
+      if (r.action !== "page.view") continue;
+      const k = fp(r);
+      const arr = m.get(k) ?? [];
+      arr.push(r);
+      m.set(k, arr);
+    }
+    const out: {
+      key: string; first: string; last: string; hits: number; pages: number;
+      device: string; browser: string; os: string; tz: string; lang: string;
+      last_path: string; ref_host: string; user_id: string | null;
+      paths: Set<string>;
+    }[] = [];
+    for (const [key, arr] of m) {
+      arr.sort((x, y) => x.created_at.localeCompare(y.created_at));
+      const last = arr[arr.length - 1];
+      const paths = new Set(arr.map((r) => r.path));
+      const uid = arr.map((r) => r.user_id).find(Boolean) ?? null;
+      out.push({
+        key, first: arr[0].created_at, last: last.created_at,
+        hits: arr.length, pages: paths.size,
+        device: last.device, browser: last.browser, os: last.os,
+        tz: last.tz, lang: last.lang, last_path: last.path,
+        ref_host: last.ref_host, user_id: uid, paths,
+      });
+    }
+    return out.sort((a, b) => b.last.localeCompare(a.last));
+  }, [data]);
+
+
+
   // Heatmap (day-of-week × hour) from rawActivity
   const heat = useMemo(() => {
     const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
@@ -502,7 +549,75 @@ function Page() {
             <StatChip icon={<Sparkles className="h-3.5 w-3.5" />} label="Admin (paslėpta)" value={a.admin_hidden_events} tint="amber" />
           </div>
 
+          {/* UNIQUE VISITORS — "kas paspaudė ant svetainės", dedup by device */}
+          <ChartCard
+            id="visitors"
+            title={`Lankytojai (${visitors.length} unikalūs)`}
+            subtitle="Kas paspaudė ant svetainės — kiekvienas įrenginys / naršyklė skaičiuojamas vieną kartą"
+            full={full}
+            setFull={setFull}
+          >
+            <div className="flex items-center gap-2 pb-3 text-[11px] text-white/50">
+              <Fingerprint className="h-3.5 w-3.5 text-violet-300" />
+              Dedublikuota pagal <code className="rounded bg-white/10 px-1 py-0.5 text-white/70">visitor_id</code> (localStorage) + įrenginio pirštų atspaudą senesniems įrašams.
+            </div>
+            {visitors.length === 0 ? (
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-8 text-center text-sm text-white/50">
+                Kol kas dar niekas neaplankė svetainės šiame lange.
+              </div>
+            ) : (
+              <div className="max-h-[520px] overflow-auto rounded-xl border border-white/10">
+                <table className="w-full text-left text-xs">
+                  <thead className="sticky top-0 z-10 bg-slate-950/95 text-[10px] uppercase tracking-wide text-white/40 backdrop-blur">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">#</th>
+                      <th className="px-3 py-2 font-semibold">Paskutinis vizitas</th>
+                      <th className="px-3 py-2 font-semibold">Pirmas kartas</th>
+                      <th className="px-3 py-2 font-semibold">Paspaudimai</th>
+                      <th className="px-3 py-2 font-semibold">Puslapiai</th>
+                      <th className="px-3 py-2 font-semibold">Įrenginys</th>
+                      <th className="px-3 py-2 font-semibold">Naršyklė</th>
+                      <th className="px-3 py-2 font-semibold">OS</th>
+                      <th className="px-3 py-2 font-semibold">Laiko juosta</th>
+                      <th className="px-3 py-2 font-semibold">Kalba</th>
+                      <th className="px-3 py-2 font-semibold">Paskutinis puslapis</th>
+                      <th className="px-3 py-2 font-semibold">Iš kur</th>
+                      <th className="px-3 py-2 font-semibold">Vartotojas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visitors.slice(0, 200).map((v, i) => (
+                      <tr key={v.key} className="border-t border-white/5 transition hover:bg-white/[0.03]">
+                        <td className="px-3 py-2 text-white/40">{i + 1}</td>
+                        <td className="px-3 py-2 text-white/80">{timeAgo(v.last)} atgal</td>
+                        <td className="px-3 py-2 text-white/50">{new Date(v.first).toLocaleString("lt-LT")}</td>
+                        <td className="px-3 py-2 font-semibold text-cyan-300">{fmt(v.hits)}</td>
+                        <td className="px-3 py-2 text-violet-300">{fmt(v.pages)}</td>
+                        <td className="px-3 py-2 text-white/70">{v.device}</td>
+                        <td className="px-3 py-2 text-white/70">{v.browser}</td>
+                        <td className="px-3 py-2 text-white/70">{v.os}</td>
+                        <td className="px-3 py-2 text-white/50">{v.tz || "—"}</td>
+                        <td className="px-3 py-2 text-white/50">{v.lang || "—"}</td>
+                        <td className="px-3 py-2">
+                          <code className="rounded bg-white/5 px-1.5 py-0.5 text-white/70">{v.last_path}</code>
+                        </td>
+                        <td className="px-3 py-2 text-white/50">{v.ref_host || "(tiesiogiai)"}</td>
+                        <td className="px-3 py-2 text-white/60">{v.user_id ? <span className="text-emerald-300">prisijungęs</span> : <span className="text-white/30">svečias</span>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {visitors.length > 200 && (
+                  <div className="border-t border-white/5 bg-white/[0.02] px-3 py-2 text-center text-[11px] text-white/40">
+                    Rodoma 200 iš {visitors.length}. Eksportuok CSV pilnam sąrašui.
+                  </div>
+                )}
+              </div>
+            )}
+          </ChartCard>
+
           {/* TRAFFIC — with rich cursor-follow tooltip */}
+
           <ChartCard id="traffic" title="Srautas laike" subtitle={`${range} dienų • paspausk stulpelį fokusuoti`} full={full} setFull={setFull}>
             <div
               onPointerMove={(e) => {
