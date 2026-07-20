@@ -10,11 +10,12 @@ import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, RefreshCw, LogIn, LogOut, Eye, Users, Download, Zap, Clock,
-  ArrowUp, ArrowDown, Activity as ActivityIcon, Globe, X, LineChart as LineIcon,
+  ArrowUp, ArrowDown, Activity as ActivityIcon, Globe, LineChart as LineIcon,
   AreaChart as AreaIcon, BarChart2, Smartphone, Tablet, Monitor, Wifi,
-  Chrome, Languages, ExternalLink, ShieldCheck,
+  Chrome, Languages, ExternalLink, ShieldCheck, Maximize2, Minimize2, MapPin, MonitorSmartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
 
@@ -67,6 +68,17 @@ const timeAgo = (iso: string) => {
   if (s < 86400) return `${Math.round(s / 3600)}val`;
   return `${Math.round(s / 86400)}d`;
 };
+function bucketViewport(vp: string): string {
+  const [wStr] = (vp || "").split("x");
+  const w = Number(wStr);
+  if (!w) return "";
+  if (w < 480) return "XS <480";
+  if (w < 768) return "SM <768";
+  if (w < 1024) return "MD <1024";
+  if (w < 1440) return "LG <1440";
+  if (w < 1920) return "XL <1920";
+  return "2XL 1920+";
+}
 
 // ============================================================================
 // Reusable primitives
@@ -157,6 +169,8 @@ function Page() {
   const [chartKind, setChartKind] = useState<"area" | "line" | "bar">("area");
   const [liveEvents, setLiveEvents] = useState<FeedRow[]>([]);
   const [pulse, setPulse] = useState(0);
+  const [detailKind, setDetailKind] = useState<KpiKind | null>(null);
+  const [fullscreenId, setFullscreenId] = useState<string | null>(null);
 
   const toggleMetric = useCallback((m: MetricKey) => {
     setActiveMetrics((prev) => {
@@ -258,6 +272,34 @@ function Page() {
   const oses = useMemo(() => analytics?.os ?? [], [analytics]);
   const referrers = useMemo(() => analytics?.referrers ?? [], [analytics]);
   const languages = useMemo(() => analytics?.languages ?? [], [analytics]);
+
+  // Deep device breakdowns from raw meta
+  const raw = data?.rawActivity ?? [];
+  const groupTop = (fn: (r: typeof raw[number]) => string, min = 1) => {
+    const map: Record<string, number> = {};
+    for (const r of raw) {
+      if (r.action !== "page.view") continue;
+      const k = fn(r);
+      if (!k) continue;
+      map[k] = (map[k] ?? 0) + 1;
+    }
+    return Object.entries(map).filter(([, n]) => n >= min).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  };
+  const timezones = useMemo(() => groupTop((r) => r.tz), [raw]);
+  const screens = useMemo(() => groupTop((r) => r.screen), [raw]);
+  const viewports = useMemo(() => groupTop((r) => bucketViewport(r.vp)), [raw]);
+  // Data shaped for the KpiDetailModal (needs .meta shape)
+  const activityForModal = useMemo(
+    () => raw.map((r) => ({
+      id: r.id, created_at: r.created_at, action: r.action, user_id: r.user_id,
+      meta: { path: r.path, device: r.device, browser: r.browser, os: r.os, lang: r.lang, ref_host: r.ref_host, session_id: r.session_id, screen: r.screen, vp: r.vp, tz: r.tz },
+    })),
+    [raw],
+  );
+  const rangeSince = useMemo(
+    () => new Date(Date.now() - range * 86400000).toISOString().slice(0, 10),
+    [range],
+  );
 
   const rolePie = useMemo(() => {
     if (!data) return [];
@@ -388,16 +430,20 @@ function Page() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <HeroStat label="Peržiūros" value={totals.views} delta={pct(totals.views, prev.views)}
           icon={Eye} color={C.cyan} spark={traffic.map((t) => t.Peržiūros)}
-          active={activeMetrics.has("Peržiūros")} onClick={() => toggleMetric("Peržiūros")} />
+          active={activeMetrics.has("Peržiūros")} onClick={() => toggleMetric("Peržiūros")}
+          onExpand={() => setDetailKind("views")} />
         <HeroStat label="Unikalūs" value={totals.uniques} delta={pct(totals.uniques, prev.uniques)}
           icon={Users} color={C.violet} spark={traffic.map((t) => t.Unikalūs)}
-          active={activeMetrics.has("Unikalūs")} onClick={() => toggleMetric("Unikalūs")} />
+          active={activeMetrics.has("Unikalūs")} onClick={() => toggleMetric("Unikalūs")}
+          onExpand={() => setDetailKind("uniques")} />
         <HeroStat label="Prisijungimai" value={totals.signins} delta={pct(totals.signins, prev.signins)}
           icon={LogIn} color={C.emerald} spark={traffic.map((t) => t.Prisijungimai)} sub="tikri auth įvykiai"
-          active={activeMetrics.has("Prisijungimai")} onClick={() => toggleMetric("Prisijungimai")} />
+          active={activeMetrics.has("Prisijungimai")} onClick={() => toggleMetric("Prisijungimai")}
+          onExpand={() => setDetailKind("signIns")} />
         <HeroStat label="Atsijungimai" value={totals.signouts} delta={0} hideDelta
           icon={LogOut} color={C.rose} spark={traffic.map((t) => t.Atsijungimai)}
-          active={activeMetrics.has("Atsijungimai")} onClick={() => toggleMetric("Atsijungimai")} />
+          active={activeMetrics.has("Atsijungimai")} onClick={() => toggleMetric("Atsijungimai")}
+          onExpand={() => setDetailKind("signOuts")} />
       </div>
 
       {/* Secondary stats */}
@@ -409,7 +455,10 @@ function Page() {
       </div>
 
       {/* Traffic chart */}
-      <Card title="Srautas laike" icon={ActivityIcon} tools={
+      <Card title="Srautas laike" icon={ActivityIcon}
+        expanded={fullscreenId === "traffic"}
+        onToggleExpand={() => setFullscreenId(fullscreenId === "traffic" ? null : "traffic")}
+        tools={
         <div className="inline-flex rounded-full border border-border bg-card/60 p-0.5 text-[10px]">
           {(["area", "line", "bar"] as const).map((k) => {
             const Icon = k === "area" ? AreaIcon : k === "line" ? LineIcon : BarChart2;
@@ -490,6 +539,13 @@ function Page() {
         <DeviceCard devices={devices} />
         <BreakdownCard title="Naršyklės" icon={Chrome} items={browsers.map((b) => ({ label: b.browser, n: b.n }))} color={C.cyan} />
         <BreakdownCard title="Operacinės sistemos" icon={Monitor} items={oses.map((o) => ({ label: o.os, n: o.n }))} color={C.emerald} />
+      </div>
+
+      {/* Deep device breakdowns (from raw meta) */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <BreakdownCard title="Laiko juostos" icon={MapPin} items={timezones.map(([label, n]) => ({ label, n }))} color={C.violet} />
+        <BreakdownCard title="Ekranai (raiška)" icon={Monitor} items={screens.map(([label, n]) => ({ label, n }))} color={C.cyan} />
+        <BreakdownCard title="Lango dydžiai" icon={MonitorSmartphone} items={viewports.map(([label, n]) => ({ label, n }))} color={C.pink} />
       </div>
 
       {/* Referrers + Languages + Hourly */}
@@ -648,6 +704,14 @@ function Page() {
           </AnimatePresence>
         </div>
       </Card>
+
+      <KpiDetailModal
+        kind={detailKind}
+        onClose={() => setDetailKind(null)}
+        activity={activityForModal}
+        rangeSince={rangeSince}
+        rangeDays={range}
+      />
     </div>
   );
 }
@@ -655,40 +719,70 @@ function Page() {
 // ============================================================================
 // Sub-components
 // ============================================================================
-function Card({ title, icon: Icon, tools, children }: {
+function Card({ title, icon: Icon, tools, children, expanded, onToggleExpand }: {
   title: string; icon: React.ComponentType<{ className?: string }>;
   tools?: React.ReactNode; children: React.ReactNode;
+  expanded?: boolean; onToggleExpand?: () => void;
 }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur-xl">
+  const body = (
+    <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-xl ${expanded ? "h-full" : ""}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="h-4 w-4 text-primary" />
-          <span>{title}</span>
+          <span className="truncate">{title}</span>
         </div>
-        {tools}
+        <div className="flex items-center gap-1.5">
+          {tools}
+          {onToggleExpand && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-white"
+              title={expanded ? "Sumažinti" : "Fullscreen"}
+              aria-label="Fullscreen"
+            >
+              {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            </button>
+          )}
+        </div>
       </div>
-      {children}
+      <div className={expanded ? "h-[calc(100%-52px)]" : ""}>{children}</div>
     </div>
+  );
+  if (!expanded) return body;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] bg-black/80 p-3 backdrop-blur-md sm:p-6"
+      onClick={onToggleExpand}
+    >
+      <motion.div
+        initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        className="mx-auto h-full max-w-[1500px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {body}
+      </motion.div>
+    </motion.div>
   );
 }
 
 function HeroStat({
-  label, value, delta, icon: Icon, color, spark, active = true, onClick, hideDelta, sub,
+  label, value, delta, icon: Icon, color, spark, active = true, onClick, hideDelta, sub, onExpand,
 }: {
   label: string; value: number; delta: number;
   icon: React.ComponentType<{ className?: string }>;
   color: string; spark: number[]; active?: boolean; onClick?: () => void;
-  hideDelta?: boolean; sub?: string;
+  hideDelta?: boolean; sub?: string; onExpand?: () => void;
 }) {
   const isUp = delta >= 0;
   return (
     <Tilt3D intensity={7} className="rounded-2xl">
-      <motion.button
-        type="button"
-        onClick={onClick}
+      <motion.div
         whileTap={{ scale: 0.98 }}
-        className={`group relative w-full overflow-hidden rounded-2xl border p-3 text-left backdrop-blur-xl transition-all sm:p-4 ${
+        onClick={onClick}
+        className={`group relative w-full cursor-pointer overflow-hidden rounded-2xl border p-3 text-left backdrop-blur-xl transition-all sm:p-4 ${
           active ? "border-white/15 bg-card/70" : "border-white/5 bg-card/30 opacity-60"
         }`}
         style={{ boxShadow: active ? `0 20px 60px -30px ${color}` : "none" }}
@@ -697,6 +791,17 @@ function HeroStat({
           className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-2xl transition-opacity group-hover:opacity-70"
           style={{ background: color }}
         />
+        {onExpand && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onExpand(); }}
+            className="absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-lg border border-white/10 bg-black/30 text-white/70 opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-white/10 hover:text-white"
+            aria-label="Išplėsti"
+            title="Išsamiau"
+          >
+            <Maximize2 className="h-3 w-3" />
+          </button>
+        )}
         <div className="relative flex items-start justify-between">
           <div className="min-w-0">
             <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:text-[10px]">
@@ -736,7 +841,7 @@ function HeroStat({
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </motion.button>
+      </motion.div>
     </Tilt3D>
   );
 }
