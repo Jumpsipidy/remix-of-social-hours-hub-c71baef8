@@ -3,7 +3,7 @@
 // - Persists to public.activity_log with action='client.error' or 'supabase.error'
 // - Admin dashboard reads these rows via /admin/errors and realtime subscription
 import { supabase } from "@/integrations/supabase/client";
-import { getDeviceMeta } from "@/lib/device-meta";
+import { deviceMeta } from "@/lib/device-meta";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
