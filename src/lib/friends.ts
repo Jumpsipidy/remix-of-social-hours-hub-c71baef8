@@ -68,6 +68,7 @@ export async function sendFriendRequest(fromId: string, toId: string) {
     status: "pending",
   } as any);
   if (error) throw error;
+  logActivity("friend.request_sent", { entityType: "profile", entityId: toId });
 }
 
 export async function respondToRequest(rowId: string, accept: boolean) {
@@ -76,11 +77,13 @@ export async function respondToRequest(rowId: string, accept: boolean) {
     .update({ status: accept ? "accepted" : "declined" } as any)
     .eq("id", rowId);
   if (error) throw error;
+  logActivity(accept ? "friend.request_accepted" : "friend.request_declined", { entityType: "friendship", entityId: rowId });
 }
 
 export async function unfriend(rowId: string) {
   const { error } = await supabase.from("friendships").delete().eq("id", rowId);
   if (error) throw error;
+  logActivity("friend.unfriended", { entityType: "friendship", entityId: rowId });
 }
 
 // ============ Group reservations ============
