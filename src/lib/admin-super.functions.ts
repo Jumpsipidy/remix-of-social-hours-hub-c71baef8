@@ -215,26 +215,51 @@ export const adminLeaderboard = createServerFn({ method: "GET" })
 
 export const adminAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .validator((input: { days?: number } | undefined) => input ?? {})
+  .handler(async ({ data, context }) => {
     const sb = await assertAdmin(context.userId);
-    const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-    const [rRes, pRes, mRes, aRes] = await Promise.all([
+    const days = Math.min(Math.max(data.days ?? 30, 1), 90);
+    const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+
+    const [rRes, pRes, mRes, rpcRes, feedRes] = await Promise.all([
       sb.from("reservations").select("id, status, hours_to_earn, created_at").gte("created_at", since),
       sb.from("profiles").select("id, role, created_at").gte("created_at", since),
       sb.from("messages").select("id, created_at").gte("created_at", since),
-      sb.from("activity_log")
-        .select("id, user_id, action, created_at, meta")
-        .in("action", ["auth.signed_in", "auth.signed_out", "page.view"])
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(20000),
+      sb.rpc("admin_analytics_v2", { _days: days }),
+      sb.rpc("admin_recent_activity", { _limit: 80 }),
     ]);
+    if (rpcRes.error) throw new Error(rpcRes.error.message);
+
     return {
       reservations: rRes.data ?? [],
       profiles: pRes.data ?? [],
       messages: mRes.data ?? [],
-      activity: (aRes.data ?? []) as Array<{
-        id: string; user_id: string | null; action: string; created_at: string; meta: { path?: string; anon?: string } | null;
-      }>,
+      analytics: rpcRes.data as AdminAnalyticsV2,
+      feed: (feedRes.data ?? []) as FeedRow[],
     };
   });
+
+export type AdminAnalyticsV2 = {
+  generated_at: string;
+  range_days: number;
+  totals: { views: number; uniques: number; signins: number; signouts: number; sessions: number; signed_in_users: number };
+  prev_totals: { views: number; uniques: number; signins: number; signouts: number };
+  active_now: number;
+  admin_hidden_events: number;
+  daily: Array<{ d: string; views: number; uniques: number; signins: number; signouts: number }>;
+  hourly: Array<{ h: number; views: number; signins: number; uniques: number }>;
+  weekday: Array<{ w: number; views: number }>;
+  top_pages: Array<{ path: string; n: number; u: number }>;
+  devices: Array<{ device: string; n: number }>;
+  browsers: Array<{ browser: string; n: number }>;
+  os: Array<{ os: string; n: number }>;
+  referrers: Array<{ host: string; n: number }>;
+  languages: Array<{ lang: string; n: number }>;
+};
+
+export type FeedRow = {
+  id: string; created_at: string; action: string; user_id: string | null;
+  path: string; device: string; browser: string; os: string; ref_host: string; lang: string;
+  user_name: string | null; user_role: string | null;
+};
+

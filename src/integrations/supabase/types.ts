@@ -778,6 +778,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_analytics_v2: { Args: { _days?: number }; Returns: Json }
+      admin_recent_activity: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          browser: string
+          created_at: string
+          device: string
+          id: string
+          lang: string
+          os: string
+          path: string
+          ref_host: string
+          user_id: string
+          user_name: string
+          user_role: string
+        }[]
+      }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
       auto_lockdown_if_unhealthy: { Args: never; Returns: Json }
       award_reservation_hours: {
