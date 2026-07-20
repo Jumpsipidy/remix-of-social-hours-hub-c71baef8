@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
 import { deviceMeta } from "@/lib/device-meta";
 import { insertActivityLogRow } from "@/lib/activity-log";
+import { AuthProvidersStatus } from "@/components/auth-providers-status";
 import { Captcha } from "@/components/captcha";
 import { toast } from "sonner";
 
@@ -286,6 +287,10 @@ function LoginPage() {
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
                   {oauthBusy === "discord" ? <Loader2 className="h-4 w-4 animate-spin" /> : <DiscordIcon />} Discord
                 </button>
+              </div>
+
+              <div className="mt-4">
+                <AuthProvidersStatus />
               </div>
 
               <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
