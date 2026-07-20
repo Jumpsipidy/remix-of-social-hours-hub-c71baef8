@@ -333,7 +333,7 @@ function AdminErrorsPage() {
     try {
       await logClientError(new Error(`[TEST] Testinė klaida ${new Date().toLocaleTimeString("lt-LT")}`), {
         source: "admin.errors.test",
-        path: "/admin/errors",
+        extra: { path: "/admin/errors" },
       });
       toast.success("Testinė klaida sukurta — turėtų atsirasti Live sraute");
     } catch (e) {
