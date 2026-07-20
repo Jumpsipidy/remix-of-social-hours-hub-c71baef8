@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   RefreshCw,
@@ -21,6 +21,12 @@ import {
   Menu,
   Copy,
   Check,
+  EyeOff,
+  Plus,
+  Globe,
+  Filter,
+  Play,
+  Pause,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -30,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
+import { logClientError } from "@/lib/error-log";
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
@@ -82,16 +89,27 @@ const KIND_STYLE: Record<string, string> = {
 
 const CRITICAL_KINDS = new Set(["client.error", "app.critical"]);
 
-type Section = "overview" | "live" | "analytics" | "top" | "lockdown" | "settings";
+type Section = "overview" | "live" | "analytics" | "top" | "sources" | "lockdown" | "settings";
 
 const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[] = [
   { id: "overview", label: "Apžvalga", icon: LayoutDashboard, hint: "KPI + srautas" },
   { id: "live", label: "Live srautas", icon: Radio, hint: "Realaus laiko sąrašas" },
   { id: "analytics", label: "Analitika", icon: BarChart3, hint: "24h trendai" },
   { id: "top", label: "Dažniausios", icon: ListOrdered, hint: "Grupuota pagal žinutę" },
+  { id: "sources", label: "Šaltiniai", icon: Globe, hint: "Puslapiai · naršyklės · OS" },
   { id: "lockdown", label: "Auto-lockdown", icon: ShieldAlert, hint: "Slenkstis ir valdymas" },
-  { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Išvalyti / eksportuoti" },
+  { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Ignore · testas · eksportas" },
 ];
+
+const IGNORE_KEY = "admin-errors-ignore-rules";
+const AUTO_KEY = "admin-errors-auto-refresh";
+function loadIgnore(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]") as string[]; } catch { return []; }
+}
+function saveIgnore(list: string[]) {
+  try { localStorage.setItem(IGNORE_KEY, JSON.stringify(list)); } catch {}
+}
 
 function AdminErrorsPage() {
   const [rows, setRows] = useState<ErrRow[]>([]);
@@ -107,8 +125,21 @@ function AdminErrorsPage() {
   const [section, setSection] = useState<Section>("overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [ignoreRules, setIgnoreRules] = useState<string[]>([]);
+  const [showIgnored, setShowIgnored] = useState(false);
+  const [autoMs, setAutoMs] = useState<number>(0);
+  const [testing, setTesting] = useState(false);
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+
+  useEffect(() => {
+    setIgnoreRules(loadIgnore());
+    try {
+      const v = Number(localStorage.getItem(AUTO_KEY));
+      if (Number.isFinite(v) && v > 0) setAutoMs(v);
+    } catch {}
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -167,6 +198,39 @@ function AdminErrorsPage() {
     };
   }, [live]);
 
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!autoMs) return;
+    const t = setInterval(() => { void load(); }, autoMs);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoMs]);
+
+  // Keyboard shortcuts: `/` focuses search, `l` toggles live, `Esc` clears filter
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || (target as HTMLElement).isContentEditable);
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        setSection("live");
+        setTimeout(() => searchRef.current?.focus(), 50);
+      } else if (e.key === "Escape" && filter && !selected) {
+        setFilter("");
+      } else if ((e.key === "l" || e.key === "L") && !inField) {
+        setLive((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filter, selected]);
+
+  const matchesIgnore = (r: ErrRow) => {
+    if (!ignoreRules.length) return false;
+    const hay = (r.meta?.message ?? "") + " " + (r.meta?.path ?? "") + " " + (r.meta?.source ?? "");
+    return ignoreRules.some((p) => p && hay.toLowerCase().includes(p.toLowerCase()));
+  };
+
   const filtered = useMemo(() => {
     const f = filter.trim();
     const windowMs =
@@ -180,6 +244,7 @@ function AdminErrorsPage() {
     }
     const fl = f.toLowerCase();
     return rows.filter((r) => {
+      if (!showIgnored && matchesIgnore(r)) return false;
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
@@ -188,7 +253,7 @@ function AdminErrorsPage() {
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind, regexMode, timeWindow]);
+  }, [rows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
 
   const now = Date.now();
   const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
@@ -224,6 +289,58 @@ function AdminErrorsPage() {
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 10);
   }, [rows]);
+
+  const topSources = useMemo(() => {
+    const paths = new Map<string, number>();
+    const browsers = new Map<string, number>();
+    const oses = new Map<string, number>();
+    for (const r of rows) {
+      const p = (r.meta?.path ?? "").split("?")[0] || "(nežinomas)";
+      paths.set(p, (paths.get(p) ?? 0) + 1);
+      const b = r.meta?.browser ?? "(nežinoma)";
+      browsers.set(b, (browsers.get(b) ?? 0) + 1);
+      const o = r.meta?.os ?? "(nežinoma)";
+      oses.set(o, (oses.get(o) ?? 0) + 1);
+    }
+    const top = (m: Map<string, number>, n = 8) =>
+      Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n);
+    return { paths: top(paths, 10), browsers: top(browsers), oses: top(oses) };
+  }, [rows]);
+
+  const ignoredCount = useMemo(() => rows.filter(matchesIgnore).length, [rows, ignoreRules]);
+
+  const addIgnoreRule = (pattern: string) => {
+    const p = pattern.trim();
+    if (!p) return;
+    if (ignoreRules.includes(p)) return toast.info("Toks šablonas jau yra");
+    const next = [...ignoreRules, p];
+    setIgnoreRules(next); saveIgnore(next);
+    toast.success(`Paslėpta: „${p.slice(0, 40)}"`);
+  };
+  const removeIgnoreRule = (p: string) => {
+    const next = ignoreRules.filter((x) => x !== p);
+    setIgnoreRules(next); saveIgnore(next);
+  };
+
+  const setAutoInterval = (ms: number) => {
+    setAutoMs(ms);
+    try { localStorage.setItem(AUTO_KEY, String(ms)); } catch {}
+  };
+
+  const triggerTestError = async () => {
+    setTesting(true);
+    try {
+      await logClientError(new Error(`[TEST] Testinė klaida ${new Date().toLocaleTimeString("lt-LT")}`), {
+        source: "admin.errors.test",
+        extra: { path: "/admin/errors" },
+      });
+      toast.success("Testinė klaida sukurta — turėtų atsirasti Live sraute");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const clear = async () => {
     if (!confirm("Ištrinti visas klaidas iš žurnalo?")) return;
@@ -361,6 +478,19 @@ function AdminErrorsPage() {
               {copied ? <Check className="mr-1 h-4 w-4 text-emerald-400" /> : <Copy className="mr-1 h-4 w-4" />}
               <span className="hidden sm:inline">{copied ? "Nukopijuota" : "Kopijuoti"}</span>
             </Button>
+            <div className="hidden items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 text-[11px] sm:inline-flex" title="Automatinis atnaujinimas">
+              {autoMs ? <Play className="h-3 w-3 text-emerald-400" /> : <Pause className="h-3 w-3 text-muted-foreground" />}
+              <select
+                value={autoMs}
+                onChange={(e) => setAutoInterval(Number(e.target.value))}
+                className="bg-transparent text-xs outline-none"
+              >
+                <option value={0}>Auto: išj.</option>
+                <option value={5000}>5s</option>
+                <option value={15000}>15s</option>
+                <option value={60000}>60s</option>
+              </select>
+            </div>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Atnaujinti</span>
@@ -536,6 +666,7 @@ function AdminErrorsPage() {
                       <div className="relative min-w-[200px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
+                          ref={searchRef}
                           placeholder={regexMode ? "Regex, pvz. ^Cannot read|is not a function" : "Ieškoti žinutėje, kelyje, stack…"}
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
@@ -728,6 +859,22 @@ function AdminErrorsPage() {
                 </SaaSPanel>
               )}
 
+              {section === "sources" && (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <SourceBreakdown title="Puslapiai" items={topSources.paths} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SourceBreakdown title="Naršyklės" items={topSources.browsers} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SourceBreakdown title="OS" items={topSources.oses} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Klavišų kombinacijos</div>
+                    <div className="mt-3 space-y-2 text-xs">
+                      <ShortcutRow k="/" desc="Fokusuoti paiešką (Live)" />
+                      <ShortcutRow k="L" desc="Įjungti / išjungti Live streamą" />
+                      <ShortcutRow k="Esc" desc="Išvalyti paiešką" />
+                    </div>
+                  </SaaSPanel>
+                </div>
+              )}
+
               {section === "lockdown" && (
                 <LockdownBanner
                   lockdown={lockdown}
@@ -739,49 +886,75 @@ function AdminErrorsPage() {
               )}
 
               {section === "settings" && (
-                <SaaSPanel>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Priežiūra</div>
-                  <div className="mt-3 space-y-3">
-                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">Kopijuoti visas klaidas (tekstas)</p>
-                          <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį, kad greičiau debuginčiau.</p>
-                        </div>
-                        <div className="flex gap-2">
+                <div className="space-y-3">
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Diagnostika</div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                        <p className="text-sm font-semibold">Kopijuoti klaidas</p>
+                        <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį.</p>
+                        <div className="mt-2 flex gap-2">
                           <Button variant="outline" size="sm" onClick={() => copyAll(rows)}>
-                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti visas ({rows.length})
+                            <Copy className="mr-1 h-4 w-4" /> Visas ({rows.length})
                           </Button>
                           <Button size="sm" onClick={() => copyAll(filtered)}>
-                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti filtruotas ({filtered.length})
+                            <Copy className="mr-1 h-4 w-4" /> Filtruotos ({filtered.length})
                           </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-border/50 bg-background/40 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">Eksportuoti JSON</p>
-                          <p className="text-xs text-muted-foreground">Atsisiųsti visus atmintyje esančius įrašus (iki 500).</p>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={exportJson}>
-                          Eksportuoti
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                        <p className="text-sm font-semibold text-emerald-200">Testinė klaida</p>
+                        <p className="text-xs text-emerald-200/70">Patikrina, ar log pipeline'as veikia (client → Supabase → live streamas).</p>
+                        <Button variant="outline" size="sm" className="mt-2 border-emerald-500/40" onClick={triggerTestError} disabled={testing}>
+                          <Zap className="mr-1 h-4 w-4" /> {testing ? "Siunčiu…" : "Sukurti testinę klaidą"}
                         </Button>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-rose-200">Išvalyti visas klaidas</p>
-                          <p className="text-xs text-rose-200/70">Ištrinti visus client.error / supabase.error / app.* įrašus.</p>
-                        </div>
-                        <Button variant="destructive" size="sm" onClick={clear} disabled={busy}>
+                      <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                        <p className="text-sm font-semibold">Eksportuoti JSON</p>
+                        <p className="text-xs text-muted-foreground">Iki 500 įrašų (aktuali atmintis).</p>
+                        <Button variant="outline" size="sm" className="mt-2" onClick={exportJson}>Eksportuoti</Button>
+                      </div>
+                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+                        <p className="text-sm font-semibold text-rose-200">Išvalyti visas klaidas</p>
+                        <p className="text-xs text-rose-200/70">Ištrina client.error / supabase.error / app.* įrašus.</p>
+                        <Button variant="destructive" size="sm" className="mt-2" onClick={clear} disabled={busy}>
                           <Trash2 className="mr-1 h-4 w-4" /> Išvalyti visus
                         </Button>
                       </div>
                     </div>
-                  </div>
-                </SaaSPanel>
+                  </SaaSPanel>
+
+                  <SaaSPanel>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Ignoravimo šablonai</div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Slepia įrašus, kurių žinutė / kelias / šaltinis atitinka bet kurį šabloną. Saugoma tik tavo naršyklėje.
+                        </p>
+                      </div>
+                      <label className="flex items-center gap-1.5 text-xs">
+                        <input type="checkbox" checked={showIgnored} onChange={(e) => setShowIgnored(e.target.checked)} className="accent-primary" />
+                        Rodyti paslėptus ({ignoredCount})
+                      </label>
+                    </div>
+                    <IgnoreRuleEditor onAdd={addIgnoreRule} />
+                    {ignoreRules.length === 0 ? (
+                      <p className="mt-2 text-xs text-muted-foreground">Šablonų nėra. Įrašyk fragmentą, pvz. „ResizeObserver".</p>
+                    ) : (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {ignoreRules.map((p) => (
+                          <span key={p} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 text-xs">
+                            <EyeOff className="h-3 w-3 text-muted-foreground" />
+                            <code className="font-mono">{p}</code>
+                            <button onClick={() => removeIgnoreRule(p)} className="ml-1 rounded p-0.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Šalinti">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </SaaSPanel>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
@@ -933,7 +1106,28 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
             {KIND_LABEL[row.action] ?? row.action}
           </span>
           <span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString("lt-LT")}</span>
-          <button onClick={onDelete} className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Ištrinti">
+          <button
+            onClick={async () => {
+              try {
+                const m = row.meta ?? {};
+                const text = [
+                  `[${KIND_LABEL[row.action] ?? row.action}] ${new Date(row.created_at).toLocaleString("lt-LT")}`,
+                  `msg: ${m.message ?? "(no message)"}`,
+                  m.path ? `path: ${m.path}` : null,
+                  m.source ? `source: ${m.source}` : null,
+                  [m.browser, m.os, m.device].filter(Boolean).length ? `device: ${[m.browser, m.os, m.device].filter(Boolean).join(" · ")}` : null,
+                  m.stack ? `stack:\n${m.stack}` : null,
+                ].filter(Boolean).join("\n");
+                await navigator.clipboard.writeText(text);
+                toast.success("Nukopijuota");
+              } catch { toast.error("Nepavyko kopijuoti"); }
+            }}
+            className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+            aria-label="Kopijuoti"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <button onClick={onDelete} className="rounded-lg p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Ištrinti">
             <Trash2 className="h-4 w-4" />
           </button>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted" aria-label="Uždaryti">
@@ -984,4 +1178,84 @@ function relTime(iso: string) {
   if (diff < 3600) return `prieš ${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `prieš ${Math.floor(diff / 3600)}h`;
   return new Date(iso).toLocaleString("lt-LT");
+}
+
+function SourceBreakdown({
+  title, items, total, onPick,
+}: {
+  title: string;
+  items: [string, number][];
+  total: number;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <SaaSPanel>
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{title}</div>
+        <span className="text-[10px] text-muted-foreground">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Nėra duomenų.</p>
+      ) : (
+        <div className="mt-3 space-y-1.5">
+          {items.map(([label, count]) => {
+            const pct = total ? (count / total) * 100 : 0;
+            return (
+              <button
+                key={label}
+                onClick={() => onPick(label)}
+                className="group block w-full text-left"
+                title="Filtruoti Live srautą"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="min-w-0 truncate font-mono">{label}</span>
+                  <span className="ml-2 shrink-0 tabular-nums text-muted-foreground">{count} · {pct.toFixed(0)}%</span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted/30">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                    className="h-full bg-gradient-primary"
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </SaaSPanel>
+  );
+}
+
+function ShortcutRow({ k, desc }: { k: string; desc: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/40 px-3 py-2">
+      <span className="text-muted-foreground">{desc}</span>
+      <kbd className="inline-flex min-w-[28px] justify-center rounded border border-border bg-background px-2 py-0.5 font-mono text-[11px] font-bold">{k}</kbd>
+    </div>
+  );
+}
+
+function IgnoreRuleEditor({ onAdd }: { onAdd: (p: string) => void }) {
+  const [v, setV] = useState("");
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); onAdd(v); setV(""); }}
+      className="mt-3 flex gap-2"
+    >
+      <div className="relative flex-1">
+        <Filter className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          placeholder={'Įrašyk fragmentą, pvz. „ResizeObserver" arba „/admin/errors"'}
+          className="pl-8 font-mono text-xs"
+        />
+      </div>
+      <Button type="submit" size="sm" disabled={!v.trim()}>
+        <Plus className="mr-1 h-4 w-4" /> Pridėti
+      </Button>
+    </form>
+  );
 }

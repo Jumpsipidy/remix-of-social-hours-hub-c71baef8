@@ -776,9 +776,79 @@ Pilni gidai: `docs/PRIDETI-MOKYKLA.md`, `docs/KEISTI-MOKYKLOS-KODA.md`.
 
 ---
 
-## 24. Ateities planai (dar neįdiegta)
+## 24. Naujausi patobulinimai (2026-07)
 
-- Email notifikacijos (registracija, statuso keitimai).
+### 24.1 Klaidų centras `/admin/errors` (Error Center)
+Atskiras SaaS-tipo puslapis su savo sidebar'u ir 7 skyriais:
+
+- **Apžvalga** — KPI kortelės (500 įrašų, paskutinė val., kritinės 5 min, email siųsta), 24h sparkline.
+- **Live srautas** — realaus laiko sąrašas su regex paieška (`.* ` režimo mygtukas), laiko lango filtrais (5m / 1h / 24h / visi), tipo filtrais su skaičiukais.
+- **Analitika** — pasiskirstymas pagal tipą (animuoti bar chart'ai), 24h sparkline.
+- **Dažniausios** — TOP 10 klaidų grupuota pagal žinutę; paspaudus filtruoja Live srautą.
+- **Šaltiniai** — TOP 10 puslapių, TOP 8 naršyklių, TOP 8 OS su procentiniais bar'ais + klavišų kombinacijų kortelė.
+- **Auto-lockdown** — vizualus slenksčio matuoklis (kritinės / 3 per 5 min), rankinis toggle.
+- **Nustatymai** — kopijavimas AI'ui, testinės klaidos generavimas, JSON eksportas, ignoravimo šablonų valdymas, mass clear.
+
+**Papildomos funkcijos:**
+- **Automatinis atnaujinimas** — 5s / 15s / 60s / išj. pasirinkimas (localStorage'e).
+- **Ignoravimo šablonai** — įrašai atitinkantys fragmentus (žinutė / kelias / šaltinis) slepiami; „Rodyti paslėptus" toggle su skaičiuku.
+- **Testinės klaidos mygtukas** — sukuria dirbtinę `client.error`, kad patikrintum ar log pipeline'as veikia.
+- **Klavišų kombinacijos** — `/` fokusuoja paiešką, `L` toggle'ina Live, `Esc` išvalo paiešką.
+- **Kopijuoti AI'ui** — vienu paspaudimu formatuotas plain text (visos / filtruotos / vienetinė iš detalės modal'o).
+- **Auto-lockdown eskalacija** — 3+ kritinės klaidos per 5 min automatiškai įjungia lockdown režimą (`error-escalation.functions.ts`).
+
+### 24.2 Organizacijų profiliai su nuotraukomis ir žemėlapiu
+- Organizacijos gali įkelti logo / cover nuotraukas (Supabase Storage bucket).
+- **Google Maps / Leaflet integracija** — adresas paverčiamas koordinatėmis, embed'as rezervacijos ir profilio kortelėse.
+- **Street View** nuoroda — mokinys mato kur eina prieš rezervuodamas.
+- Aprašymas, socialiniai tinklai, veiklos sritys, kontaktai.
+
+### 24.3 Email notifikacijos (Resend)
+Custom HTML šablonai `src/lib/email-templates/`, 3D-stiliaus dizainas su gradientais:
+
+- **Welcome** — po registracijos.
+- **Reservation approved** — kai organizacija patvirtina laiką.
+- **Reservation declined** — su atmetimo priežastimi.
+- **Hours confirmed** — kai užduotis uždaroma, valandos paskaičiuotos.
+- Anti-spam header'iai, DKIM per custom domain'ą, plain-text fallback.
+- Test panelis `/admin/tools` — siunčia demo email.
+
+### 24.4 Achievements sistema (`user_achievements`)
+- Automatiniai badge'ai: „Pirma rezervacija", „10 valandų", „50 valandų", „Šimtininkas", „Draugystės meistras", „Serial helper" ir kt.
+- Mokinys mato progress bar'us dashboard'e.
+- Duomenys `user_achievements` lentelėje su triggeriais ant `reservations.status = completed`.
+
+### 24.5 Audit log `/admin/activity`
+- Ieškoma pagal veiksmą, vartotoją, entitetą, datą.
+- Visi svarbūs įvykiai automatiškai loguojami (`activity_log`): prisijungimai, statuso keitimai, rolės pakeitimai, lockdown toggle, admin veiksmai.
+- Realtime subscription — nauji įrašai atsiranda be perkrovimo.
+
+### 24.6 Multi-role onboarding wizard
+Rebuilt `onboarding-tour.tsx` — atskiri žingsniai student / organization / school_admin / admin. Interaktyvūs tooltip'ai, skip / next / prev, `localStorage` progress.
+
+### 24.7 Grupės pakvietimai rezervacijoje
+- Kuriant rezervaciją mokinys mato **„Pakviesti draugus"** mygtuką.
+- Draugai gauna pakvietimą į `group-invites-inbox.tsx`.
+- Kai užduotis uždaroma — valandos duodamos visiems priėmusiems dalyviams.
+
+### 24.8 Klasės valandų taisyklės
+- 5–7 klasė — griežtai **20 val.** (locked, negalima keisti registracijoje).
+- 8+ klasė — minimum **8 val.**, mokinys pasirenka norimą kiekį.
+- „Pasiūlyk rezervaciją" ribotas **max 8 val. per sesiją** (anti-abuse).
+
+### 24.9 Sukčiavimo eilė + bulk actions (`/school`)
+Mokyklos administratoriui:
+- **Fraud queue** — automatiškai pažymėtos rezervacijos (per didelis valandų kiekis, per mažas laikas tarp rezervacijų, dubliuoti tag'ai).
+- **Bulk approve / reject** — checkbox'ai + veiksmų juosta.
+- **Per-class view** — filtras pagal klasę, statistika kiekvienai atskirai.
+
+### 24.10 CSRF warning nutildytas
+Vite plugin flag'as `serverFns.disableCsrfMiddlewareWarning: true` — server function'ai apsaugoti bearer token'u + same-origin, CSRF neaktualus.
+
+---
+
+## 25. Ateities planai (dar neįdiegta)
+
 - Bulk student import iš CSV.
 - 2FA super admin paskyroms.
 - PWA (offline režimas telefone).
@@ -790,3 +860,4 @@ Pilni gidai: `docs/PRIDETI-MOKYKLA.md`, `docs/KEISTI-MOKYKLOS-KODA.md`.
 ---
 
 **Pabaiga.** Šis dokumentas atnaujinamas kartu su platforma. Jei kažkur radai neaiškumo — klausk manęs, atnaujinsiu.
+
