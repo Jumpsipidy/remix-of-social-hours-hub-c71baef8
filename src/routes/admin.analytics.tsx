@@ -455,7 +455,10 @@ function Page() {
       </div>
 
       {/* Traffic chart */}
-      <Card title="Srautas laike" icon={ActivityIcon} tools={
+      <Card title="Srautas laike" icon={ActivityIcon}
+        expanded={fullscreenId === "traffic"}
+        onToggleExpand={() => setFullscreenId(fullscreenId === "traffic" ? null : "traffic")}
+        tools={
         <div className="inline-flex rounded-full border border-border bg-card/60 p-0.5 text-[10px]">
           {(["area", "line", "bar"] as const).map((k) => {
             const Icon = k === "area" ? AreaIcon : k === "line" ? LineIcon : BarChart2;
