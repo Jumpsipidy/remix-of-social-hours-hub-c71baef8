@@ -333,6 +333,8 @@ export const adminAnalytics = createServerFn({ method: "GET" })
           dpr: Number(m.dpr ?? 0),
           tz: String(m.tz ?? ""),
           session_id: String(m.session_id ?? ""),
+          visitor_id: String(m.visitor_id ?? ""),
+
         };
       }),
     };
