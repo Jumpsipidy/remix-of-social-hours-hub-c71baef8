@@ -742,6 +742,22 @@ function AdminErrorsPage() {
                 <SaaSPanel>
                   <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Priežiūra</div>
                   <div className="mt-3 space-y-3">
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">Kopijuoti visas klaidas (tekstas)</p>
+                          <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį, kad greičiau debuginčiau.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => copyAll(rows)}>
+                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti visas ({rows.length})
+                          </Button>
+                          <Button size="sm" onClick={() => copyAll(filtered)}>
+                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti filtruotas ({filtered.length})
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                     <div className="rounded-xl border border-border/50 bg-background/40 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
