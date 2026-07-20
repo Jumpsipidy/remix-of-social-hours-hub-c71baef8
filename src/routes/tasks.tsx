@@ -12,6 +12,7 @@ import { TasksBackgroundFX } from "@/components/tasks-background";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
