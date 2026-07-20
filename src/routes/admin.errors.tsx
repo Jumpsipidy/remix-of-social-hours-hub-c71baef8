@@ -351,6 +351,16 @@ function AdminErrorsPage() {
                 Live
               </span>
             </label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyAll(filtered)}
+              disabled={rows.length === 0}
+              title="Kopijuoti klaidas AI'ui / debug'ui"
+            >
+              {copied ? <Check className="mr-1 h-4 w-4 text-emerald-400" /> : <Copy className="mr-1 h-4 w-4" />}
+              <span className="hidden sm:inline">{copied ? "Nukopijuota" : "Kopijuoti"}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Atnaujinti</span>
