@@ -390,6 +390,25 @@ function Page() {
       })));
   };
 
+  const resetAnalytics = async () => {
+    const ok = window.confirm(
+      "Ar tikrai nori IŠTRINTI VISUS analitikos duomenis (activity_log)?\n\n" +
+      "Šis veiksmas negrįžtamas. Visos peržiūros, prisijungimai ir sesijų istorija bus panaikinti."
+    );
+    if (!ok) return;
+    const confirmTxt = window.prompt('Įrašyk "RESET" kad patvirtintum:');
+    if (confirmTxt !== "RESET") return;
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: n, error } = await supabase.rpc("analytics_reset");
+      if (error) throw error;
+      alert(`Ištrinta ${n ?? 0} įrašų. Analitika iš naujo.`);
+      load();
+    } catch (e: any) {
+      alert("Nepavyko: " + (e?.message ?? String(e)));
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       <FloatingTooltip p={tip} />
