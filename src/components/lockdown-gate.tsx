@@ -98,12 +98,28 @@ export function LockdownGate() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data, error } = await readPublicSettings();
-      if (!mounted) return;
-      if (error) { setLockdown(false); return; }
-      setLockdown(Boolean(data?.lockdown_enabled));
-      setMessage(data?.lockdown_message ?? null);
-      setCodeId(data?.lockdown_code ?? null);
+      try {
+        const { data, error } = await readPublicSettings();
+        if (!mounted) return;
+        if (error) throw new Error(error.message);
+        setLockdown(Boolean(data?.lockdown_enabled));
+        setMessage(data?.lockdown_message ?? null);
+        setCodeId(data?.lockdown_code ?? null);
+      } catch {
+        // Server function not reachable (e.g. Lovable preview / cold worker) →
+        // fall back to the public RPC exposed on the database directly.
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data } = await supabase.rpc("get_lockdown_public");
+          const row = Array.isArray(data) ? data[0] : data;
+          if (!mounted) return;
+          setLockdown(Boolean(row?.lockdown_enabled));
+          setMessage(row?.lockdown_message ?? null);
+          setCodeId(row?.lockdown_code ?? null);
+        } catch {
+          if (mounted) setLockdown(false);
+        }
+      }
     };
     load();
     const poll = setInterval(load, 60_000);
