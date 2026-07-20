@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          meta: Json
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          meta?: Json
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          meta?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           admin_note: string | null
@@ -721,6 +751,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_achievements: {
+        Row: {
+          id: string
+          key: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

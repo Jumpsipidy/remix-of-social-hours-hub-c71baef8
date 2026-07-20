@@ -12,6 +12,7 @@ import { TasksBackgroundFX } from "@/components/tasks-background";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
+import { logActivity } from "@/lib/activity-log";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -187,6 +188,7 @@ function TasksPage() {
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
+    logActivity("reservation.created", { entityType: "reservation", entityId: inserted?.id as string | undefined, meta: { hours: details.hours, org: active.target.name } });
     const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
     setActive(null);
     if (inserted?.id) setInvite({ id: inserted.id as string, label });

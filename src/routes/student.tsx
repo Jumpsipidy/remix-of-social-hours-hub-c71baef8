@@ -17,6 +17,7 @@ import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { LeafletMap } from "@/components/leaflet-map";
+import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
@@ -111,6 +112,39 @@ function StudentDashboard() {
     return s;
   }, [weeklyData]);
 
+  const uniqueOrgs = useMemo(() => new Set(reservations.map((r) => r.organization_id)).size, [reservations]);
+  const [unlockedKeys, setUnlockedKeys] = useState<Set<string>>(new Set());
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [groupJoined, setGroupJoined] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ count: fc }, { count: gc }] = await Promise.all([
+        supabase.from("friendships").select("id", { count: "exact", head: true })
+          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`).eq("status", "accepted"),
+        supabase.from("reservation_participants").select("id", { count: "exact", head: true })
+          .eq("student_id", user.id).eq("status", "accepted"),
+      ]);
+      setFriendsCount(fc ?? 0);
+      setGroupJoined(gc ?? 0);
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !profile) return;
+    const ctx: AchievementCtx = {
+      hoursEarned: Number(profile.hours_earned ?? 0),
+      hoursNeeded: Number(profile.hours_needed ?? 0),
+      completedCount: reservations.filter((r) => r.status === "completed" || r.status === "confirmed").length,
+      uniqueOrgs,
+      streakWeeks: streak,
+      friendsCount,
+      groupJoined,
+    };
+    syncAchievements(user.id, ctx).then(setUnlockedKeys);
+  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined]);
+
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
     return (
@@ -144,15 +178,6 @@ function StudentDashboard() {
     return r.status === filter;
   });
 
-  // Achievements
-  const achievements = [
-    { key: "first", label: "Pirmoji valanda", got: completed >= 1, icon: Star },
-    { key: "ten", label: "10 valandų", got: completed >= 10, icon: Trophy },
-    { key: "half", label: "Pusiaukelė", got: progress >= 50, icon: Rocket },
-    { key: "done", label: "Tikslas pasiektas", got: progress >= 100, icon: Award },
-    { key: "orgs3", label: "3 organizacijos", got: new Set(reservations.map((r) => r.organization_id)).size >= 3, icon: Building2 },
-    { key: "streak", label: `${streak} sav. iš eilės`, got: streak >= 2, icon: Flame },
-  ];
 
   return (
     <PageShell>
@@ -293,14 +318,17 @@ function StudentDashboard() {
 
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
             <h2 className="text-lg font-bold flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Pasiekimai</h2>
-            <p className="text-xs text-muted-foreground">Atrakinta {achievements.filter((a) => a.got).length} iš {achievements.length}</p>
+            <p className="text-xs text-muted-foreground">Atrakinta {ACHIEVEMENTS.filter((a) => unlockedKeys.has(a.key)).length} iš {ACHIEVEMENTS.length}</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {achievements.map((a) => (
-                <div key={a.key} className={`rounded-xl border p-3 text-xs transition ${a.got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
-                  <a.icon className={`h-4 w-4 ${a.got ? "text-primary" : "text-muted-foreground"}`} />
-                  <p className="mt-2 font-semibold leading-tight">{a.label}</p>
-                </div>
-              ))}
+              {ACHIEVEMENTS.map((a) => {
+                const got = unlockedKeys.has(a.key);
+                return (
+                  <div key={a.key} title={a.description} className={`rounded-xl border p-3 text-xs transition ${got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
+                    <a.icon className={`h-4 w-4 ${got ? "text-primary" : "text-muted-foreground"}`} />
+                    <p className="mt-2 font-semibold leading-tight">{a.label}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

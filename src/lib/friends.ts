@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 
 export type FriendshipStatus = "pending" | "accepted" | "declined" | "blocked";
 
@@ -67,6 +68,7 @@ export async function sendFriendRequest(fromId: string, toId: string) {
     status: "pending",
   } as any);
   if (error) throw error;
+  logActivity("friend.request_sent", { entityType: "profile", entityId: toId });
 }
 
 export async function respondToRequest(rowId: string, accept: boolean) {
@@ -75,11 +77,13 @@ export async function respondToRequest(rowId: string, accept: boolean) {
     .update({ status: accept ? "accepted" : "declined" } as any)
     .eq("id", rowId);
   if (error) throw error;
+  logActivity(accept ? "friend.request_accepted" : "friend.request_declined", { entityType: "friendship", entityId: rowId });
 }
 
 export async function unfriend(rowId: string) {
   const { error } = await supabase.from("friendships").delete().eq("id", rowId);
   if (error) throw error;
+  logActivity("friend.unfriended", { entityType: "friendship", entityId: rowId });
 }
 
 // ============ Group reservations ============
@@ -108,6 +112,7 @@ export async function inviteFriendsToReservation(
   }));
   const { error } = await supabase.from("reservation_participants").insert(rows as any);
   if (error) throw error;
+  logActivity("group.invited", { entityType: "reservation", entityId: reservationId, meta: { count: friendIds.length } });
 }
 
 export async function listMyInvites(userId: string): Promise<ParticipantRow[]> {
@@ -126,6 +131,7 @@ export async function respondToInvite(rowId: string, accept: boolean) {
     .update({ status: accept ? "accepted" : "declined" } as any)
     .eq("id", rowId);
   if (error) throw error;
+  logActivity(accept ? "group.invite_accepted" : "group.invite_declined", { entityType: "reservation_participant", entityId: rowId });
 }
 
 export async function listParticipants(reservationId: string): Promise<ParticipantRow[]> {
