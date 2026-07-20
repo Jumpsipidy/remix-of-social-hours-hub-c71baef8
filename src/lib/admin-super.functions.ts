@@ -312,13 +312,26 @@ export const adminAnalytics = createServerFn({ method: "GET" })
         user_name: null,
         user_role: null,
       })) : feedRes.data ?? []) as FeedRow[],
-      rawActivity: fallbackRows.map((row) => ({
-        id: row.id,
-        created_at: row.created_at,
-        action: row.action,
-        user_id: row.user_id,
-        meta: row.meta ?? {},
-      })),
+      rawActivity: fallbackRows.map((row) => {
+        const m = (row.meta ?? {}) as Record<string, unknown>;
+        return {
+          id: row.id,
+          created_at: row.created_at,
+          action: row.action,
+          user_id: row.user_id,
+          path: String(m.path ?? "/"),
+          device: String(m.device ?? "unknown"),
+          browser: String(m.browser ?? "unknown"),
+          os: String(m.os ?? "unknown"),
+          ref_host: String(m.ref_host ?? ""),
+          lang: String(m.lang ?? ""),
+          screen: String(m.screen ?? ""),
+          vp: String(m.vp ?? ""),
+          dpr: Number(m.dpr ?? 0),
+          tz: String(m.tz ?? ""),
+          session_id: String(m.session_id ?? ""),
+        };
+      }),
     };
   });
 
