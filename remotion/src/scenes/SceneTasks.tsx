@@ -5,7 +5,7 @@ import { Cursor } from "../components/Cursor";
 const TASKS = [
   { title: "Pagalba senjorų namuose", org: "Radviliškio senelių globa", city: "Radviliškis", hours: 4, tag: "Su senjorais", color: "#f59e0b" },
   { title: "Miesto bibliotekos talka", org: "Miesto biblioteka", city: "Radviliškis", hours: 3, tag: "Kultūra", color: "#a78bfa" },
-  { title: "Gyvūnų prieglaudos priežiūra", org: "Prieglauda „Letenėlė"", city: "Šeduva", hours: 5, tag: "Su gyvūnais", color: "#22d3ee" },
+  { title: "Gyvūnų prieglaudos priežiūra", org: "Prieglauda Letenėlė", city: "Šeduva", hours: 5, tag: "Su gyvūnais", color: "#22d3ee" },
   { title: "Aplinkos tvarkymo talka", org: "Aplinkosaugos klubas", city: "Radviliškis", hours: 3, tag: "Aplinkosauga", color: "#4ade80" },
   { title: "Vaikų dienos centro pagalba", org: "Vaikų dienos centras", city: "Šeduva", hours: 4, tag: "Su vaikais", color: "#f472b6" },
   { title: "Sporto renginio pagalba", org: "Radviliškio SC", city: "Radviliškis", hours: 6, tag: "Sportas", color: "#60a5fa" },
