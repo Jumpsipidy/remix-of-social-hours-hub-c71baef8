@@ -1042,6 +1042,7 @@ function HeroStat({
   hideDelta,
   active = true,
   onClick,
+  onExpand,
 }: {
   label: string;
   value: number;
@@ -1053,6 +1054,7 @@ function HeroStat({
   hideDelta?: boolean;
   active?: boolean;
   onClick?: () => void;
+  onExpand?: () => void;
 }) {
   const up = delta >= 0;
   // Magnetic tilt on mouse move
