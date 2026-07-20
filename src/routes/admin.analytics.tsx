@@ -135,6 +135,8 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>(30);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
 
   // ---- Interactive state -------------------------------------------------
   type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
