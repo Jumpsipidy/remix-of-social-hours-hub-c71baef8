@@ -849,17 +849,35 @@ function Card({
   delay?: number;
   action?: React.ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const mx = useMotionValue(-200);
+  const my = useMotionValue(-200);
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set(e.clientX - r.left);
+    my.set(e.clientY - r.top);
+  };
+  const onLeave = () => {
+    mx.set(-200);
+    my.set(-200);
+  };
+  const spotlight = useTransform([mx, my] as any, ([x, y]: any) =>
+    `radial-gradient(240px circle at ${x}px ${y}px, rgba(139,92,246,0.18), transparent 60%)`,
+  );
   return (
     <motion.div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -2 }}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur transition"
+      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur transition hover:border-primary/40"
     >
-      {/* subtle border glow on hover */}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100"
-           style={{ boxShadow: "inset 0 0 40px rgba(139,92,246,0.08)" }} />
+      {/* cursor-following spotlight */}
+      <motion.div className="pointer-events-none absolute inset-0 rounded-2xl" style={{ background: spotlight as any }} />
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -869,7 +887,7 @@ function Card({
         </div>
         {action}
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </motion.div>
   );
 }
