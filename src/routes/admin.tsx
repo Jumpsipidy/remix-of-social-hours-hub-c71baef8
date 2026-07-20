@@ -36,6 +36,7 @@ const NAV: NavItem[] = [
   { to: "/admin/leaderboard", label: "Reitingas", icon: Trophy },
   { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
   { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
+  { to: "/admin/audit", label: "Auditas (log)", icon: Activity },
   { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },
   { to: "/admin/manage", label: "Valdyti paskyras", icon: Users },
   { to: "/admin/schools", label: "Mokyklos & kodai", icon: GraduationCap },
