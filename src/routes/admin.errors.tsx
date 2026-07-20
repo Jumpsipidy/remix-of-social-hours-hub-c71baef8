@@ -254,7 +254,7 @@ function AdminErrorsPage() {
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind, regexMode, timeWindow]);
+  }, [rows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
 
   const now = Date.now();
   const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
