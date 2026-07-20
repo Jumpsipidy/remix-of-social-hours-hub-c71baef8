@@ -487,7 +487,7 @@ function StatChip({
       />
       <div className="relative">
         <div className="flex items-center gap-1.5">
-          <Icon className="h-3 w-3" style={{ color }} />
+          <span style={{ color }} className="inline-flex"><Icon className="h-3 w-3" /></span>
           <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground">
             {label}
           </p>
