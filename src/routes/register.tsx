@@ -14,9 +14,9 @@ export const Route = createFileRoute("/register")({
       { name: "description", content: "Sukurk moksleivio paskyrą su mokyklos kodu ir klase arba pateik organizacijos prieigos prašymą Socialinių Valandų platformoje." },
       { property: "og:title", content: "Registruotis — Socialinės Valandos" },
       { property: "og:description", content: "Sukurk paskyrą Socialinių Valandų platformoje ir pradėk rinkti savanorystės valandas." },
-      { property: "og:url", content: "https://socialinesvalandos.lovable.app/register" },
+      { property: "og:url", content: "https://socialinesvalandos.vercel.app/register" },
     ],
-    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/register" }],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.vercel.app/register" }],
   }),
   component: RegisterPage,
 });

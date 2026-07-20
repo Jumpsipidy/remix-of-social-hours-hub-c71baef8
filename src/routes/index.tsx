@@ -13,9 +13,9 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Kiekviena valanda — tai žingsnis pokyčio link. Vienintelė Lietuvoje platforma, sujungianti mokinius, mokyklas ir savanorystės organizacijas." },
       { property: "og:title", content: "Socialinės Valandos — moksleivių savanorystės platforma" },
       { property: "og:description", content: "Rezervuok savanorystės valandas, sekk savo pažangą ir gauk automatinę apskaitą — vienoje ramioje vietoje." },
-      { property: "og:url", content: "https://socialinesvalandos.lovable.app/" },
+      { property: "og:url", content: "https://socialinesvalandos.vercel.app/" },
     ],
-    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.vercel.app/" }],
   }),
   component: Home,
 });

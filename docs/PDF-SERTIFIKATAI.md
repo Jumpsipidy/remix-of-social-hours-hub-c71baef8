@@ -20,7 +20,7 @@ Nueik į **Vercel → Project → Settings → Environment Variables** ir įdėk
 | Kintamasis | Aplinka | Reikšmė |
 |-----------|---------|---------|
 | `CERT_SIGNING_SECRET` | Production, Preview, Development | (64 baitų slaptas raktas — sugeneruotas per Lovable Cloud secrets; nurašyk iš Lovable Secrets panelės) |
-| `SUPABASE_URL` | visos | `https://ykmaveambdulceygzuwq.supabase.co` |
+| `SUPABASE_URL` | visos | `https://ydtzjbqakxcxlmqipbya.supabase.co` |
 | `SUPABASE_PUBLISHABLE_KEY` | visos | `sb_publishable_...` arba anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | visos | (iš tavo Supabase Dashboard → Settings → API) |
 | `VITE_SUPABASE_URL` | visos | tas pats kaip `SUPABASE_URL` |

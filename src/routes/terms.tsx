@@ -9,9 +9,9 @@ export const Route = createFileRoute("/terms")({
       { name: "description", content: "Socialinių Valandų platformos naudojimosi taisyklės, privatumo politika, duomenų tvarkymas ir naudotojų atsakomybės." },
       { property: "og:title", content: "Naudojimosi taisyklės — Socialinės Valandos" },
       { property: "og:description", content: "Perskaityk Socialinių Valandų platformos taisykles, privatumo politiką ir duomenų tvarkymo principus." },
-      { property: "og:url", content: "https://socialinesvalandos.lovable.app/terms" },
+      { property: "og:url", content: "https://socialinesvalandos.vercel.app/terms" },
     ],
-    links: [{ rel: "canonical", href: "https://socialinesvalandos.lovable.app/terms" }],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.vercel.app/terms" }],
   }),
   component: TermsPage,
 });
