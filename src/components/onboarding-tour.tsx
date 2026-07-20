@@ -97,27 +97,41 @@ function useTargetRect(selector?: string) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   useLayoutEffect(() => {
     if (!selector) { setRect(null); return; }
-    let raf = 0;
+    let cancelled = false;
+    let ro: ResizeObserver | null = null;
+    let mo: MutationObserver | null = null;
+    let attached: HTMLElement | null = null;
+
     const measure = () => {
+      if (cancelled) return;
       const el = document.querySelector(selector) as HTMLElement | null;
       if (!el) { setRect(null); return; }
-      // Scroll target into view if far off-screen
+      if (el !== attached) {
+        attached = el;
+        ro?.disconnect();
+        ro = new ResizeObserver(() => setRect(el.getBoundingClientRect()));
+        ro.observe(el);
+      }
       const r = el.getBoundingClientRect();
       if (r.top < 40 || r.bottom > window.innerHeight - 40) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       }
       setRect(el.getBoundingClientRect());
     };
+
     measure();
-    const loop = () => { measure(); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    const onResize = () => measure();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("scroll", onResize, true);
+    // Watch DOM changes (route changes, async renders) instead of a RAF hot loop.
+    mo = new MutationObserver(() => measure());
+    mo.observe(document.body, { childList: true, subtree: true });
+    const onScroll = () => measure();
+    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", onScroll, true);
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("scroll", onResize, true);
+      cancelled = true;
+      ro?.disconnect();
+      mo?.disconnect();
+      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [selector]);
   return rect;
@@ -127,6 +141,7 @@ export function OnboardingTour() {
   const { isAuthenticated, profile, loading } = useAuth();
   const [active, setActive] = useState(false);
   const [i, setI] = useState(0);
+  const [targetTimedOut, setTargetTimedOut] = useState(false);
 
   const steps = useMemo(() => stepsFor(profile?.role ?? null), [profile?.role]);
   const step = steps[i];
@@ -152,15 +167,29 @@ export function OnboardingTour() {
     }
   };
 
-  // Skip step if target selector was provided but no element exists
+  // If a target selector doesn't resolve within 1.2s, gracefully fall back
+  // to a centered popover instead of freezing or auto-skipping. This is what
+  // fixes the "sometimes it can't find the button" complaint.
   useEffect(() => {
+    setTargetTimedOut(false);
     if (!active || !step?.target) return;
-    const el = document.querySelector(step.target);
-    if (!el && i < steps.length - 1) {
-      const t = setTimeout(() => setI(i + 1), 250);
-      return () => clearTimeout(t);
-    }
-  }, [active, step, i, steps.length]);
+    if (rect) return; // already found
+    const t = setTimeout(() => setTargetTimedOut(true), 1200);
+    return () => clearTimeout(t);
+  }, [active, step?.target, rect, i]);
+
+  // Keyboard navigation: Esc, →, ←
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") finish();
+      else if (e.key === "ArrowRight") setI((v) => Math.min(steps.length - 1, v + 1));
+      else if (e.key === "ArrowLeft") setI((v) => Math.max(0, v - 1));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, steps.length]);
 
   if (!active || !step) return null;
 

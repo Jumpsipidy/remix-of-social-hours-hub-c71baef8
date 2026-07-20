@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, useSpring } from "framer-motion";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -20,6 +20,7 @@ import {
   Legend,
   RadialBarChart,
   RadialBar,
+  Brush,
 } from "recharts";
 import { adminAnalytics } from "@/lib/admin-super.functions";
 import {
@@ -39,6 +40,11 @@ import {
   Activity as ActivityIcon,
   Globe,
   Target,
+  X,
+  LineChart as LineIcon,
+  AreaChart as AreaIcon,
+  BarChart2,
+  MousePointerClick,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -129,6 +135,30 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>(30);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  // ---- Interactive state -------------------------------------------------
+  type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
+  const ALL_METRICS: MetricKey[] = ["Peržiūros", "Unikalūs", "Prisijungimai", "Atsijungimai"];
+  const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(new Set(ALL_METRICS));
+  const [chartKind, setChartKind] = useState<"area" | "line" | "bar">("area");
+  const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
+  const [drilldownPath, setDrilldownPath] = useState<string | null>(null);
+  const [drilldownStatus, setDrilldownStatus] = useState<string | null>(null);
+
+  const toggleMetric = useCallback((m: MetricKey) => {
+    setActiveMetrics((prev) => {
+      const next = new Set(prev);
+      // If the user clicks the only-active metric, treat it as "reset all" (nicer UX)
+      if (next.size === 1 && next.has(m)) return new Set(ALL_METRICS);
+      // If everything is on, isolate the clicked metric
+      if (next.size === ALL_METRICS.length) return new Set([m]);
+      if (next.has(m)) next.delete(m); else next.add(m);
+      if (next.size === 0) return new Set(ALL_METRICS);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const rangeSince = useMemo(
     () => new Date(Date.now() - range * 24 * 3600 * 1000).toISOString().slice(0, 10),
     [range],
@@ -416,7 +446,7 @@ function Page() {
         </div>
       </header>
 
-      {/* Hero KPI row */}
+      {/* Hero KPI row — CLICK to isolate/toggle a metric on the traffic chart */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <HeroStat
           label="Peržiūros"
@@ -426,6 +456,8 @@ function Page() {
           gradient="from-cyan-500/25 via-cyan-500/5 to-transparent"
           color={C.cyan}
           spark={traffic.map((t) => t.Peržiūros)}
+          active={activeMetrics.has("Peržiūros")}
+          onClick={() => toggleMetric("Peržiūros")}
         />
         <HeroStat
           label="Unikalūs"
@@ -435,6 +467,8 @@ function Page() {
           gradient="from-violet-500/25 via-violet-500/5 to-transparent"
           color={C.violet}
           spark={traffic.map((t) => t.Unikalūs)}
+          active={activeMetrics.has("Unikalūs")}
+          onClick={() => toggleMetric("Unikalūs")}
         />
         <HeroStat
           label="Prisijungimai"
@@ -444,6 +478,8 @@ function Page() {
           gradient="from-emerald-500/25 via-emerald-500/5 to-transparent"
           color={C.emerald}
           spark={traffic.map((t) => t.Prisijungimai)}
+          active={activeMetrics.has("Prisijungimai")}
+          onClick={() => toggleMetric("Prisijungimai")}
         />
         <HeroStat
           label="Atsijungimai"
@@ -454,45 +490,77 @@ function Page() {
           color={C.rose}
           spark={traffic.map((t) => t.Atsijungimai)}
           hideDelta
+          active={activeMetrics.has("Atsijungimai")}
+          onClick={() => toggleMetric("Atsijungimai")}
         />
+      </div>
+
+      {/* Hint bar */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground">
+        <MousePointerClick className="h-3.5 w-3.5 text-primary" />
+        <span>Spausk kortelę virš — izoliuoji rodiklį. Grafike tempk apatinę juostelę — priartini laiką. Spausk stulpelį / puslapį — atsidaro detalus vaizdas.</span>
+        {activeMetrics.size !== ALL_METRICS.length && (
+          <button
+            onClick={() => setActiveMetrics(new Set(ALL_METRICS))}
+            className="ml-auto rounded-full border border-border bg-background/40 px-2 py-0.5 font-semibold text-foreground hover:bg-accent"
+          >
+            Rodyti visus
+          </button>
+        )}
       </div>
 
       {/* Main split: traffic chart + goal ring */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card delay={0} title="Svetainės srautas" icon={Globe} action={
-          <button onClick={exportTraffic} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-3 py-1.5 text-[11px] font-semibold hover:bg-accent">
-            <Download className="h-3 w-3" /> CSV
-          </button>
+          <div className="flex items-center gap-1.5">
+            <div className="inline-flex rounded-full border border-border/60 bg-background/40 p-0.5">
+              {([
+                ["area", AreaIcon, "Sritis"],
+                ["line", LineIcon, "Linija"],
+                ["bar", BarChart2, "Stulpeliai"],
+              ] as const).map(([k, Ico, lbl]) => (
+                <button
+                  key={k}
+                  onClick={() => setChartKind(k)}
+                  title={lbl}
+                  className={`relative grid h-6 w-7 place-items-center rounded-full text-[11px] transition ${
+                    chartKind === k ? "text-white" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {chartKind === k && (
+                    <motion.span
+                      layoutId="chart-kind-pill"
+                      className="absolute inset-0 rounded-full bg-gradient-primary"
+                      transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <Ico className="relative h-3 w-3" />
+                </button>
+              ))}
+            </div>
+            <button onClick={exportTraffic} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-3 py-1.5 text-[11px] font-semibold hover:bg-accent">
+              <Download className="h-3 w-3" /> CSV
+            </button>
+          </div>
         }>
           <div className="h-80 w-full">
             <ResponsiveContainer>
-              <AreaChart data={traffic} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="g-views" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.cyan} stopOpacity={0.9} />
-                    <stop offset="100%" stopColor={C.cyan} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="g-uni" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.violet} stopOpacity={0.7} />
-                    <stop offset="100%" stopColor={C.violet} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="g-in" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.emerald} stopOpacity={0.7} />
-                    <stop offset="100%" stopColor={C.emerald} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.25} />
-                <XAxis dataKey="label" fontSize={10} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
-                <YAxis fontSize={10} stroke="hsl(var(--muted-foreground))" allowDecimals={false} tickLine={false} axisLine={false} />
-                <Tooltip content={<GlassTooltip />} cursor={{ stroke: C.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-                <Area type="monotone" dataKey="Peržiūros" stroke={C.cyan} strokeWidth={2.5} fill="url(#g-views)" animationDuration={900} />
-                <Area type="monotone" dataKey="Unikalūs" stroke={C.violet} strokeWidth={2} fill="url(#g-uni)" animationDuration={1100} />
-                <Area type="monotone" dataKey="Prisijungimai" stroke={C.emerald} strokeWidth={2} fill="url(#g-in)" animationDuration={1300} />
-              </AreaChart>
+              <TrafficChart
+                kind={chartKind}
+                data={traffic}
+                active={activeMetrics}
+                onBrushChange={(r) => setBrushRange(r)}
+              />
             </ResponsiveContainer>
           </div>
+          {brushRange && traffic[brushRange.start] && traffic[brushRange.end] && (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Priartinta: <span className="font-semibold text-foreground">{traffic[brushRange.start].label}</span> → <span className="font-semibold text-foreground">{traffic[brushRange.end].label}</span>
+            </p>
+          )}
         </Card>
+
+
 
         <Card delay={0.05} title="Auditorija" icon={Target}>
           <div className="relative h-56">
@@ -591,18 +659,21 @@ function Page() {
               const max = topPages[0]?.count ?? 1;
               const w = Math.max(6, (p.count / max) * 100);
               return (
-                <motion.div
+                <motion.button
                   key={p.path}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.02 * i }}
-                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-background/40 px-3 py-2"
+                  whileHover={{ x: 2, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setDrilldownPath(p.path)}
+                  className="group relative block w-full overflow-hidden rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-left transition hover:border-primary/40"
                 >
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${w}%` }}
                     transition={{ duration: 0.9, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/30 to-cyan-500/20"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/30 to-cyan-500/20 group-hover:from-primary/50 group-hover:to-cyan-500/30"
                   />
                   <div className="relative flex items-center justify-between gap-2 text-xs">
                     <span className="truncate font-mono text-foreground">{p.path}</span>
@@ -610,7 +681,7 @@ function Page() {
                       {p.count.toLocaleString("lt-LT")}
                     </span>
                   </div>
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>
@@ -659,7 +730,23 @@ function Page() {
 
       {/* Pies */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card delay={0.3} title="Rezervacijų būsenos" icon={TrendingUp}>
+        <Card
+          delay={0.3}
+          title="Rezervacijų būsenos"
+          icon={TrendingUp}
+          action={
+            drilldownStatus ? (
+              <button
+                onClick={() => setDrilldownStatus(null)}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-background/40 px-2 py-0.5 text-[10px] font-semibold hover:bg-accent"
+              >
+                <X className="h-3 w-3" /> {drilldownStatus}
+              </button>
+            ) : (
+              <span className="text-[10px] text-muted-foreground">Spausk skiltį</span>
+            )
+          }
+        >
           <div className="h-64">
             <ResponsiveContainer>
               <PieChart>
@@ -673,10 +760,27 @@ function Page() {
                   outerRadius={95}
                   paddingAngle={3}
                   animationDuration={1000}
+                  onClick={(e: any) =>
+                    setDrilldownStatus((cur) => (cur === e?.name ? null : (e?.name ?? null)))
+                  }
                 >
-                  {statusPie.map((_, i) => (
-                    <Cell key={i} fill={PIE[i % PIE.length]} stroke="hsl(var(--card))" strokeWidth={2} />
-                  ))}
+                  {statusPie.map((s, i) => {
+                    const dim = drilldownStatus && drilldownStatus !== s.name;
+                    return (
+                      <Cell
+                        key={i}
+                        fill={PIE[i % PIE.length]}
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                        style={{
+                          cursor: "pointer",
+                          opacity: dim ? 0.25 : 1,
+                          filter: drilldownStatus === s.name ? `drop-shadow(0 0 10px ${PIE[i % PIE.length]})` : undefined,
+                          transition: "opacity 200ms, filter 200ms",
+                        }}
+                      />
+                    );
+                  })}
                 </Pie>
                 <Tooltip content={<GlassTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
@@ -684,6 +788,7 @@ function Page() {
             </ResponsiveContainer>
           </div>
         </Card>
+
 
         <Card delay={0.35} title="Vartotojai pagal rolę" icon={Users} action={
           <button
@@ -717,6 +822,14 @@ function Page() {
           </div>
         </Card>
       </div>
+
+      {/* Drill-down drawer: opens when a top-page row is clicked */}
+      <DrilldownDrawer
+        path={drilldownPath}
+        onClose={() => setDrilldownPath(null)}
+        activity={data?.activity ?? []}
+        rangeSince={rangeSince}
+      />
     </div>
   );
 }
@@ -736,17 +849,35 @@ function Card({
   delay?: number;
   action?: React.ReactNode;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const mx = useMotionValue(-200);
+  const my = useMotionValue(-200);
+  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    mx.set(e.clientX - r.left);
+    my.set(e.clientY - r.top);
+  };
+  const onLeave = () => {
+    mx.set(-200);
+    my.set(-200);
+  };
+  const spotlight = useTransform([mx, my] as any, ([x, y]: any) =>
+    `radial-gradient(240px circle at ${x}px ${y}px, rgba(139,92,246,0.18), transparent 60%)`,
+  );
   return (
     <motion.div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -2 }}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur transition"
+      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur transition hover:border-primary/40"
     >
-      {/* subtle border glow on hover */}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity group-hover:opacity-100"
-           style={{ boxShadow: "inset 0 0 40px rgba(139,92,246,0.08)" }} />
+      {/* cursor-following spotlight */}
+      <motion.div className="pointer-events-none absolute inset-0 rounded-2xl" style={{ background: spotlight as any }} />
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="grid h-7 w-7 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -756,7 +887,7 @@ function Card({
         </div>
         {action}
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </motion.div>
   );
 }
@@ -818,6 +949,8 @@ function HeroStat({
   color,
   spark,
   hideDelta,
+  active = true,
+  onClick,
 }: {
   label: string;
   value: number;
@@ -827,26 +960,58 @@ function HeroStat({
   color: string;
   spark: number[];
   hideDelta?: boolean;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   const up = delta >= 0;
+  // Magnetic tilt on mouse move
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const rx = useSpring(0, { stiffness: 300, damping: 20 });
+  const ry = useSpring(0, { stiffness: 300, damping: 20 });
+  const onMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    ry.set(px * 8);
+    rx.set(-py * 8);
+  };
+  const onLeave = () => { rx.set(0); ry.set(0); };
   return (
-    <motion.div
+    <motion.button
+      ref={ref}
+      type="button"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={onClick}
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3, scale: 1.01 }}
+      animate={{ opacity: active ? 1 : 0.55, y: 0, scale: active ? 1 : 0.98 }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur"
+      style={{ rotateX: rx as any, rotateY: ry as any, transformPerspective: 800 }}
+      className={`group relative block w-full overflow-hidden rounded-2xl border p-4 text-left shadow-md backdrop-blur transition ${
+        active
+          ? "border-primary/50 bg-card/80 shadow-[0_0_0_1px_rgba(139,92,246,0.15),0_10px_40px_-12px_rgba(139,92,246,0.35)]"
+          : "border-border bg-card/50"
+      }`}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-70`} />
       <div
-        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-40 transition-opacity group-hover:opacity-70"
+        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-40 transition-opacity group-hover:opacity-80"
         style={{ background: color }}
       />
+      {active && (
+        <motion.span
+          layoutId={`kpi-ring-${label}`}
+          className="pointer-events-none absolute inset-0 rounded-2xl"
+          style={{ boxShadow: `inset 0 0 0 1.5px ${color}55` }}
+        />
+      )}
       <div className="relative">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur"
-               style={{ color }}>
+          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
             <Icon className="h-3.5 w-3.5" />
           </div>
         </div>
@@ -871,6 +1036,251 @@ function HeroStat({
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
+  );
+}
+
+// ---- Interactive traffic chart (area / line / bar + brush) ----------------
+type TrafficRow = {
+  label: string;
+  Peržiūros: number;
+  Unikalūs: number;
+  Prisijungimai: number;
+  Atsijungimai: number;
+};
+type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
+const METRIC_COLOR: Record<MetricKey, string> = {
+  "Peržiūros": C.cyan,
+  "Unikalūs": C.violet,
+  "Prisijungimai": C.emerald,
+  "Atsijungimai": C.rose,
+};
+
+function TrafficChart({
+  kind,
+  data,
+  active,
+  onBrushChange,
+}: {
+  kind: "area" | "line" | "bar";
+  data: TrafficRow[];
+  active: Set<MetricKey>;
+  onBrushChange: (r: { start: number; end: number } | null) => void;
+}) {
+  const keys: MetricKey[] = ["Peržiūros", "Unikalūs", "Prisijungimai", "Atsijungimai"];
+  const shared = (
+    <>
+      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.25} />
+      <XAxis dataKey="label" fontSize={10} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+      <YAxis fontSize={10} stroke="hsl(var(--muted-foreground))" allowDecimals={false} tickLine={false} axisLine={false} />
+      <Tooltip content={<GlassTooltip />} cursor={{ stroke: C.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
+      <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+      <Brush
+        dataKey="label"
+        height={22}
+        stroke={C.primary}
+        fill="hsl(var(--card))"
+        travellerWidth={10}
+        onChange={(e: any) => {
+          if (e && typeof e.startIndex === "number" && typeof e.endIndex === "number") {
+            onBrushChange({ start: e.startIndex, end: e.endIndex });
+          }
+        }}
+      />
+    </>
+  );
+
+  if (kind === "bar") {
+    return (
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+        {shared}
+        {keys.map((k) => (
+          <Bar
+            key={k}
+            dataKey={k}
+            fill={METRIC_COLOR[k]}
+            radius={[6, 6, 0, 0]}
+            hide={!active.has(k)}
+            fillOpacity={active.has(k) ? 0.9 : 0.15}
+            animationDuration={800}
+          />
+        ))}
+      </BarChart>
+    );
+  }
+  if (kind === "line") {
+    return (
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+        {shared}
+        {keys.map((k) => (
+          <Line
+            key={k}
+            type="monotone"
+            dataKey={k}
+            stroke={METRIC_COLOR[k]}
+            strokeWidth={active.has(k) ? 2.6 : 1}
+            strokeOpacity={active.has(k) ? 1 : 0.2}
+            dot={false}
+            activeDot={{ r: 5 }}
+            hide={!active.has(k)}
+            animationDuration={800}
+          />
+        ))}
+      </LineChart>
+    );
+  }
+  // area (default)
+  return (
+    <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+      <defs>
+        {keys.map((k) => (
+          <linearGradient key={k} id={`ga-${k}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={METRIC_COLOR[k]} stopOpacity={0.85} />
+            <stop offset="100%" stopColor={METRIC_COLOR[k]} stopOpacity={0} />
+          </linearGradient>
+        ))}
+      </defs>
+      {shared}
+      {keys.map((k) => (
+        <Area
+          key={k}
+          type="monotone"
+          dataKey={k}
+          stroke={METRIC_COLOR[k]}
+          strokeWidth={active.has(k) ? 2.5 : 1}
+          fill={`url(#ga-${k})`}
+          fillOpacity={active.has(k) ? 1 : 0.15}
+          strokeOpacity={active.has(k) ? 1 : 0.25}
+          hide={!active.has(k)}
+          animationDuration={900}
+        />
+      ))}
+    </AreaChart>
+  );
+}
+
+// ---- Drill-down drawer for top-page clicks --------------------------------
+function DrilldownDrawer({
+  path,
+  onClose,
+  activity,
+  rangeSince,
+}: {
+  path: string | null;
+  onClose: () => void;
+  activity: Array<{ id: string; created_at: string; action: string; user_id: string | null; meta?: any }>;
+  rangeSince: string;
+}) {
+  const events = useMemo(() => {
+    if (!path) return [];
+    return activity
+      .filter(
+        (a) =>
+          a.action === "page.view" &&
+          a.created_at.slice(0, 10) >= rangeSince &&
+          ((a.meta?.path as string | undefined) ?? "/") === path,
+      )
+      .slice(0, 200);
+  }, [path, activity, rangeSince]);
+
+  const byDay = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of events) {
+      const d = e.created_at.slice(0, 10);
+      map[d] = (map[d] ?? 0) + 1;
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, count]) => ({ label: day.slice(5), count }));
+  }, [events]);
+
+  return (
+    <AnimatePresence>
+      {path && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm"
+          />
+          <motion.aside
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 32 }}
+            className="fixed right-0 top-0 z-[81] flex h-full w-full max-w-md flex-col border-l border-border bg-background/95 shadow-2xl backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Puslapio detalės</p>
+                <p className="mt-0.5 truncate font-mono text-sm font-semibold text-primary">{path}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 px-4 py-3">
+              <MiniStat label="Peržiūros" value={events.length} />
+              <MiniStat label="Unikalūs" value={new Set(events.map((e) => e.user_id ?? `a-${e.id}`)).size} />
+              <MiniStat label="Anonim." value={events.filter((e) => !e.user_id).length} />
+            </div>
+
+            <div className="h-40 px-3">
+              <ResponsiveContainer>
+                <AreaChart data={byDay} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="dd-area" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={C.primary} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={C.primary} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Area type="monotone" dataKey="count" stroke={C.primary} fill="url(#dd-area)" strokeWidth={2} animationDuration={700} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex-1 overflow-y-auto border-t border-border/60 px-3 py-2">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Paskutinės peržiūros ({events.length})
+              </p>
+              <div className="space-y-1">
+                {events.length === 0 && (
+                  <p className="rounded-lg border border-border/60 bg-card/40 p-3 text-xs text-muted-foreground">
+                    Nėra duomenų šiam laikotarpiui.
+                  </p>
+                )}
+                {events.slice(0, 60).map((e, i) => (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.01 }}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-card/40 px-2.5 py-1.5 text-[11px]"
+                  >
+                    <span className="truncate font-mono text-muted-foreground">
+                      {new Date(e.created_at).toLocaleString("lt-LT")}
+                    </span>
+                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                      e.user_id ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {e.user_id ? "reg" : "anon"}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
