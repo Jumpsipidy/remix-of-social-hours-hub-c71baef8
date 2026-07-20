@@ -8,7 +8,7 @@ import { SceneDashboard } from "./scenes/SceneDashboard";
 import { SceneCertificate } from "./scenes/SceneCertificate";
 
 loadInstrumentSerif();
-loadInter({ weights: ["400", "500", "600", "700"] });
+loadInter();
 
 const Backdrop: React.FC = () => {
   const frame = useCurrentFrame();
