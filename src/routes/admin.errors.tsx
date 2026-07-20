@@ -199,6 +199,39 @@ function AdminErrorsPage() {
     };
   }, [live]);
 
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!autoMs) return;
+    const t = setInterval(() => { void load(); }, autoMs);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoMs]);
+
+  // Keyboard shortcuts: `/` focuses search, `l` toggles live, `Esc` clears filter
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || (target as HTMLElement).isContentEditable);
+      if (e.key === "/" && !inField) {
+        e.preventDefault();
+        setSection("live");
+        setTimeout(() => searchRef.current?.focus(), 50);
+      } else if (e.key === "Escape" && filter && !selected) {
+        setFilter("");
+      } else if ((e.key === "l" || e.key === "L") && !inField) {
+        setLive((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filter, selected]);
+
+  const matchesIgnore = (r: ErrRow) => {
+    if (!ignoreRules.length) return false;
+    const hay = (r.meta?.message ?? "") + " " + (r.meta?.path ?? "") + " " + (r.meta?.source ?? "");
+    return ignoreRules.some((p) => p && hay.toLowerCase().includes(p.toLowerCase()));
+  };
+
   const filtered = useMemo(() => {
     const f = filter.trim();
     const windowMs =
