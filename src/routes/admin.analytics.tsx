@@ -822,6 +822,14 @@ function Page() {
           </div>
         </Card>
       </div>
+
+      {/* Drill-down drawer: opens when a top-page row is clicked */}
+      <DrilldownDrawer
+        path={drilldownPath}
+        onClose={() => setDrilldownPath(null)}
+        activity={data?.activity ?? []}
+        rangeSince={rangeSince}
+      />
     </div>
   );
 }
