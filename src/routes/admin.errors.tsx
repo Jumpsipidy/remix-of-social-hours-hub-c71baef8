@@ -90,16 +90,27 @@ const KIND_STYLE: Record<string, string> = {
 
 const CRITICAL_KINDS = new Set(["client.error", "app.critical"]);
 
-type Section = "overview" | "live" | "analytics" | "top" | "lockdown" | "settings";
+type Section = "overview" | "live" | "analytics" | "top" | "sources" | "lockdown" | "settings";
 
 const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[] = [
   { id: "overview", label: "Apžvalga", icon: LayoutDashboard, hint: "KPI + srautas" },
   { id: "live", label: "Live srautas", icon: Radio, hint: "Realaus laiko sąrašas" },
   { id: "analytics", label: "Analitika", icon: BarChart3, hint: "24h trendai" },
   { id: "top", label: "Dažniausios", icon: ListOrdered, hint: "Grupuota pagal žinutę" },
+  { id: "sources", label: "Šaltiniai", icon: Globe, hint: "Puslapiai · naršyklės · OS" },
   { id: "lockdown", label: "Auto-lockdown", icon: ShieldAlert, hint: "Slenkstis ir valdymas" },
-  { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Išvalyti / eksportuoti" },
+  { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Ignore · testas · eksportas" },
 ];
+
+const IGNORE_KEY = "admin-errors-ignore-rules";
+const AUTO_KEY = "admin-errors-auto-refresh";
+function loadIgnore(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]") as string[]; } catch { return []; }
+}
+function saveIgnore(list: string[]) {
+  try { localStorage.setItem(IGNORE_KEY, JSON.stringify(list)); } catch {}
+}
 
 function AdminErrorsPage() {
   const [rows, setRows] = useState<ErrRow[]>([]);
