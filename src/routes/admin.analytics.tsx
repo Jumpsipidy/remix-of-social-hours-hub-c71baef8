@@ -135,6 +135,8 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>(30);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
 
   // ---- Interactive state -------------------------------------------------
   type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
@@ -164,20 +166,30 @@ function Page() {
     [range],
   );
 
-  const refresh = async () => {
-    setLoading(true);
+  const refresh = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       setData(await fn());
       setRefreshTick((t) => t + 1);
+      setLastRefreshAt(new Date());
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Klaida");
+      if (!silent) toast.error(e instanceof Error ? e.message : "Klaida");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
   useEffect(() => {
     refresh();
   }, []);
+
+  // Auto-refresh polling (15 s) — lets analytics update in real time as users
+  // browse the site. Silent refresh so we don't blast toasts.
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => refresh(true), 15000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh]);
 
   // Filter to selected range
   const inRange = <T extends { created_at: string }>(arr: T[] | undefined) =>
@@ -438,8 +450,21 @@ function Page() {
             CSV
           </button>
           <button
-            onClick={refresh}
+            onClick={() => setAutoRefresh((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold backdrop-blur transition ${
+              autoRefresh
+                ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                : "border-border bg-card/70 hover:bg-accent"
+            }`}
+            title="Automatiškai atnaujinti kas 15 s"
+          >
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRefresh ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"}`} />
+            {autoRefresh ? "Live" : "Auto"}
+          </button>
+          <button
+            onClick={() => refresh()}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur transition hover:bg-accent"
+            title={lastRefreshAt ? `Atnaujinta ${lastRefreshAt.toLocaleTimeString("lt-LT")}` : "Atnaujinti"}
           >
             <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -822,6 +847,64 @@ function Page() {
           </div>
         </Card>
       </div>
+
+      {/* Live activity feed — newest events, updates with auto-refresh */}
+      <Card
+        delay={0.4}
+        title="Gyvas veiklos srautas"
+        icon={ActivityIcon}
+        action={
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/40 px-2 py-0.5 text-[10px] font-semibold">
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRefresh ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"}`} />
+            {autoRefresh ? "Live 15s" : "Sustabdytas"}
+          </span>
+        }
+      >
+        <div className="max-h-80 overflow-y-auto pr-1">
+          <div className="space-y-1.5">
+            {(data?.activity ?? []).slice(0, 40).map((e, i) => {
+              const isView = e.action === "page.view";
+              const isIn = e.action === "auth.signed_in";
+              const isOut = e.action === "auth.signed_out";
+              const color = isIn ? C.emerald : isOut ? C.rose : C.cyan;
+              const label = isIn ? "Prisijungimas" : isOut ? "Atsijungimas" : "Peržiūra";
+              return (
+                <motion.div
+                  key={e.id}
+                  layout
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: Math.min(i * 0.01, 0.3) }}
+                  className="group flex items-center gap-2 rounded-lg border border-border/50 bg-card/40 px-2.5 py-1.5 text-[11px] hover:border-primary/40"
+                >
+                  <span
+                    className="inline-block h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: color, boxShadow: `0 0 8px ${color}` }}
+                  />
+                  <span className="w-24 shrink-0 font-semibold" style={{ color }}>{label}</span>
+                  <span className="truncate font-mono text-muted-foreground">
+                    {(e.meta?.path as string | undefined) ?? (isView ? "/" : "—")}
+                  </span>
+                  <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                    e.user_id ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {e.user_id ? "reg" : "anon"}
+                  </span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">
+                    {new Date(e.created_at).toLocaleTimeString("lt-LT")}
+                  </span>
+                </motion.div>
+              );
+            })}
+            {!(data?.activity ?? []).length && (
+              <p className="rounded-lg border border-dashed border-border/60 bg-card/40 p-4 text-center text-xs text-muted-foreground">
+                Kol kas įvykių nėra. Kai lankytojai naršys svetainę, čia atsiras srautas realiu laiku.
+              </p>
+            )}
+          </div>
+        </div>
+      </Card>
+
 
       {/* Drill-down drawer: opens when a top-page row is clicked */}
       <DrilldownDrawer
