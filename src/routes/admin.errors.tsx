@@ -536,16 +536,38 @@ function AdminErrorsPage() {
                       <div className="relative min-w-[200px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Ieškoti pagal žinutę, šaltinį, kelią…"
+                          placeholder={regexMode ? "Regex, pvz. ^Cannot read|is not a function" : "Ieškoti žinutėje, kelyje, stack…"}
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
-                          className="pl-8"
+                          className="pl-8 pr-20 font-mono text-sm"
                         />
-                        {filter && (
-                          <button onClick={() => setFilter("")} className="absolute right-2 top-2 text-muted-foreground hover:text-foreground">
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
+                        <div className="absolute right-1.5 top-1.5 flex items-center gap-1">
+                          <button
+                            onClick={() => setRegexMode((v) => !v)}
+                            title="Regex režimas"
+                            className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase transition ${
+                              regexMode ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >.*</button>
+                          {filter && (
+                            <button onClick={() => setFilter("")} className="text-muted-foreground hover:text-foreground">
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        {(["5m", "1h", "24h", "all"] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTimeWindow(t)}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                              timeWindow === t
+                                ? "border-primary/60 bg-primary/15 text-primary"
+                                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >{t === "all" ? "Visos" : t}</button>
+                        ))}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {(["all", "client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"] as const).map((k) => {
