@@ -166,20 +166,30 @@ function Page() {
     [range],
   );
 
-  const refresh = async () => {
-    setLoading(true);
+  const refresh = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       setData(await fn());
       setRefreshTick((t) => t + 1);
+      setLastRefreshAt(new Date());
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Klaida");
+      if (!silent) toast.error(e instanceof Error ? e.message : "Klaida");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
   useEffect(() => {
     refresh();
   }, []);
+
+  // Auto-refresh polling (15 s) — lets analytics update in real time as users
+  // browse the site. Silent refresh so we don't blast toasts.
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(() => refresh(true), 15000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh]);
 
   // Filter to selected range
   const inRange = <T extends { created_at: string }>(arr: T[] | undefined) =>
