@@ -34,10 +34,17 @@ export function ErrorMonitor() {
   const reportedRef = useRef(false);
   const eventsRef = useRef<number[]>([]);
 
+  // Install global error logging on every mount (works even without auth —
+  // anon-safe inserts are dropped by RLS but console output still fires).
+  useEffect(() => {
+    installGlobalErrorLogging();
+  }, []);
+
   useEffect(() => {
     // Only actively monitor when someone is signed in — auto-report requires auth
     // and unauthenticated visitors can't write to lockdown regardless.
     if (!isAuthenticated) return;
+
 
     const shouldIgnore = (msg: unknown) => {
       const s = String(msg ?? "");
