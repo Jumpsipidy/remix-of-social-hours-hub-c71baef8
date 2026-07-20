@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import {
   Activity, Eye, Users, LogIn, LogOut, RefreshCw, Download, Maximize2, Minimize2,
   Zap, Clock, Globe2, MonitorSmartphone, Chrome, Languages, MapPin, ArrowUp, ArrowDown,
-  Sparkles, Radio, Search, Filter, ChevronRight, Layers, Fingerprint, Timer,
+  Sparkles, Radio, Search, Filter, ChevronRight, Layers, Fingerprint, Timer, Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
