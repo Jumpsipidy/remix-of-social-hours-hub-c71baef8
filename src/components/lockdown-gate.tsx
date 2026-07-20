@@ -25,6 +25,10 @@ const SEV_PILL = {
 
 /** Floating dust motes — slow, warm, ambient. Not neon, not orbital. */
 function Dust({ accent }: { accent: string }) {
+  // Defer Math.random-based motes until after hydration to avoid a
+  // server/client HTML mismatch (React #418).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const motes = useMemo(
     () => Array.from({ length: 22 }, () => ({
       x: Math.random() * 100,
@@ -35,6 +39,7 @@ function Dust({ accent }: { accent: string }) {
     })),
     [],
   );
+  if (!mounted) return null;
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {motes.map((m, i) => (
