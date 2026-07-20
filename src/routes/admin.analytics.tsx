@@ -792,7 +792,7 @@ function HeroStat({
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </motion.button>
+      </motion.div>
     </Tilt3D>
   );
 }
