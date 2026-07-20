@@ -2,26 +2,48 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { renderHoursConfirmedEmail } from "./email-templates/hours-confirmed";
+import { renderReservationApprovedEmail, reservationApprovedText } from "./email-templates/reservation-approved";
+import { renderReservationDeclinedEmail, reservationDeclinedText } from "./email-templates/reservation-declined";
+import { renderWelcomeEmail, welcomeText } from "./email-templates/welcome";
+import { APP_URL, SUPPORT_EMAIL } from "./email-templates/_shell";
 
 const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
+const REPLY_TO = SUPPORT_EMAIL;
 
-async function sendResend(payload: {
+type SendPayload = {
   to: string;
   subject: string;
   html: string;
-}) {
+  text: string;
+  tag?: string;
+};
+
+// Anti-spam best-practice: plaintext fallback, Reply-To, List-Unsubscribe, tag for tracking.
+async function sendResend(payload: SendPayload) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     console.warn("[email] RESEND_API_KEY not set — skipping send");
     return { skipped: true as const };
   }
+  const body: Record<string, unknown> = {
+    from: FROM,
+    to: payload.to,
+    reply_to: REPLY_TO,
+    subject: payload.subject,
+    html: payload.html,
+    text: payload.text,
+    headers: {
+      "List-Unsubscribe": `<mailto:${SUPPORT_EMAIL}?subject=unsubscribe>, <${APP_URL}/unsubscribe>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      "X-Entity-Ref-ID": crypto.randomUUID(),
+    },
+  };
+  if (payload.tag) body.tags = [{ name: "category", value: payload.tag }];
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({ from: FROM, ...payload }),
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -31,96 +53,205 @@ async function sendResend(payload: {
   return { ok: true as const };
 }
 
+// -------------------- 1. Hours confirmed --------------------
+
 export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((v) =>
-    z
-      .object({
-        reservationId: z.string().uuid(),
-      })
-      .parse(v),
-  )
+  .validator((v) => z.object({ reservationId: z.string().uuid() }).parse(v))
   .handler(async ({ data, context }) => {
-    // Load reservation (RLS: only the org owner or admin can see it — matches finalize flow)
     const { data: r, error } = await context.supabase
       .from("reservations")
       .select("id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, address")
       .eq("id", data.reservationId)
       .single();
     if (error || !r) throw new Error(error?.message ?? "Rezervacija nerasta");
-
-    // Only the org owner (or admin) may trigger the mail. RLS above already enforces read.
     if (r.organization_id !== context.userId) {
-      const { data: isAdmin } = await context.supabase.rpc("has_role", {
-        _user_id: context.userId,
-        _role: "admin",
-      });
+      const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
       if (!isAdmin) throw new Error("Neturi teisės siųsti šio pranešimo");
     }
-
-    // Load student + org profile (public-visible via can_view_profile since they share this reservation)
     const [{ data: student }, { data: org }] = await Promise.all([
       context.supabase.from("profiles").select("full_name, email, hours_earned, hours_needed").eq("id", r.student_id).single(),
       context.supabase.from("profiles").select("organization_name, full_name").eq("id", r.organization_id).single(),
     ]);
     if (!student?.email) return { skipped: true as const, reason: "no_email" };
-
     const orgName = org?.organization_name || org?.full_name || "Organizacija";
+    const hours = Number(r.hours_to_earn) || 0;
+    const totalHours = Number(student.hours_earned) || 0;
+    const neededHours = Number(student.hours_needed) || 0;
     const html = renderHoursConfirmedEmail({
       studentName: student.full_name || "Savanoriau",
-      orgName,
-      hours: Number(r.hours_to_earn) || 0,
-      date: r.reservation_date,
-      totalHours: Number(student.hours_earned) || 0,
-      neededHours: Number(student.hours_needed) || 0,
+      orgName, hours, date: r.reservation_date,
+      totalHours, neededHours,
       location: r.address || undefined,
     });
+    const text = `Sveikas!\n\n${orgName} patvirtino tavo darbą (${hours} val., ${r.reservation_date}).\nDabar tavo suma: ${totalHours}/${neededHours} val.\n\n${APP_URL}/student`;
+    return sendResend({ to: student.email, subject: `✓ ${hours} val. patvirtinta — ${orgName}`, html, text, tag: "hours-confirmed" });
+  });
 
+// -------------------- 2. Reservation approved (pending → approved) --------------------
+
+export const sendReservationApprovedEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((v) => z.object({ reservationId: z.string().uuid() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { data: r } = await context.supabase
+      .from("reservations")
+      .select("id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, address")
+      .eq("id", data.reservationId).single();
+    if (!r) return { skipped: true as const, reason: "not_found" };
+    if (r.organization_id !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+      if (!isAdmin) return { skipped: true as const, reason: "forbidden" };
+    }
+    const [{ data: student }, { data: org }] = await Promise.all([
+      context.supabase.from("profiles").select("full_name, email").eq("id", r.student_id).single(),
+      context.supabase.from("profiles").select("organization_name, full_name").eq("id", r.organization_id).single(),
+    ]);
+    if (!student?.email) return { skipped: true as const, reason: "no_email" };
+    const orgName = org?.organization_name || org?.full_name || "Organizacija";
+    const props = {
+      studentName: student.full_name || "Savanoriau",
+      orgName, date: r.reservation_date,
+      startTime: r.start_time, endTime: r.end_time,
+      hours: Number(r.hours_to_earn) || 0,
+      location: r.address || undefined,
+    };
     return sendResend({
       to: student.email,
-      subject: `✓ ${Number(r.hours_to_earn)} val. patvirtinta — ${orgName}`,
-      html,
+      subject: `🚀 Patvirtinta — ${orgName}`,
+      html: renderReservationApprovedEmail(props),
+      text: reservationApprovedText(props),
+      tag: "reservation-approved",
     });
   });
 
-// ---------------- Debug helpers (admin-only) ----------------
+// -------------------- 3. Reservation declined --------------------
 
-function demoHtml(overrides?: Partial<Parameters<typeof renderHoursConfirmedEmail>[0]>) {
-  return renderHoursConfirmedEmail({
-    studentName: "Jonas Jonaitis",
-    orgName: "Radviliškio Senjorų Namai",
-    hours: 4,
-    date: new Date().toISOString().slice(0, 10),
-    totalHours: 12,
-    neededHours: 20,
-    location: "Vaižganto g. 5, Radviliškis",
-    ...overrides,
+export const sendReservationDeclinedEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((v) => z.object({ reservationId: z.string().uuid(), reason: z.string().max(500).optional() }).parse(v))
+  .handler(async ({ data, context }) => {
+    const { data: r } = await context.supabase
+      .from("reservations")
+      .select("id, student_id, organization_id, reservation_date")
+      .eq("id", data.reservationId).single();
+    if (!r) return { skipped: true as const, reason: "not_found" };
+    if (r.organization_id !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+      if (!isAdmin) return { skipped: true as const, reason: "forbidden" };
+    }
+    const [{ data: student }, { data: org }] = await Promise.all([
+      context.supabase.from("profiles").select("full_name, email").eq("id", r.student_id).single(),
+      context.supabase.from("profiles").select("organization_name, full_name").eq("id", r.organization_id).single(),
+    ]);
+    if (!student?.email) return { skipped: true as const, reason: "no_email" };
+    const orgName = org?.organization_name || org?.full_name || "Organizacija";
+    const props = {
+      studentName: student.full_name || "Savanoriau",
+      orgName, date: r.reservation_date, reason: data.reason,
+    };
+    return sendResend({
+      to: student.email,
+      subject: `Rezervacija atmesta — ${orgName}`,
+      html: renderReservationDeclinedEmail(props),
+      text: reservationDeclinedText(props),
+      tag: "reservation-declined",
+    });
   });
+
+// -------------------- 4. Welcome (self-triggered post-signup) --------------------
+
+export const sendWelcomeEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: me } = await context.supabase
+      .from("profiles")
+      .select("full_name, email, role, hours_needed")
+      .eq("id", context.userId).single();
+    if (!me?.email) return { skipped: true as const, reason: "no_email" };
+    const role = (me.role as "student" | "organization" | "school_admin" | "admin") || "student";
+    const props = {
+      fullName: me.full_name || "Savanoriau",
+      role,
+      hoursNeeded: role === "student" ? Number(me.hours_needed) || 20 : undefined,
+    };
+    return sendResend({
+      to: me.email,
+      subject: `Sveikas atvykęs į Socialinės Valandos ✦`,
+      html: renderWelcomeEmail(props),
+      text: welcomeText(props),
+      tag: "welcome",
+    });
+  });
+
+// -------------------- Debug preview / test helpers --------------------
+
+function demoHoursHtml() {
+  return renderHoursConfirmedEmail({
+    studentName: "Jonas Jonaitis", orgName: "Radviliškio Senjorų Namai",
+    hours: 4, date: new Date().toISOString().slice(0, 10),
+    totalHours: 12, neededHours: 20, location: "Vaižganto g. 5, Radviliškis",
+  });
+}
+
+async function assertAdmin(ctx: { supabase: typeof import("@supabase/supabase-js")["createClient"] extends never ? never : any; userId: string }) {
+  const { data: isAdmin } = await (ctx.supabase as any).rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  if (!isAdmin) throw new Error("Tik super admin");
 }
 
 export const previewHoursConfirmedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Tik super admin");
-    return { html: demoHtml() };
+    await assertAdmin(context as any);
+    return { html: demoHoursHtml() };
+  });
+
+export const previewAllEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as any);
+    return {
+      hoursConfirmed: demoHoursHtml(),
+      reservationApproved: renderReservationApprovedEmail({
+        studentName: "Jonas Jonaitis", orgName: "Radviliškio Senjorų Namai",
+        date: new Date().toISOString().slice(0, 10),
+        startTime: "10:00", endTime: "14:00", hours: 4,
+        location: "Vaižganto g. 5, Radviliškis",
+      }),
+      reservationDeclined: renderReservationDeclinedEmail({
+        studentName: "Jonas Jonaitis", orgName: "Radviliškio Senjorų Namai",
+        date: new Date().toISOString().slice(0, 10),
+        reason: "Šiuo metu neturime laisvų vietų.",
+      }),
+      welcome: renderWelcomeEmail({ fullName: "Jonas Jonaitis", role: "student", hoursNeeded: 20 }),
+    };
   });
 
 export const sendTestHoursConfirmedEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((v) => z.object({ to: z.string().email() }).parse(v))
+  .validator((v) => z.object({ to: z.string().email(), variant: z.enum(["hours", "approved", "declined", "welcome"]).default("hours") }).parse(v))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Tik super admin");
+    await assertAdmin(context as any);
+    const demo = {
+      studentName: "Testinis Vartotojas", orgName: "Testinė Organizacija",
+      date: new Date().toISOString().slice(0, 10),
+    };
+    if (data.variant === "approved") {
+      const p = { ...demo, startTime: "10:00", endTime: "14:00", hours: 4, location: "Testinis adresas 1" };
+      return sendResend({ to: data.to, subject: "🧪 TEST — Rezervacija patvirtinta", html: renderReservationApprovedEmail(p), text: reservationApprovedText(p), tag: "test" });
+    }
+    if (data.variant === "declined") {
+      const p = { ...demo, reason: "Testinė atmetimo priežastis." };
+      return sendResend({ to: data.to, subject: "🧪 TEST — Rezervacija atmesta", html: renderReservationDeclinedEmail(p), text: reservationDeclinedText(p), tag: "test" });
+    }
+    if (data.variant === "welcome") {
+      const p = { fullName: "Testinis Vartotojas", role: "student" as const, hoursNeeded: 20 };
+      return sendResend({ to: data.to, subject: "🧪 TEST — Sveikas atvykęs", html: renderWelcomeEmail(p), text: welcomeText(p), tag: "test" });
+    }
     return sendResend({
-      to: data.to,
-      subject: "🧪 TEST — Valandos patvirtintos (Socialinės Valandos)",
-      html: demoHtml({ studentName: "Testinis Vartotojas" }),
+      to: data.to, subject: "🧪 TEST — Valandos patvirtintos",
+      html: demoHoursHtml(),
+      text: `Test — 4 val. patvirtinta.\n${APP_URL}/student`,
+      tag: "test",
     });
   });

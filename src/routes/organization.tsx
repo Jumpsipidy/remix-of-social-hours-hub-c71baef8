@@ -14,7 +14,7 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
-import { sendHoursConfirmedEmail } from "@/lib/email.functions";
+import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/organization")({
   head: () => ({
@@ -170,6 +170,8 @@ function OrgDashboard() {
     const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
     if (error) { toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`, user.id);
+    sendReservationApprovedEmail({ data: { reservationId: r.id } })
+      .catch((e) => console.warn("[email] reservation-approved failed", e));
     toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
     refresh(user.id);
   };
@@ -178,6 +180,8 @@ function OrgDashboard() {
     const { error } = await supabase.from("reservations").update({ status: "declined" }).eq("id", r.id);
     if (error) { toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
+    sendReservationDeclinedEmail({ data: { reservationId: r.id } })
+      .catch((e) => console.warn("[email] reservation-declined failed", e));
     toast.success("Atmesta — žinutė nusiųsta į pokalbį");
     refresh(user.id);
   };

@@ -115,6 +115,10 @@ function RegisterPage() {
         toast.success("Paskyra sukurta! Patvirtink el. paštą kodu.");
         navigate({ to: "/verify-email" });
       } else {
+        // Session active — send welcome email (bearer is already attached)
+        import("@/lib/email.functions").then(({ sendWelcomeEmail }) =>
+          sendWelcomeEmail().catch((e) => console.warn("[email] welcome failed", e)),
+        );
         toast.success("Paskyra sukurta! Sveiki atvykę.");
         navigate({ to: "/student" });
       }
