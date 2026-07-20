@@ -131,6 +131,7 @@ export async function respondToInvite(rowId: string, accept: boolean) {
     .update({ status: accept ? "accepted" : "declined" } as any)
     .eq("id", rowId);
   if (error) throw error;
+  logActivity(accept ? "group.invite_accepted" : "group.invite_declined", { entityType: "reservation_participant", entityId: rowId });
 }
 
 export async function listParticipants(reservationId: string): Promise<ParticipantRow[]> {
