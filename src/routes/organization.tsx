@@ -79,7 +79,7 @@ function OrgDashboard() {
     const rs = (rData as Reservation[]) ?? [];
     setReservations(rs);
     setTasks((tData as TaskRow[]) ?? []);
-    const ids = Array.from(new Set(rs.map((r) => r.student_id)));
+    const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
     if (ids.length) {
       const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
       const map: Record<string, StudentLite> = {};

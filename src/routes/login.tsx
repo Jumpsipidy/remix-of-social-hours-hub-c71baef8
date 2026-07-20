@@ -47,11 +47,13 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
-  const [fails, setFails] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    const n = Number(localStorage.getItem(FAIL_KEY) ?? "0");
-    return Number.isFinite(n) ? n : 0;
-  });
+  const [fails, setFails] = useState<number>(0);
+  useEffect(() => {
+    try {
+      const n = Number(localStorage.getItem(FAIL_KEY) ?? "0");
+      if (Number.isFinite(n) && n > 0) setFails(n);
+    } catch {}
+  }, []);
   const [captchaProof, setCaptchaProof] = useState<string | null>(null);
   const captchaRequired = fails >= FAIL_THRESHOLD;
 

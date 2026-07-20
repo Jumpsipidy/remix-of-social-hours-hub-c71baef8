@@ -87,15 +87,22 @@ export function Sparkline({
   className?: string;
   stroke?: string;
 }) {
-  if (!values.length) values = [0, 0];
+  const clean = (values ?? []).map((v) => (Number.isFinite(v) ? Number(v) : 0));
+  const safe = clean.length ? clean : [0, 0];
   const w = 100;
   const h = 28;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const min = Math.min(...safe);
+  const max = Math.max(...safe);
   const span = max - min || 1;
-  const step = w / Math.max(values.length - 1, 1);
-  const pts = values.map((v, i) => `${i * step},${h - ((v - min) / span) * (h - 4) - 2}`).join(" ");
-  const area = `M0,${h} L${pts.replace(/,/g, " ").replace(/ /g, ",").split(",").reduce((acc, _, i, arr) => (i % 2 === 0 && arr[i + 1] ? `${acc} L${arr[i]},${arr[i + 1]}` : acc), "")} L${w},${h} Z`;
+  const step = safe.length > 1 ? w / (safe.length - 1) : w;
+  const coords = safe.map((v, i) => {
+    const x = safe.length > 1 ? i * step : w / 2;
+    const y = h - ((v - min) / span) * (h - 4) - 2;
+    return { x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : h - 2 };
+  });
+  const pts = coords.map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
+  const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
+  const area = `M0,${h} ${linePath} L${w},${h} Z`;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={`h-7 w-full ${className}`}>
       <defs>
