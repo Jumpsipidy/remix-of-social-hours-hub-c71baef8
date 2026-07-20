@@ -17,6 +17,16 @@ const IGNORE_SUBSTRINGS = [
   // React hydration mismatch warnings are noisy; they're not user-facing outages.
   "Minified React error #418",
   "hydrated but some attributes",
+  // WebGL context creation/loss — decorative background only, we already fall back
+  "THREE.WebGLRenderer",
+  "WebGL context",
+  "Web page caused context loss",
+  "context lost",
+  // Vite HMR transient messages
+  "[vite] Failed to reload",
+  "[vite]",
+  // Manual test errors triggered from /admin/errors "Trigger test error" button
+  "[TEST]",
 ];
 
 // Patterns that indicate a serious runtime failure worth auto-lockdown.
