@@ -704,6 +704,14 @@ function Page() {
           </AnimatePresence>
         </div>
       </Card>
+
+      <KpiDetailModal
+        kind={detailKind}
+        onClose={() => setDetailKind(null)}
+        activity={activityForModal}
+        rangeSince={rangeSince}
+        rangeDays={range}
+      />
     </div>
   );
 }
