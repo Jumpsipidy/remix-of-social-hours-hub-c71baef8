@@ -137,13 +137,31 @@ select created_at, action, meta->>'path' as path, meta->>'device' as device,
 from public.activity_log
 order by created_at desc limit 20;
 
--- Active in last 5 minutes
-select count(distinct meta->>'session_id') as active_now
+-- Active public visitors in last 5 minutes
+-- Important: this ignores /admin and admin-user traffic, because admin visits
+-- are intentionally hidden from analytics totals.
+select count(distinct coalesce(meta->>'session_id', user_id::text, id::text)) as active_now
 from public.activity_log
-where action = 'page.view' and created_at > now() - interval '5 minutes';
+where action = 'page.view'
+  and created_at > now() - interval '5 minutes'
+  and coalesce(is_admin_event, false) = false
+  and coalesce(meta->>'path', '') not like '/admin%';
+
+-- If active_now is 0, check whether anything was tracked recently:
+select created_at, action, meta->>'path' as path, meta->>'session_id' as session_id, is_admin_event
+from public.activity_log
+order by created_at desc
+limit 10;
 ```
 
 If `count(*)` is 0, the client is not tracking. Check:
 - `<PageViewTracker />` mounted in `__root.tsx`
 - Browser console for insert errors
 - The three grants in step 2
+
+If the browser console request URL points to a different backend project than
+your real project, fix Vercel env variables and redeploy:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
