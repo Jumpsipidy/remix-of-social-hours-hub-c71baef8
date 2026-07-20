@@ -147,6 +147,7 @@ function RootComponent() {
         <MockTesterPanel />
         <LockdownGate />
         <ErrorMonitor />
+        <PageViewTracker />
       </AuthProvider>
     </QueryClientProvider>
 
