@@ -22,6 +22,7 @@ import {
   BarChart3,
   Lock,
   MoreHorizontal,
+  AlertTriangle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
