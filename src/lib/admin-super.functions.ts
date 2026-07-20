@@ -234,7 +234,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       profiles: pRes.data ?? [],
       messages: mRes.data ?? [],
       activity: (aRes.data ?? []) as Array<{
-        id: string; user_id: string | null; action: string; created_at: string; meta: Record<string, unknown> | null;
+        id: string; user_id: string | null; action: string; created_at: string; meta: { path?: string; anon?: string } | null;
       }>,
     };
   });
