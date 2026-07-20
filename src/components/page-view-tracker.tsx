@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { deviceMeta } from "@/lib/device-meta";
+import { insertActivityLogRow } from "@/lib/activity-log";
 
 /**
  * Logs a `page.view` row into `activity_log` on every route change with rich
@@ -33,13 +34,12 @@ export function PageViewTracker() {
       try {
         const { data } = await supabase.auth.getUser();
         const meta = deviceMeta({ path: pathname });
-        await supabase.from("activity_log").insert({
+        await insertActivityLogRow({
           user_id: data.user?.id ?? null,
           action: "page.view",
           entity_type: "route",
-          entity_id: null,
-          meta: meta as never,
-        } as never);
+          meta,
+        });
       } catch {
         // ignore — analytics is best-effort
       }

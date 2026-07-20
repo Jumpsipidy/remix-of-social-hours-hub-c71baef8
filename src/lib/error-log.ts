@@ -3,6 +3,7 @@
 // - Persists to public.activity_log with action='client.error' or 'supabase.error'
 // - Admin dashboard reads these rows via /admin/errors and realtime subscription
 import { supabase } from "@/integrations/supabase/client";
+import { insertActivityLogRow } from "@/lib/activity-log";
 import { deviceMeta } from "@/lib/device-meta";
 
 const IGNORE_SUBSTRINGS = [
@@ -42,7 +43,7 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id ?? null;
 
-    await supabase.from("activity_log").insert({
+    await insertActivityLogRow({
       user_id: uid,
       action,
       entity_type: payload.source ?? null,
@@ -53,8 +54,8 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
         path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
         extra: payload.extra ?? {},
         ...dev,
-      } as any,
-    } as any);
+      },
+    });
   } catch {
     // swallow — never crash reporting the report
   }

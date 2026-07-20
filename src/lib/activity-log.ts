@@ -20,7 +20,35 @@ export type ActivityAction =
   | "certificate.generated"
   | "auth.signed_in"
   | "auth.signed_out"
-  | "page.view";
+  | "page.view"
+  | "client.error"
+  | "supabase.error";
+
+export type ActivityLogRow = {
+  user_id?: string | null;
+  action: ActivityAction | string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  meta?: Record<string, unknown>;
+};
+
+/**
+ * Compatible activity insert for both the newest schema and older deployed DBs.
+ * Keep the wire payload to the long-lived columns only; entity details live in meta.
+ */
+export async function insertActivityLogRow(row: ActivityLogRow) {
+  const meta = {
+    ...(row.meta ?? {}),
+    ...(row.entity_type ? { entity_type: row.entity_type } : {}),
+    ...(row.entity_id ? { entity_id: row.entity_id } : {}),
+  };
+
+  await supabase.from("activity_log").insert({
+    user_id: row.user_id ?? null,
+    action: row.action,
+    meta: meta as any,
+  } as any);
+}
 
 /** Fire-and-forget activity logger. Silently ignores errors. */
 export async function logActivity(
@@ -31,13 +59,13 @@ export async function logActivity(
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
     if (!uid) return;
-    await supabase.from("activity_log").insert({
+    await insertActivityLogRow({
       user_id: uid,
       action,
       entity_type: opts?.entityType ?? null,
       entity_id: opts?.entityId ?? null,
-      meta: (opts?.meta ?? {}) as any,
-    } as any);
+      meta: opts?.meta ?? {},
+    });
   } catch {
     // ignore
   }
