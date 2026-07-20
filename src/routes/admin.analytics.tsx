@@ -701,21 +701,52 @@ function Page() {
 // ============================================================================
 // Sub-components
 // ============================================================================
-function Card({ title, icon: Icon, tools, children }: {
+function Card({ title, icon: Icon, tools, children, expanded, onToggleExpand }: {
   title: string; icon: React.ComponentType<{ className?: string }>;
   tools?: React.ReactNode; children: React.ReactNode;
+  expanded?: boolean; onToggleExpand?: () => void;
 }) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur-xl">
+  const body = (
+    <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-xl ${expanded ? "h-full" : ""}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Icon className="h-4 w-4 text-primary" />
-          <span>{title}</span>
+          <span className="truncate">{title}</span>
         </div>
-        {tools}
+        <div className="flex items-center gap-1.5">
+          {tools}
+          {onToggleExpand && (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-white"
+              title={expanded ? "Sumažinti" : "Fullscreen"}
+              aria-label="Fullscreen"
+            >
+              {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+            </button>
+          )}
+        </div>
       </div>
-      {children}
+      <div className={expanded ? "h-[calc(100%-52px)]" : ""}>{children}</div>
     </div>
+  );
+  if (!expanded) return body;
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] bg-black/80 p-3 backdrop-blur-md sm:p-6"
+      onClick={onToggleExpand}
+    >
+      <motion.div
+        initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        className="mx-auto h-full max-w-[1500px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {body}
+      </motion.div>
+    </motion.div>
   );
 }
 
