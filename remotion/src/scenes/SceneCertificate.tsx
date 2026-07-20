@@ -6,7 +6,7 @@ const ROWS = [
   { d: "2026-07-14", h: 2, o: "Raudonojo Kryžiaus draugija" },
   { d: "2026-07-10", h: 3, o: "Panevėžio senelių namai" },
   { d: "2026-07-06", h: 4, o: "Miesto biblioteka" },
-  { d: "2026-07-02", h: 2, o: "Gyvūnų prieglauda „Letenėlė"" },
+  { d: "2026-07-02", h: 2, o: "Gyvūnų prieglauda Letenėlė" },
   { d: "2026-06-28", h: 3, o: "Aplinkosaugos klubas" },
   { d: "2026-06-24", h: 2, o: "Vaikų dienos centras" },
   { d: "2026-06-20", h: 4, o: "Raudonojo Kryžiaus draugija" },
