@@ -1,150 +1,216 @@
-import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
-import { BrowserFrame } from "../components/BrowserFrame";
-import { Cursor } from "../components/Cursor";
+import React from "react";
+import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig } from "remotion";
+import { AmbientBg, Logo, COLORS, Cursor, interp } from "../ui/primitives";
+
+const EMAIL = "lukas.stankevicius@dev.local";
+const PASS = "••••••••••";
 
 export const SceneLogin: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const enter = spring({ frame, fps, config: { damping: 22 } });
-  const exit = interpolate(frame, [270, 300], [0, 1], { extrapolateRight: "clamp" });
+  const cardIn = spring({ frame, fps, config: { damping: 20 } });
+  const leftIn = spring({ frame: frame - 10, fps, config: { damping: 22 } });
 
-  const scale = interpolate(enter, [0, 1], [0.85, 1]);
-  const rotY = interpolate(enter, [0, 1], [-14, 0]);
-  const y = interpolate(enter, [0, 1], [60, 0]);
-  const exitScale = 1 - exit * 0.08;
-  const exitY = -exit * 60;
-  const exitOpacity = 1 - exit;
+  // typing
+  const emailStart = 60;
+  const emailChars = Math.max(0, Math.min(EMAIL.length, Math.floor((frame - emailStart) / 1.6)));
+  const passStart = 140;
+  const passChars = Math.max(0, Math.min(PASS.length, Math.floor((frame - passStart) / 2)));
 
-  // Cursor path within panel (panel width 1500, top-left origin at panel)
-  // Email field around x=1000 y=370, password around x=1000 y=460, button y=560
-  const panelW = 1500;
-  const panelH = Math.round(panelW * (740 / 1420));
+  // cursor trajectory: idle → email field → password field → submit
+  const cx = interp(frame, [30, 55, 80, 130, 160, 210, 240], [1400, 1200, 1200, 1200, 1200, 1200, 1200]);
+  const cy = interp(frame, [30, 55, 80, 130, 160, 210, 240], [600, 420, 420, 520, 520, 620, 620]);
+  const clicking = (frame >= 55 && frame <= 62) || (frame >= 138 && frame <= 145) || (frame >= 218 && frame <= 228);
 
-  // Typed text
-  const emailText = "lukas@gimnazija.lt";
-  const emailLen = Math.max(0, Math.min(emailText.length, Math.floor((frame - 55) / 1.8)));
-  const passLen = Math.max(0, Math.min(9, Math.floor((frame - 110) / 2)));
+  // submit ripple
+  const submitPress = interp(frame, [218, 230], [1, 0.96]);
+  const flash = interp(frame, [228, 250, 280], [0, 1, 0]);
 
-  // Loading + login click
-  const clicked = frame >= 175;
-  const loadingProgress = clicked ? Math.min(1, (frame - 175) / 45) : 0;
+  const outO = interp(frame, [280, 300], [1, 0]);
 
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
-      <div
-        style={{
-          transform: `translateY(${y + exitY}px) scale(${scale * exitScale}) perspective(2200px) rotateY(${rotY}deg)`,
-          opacity: enter * exitOpacity,
-          position: "relative",
-        }}
-      >
-        <BrowserFrame src="screens/login.png" width={panelW}>
-          {/* Email typed overlay - hide static field text by overlaying a matching rect */}
-          <div
-            style={{
-              position: "absolute",
-              left: panelW * 0.61,
-              top: panelH * 0.485,
-              width: panelW * 0.245,
-              height: 28,
-              display: "flex",
-              alignItems: "center",
-              paddingLeft: 30,
-              color: "#e6edf7",
-              fontSize: 15,
-              fontFamily: "Inter, sans-serif",
-              background: "#0f1626",
-            }}
-          >
-            {emailText.slice(0, emailLen)}
-            {emailLen < emailText.length && frame % 20 < 10 && (
-              <span style={{ marginLeft: 2, color: "#60a5fa" }}>|</span>
-            )}
-          </div>
-          {/* Password dots overlay */}
-          <div
-            style={{
-              position: "absolute",
-              left: panelW * 0.61,
-              top: panelH * 0.61,
-              width: panelW * 0.245,
-              height: 28,
-              display: "flex",
-              alignItems: "center",
-              paddingLeft: 30,
-              color: "#e6edf7",
-              fontSize: 20,
-              letterSpacing: 4,
-              fontFamily: "Inter, sans-serif",
-              background: "#0f1626",
-            }}
-          >
-            {"•".repeat(passLen)}
-            {passLen < 9 && frame % 20 < 10 && (
-              <span style={{ marginLeft: 2, color: "#60a5fa", fontSize: 15 }}>|</span>
-            )}
-          </div>
-          {/* Button loading overlay */}
-          {clicked && (
-            <div
-              style={{
-                position: "absolute",
-                left: panelW * 0.61,
-                top: panelH * 0.735,
-                width: panelW * 0.245,
-                height: 46,
-                borderRadius: 14,
-                background: "linear-gradient(90deg, #60a5fa, #22d3ee)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#0a0d1c",
-                fontWeight: 600,
-                fontSize: 16,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: `${loadingProgress * 100}%`,
-                  background: "rgba(255,255,255,0.35)",
-                }}
-              />
-              <span style={{ position: "relative" }}>
-                {loadingProgress < 1 ? "Jungiamės..." : "Sveikas, Lukas!"}
-              </span>
-            </div>
-          )}
-
-          <Cursor
-            path={[
-              { frame: 0, pos: { x: panelW * 0.55, y: panelH * 0.9 } },
-              { frame: 40, pos: { x: panelW * 0.68, y: panelH * 0.5 }, click: true },
-              { frame: 100, pos: { x: panelW * 0.68, y: panelH * 0.62 }, click: true },
-              { frame: 170, pos: { x: panelW * 0.73, y: panelH * 0.755 }, click: true },
-              { frame: 260, pos: { x: panelW * 0.73, y: panelH * 0.755 } },
-            ]}
-          />
-        </BrowserFrame>
+    <AbsoluteFill style={{ opacity: outO }}>
+      <AmbientBg />
+      {/* Top logo */}
+      <div style={{ position: "absolute", top: 60, left: 100 }}>
+        <Logo scale={1.1} />
       </div>
 
+      {/* Left column */}
       <div
         style={{
           position: "absolute",
-          bottom: 90,
-          fontSize: 22,
-          color: "#9aa7c2",
-          letterSpacing: 4,
-          textTransform: "uppercase",
-          opacity: interpolate(frame, [20, 40, 240, 270], [0, 1, 1, 0]),
+          top: 200,
+          left: 100,
+          width: 700,
+          opacity: leftIn,
+          transform: `translateX(${(1 - leftIn) * -30}px)`,
         }}
       >
-        01 · Vienas prisijungimas — visos rolės
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "8px 16px",
+            borderRadius: 999,
+            background: COLORS.cyanSoft,
+            color: COLORS.cyan,
+            fontWeight: 700,
+            fontSize: 13,
+            letterSpacing: 1.5,
+          }}
+        >
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: COLORS.cyan }} />
+          BETA · LIVE
+        </div>
+        <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 110, lineHeight: 1.05, color: "#fff", marginTop: 30, letterSpacing: -2 }}>
+          Prisijunk ir <br />
+          <span style={{ color: "#fff" }}>su stiliumi.</span>
+        </div>
+        <div style={{ color: COLORS.muted, fontSize: 20, marginTop: 30, lineHeight: 1.5 }}>
+          Vienas prisijungimas — visos rolės. Sistema pati nukreipia<br />
+          tave į teisingą skydą.
+        </div>
       </div>
+
+      {/* Login card */}
+      <div
+        style={{
+          position: "absolute",
+          top: 200,
+          right: 120,
+          width: 520,
+          padding: 40,
+          borderRadius: 28,
+          background: "linear-gradient(180deg, rgba(15,20,36,0.95), rgba(10,13,28,0.95))",
+          border: `1px solid ${COLORS.borderStrong}`,
+          boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(103,232,249,0.08)",
+          opacity: cardIn,
+          transform: `translateY(${(1 - cardIn) * 30}px) scale(${submitPress})`,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+          <div>
+            <div style={{ fontFamily: "'Instrument Serif', serif", color: "#fff", fontSize: 44 }}>Prisijungti</div>
+            <div style={{ color: COLORS.muted, marginTop: 6, fontSize: 15 }}>Sistema pati nukreips pagal rolę.</div>
+          </div>
+          <div
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 12,
+              background: COLORS.cyanSoft,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: COLORS.cyan,
+              fontSize: 22,
+            }}
+          >
+            ✦
+          </div>
+        </div>
+
+        {/* OAuth */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 26 }}>
+          {[
+            { name: "Google", c: "#ea4335" },
+            { name: "Discord", c: "#5865f2" },
+          ].map((p) => (
+            <div
+              key={p.name}
+              style={{
+                padding: "14px 0",
+                borderRadius: 12,
+                background: COLORS.panel2,
+                border: `1px solid ${COLORS.border}`,
+                textAlign: "center",
+                color: "#fff",
+                fontWeight: 600,
+                fontSize: 15,
+              }}
+            >
+              <span style={{ color: p.c, marginRight: 8 }}>●</span>
+              {p.name}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center", color: COLORS.muted, fontSize: 12, letterSpacing: 2, margin: "22px 0 18px" }}>
+          — ARBA EL. PAŠTU —
+        </div>
+
+        {/* Email */}
+        <div style={{ color: COLORS.muted, fontSize: 12, letterSpacing: 1.5, fontWeight: 600 }}>EL. PAŠTAS</div>
+        <div
+          style={{
+            marginTop: 8,
+            padding: "16px 18px",
+            borderRadius: 12,
+            background: "#0b1020",
+            border: `1px solid ${emailChars > 0 ? COLORS.cyanDeep : COLORS.border}`,
+            color: "#fff",
+            fontSize: 16,
+            minHeight: 22,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ color: COLORS.muted }}>@</span>
+          {EMAIL.slice(0, emailChars)}
+          {emailChars < EMAIL.length && Math.floor(frame / 8) % 2 === 0 && (
+            <span style={{ width: 2, height: 20, background: COLORS.cyan, display: "inline-block" }} />
+          )}
+        </div>
+
+        {/* Pass */}
+        <div style={{ color: COLORS.muted, fontSize: 12, letterSpacing: 1.5, fontWeight: 600, marginTop: 18 }}>SLAPTAŽODIS</div>
+        <div
+          style={{
+            marginTop: 8,
+            padding: "16px 18px",
+            borderRadius: 12,
+            background: "#0b1020",
+            border: `1px solid ${passChars > 0 ? COLORS.cyanDeep : COLORS.border}`,
+            color: "#fff",
+            fontSize: 20,
+            letterSpacing: 4,
+            minHeight: 22,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span style={{ color: COLORS.muted, fontSize: 14 }}>*</span>
+          {PASS.slice(0, passChars)}
+        </div>
+
+        {/* Submit */}
+        <div
+          style={{
+            marginTop: 28,
+            padding: "16px 0",
+            borderRadius: 12,
+            textAlign: "center",
+            color: "#0a0d1c",
+            background: "linear-gradient(135deg, #67e8f9, #22b8d4)",
+            fontWeight: 700,
+            fontSize: 17,
+            boxShadow: `0 12px 30px rgba(103,232,249,${0.3 + flash * 0.5})`,
+            transform: `scale(${1 - flash * 0.02})`,
+          }}
+        >
+          Prisijungti →
+        </div>
+
+        <div style={{ textAlign: "center", color: COLORS.muted, fontSize: 14, marginTop: 18 }}>
+          Neturi paskyros? <span style={{ color: COLORS.cyan, fontWeight: 600 }}>Registruokis</span>
+        </div>
+      </div>
+
+      <Cursor x={cx} y={cy} clicking={clicking} />
     </AbsoluteFill>
   );
 };
