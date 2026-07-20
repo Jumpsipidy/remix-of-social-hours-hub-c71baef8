@@ -10,11 +10,12 @@ import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, RefreshCw, LogIn, LogOut, Eye, Users, Download, Zap, Clock,
-  ArrowUp, ArrowDown, Activity as ActivityIcon, Globe, X, LineChart as LineIcon,
+  ArrowUp, ArrowDown, Activity as ActivityIcon, Globe, LineChart as LineIcon,
   AreaChart as AreaIcon, BarChart2, Smartphone, Tablet, Monitor, Wifi,
-  Chrome, Languages, ExternalLink, ShieldCheck,
+  Chrome, Languages, ExternalLink, ShieldCheck, Maximize2, Minimize2, MapPin, MonitorSmartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
 
