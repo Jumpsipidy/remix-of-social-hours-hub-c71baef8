@@ -1,7 +1,7 @@
 # 🔥 PILNAS SQL FIX — Socialinės Valandos
 
 Paleisk **VISĄ** šitą SQL vienu ypu savo Supabase SQL editoriuje
-(tame projekte, į kurį taikai Vercel env — rekomenduoju `ykmaveambdulceygzuwq`).
+(tavo aktyviame projekte: `bacqlmhfokfnmoexijkj`).
 
 Šis skriptas yra **idempotentinis** (galima paleisti kelis kartus) ir
 sutvarko VISKĄ ko reikia analytics, lockdown, activity log, achievements,
@@ -167,4 +167,4 @@ select 'last 5min public views',
 
 Jei po viso to Vercel vis dar rodo kitokius duomenis nei preview — reiškia
 Vercel env vis dar rodo į kitą projektą. Patikrink DevTools → Network →
-turi matyti `ykmaveambdulceygzuwq.supabase.co` užklausas.
+turi matyti `bacqlmhfokfnmoexijkj.supabase.co` užklausas.
