@@ -168,17 +168,27 @@ function AdminErrorsPage() {
   }, [live]);
 
   const filtered = useMemo(() => {
-    const f = filter.trim().toLowerCase();
+    const f = filter.trim();
+    const windowMs =
+      timeWindow === "5m" ? 5 * 60_000 :
+      timeWindow === "1h" ? 60 * 60_000 :
+      timeWindow === "24h" ? 24 * 60 * 60_000 : Infinity;
+    const cutoff = Date.now() - windowMs;
+    let rx: RegExp | null = null;
+    if (f && regexMode) {
+      try { rx = new RegExp(f, "i"); } catch { rx = null; }
+    }
+    const fl = f.toLowerCase();
     return rows.filter((r) => {
       if (kind !== "all" && r.action !== kind) return false;
+      if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
-      return (
-        (r.meta?.message ?? "").toLowerCase().includes(f) ||
-        (r.meta?.source ?? "").toLowerCase().includes(f) ||
-        (r.meta?.path ?? "").toLowerCase().includes(f)
-      );
+      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack]
+        .filter(Boolean).join(" \n ");
+      if (rx) return rx.test(haystack);
+      return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind]);
+  }, [rows, filter, kind, regexMode, timeWindow]);
 
   const now = Date.now();
   const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
