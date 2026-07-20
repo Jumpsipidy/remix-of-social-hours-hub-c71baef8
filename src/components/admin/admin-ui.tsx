@@ -91,7 +91,7 @@ export function Sparkline({
   stroke?: string;
 }) {
   // Stable per-instance IDs prevent Safari cross-SVG gradient collisions.
-  const uidRef = useRef<string>();
+  const uidRef = useRef<string | null>(null);
   if (!uidRef.current) uidRef.current = `sp${++__sparkSeq}`;
   const uid = uidRef.current;
 
