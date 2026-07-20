@@ -486,6 +486,7 @@ function Page() {
           spark={traffic.map((t) => t.Peržiūros)}
           active={activeMetrics.has("Peržiūros")}
           onClick={() => toggleMetric("Peržiūros")}
+          onExpand={() => setKpiDetail("views")}
         />
         <HeroStat
           label="Unikalūs"
@@ -497,6 +498,7 @@ function Page() {
           spark={traffic.map((t) => t.Unikalūs)}
           active={activeMetrics.has("Unikalūs")}
           onClick={() => toggleMetric("Unikalūs")}
+          onExpand={() => setKpiDetail("uniques")}
         />
         <HeroStat
           label="Prisijungimai"
@@ -508,6 +510,7 @@ function Page() {
           spark={traffic.map((t) => t.Prisijungimai)}
           active={activeMetrics.has("Prisijungimai")}
           onClick={() => toggleMetric("Prisijungimai")}
+          onExpand={() => setKpiDetail("signIns")}
         />
         <HeroStat
           label="Atsijungimai"
@@ -520,8 +523,10 @@ function Page() {
           hideDelta
           active={activeMetrics.has("Atsijungimai")}
           onClick={() => toggleMetric("Atsijungimai")}
+          onExpand={() => setKpiDetail("signOuts")}
         />
       </div>
+
 
       {/* Hint bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground">
