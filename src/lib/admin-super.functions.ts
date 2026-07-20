@@ -221,21 +221,97 @@ export const adminAnalytics = createServerFn({ method: "GET" })
     const days = Math.min(Math.max(data.days ?? 30, 1), 90);
     const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
 
-    const [rRes, pRes, mRes, rpcRes, feedRes] = await Promise.all([
+    const [rRes, pRes, mRes, rpcRes, feedRes, rawActivityRes] = await Promise.all([
       sb.from("reservations").select("id, status, hours_to_earn, created_at").gte("created_at", since),
       sb.from("profiles").select("id, role, created_at").gte("created_at", since),
       sb.from("messages").select("id, created_at").gte("created_at", since),
       sb.rpc("admin_analytics_v2", { _days: days }),
       sb.rpc("admin_recent_activity", { _limit: 80 }),
+      sb.from("activity_log").select("id, created_at, action, user_id, meta, is_admin_event").gte("created_at", since).order("created_at", { ascending: false }).limit(2500),
     ]);
-    if (rpcRes.error) throw new Error(rpcRes.error.message);
+    const fallbackRows = ((rawActivityRes.data ?? []) as Array<{
+      id: string;
+      created_at: string;
+      action: string;
+      user_id: string | null;
+      meta: Record<string, unknown> | null;
+      is_admin_event?: boolean | null;
+    }>).filter((row) => !row.is_admin_event && !String(row.meta?.path ?? "").startsWith("/admin"));
+
+    const fallbackDaily = Array.from({ length: days }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (days - 1 - i));
+      const d = date.toISOString().slice(0, 10);
+      const dayRows = fallbackRows.filter((row) => row.created_at.slice(0, 10) === d);
+      const pageRows = dayRows.filter((row) => row.action === "page.view");
+      return {
+        d,
+        views: pageRows.length,
+        uniques: new Set(pageRows.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        signins: dayRows.filter((row) => row.action === "auth.signed_in").length,
+        signouts: dayRows.filter((row) => row.action === "auth.signed_out").length,
+      };
+    });
+    const pageViews = fallbackRows.filter((row) => row.action === "page.view");
+    const countBy = (key: string, limit = 12) => Object.entries(pageViews.reduce<Record<string, number>>((acc, row) => {
+      const value = String(row.meta?.[key] ?? (key === "ref_host" ? "(direct)" : "unknown")) || "unknown";
+      acc[value] = (acc[value] ?? 0) + 1;
+      return acc;
+    }, {})).sort((a, b) => b[1] - a[1]).slice(0, limit);
+    const fallbackAnalytics: AdminAnalyticsV2 = {
+      generated_at: new Date().toISOString(),
+      range_days: days,
+      totals: {
+        views: pageViews.length,
+        uniques: new Set(pageViews.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        signins: fallbackRows.filter((row) => row.action === "auth.signed_in").length,
+        signouts: fallbackRows.filter((row) => row.action === "auth.signed_out").length,
+        sessions: new Set(fallbackRows.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        signed_in_users: new Set(fallbackRows.map((row) => row.user_id).filter(Boolean)).size,
+      },
+      prev_totals: { views: 0, uniques: 0, signins: 0, signouts: 0 },
+      active_now: pageViews.filter((row) => Date.now() - new Date(row.created_at).getTime() <= 5 * 60 * 1000).length,
+      admin_hidden_events: ((rawActivityRes.data ?? []) as Array<{ is_admin_event?: boolean | null }>).filter((row) => row.is_admin_event).length,
+      daily: fallbackDaily,
+      hourly: Array.from({ length: 24 }, (_, h) => {
+        const rows = fallbackRows.filter((row) => new Date(row.created_at).getHours() === h);
+        const views = rows.filter((row) => row.action === "page.view");
+        return { h, views: views.length, signins: rows.filter((row) => row.action === "auth.signed_in").length, uniques: new Set(views.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size };
+      }),
+      weekday: Array.from({ length: 7 }, (_, w) => ({ w, views: pageViews.filter((row) => new Date(row.created_at).getDay() === w).length })),
+      top_pages: Object.entries(pageViews.reduce<Record<string, { n: number; u: Set<string> }>>((acc, row) => {
+        const path = String(row.meta?.path ?? "/");
+        acc[path] ??= { n: 0, u: new Set() };
+        acc[path].n += 1;
+        acc[path].u.add(String(row.meta?.session_id ?? row.user_id ?? row.id));
+        return acc;
+      }, {})).sort((a, b) => b[1].n - a[1].n).slice(0, 15).map(([path, value]) => ({ path, n: value.n, u: value.u.size })),
+      devices: countBy("device").map(([device, n]) => ({ device, n })),
+      browsers: countBy("browser").map(([browser, n]) => ({ browser, n })),
+      os: countBy("os").map(([os, n]) => ({ os, n })),
+      referrers: countBy("ref_host").map(([host, n]) => ({ host: host || "(direct)", n })),
+      languages: countBy("lang").map(([lang, n]) => ({ lang, n })),
+    };
 
     return {
       reservations: rRes.data ?? [],
       profiles: pRes.data ?? [],
       messages: mRes.data ?? [],
-      analytics: rpcRes.data as AdminAnalyticsV2,
-      feed: (feedRes.data ?? []) as FeedRow[],
+      analytics: rpcRes.error ? fallbackAnalytics : rpcRes.data as AdminAnalyticsV2,
+      feed: (feedRes.error ? fallbackRows.slice(0, 80).map((row) => ({
+        id: row.id,
+        created_at: row.created_at,
+        action: row.action,
+        user_id: row.user_id,
+        path: String(row.meta?.path ?? "/"),
+        device: String(row.meta?.device ?? "unknown"),
+        browser: String(row.meta?.browser ?? "unknown"),
+        os: String(row.meta?.os ?? "unknown"),
+        ref_host: String(row.meta?.ref_host ?? ""),
+        lang: String(row.meta?.lang ?? ""),
+        user_name: null,
+        user_role: null,
+      })) : feedRes.data ?? []) as FeedRow[],
     };
   });
 
