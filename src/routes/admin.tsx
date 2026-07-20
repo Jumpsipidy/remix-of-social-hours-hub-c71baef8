@@ -22,6 +22,7 @@ import {
   BarChart3,
   Lock,
   MoreHorizontal,
+  AlertTriangle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -43,6 +44,7 @@ const NAV: NavItem[] = [
   { to: "/admin/schools", label: "Mokyklos & kodai", icon: GraduationCap },
   { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
   { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
+  { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
   { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
   { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
 ];
