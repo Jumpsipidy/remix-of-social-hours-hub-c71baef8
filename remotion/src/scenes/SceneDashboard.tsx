@@ -144,7 +144,7 @@ export const SceneDashboard: React.FC = () => {
             marginTop: 10,
           }}
         >
-          Sveika, <span style={{ fontStyle: "italic", color: "#7dd3fc" }}>Lukas</span> 👋
+          Sveika, <span style={{ fontStyle: "italic", color: "#7dd3fc" }}>Lukas</span>
         </div>
       </div>
 

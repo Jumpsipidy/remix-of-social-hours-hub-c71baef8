@@ -56,7 +56,7 @@ const TaskCard: React.FC<{
         >
           #{task.tag}
         </span>
-        <span style={{ fontSize: 12, color: "#8b96ad" }}>📍 {task.city}</span>
+        <span style={{ fontSize: 12, color: "#8b96ad" }}>• {task.city}</span>
       </div>
       <div style={{ fontSize: 17, fontWeight: 600, color: "#f4f7ff", lineHeight: 1.25 }}>
         {task.title}
@@ -65,7 +65,7 @@ const TaskCard: React.FC<{
       <div style={{ flex: 1 }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 13, color: "#7dd3fc", fontWeight: 600 }}>
-          ⏱ {task.hours} val.
+          {task.hours} val.
         </span>
         <span
           style={{

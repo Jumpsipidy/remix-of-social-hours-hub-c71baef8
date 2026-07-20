@@ -76,7 +76,7 @@ export const SceneCertificate: React.FC = () => {
               transform: `scale(${1 + buttonPulse * 0.06})`,
             }}
           >
-            📄 PDF sertifikatas (20/20 val.)
+            ↓ PDF sertifikatas (20/20 val.)
           </div>
           {buttonPulse > 0 && (
             <div
@@ -105,7 +105,7 @@ export const SceneCertificate: React.FC = () => {
               minWidth: 320,
             }}
           >
-            <div style={{ fontSize: 22 }}>⬇</div>
+            <div style={{ fontSize: 22 }}>↓</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, color: "#f4f7ff", fontWeight: 600 }}>
                 sertifikatas-SV-L4UR-CN8M-ORQ8.pdf
