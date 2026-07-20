@@ -25,9 +25,7 @@ import {
   Plus,
   Globe,
   Filter,
-  Keyboard,
-  Play,
-  Pause,
+  Filter,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
