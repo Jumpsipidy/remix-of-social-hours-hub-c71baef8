@@ -70,7 +70,7 @@ function StudentDashboard() {
       .order("reservation_date", { ascending: false });
     const rs = (data as Reservation[]) ?? [];
     setReservations(rs);
-    const ids = Array.from(new Set(rs.map((r) => r.organization_id)));
+    const ids = Array.from(new Set(rs.map((r) => r.organization_id).filter((v): v is string => !!v)));
     if (ids.length) {
       const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
       const m: Record<string, OrgLite> = {};
