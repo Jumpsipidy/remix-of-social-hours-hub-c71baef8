@@ -21,8 +21,9 @@ export type Database = {
           entity_id: string | null
           entity_type: string | null
           id: string
+          is_admin_event: boolean
           meta: Json
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           action: string
@@ -30,8 +31,9 @@ export type Database = {
           entity_id?: string | null
           entity_type?: string | null
           id?: string
+          is_admin_event?: boolean
           meta?: Json
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           action?: string
@@ -39,8 +41,9 @@ export type Database = {
           entity_id?: string | null
           entity_type?: string | null
           id?: string
+          is_admin_event?: boolean
           meta?: Json
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -295,6 +298,83 @@ export type Database = {
           id?: string
           requester_id?: string
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gsc_daily: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number
+          date: string
+          id: string
+          impressions: number
+          position: number
+          property_id: string
+          top_page: string | null
+          top_query: string | null
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          date: string
+          id?: string
+          impressions?: number
+          position?: number
+          property_id: string
+          top_page?: string | null
+          top_query?: string | null
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          date?: string
+          id?: string
+          impressions?: number
+          position?: number
+          property_id?: string
+          top_page?: string | null
+          top_query?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsc_daily_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "gsc_properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gsc_properties: {
+        Row: {
+          connected: boolean
+          created_at: string
+          id: string
+          label: string | null
+          last_sync_at: string | null
+          site_url: string
+          updated_at: string
+        }
+        Insert: {
+          connected?: boolean
+          created_at?: string
+          id?: string
+          label?: string | null
+          last_sync_at?: string | null
+          site_url: string
+          updated_at?: string
+        }
+        Update: {
+          connected?: boolean
+          created_at?: string
+          id?: string
+          label?: string | null
+          last_sync_at?: string | null
+          site_url?: string
           updated_at?: string
         }
         Relationships: []
@@ -796,6 +876,8 @@ export type Database = {
           user_role: string
         }[]
       }
+      analytics_prune: { Args: { _days?: number }; Returns: number }
+      analytics_reset: { Args: never; Returns: number }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
       auto_lockdown_if_unhealthy: { Args: never; Returns: Json }
       award_reservation_hours: {
