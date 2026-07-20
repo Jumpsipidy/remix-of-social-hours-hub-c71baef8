@@ -126,8 +126,21 @@ function AdminErrorsPage() {
   const [section, setSection] = useState<Section>("overview");
   const [mobileNav, setMobileNav] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [ignoreRules, setIgnoreRules] = useState<string[]>([]);
+  const [showIgnored, setShowIgnored] = useState(false);
+  const [autoMs, setAutoMs] = useState<number>(0);
+  const [testing, setTesting] = useState(false);
+  const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+
+  useEffect(() => {
+    setIgnoreRules(loadIgnore());
+    try {
+      const v = Number(localStorage.getItem(AUTO_KEY));
+      if (Number.isFinite(v) && v > 0) setAutoMs(v);
+    } catch {}
+  }, []);
 
   const load = async () => {
     setLoading(true);
