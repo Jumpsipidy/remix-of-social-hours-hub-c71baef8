@@ -45,7 +45,9 @@ import {
   AreaChart as AreaIcon,
   BarChart2,
   MousePointerClick,
+  Maximize2,
 } from "lucide-react";
+import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
@@ -146,6 +148,7 @@ function Page() {
   const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
   const [drilldownPath, setDrilldownPath] = useState<string | null>(null);
   const [drilldownStatus, setDrilldownStatus] = useState<string | null>(null);
+  const [kpiDetail, setKpiDetail] = useState<KpiKind | null>(null);
 
   const toggleMetric = useCallback((m: MetricKey) => {
     setActiveMetrics((prev) => {
@@ -483,6 +486,7 @@ function Page() {
           spark={traffic.map((t) => t.Peržiūros)}
           active={activeMetrics.has("Peržiūros")}
           onClick={() => toggleMetric("Peržiūros")}
+          onExpand={() => setKpiDetail("views")}
         />
         <HeroStat
           label="Unikalūs"
@@ -494,6 +498,7 @@ function Page() {
           spark={traffic.map((t) => t.Unikalūs)}
           active={activeMetrics.has("Unikalūs")}
           onClick={() => toggleMetric("Unikalūs")}
+          onExpand={() => setKpiDetail("uniques")}
         />
         <HeroStat
           label="Prisijungimai"
@@ -505,6 +510,7 @@ function Page() {
           spark={traffic.map((t) => t.Prisijungimai)}
           active={activeMetrics.has("Prisijungimai")}
           onClick={() => toggleMetric("Prisijungimai")}
+          onExpand={() => setKpiDetail("signIns")}
         />
         <HeroStat
           label="Atsijungimai"
@@ -517,8 +523,10 @@ function Page() {
           hideDelta
           active={activeMetrics.has("Atsijungimai")}
           onClick={() => toggleMetric("Atsijungimai")}
+          onExpand={() => setKpiDetail("signOuts")}
         />
       </div>
+
 
       {/* Hint bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-border/60 bg-card/40 px-3 py-2 text-[11px] text-muted-foreground">
@@ -913,6 +921,15 @@ function Page() {
         activity={data?.activity ?? []}
         rangeSince={rangeSince}
       />
+
+      {/* KPI detail modal — rich motion drill-down opened from any KPI card */}
+      <KpiDetailModal
+        kind={kpiDetail}
+        onClose={() => setKpiDetail(null)}
+        activity={data?.activity ?? []}
+        rangeSince={rangeSince}
+        rangeDays={range}
+      />
     </div>
   );
 }
@@ -1034,6 +1051,7 @@ function HeroStat({
   hideDelta,
   active = true,
   onClick,
+  onExpand,
 }: {
   label: string;
   value: number;
@@ -1045,6 +1063,7 @@ function HeroStat({
   hideDelta?: boolean;
   active?: boolean;
   onClick?: () => void;
+  onExpand?: () => void;
 }) {
   const up = delta >= 0;
   // Magnetic tilt on mouse move
@@ -1094,8 +1113,22 @@ function HeroStat({
       <div className="relative">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
-            <Icon className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5">
+            {onExpand && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onExpand(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onExpand(); } }}
+                title="Detalus vaizdas"
+                className="grid h-6 w-6 cursor-pointer place-items-center rounded-md border border-white/10 bg-white/5 text-muted-foreground opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-white/10 hover:text-foreground"
+              >
+                <Maximize2 className="h-3 w-3" />
+              </span>
+            )}
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
           </div>
         </div>
         <p className="mt-2 font-display text-3xl font-bold tracking-tight">
