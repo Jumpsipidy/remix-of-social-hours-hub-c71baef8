@@ -450,8 +450,21 @@ function Page() {
             CSV
           </button>
           <button
+            onClick={() => setAutoRefresh((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold backdrop-blur transition ${
+              autoRefresh
+                ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300"
+                : "border-border bg-card/70 hover:bg-accent"
+            }`}
+            title="Automatiškai atnaujinti kas 15 s"
+          >
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRefresh ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"}`} />
+            {autoRefresh ? "Live" : "Auto"}
+          </button>
+          <button
             onClick={() => refresh()}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur transition hover:bg-accent"
+            title={lastRefreshAt ? `Atnaujinta ${lastRefreshAt.toLocaleTimeString("lt-LT")}` : "Atnaujinti"}
           >
             <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
           </button>
