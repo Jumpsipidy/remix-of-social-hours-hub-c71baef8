@@ -13,16 +13,24 @@ import {
   Bug,
   Search,
   X,
+  LayoutDashboard,
+  Radio,
+  BarChart3,
+  ListOrdered,
+  Settings2,
+  Menu,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { AdminAurora, SaaSPanel, SectionHeader, Sparkline } from "@/components/admin/admin-ui";
+import { AdminAurora, SaaSPanel, Sparkline } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
 
 export const Route = createFileRoute("/admin/errors")({
-  head: () => ({ meta: [{ title: "Klaidos — Sistemos administracija" }] }),
+  head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
   component: AdminErrorsPage,
 });
 
@@ -72,6 +80,17 @@ const KIND_STYLE: Record<string, string> = {
 
 const CRITICAL_KINDS = new Set(["client.error", "app.critical"]);
 
+type Section = "overview" | "live" | "analytics" | "top" | "lockdown" | "settings";
+
+const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[] = [
+  { id: "overview", label: "Apžvalga", icon: LayoutDashboard, hint: "KPI + srautas" },
+  { id: "live", label: "Live srautas", icon: Radio, hint: "Realaus laiko sąrašas" },
+  { id: "analytics", label: "Analitika", icon: BarChart3, hint: "24h trendai" },
+  { id: "top", label: "Dažniausios", icon: ListOrdered, hint: "Grupuota pagal žinutę" },
+  { id: "lockdown", label: "Auto-lockdown", icon: ShieldAlert, hint: "Slenkstis ir valdymas" },
+  { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Išvalyti / eksportuoti" },
+];
+
 function AdminErrorsPage() {
   const [rows, setRows] = useState<ErrRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +100,10 @@ function AdminErrorsPage() {
   const [site, setSite] = useState<SiteSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(true);
+  const [section, setSection] = useState<Section>("overview");
+  const [mobileNav, setMobileNav] = useState(false);
+  const clearFn = useServerFn(clearAllErrors);
+  const deleteFn = useServerFn(deleteErrorRow);
 
   const load = async () => {
     setLoading(true);
@@ -106,11 +129,12 @@ function AdminErrorsPage() {
   useEffect(() => {
     void load();
     const channel = supabase
-      .channel("admin-errors-v2")
+      .channel("admin-errors-v3")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "activity_log" },
         (payload) => {
+          if (!live) return;
           const row = payload.new as ErrRow;
           if (
             row.action === "client.error" ||
@@ -136,7 +160,7 @@ function AdminErrorsPage() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [live]);
 
   const filtered = useMemo(() => {
     const f = filter.trim().toLowerCase();
@@ -151,13 +175,11 @@ function AdminErrorsPage() {
     });
   }, [rows, filter, kind]);
 
-  // ----- stats -----
   const now = Date.now();
   const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
   const last5m = rows.filter((r) => now - new Date(r.created_at).getTime() < 300_000);
   const criticalRecent = last5m.filter((r) => CRITICAL_KINDS.has(r.action));
 
-  // Sparkline: last 24h in 30-min buckets
   const spark = useMemo(() => {
     const buckets = new Array(48).fill(0);
     const cutoff = now - 24 * 3_600_000;
@@ -168,13 +190,13 @@ function AdminErrorsPage() {
       buckets[idx] += 1;
     }
     return buckets;
-  }, [rows, now]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
 
-  // Grouped: top messages
   const topMessages = useMemo(() => {
     const map = new Map<string, { count: number; last: string; action: string }>();
-    for (const r of rows.slice(0, 200)) {
-      const key = (r.meta?.message ?? "(no message)").slice(0, 120);
+    for (const r of rows.slice(0, 300)) {
+      const key = (r.meta?.message ?? "(no message)").slice(0, 140);
       const prev = map.get(key);
       if (prev) {
         prev.count += 1;
@@ -185,20 +207,32 @@ function AdminErrorsPage() {
     }
     return Array.from(map.entries())
       .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 6);
+      .slice(0, 10);
   }, [rows]);
 
   const clear = async () => {
     if (!confirm("Ištrinti visas klaidas iš žurnalo?")) return;
     setBusy(true);
-    const { error } = await supabase
-      .from("activity_log")
-      .delete()
-      .in("action", ["client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"]);
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Klaidos išvalytos");
-    void load();
+    try {
+      const res = await clearFn({});
+      toast.success(`Ištrinta ${res.deleted} įrašų`);
+      setRows([]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko ištrinti");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteOne = async (id: string) => {
+    try {
+      await deleteFn({ data: { id } });
+      setRows((r) => r.filter((x) => x.id !== id));
+      if (selected?.id === id) setSelected(null);
+      toast.success("Ištrinta");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    }
   };
 
   const toggleLockdown = async (enable: boolean) => {
@@ -218,333 +252,539 @@ function AdminErrorsPage() {
   };
 
   const lockdown = site?.lockdown_enabled === true;
-  const criticalPressure = criticalRecent.length; // 0-∞
+  const criticalPressure = criticalRecent.length;
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(rows, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `errors-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
       <AdminAurora />
-      <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-center gap-3">
+
+      {/* Cinematic back button — spring-scaled, glowing */}
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
           <Link
             to="/admin"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="group inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-2 text-sm font-semibold backdrop-blur-xl transition hover:border-primary/50 hover:bg-primary/10"
           >
-            <ArrowLeft className="h-4 w-4" /> Atgal
+            <motion.span whileHover={{ x: -3 }} className="grid h-6 w-6 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </motion.span>
+            <span>Atgal į Super Admin</span>
           </Link>
-          <SectionHeader
-            eyebrow="Sistemos stebėsena"
-            title="Klaidų centras"
-            description="Realaus laiko klaidos, auto-lockdown ir SaaS diagnostika."
-            icon={Bug}
-            action={
-              <div className="flex items-center gap-2">
-                <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={live}
-                    onChange={(e) => setLive(e.target.checked)}
-                    className="accent-primary"
-                  />
-                  <span className="inline-flex items-center gap-1">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-muted"}`}
-                    />
-                    Live
-                  </span>
-                </label>
-                <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-                  <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Atnaujinti
-                </Button>
-              </div>
-            }
-          />
-        </div>
-
-        {/* Lockdown banner */}
-        <motion.div layout>
-          <SaaSPanel
-            className={
-              lockdown
-                ? "border-rose-500/50 bg-rose-500/5"
-                : criticalPressure >= 2
-                  ? "border-amber-500/50 bg-amber-500/5"
-                  : ""
-            }
-          >
-            <div className="flex flex-wrap items-center gap-4">
-              <motion.div
-                animate={lockdown ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                transition={{ repeat: lockdown ? Infinity : 0, duration: 1.4 }}
-                className={`relative flex h-14 w-14 items-center justify-center rounded-2xl border ${
-                  lockdown
-                    ? "border-rose-500/50 bg-rose-500/10 text-rose-300"
-                    : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                }`}
-              >
-                {lockdown ? <ShieldAlert className="h-7 w-7" /> : <ShieldCheck className="h-7 w-7" />}
-                {lockdown && (
-                  <span className="absolute inset-0 -z-10 animate-ping rounded-2xl bg-rose-500/30" />
-                )}
-              </motion.div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-                  Auto-lockdown būsena
-                </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`text-xl font-black tracking-tight ${lockdown ? "text-rose-300" : "text-emerald-300"}`}
-                  >
-                    {lockdown ? "LOCKDOWN" : "SVEIKAS"}
-                  </span>
-                  {site?.lockdown_code && lockdown && (
-                    <code className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200">
-                      {site.lockdown_code}
-                    </code>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    Kritinės per 5 min: <b className="text-foreground">{criticalPressure}</b> / 3
-                  </span>
-                </div>
-                {lockdown && site?.lockdown_message && (
-                  <p className="mt-1 line-clamp-2 text-xs text-rose-200/80">{site.lockdown_message}</p>
-                )}
-                {!lockdown && criticalPressure > 0 && (
-                  <p className="mt-1 text-xs text-amber-300/90">
-                    {criticalPressure >= 3
-                      ? "Slenkstis pasiektas — kitas kritinis triggeris auto-užrakins."
-                      : `Auto-lockdown suveiks kai bus ≥3 kritinės klaidos per 5 min.`}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {lockdown ? (
-                  <Button
-                    onClick={() => toggleLockdown(false)}
-                    disabled={busy}
-                    className="bg-emerald-500 text-black hover:bg-emerald-400"
-                  >
-                    <ShieldCheck className="mr-1 h-4 w-4" /> Išjungti lockdown
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    onClick={() => toggleLockdown(true)}
-                    disabled={busy}
-                  >
-                    <ShieldAlert className="mr-1 h-4 w-4" /> Užrakinti dabar
-                  </Button>
-                )}
-              </div>
-            </div>
-            {/* Pressure bar */}
-            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted/50">
-              <motion.div
-                initial={false}
-                animate={{ width: `${Math.min(100, (criticalPressure / 3) * 100)}%` }}
-                transition={{ type: "spring", stiffness: 120, damping: 20 }}
-                className={`h-full ${
-                  criticalPressure >= 3
-                    ? "bg-gradient-to-r from-rose-500 to-fuchsia-500"
-                    : criticalPressure >= 2
-                      ? "bg-amber-400"
-                      : "bg-emerald-500"
-                }`}
-              />
-            </div>
-          </SaaSPanel>
         </motion.div>
+        <button
+          onClick={() => setMobileNav(true)}
+          className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur-xl md:hidden"
+          aria-label="Klaidų sekcijos"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+      </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard
-            label="Iš viso (500)"
-            value={rows.length}
-            icon={Activity}
-            accent="text-primary"
-          />
-          <StatCard
-            label="Paskutinė val."
-            value={lastHour.length}
-            icon={Zap}
-            accent="text-amber-300"
-          />
-          <StatCard
-            label="Kritinės 5min"
-            value={criticalRecent.length}
-            icon={AlertTriangle}
-            accent={criticalRecent.length >= 3 ? "text-rose-300" : "text-fuchsia-300"}
-          />
-          <StatCard
-            label="Email siųsta"
-            value={rows.filter((r) => r.action === "app.email_sent").length}
-            icon={Mail}
-            accent="text-cyan-300"
-          />
+      {/* Header stripe */}
+      <SaaSPanel className="mb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
+            <Bug className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary">Sistemos stebėsena</p>
+            <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">Klaidų centras</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="hidden cursor-pointer items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
+              <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} className="accent-primary" />
+              <span className="inline-flex items-center gap-1">
+                <span className={`inline-block h-2 w-2 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-muted"}`} />
+                Live
+              </span>
+            </label>
+            <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+              <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Atnaujinti</span>
+            </Button>
+          </div>
         </div>
+      </SaaSPanel>
 
-        {/* 24h sparkline */}
-        <SaaSPanel>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-                Klaidų srautas · 24h
-              </div>
-              <div className="mt-0.5 text-lg font-semibold">
-                {spark.reduce((a, b) => a + b, 0)}{" "}
-                <span className="text-xs font-normal text-muted-foreground">įvykių</span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-3">
-            <Sparkline values={spark} className="!h-16" />
-          </div>
-        </SaaSPanel>
-
-        {/* Top repeating errors */}
-        {topMessages.length > 0 && (
-          <SaaSPanel>
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-              Dažniausios klaidos
-            </div>
-            <div className="mt-3 space-y-2">
-              {topMessages.map(([msg, info]) => (
+      {/* Grid: internal sidebar + content */}
+      <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+        {/* Desktop internal sidebar */}
+        <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border/70 bg-card/60 p-2 backdrop-blur-xl md:block">
+          <nav className="flex flex-col gap-1">
+            {SECTIONS.map((s) => {
+              const Icon = s.icon;
+              const active = section === s.id;
+              return (
                 <button
-                  key={msg}
-                  onClick={() => setFilter(msg.slice(0, 40))}
-                  className="group flex w-full items-center gap-3 rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                  key={s.id}
+                  onClick={() => setSection(s.id)}
+                  className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                    active
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
                 >
-                  <span
-                    className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[info.action] ?? ""}`}
-                  >
-                    {KIND_LABEL[info.action] ?? info.action}
-                  </span>
-                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{msg}</span>
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold tabular-nums">
-                    ×{info.count}
+                  {active && (
+                    <motion.span
+                      layoutId="err-nav-active"
+                      className="absolute inset-0 -z-10 rounded-xl bg-gradient-primary shadow-glow"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{s.label}</span>
+                    <span className={`block truncate text-[10px] ${active ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>{s.hint}</span>
                   </span>
                 </button>
-              ))}
+              );
+            })}
+          </nav>
+          <div className="mt-2 rounded-xl border border-border/50 bg-background/40 p-3 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <span className={`inline-block h-2 w-2 rounded-full ${live ? "animate-pulse bg-emerald-400" : "bg-muted"}`} />
+              {live ? "Live streamas" : "Live sustabdytas"}
             </div>
-          </SaaSPanel>
-        )}
-
-        {/* Filters */}
-        <SaaSPanel padded={false}>
-          <div className="flex flex-wrap items-center gap-2 p-3">
-            <div className="relative min-w-[200px] flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Ieškoti pagal žinutę, šaltinį, kelią…"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="pl-8"
-              />
-              {filter && (
-                <button
-                  onClick={() => setFilter("")}
-                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {(["all", "client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"] as const).map(
-                (k) => {
-                  const active = kind === k;
-                  const count = k === "all" ? rows.length : rows.filter((r) => r.action === k).length;
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => setKind(k)}
-                      className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
-                        active
-                          ? "border-primary/60 bg-primary/15 text-primary"
-                          : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                      }`}
-                    >
-                      {k === "all" ? "Visos" : KIND_LABEL[k]}{" "}
-                      <span className="ml-1 tabular-nums opacity-70">{count}</span>
-                    </button>
-                  );
-                },
-              )}
-            </div>
-            <div className="ml-auto flex gap-2">
-              <Button variant="destructive" size="sm" onClick={clear} disabled={busy}>
-                <Trash2 className="mr-1 h-4 w-4" /> Išvalyti
-              </Button>
-            </div>
+            <div className="mt-1 tabular-nums">{rows.length} įrašų atmintyje</div>
           </div>
-        </SaaSPanel>
+        </aside>
 
-        {/* List */}
-        <div className="space-y-2">
-          {filtered.length === 0 && !loading && (
-            <SaaSPanel>
-              <div className="p-10 text-center">
-                <ShieldCheck className="mx-auto h-10 w-10 text-emerald-400" />
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Klaidų nėra pagal šį filtrą — sistema švari 🎉
-                </p>
-              </div>
-            </SaaSPanel>
-          )}
-          <AnimatePresence initial={false}>
-            {filtered.map((r) => (
-              <motion.button
-                key={r.id}
-                layout
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
+        {/* Mobile drawer */}
+        <AnimatePresence>
+          {mobileNav && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                onClick={() => setSelected(r)}
-                className="block w-full text-left"
+                onClick={() => setMobileNav(false)}
+                className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm md:hidden"
+              />
+              <motion.aside
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                className="fixed right-0 top-0 z-[91] flex h-full w-[86%] max-w-[320px] flex-col border-l border-border bg-card/95 p-4 shadow-2xl backdrop-blur-xl md:hidden"
               >
-                <SaaSPanel className="transition hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.3)]">
-                  <div className="space-y-1 text-sm">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${KIND_STYLE[r.action] ?? ""}`}
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+                      <Bug className="h-4 w-4" />
+                    </div>
+                    <span className="font-display text-sm font-bold">Klaidų centras</span>
+                  </div>
+                  <button onClick={() => setMobileNav(false)} className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <nav className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto">
+                  {SECTIONS.map((s) => {
+                    const Icon = s.icon;
+                    const active = section === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          setSection(s.id);
+                          setMobileNav(false);
+                        }}
+                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium ${
+                          active ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-accent/60"
+                        }`}
                       >
-                        {KIND_LABEL[r.action] ?? r.action}
-                      </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {relTime(r.created_at)}
-                      </span>
-                      {r.meta?.path && (
-                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.meta.path}</code>
-                      )}
-                      {r.meta?.source && (
-                        <span className="text-xs text-muted-foreground">via {r.meta.source}</span>
-                      )}
-                      {r.meta?.lockdown && (
-                        <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">
-                          LOCKDOWN
+                        <Icon className="h-4 w-4" />
+                        <span className="flex-1">
+                          <span className="block">{s.label}</span>
+                          <span className={`block text-[10px] ${active ? "text-primary-foreground/70" : "text-muted-foreground/70"}`}>{s.hint}</span>
                         </span>
-                      )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Section content */}
+        <div className="min-w-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={section}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22 }}
+              className="space-y-4"
+            >
+              {section === "overview" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    <StatCard label="Iš viso (500)" value={rows.length} icon={Activity} accent="text-primary" />
+                    <StatCard label="Paskutinė val." value={lastHour.length} icon={Zap} accent="text-amber-300" />
+                    <StatCard
+                      label="Kritinės 5min"
+                      value={criticalRecent.length}
+                      icon={AlertTriangle}
+                      accent={criticalRecent.length >= 3 ? "text-rose-300" : "text-fuchsia-300"}
+                    />
+                    <StatCard
+                      label="Email siųsta"
+                      value={rows.filter((r) => r.action === "app.email_sent").length}
+                      icon={Mail}
+                      accent="text-cyan-300"
+                    />
+                  </div>
+
+                  <SaaSPanel>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Klaidų srautas · 24h</div>
+                        <div className="mt-0.5 text-lg font-semibold">
+                          {spark.reduce((a, b) => a + b, 0)}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">įvykių</span>
+                        </div>
+                      </div>
+                      <span className="rounded-full border border-border/50 bg-background/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        30-min buckets
+                      </span>
                     </div>
-                    <div className="line-clamp-2 break-words font-mono text-[13px] text-rose-200/90">
-                      {r.meta?.message ?? "(no message)"}
+                    <div className="mt-3">
+                      <Sparkline values={spark} className="!h-20" />
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {[r.meta?.browser, r.meta?.os, r.meta?.device].filter(Boolean).join(" • ")}
+                  </SaaSPanel>
+
+                  <LockdownBanner
+                    lockdown={lockdown}
+                    site={site}
+                    criticalPressure={criticalPressure}
+                    busy={busy}
+                    onToggle={toggleLockdown}
+                    compact
+                  />
+                </>
+              )}
+
+              {section === "live" && (
+                <>
+                  <SaaSPanel padded={false}>
+                    <div className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="relative min-w-[200px] flex-1">
+                        <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Ieškoti pagal žinutę, šaltinį, kelią…"
+                          value={filter}
+                          onChange={(e) => setFilter(e.target.value)}
+                          className="pl-8"
+                        />
+                        {filter && (
+                          <button onClick={() => setFilter("")} className="absolute right-2 top-2 text-muted-foreground hover:text-foreground">
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(["all", "client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"] as const).map((k) => {
+                          const active = kind === k;
+                          const count = k === "all" ? rows.length : rows.filter((r) => r.action === k).length;
+                          return (
+                            <button
+                              key={k}
+                              onClick={() => setKind(k)}
+                              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                                active
+                                  ? "border-primary/60 bg-primary/15 text-primary"
+                                  : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                              }`}
+                            >
+                              {k === "all" ? "Visos" : KIND_LABEL[k]} <span className="ml-1 tabular-nums opacity-70">{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </SaaSPanel>
+
+                  <div className="space-y-2">
+                    {filtered.length === 0 && !loading && (
+                      <SaaSPanel>
+                        <div className="p-10 text-center">
+                          <ShieldCheck className="mx-auto h-10 w-10 text-emerald-400" />
+                          <p className="mt-3 text-sm text-muted-foreground">Klaidų nėra pagal šį filtrą — sistema švari 🎉</p>
+                        </div>
+                      </SaaSPanel>
+                    )}
+                    <AnimatePresence initial={false}>
+                      {filtered.map((r) => (
+                        <motion.div
+                          key={r.id}
+                          layout
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <SaaSPanel className="group transition hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.3)]">
+                            <div className="flex items-start gap-2">
+                              <button onClick={() => setSelected(r)} className="min-w-0 flex-1 text-left">
+                                <div className="space-y-1 text-sm">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${KIND_STYLE[r.action] ?? ""}`}>
+                                      {KIND_LABEL[r.action] ?? r.action}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground tabular-nums">{relTime(r.created_at)}</span>
+                                    {r.meta?.path && <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.meta.path}</code>}
+                                    {r.meta?.source && <span className="text-xs text-muted-foreground">via {r.meta.source}</span>}
+                                    {r.meta?.lockdown && (
+                                      <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">LOCKDOWN</span>
+                                    )}
+                                  </div>
+                                  <div className="line-clamp-2 break-words font-mono text-[13px] text-rose-200/90">
+                                    {r.meta?.message ?? "(no message)"}
+                                  </div>
+                                  <div className="text-[11px] text-muted-foreground">
+                                    {[r.meta?.browser, r.meta?.os, r.meta?.device].filter(Boolean).join(" • ")}
+                                  </div>
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => deleteOne(r.id)}
+                                className="shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-rose-500/10 hover:text-rose-300 group-hover:opacity-100"
+                                aria-label="Ištrinti"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </SaaSPanel>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </>
+              )}
+
+              {section === "analytics" && (
+                <>
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Pasiskirstymas pagal tipą</div>
+                    <div className="mt-3 space-y-2">
+                      {(["client.error", "supabase.error", "app.critical", "app.warning", "app.email_sent"] as const).map((k) => {
+                        const count = rows.filter((r) => r.action === k).length;
+                        const pct = rows.length ? (count / rows.length) * 100 : 0;
+                        return (
+                          <div key={k}>
+                            <div className="mb-1 flex items-center justify-between text-xs">
+                              <span className="font-medium">{KIND_LABEL[k]}</span>
+                              <span className="tabular-nums text-muted-foreground">
+                                {count} · {pct.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-muted/40">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${pct}%` }}
+                                transition={{ type: "spring", stiffness: 120, damping: 24 }}
+                                className={`h-full ${
+                                  k === "app.critical" || k === "client.error"
+                                    ? "bg-gradient-to-r from-rose-500 to-fuchsia-500"
+                                    : k === "supabase.error"
+                                      ? "bg-amber-400"
+                                      : k === "app.email_sent"
+                                        ? "bg-cyan-400"
+                                        : "bg-yellow-400"
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </SaaSPanel>
+
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">24h srautas</div>
+                    <div className="mt-3">
+                      <Sparkline values={spark} className="!h-28" />
+                    </div>
+                    <div className="mt-2 flex justify-between text-[10px] text-muted-foreground">
+                      <span>prieš 24h</span>
+                      <span>dabar</span>
+                    </div>
+                  </SaaSPanel>
+                </>
+              )}
+
+              {section === "top" && (
+                <SaaSPanel>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Dažniausios klaidos (top 10)</div>
+                  {topMessages.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">Nėra duomenų.</p>
+                  ) : (
+                    <div className="mt-3 space-y-2">
+                      {topMessages.map(([msg, info]) => (
+                        <button
+                          key={msg}
+                          onClick={() => {
+                            setFilter(msg.slice(0, 40));
+                            setSection("live");
+                          }}
+                          className="group flex w-full items-center gap-3 rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[info.action] ?? ""}`}>
+                            {KIND_LABEL[info.action] ?? info.action}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate font-mono text-xs">{msg}</span>
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold tabular-nums">×{info.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </SaaSPanel>
+              )}
+
+              {section === "lockdown" && (
+                <LockdownBanner
+                  lockdown={lockdown}
+                  site={site}
+                  criticalPressure={criticalPressure}
+                  busy={busy}
+                  onToggle={toggleLockdown}
+                />
+              )}
+
+              {section === "settings" && (
+                <SaaSPanel>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Priežiūra</div>
+                  <div className="mt-3 space-y-3">
+                    <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">Eksportuoti JSON</p>
+                          <p className="text-xs text-muted-foreground">Atsisiųsti visus atmintyje esančius įrašus (iki 500).</p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={exportJson}>
+                          Eksportuoti
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-rose-200">Išvalyti visas klaidas</p>
+                          <p className="text-xs text-rose-200/70">Ištrinti visus client.error / supabase.error / app.* įrašus.</p>
+                        </div>
+                        <Button variant="destructive" size="sm" onClick={clear} disabled={busy}>
+                          <Trash2 className="mr-1 h-4 w-4" /> Išvalyti visus
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </SaaSPanel>
-              </motion.button>
-            ))}
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Detail modal */}
-      <AnimatePresence>
-        {selected && <DetailModal row={selected} onClose={() => setSelected(null)} />}
-      </AnimatePresence>
+      <AnimatePresence>{selected && <DetailModal row={selected} onClose={() => setSelected(null)} onDelete={() => deleteOne(selected.id)} />}</AnimatePresence>
     </>
+  );
+}
+
+function LockdownBanner({
+  lockdown,
+  site,
+  criticalPressure,
+  busy,
+  onToggle,
+  compact,
+}: {
+  lockdown: boolean;
+  site: SiteSettings | null;
+  criticalPressure: number;
+  busy: boolean;
+  onToggle: (v: boolean) => void;
+  compact?: boolean;
+}) {
+  return (
+    <SaaSPanel
+      className={
+        lockdown ? "border-rose-500/50 bg-rose-500/5" : criticalPressure >= 2 ? "border-amber-500/50 bg-amber-500/5" : ""
+      }
+    >
+      <div className="flex flex-wrap items-center gap-4">
+        <motion.div
+          animate={lockdown ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+          transition={{ repeat: lockdown ? Infinity : 0, duration: 1.4 }}
+          className={`relative flex h-14 w-14 items-center justify-center rounded-2xl border ${
+            lockdown ? "border-rose-500/50 bg-rose-500/10 text-rose-300" : "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+          }`}
+        >
+          {lockdown ? <ShieldAlert className="h-7 w-7" /> : <ShieldCheck className="h-7 w-7" />}
+          {lockdown && <span className="absolute inset-0 -z-10 animate-ping rounded-2xl bg-rose-500/30" />}
+        </motion.div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Auto-lockdown būsena</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+            <span className={`text-xl font-black tracking-tight ${lockdown ? "text-rose-300" : "text-emerald-300"}`}>
+              {lockdown ? "LOCKDOWN" : "SVEIKAS"}
+            </span>
+            {site?.lockdown_code && lockdown && (
+              <code className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200">{site.lockdown_code}</code>
+            )}
+            <span className="text-xs text-muted-foreground">
+              Kritinės per 5 min: <b className="text-foreground">{criticalPressure}</b> / 3
+            </span>
+          </div>
+          {lockdown && site?.lockdown_message && !compact && (
+            <p className="mt-1 line-clamp-2 text-xs text-rose-200/80">{site.lockdown_message}</p>
+          )}
+          {!lockdown && criticalPressure > 0 && (
+            <p className="mt-1 text-xs text-amber-300/90">
+              {criticalPressure >= 3
+                ? "Slenkstis pasiektas — kitas kritinis triggeris auto-užrakins."
+                : `Auto-lockdown suveiks kai bus ≥3 kritinės klaidos per 5 min.`}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {lockdown ? (
+            <Button onClick={() => onToggle(false)} disabled={busy} className="bg-emerald-500 text-black hover:bg-emerald-400">
+              <ShieldCheck className="mr-1 h-4 w-4" /> Išjungti lockdown
+            </Button>
+          ) : (
+            <Button variant="destructive" onClick={() => onToggle(true)} disabled={busy}>
+              <ShieldAlert className="mr-1 h-4 w-4" /> Užrakinti dabar
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted/50">
+        <motion.div
+          initial={false}
+          animate={{ width: `${Math.min(100, (criticalPressure / 3) * 100)}%` }}
+          transition={{ type: "spring", stiffness: 120, damping: 20 }}
+          className={`h-full ${
+            criticalPressure >= 3
+              ? "bg-gradient-to-r from-rose-500 to-fuchsia-500"
+              : criticalPressure >= 2
+                ? "bg-amber-400"
+                : "bg-emerald-500"
+          }`}
+        />
+      </div>
+    </SaaSPanel>
   );
 }
 
@@ -566,15 +806,8 @@ function StatCard({
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            {label}
-          </div>
-          <motion.div
-            key={value}
-            initial={{ scale: 0.9, opacity: 0.5 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mt-0.5 text-2xl font-black tabular-nums"
-          >
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+          <motion.div key={value} initial={{ scale: 0.9, opacity: 0.5 }} animate={{ scale: 1, opacity: 1 }} className="mt-0.5 text-2xl font-black tabular-nums">
             {value}
           </motion.div>
         </div>
@@ -583,7 +816,7 @@ function StatCard({
   );
 }
 
-function DetailModal({ row, onClose }: { row: ErrRow; onClose: () => void }) {
+function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => void; onDelete: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -605,18 +838,14 @@ function DetailModal({ row, onClose }: { row: ErrRow; onClose: () => void }) {
         className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
       >
         <div className="flex items-center gap-2 border-b border-border/60 p-4">
-          <span
-            className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${KIND_STYLE[row.action] ?? ""}`}
-          >
+          <span className={`rounded border px-2 py-0.5 text-[10px] font-bold uppercase ${KIND_STYLE[row.action] ?? ""}`}>
             {KIND_LABEL[row.action] ?? row.action}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {new Date(row.created_at).toLocaleString("lt-LT")}
-          </span>
-          <button
-            onClick={onClose}
-            className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
-          >
+          <span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString("lt-LT")}</span>
+          <button onClick={onDelete} className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Ištrinti">
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted" aria-label="Uždaryti">
             <X className="h-4 w-4" />
           </button>
         </div>
