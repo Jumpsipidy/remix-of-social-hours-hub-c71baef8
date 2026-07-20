@@ -23,7 +23,10 @@ export default defineConfig({
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(SUPABASE_PUBLISHABLE_KEY),
   },
   plugins: [
-    tanstackStart({ server: { entry: "server" } }),
+    tanstackStart({
+      server: { entry: "server" },
+      serverFns: { disableCsrfMiddlewareWarning: true },
+    }),
     tailwindcss(),
     tsconfigPaths(),
     nitro(),
