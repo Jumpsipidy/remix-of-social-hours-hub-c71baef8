@@ -279,6 +279,34 @@ function AdminErrorsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const formatRowsForCopy = (list: ErrRow[]) => {
+    const header = `# Socialinės Valandos — klaidų eksportas\n# ${new Date().toLocaleString("lt-LT")} · ${list.length} įrašų\n\n`;
+    return header + list.map((r) => {
+      const m = r.meta ?? {};
+      return [
+        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")}`,
+        `msg:    ${m.message ?? "(no message)"}`,
+        m.path ? `path:   ${m.path}` : null,
+        m.source ? `source: ${m.source}` : null,
+        [m.browser, m.os, m.device].filter(Boolean).length ? `device: ${[m.browser, m.os, m.device].filter(Boolean).join(" · ")}` : null,
+        m.stack ? `stack:\n${String(m.stack).split("\n").slice(0, 10).map((l) => "  " + l).join("\n")}` : null,
+      ].filter(Boolean).join("\n");
+    }).join("\n\n");
+  };
+
+  const copyAll = async (list: ErrRow[] = filtered) => {
+    try {
+      const text = formatRowsForCopy(list);
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success(`Nukopijuota ${list.length} įrašų — įklijuok į pokalbį`);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      toast.error("Naršyklė neleido kopijuoti");
+    }
+  };
+
+
   return (
     <>
       <AdminAurora />
