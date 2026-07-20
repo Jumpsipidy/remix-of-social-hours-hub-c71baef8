@@ -538,6 +538,13 @@ function Page() {
         <BreakdownCard title="Operacinės sistemos" icon={Monitor} items={oses.map((o) => ({ label: o.os, n: o.n }))} color={C.emerald} />
       </div>
 
+      {/* Deep device breakdowns (from raw meta) */}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <BreakdownCard title="Laiko juostos" icon={MapPin} items={timezones.map(([label, n]) => ({ label, n }))} color={C.violet} />
+        <BreakdownCard title="Ekranai (raiška)" icon={Monitor} items={screens.map(([label, n]) => ({ label, n }))} color={C.cyan} />
+        <BreakdownCard title="Lango dydžiai" icon={MonitorSmartphone} items={viewports.map(([label, n]) => ({ label, n }))} color={C.pink} />
+      </div>
+
       {/* Referrers + Languages + Hourly */}
       <div className="grid gap-3 lg:grid-cols-3">
         <BreakdownCard title="Šaltiniai (referrer)" icon={ExternalLink} items={referrers.map((r) => ({ label: r.host, n: r.n }))} color={C.amber} />
