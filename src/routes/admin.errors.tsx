@@ -291,6 +291,58 @@ function AdminErrorsPage() {
       .slice(0, 10);
   }, [rows]);
 
+  const topSources = useMemo(() => {
+    const paths = new Map<string, number>();
+    const browsers = new Map<string, number>();
+    const oses = new Map<string, number>();
+    for (const r of rows) {
+      const p = (r.meta?.path ?? "").split("?")[0] || "(nežinomas)";
+      paths.set(p, (paths.get(p) ?? 0) + 1);
+      const b = r.meta?.browser ?? "(nežinoma)";
+      browsers.set(b, (browsers.get(b) ?? 0) + 1);
+      const o = r.meta?.os ?? "(nežinoma)";
+      oses.set(o, (oses.get(o) ?? 0) + 1);
+    }
+    const top = (m: Map<string, number>, n = 8) =>
+      Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n);
+    return { paths: top(paths, 10), browsers: top(browsers), oses: top(oses) };
+  }, [rows]);
+
+  const ignoredCount = useMemo(() => rows.filter(matchesIgnore).length, [rows, ignoreRules]);
+
+  const addIgnoreRule = (pattern: string) => {
+    const p = pattern.trim();
+    if (!p) return;
+    if (ignoreRules.includes(p)) return toast.info("Toks šablonas jau yra");
+    const next = [...ignoreRules, p];
+    setIgnoreRules(next); saveIgnore(next);
+    toast.success(`Paslėpta: „${p.slice(0, 40)}"`);
+  };
+  const removeIgnoreRule = (p: string) => {
+    const next = ignoreRules.filter((x) => x !== p);
+    setIgnoreRules(next); saveIgnore(next);
+  };
+
+  const setAutoInterval = (ms: number) => {
+    setAutoMs(ms);
+    try { localStorage.setItem(AUTO_KEY, String(ms)); } catch {}
+  };
+
+  const triggerTestError = async () => {
+    setTesting(true);
+    try {
+      await logClientError(new Error(`[TEST] Testinė klaida ${new Date().toLocaleTimeString("lt-LT")}`), {
+        source: "admin.errors.test",
+        path: "/admin/errors",
+      });
+      toast.success("Testinė klaida sukurta — turėtų atsirasti Live sraute");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const clear = async () => {
     if (!confirm("Ištrinti visas klaidas iš žurnalo?")) return;
     setBusy(true);
