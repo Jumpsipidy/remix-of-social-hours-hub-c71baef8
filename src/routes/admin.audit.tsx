@@ -36,7 +36,7 @@ function AuditPage() {
         .limit(500);
       const list = (data as Row[]) ?? [];
       setRows(list);
-      const ids = Array.from(new Set(list.map((r) => r.user_id)));
+      const ids = Array.from(new Set(list.map((r) => r.user_id).filter((v): v is string => !!v)));
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, full_name, email, role, organization_name").in("id", ids);
         const m: Record<string, ProfileLite> = {};
