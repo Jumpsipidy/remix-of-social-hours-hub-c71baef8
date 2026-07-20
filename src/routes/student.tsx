@@ -627,7 +627,7 @@ function OpenTasksFeed() {
         .limit(4);
       const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>) ?? [];
       setTasks(list);
-      const ids = Array.from(new Set(list.map((t) => t.organization_id)));
+      const ids = Array.from(new Set(list.map((t) => t.organization_id).filter((v): v is string => !!v)));
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
         const map: Record<string, { organization_name: string | null; full_name: string | null }> = {};
