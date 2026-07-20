@@ -223,7 +223,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       sb.from("profiles").select("id, role, created_at").gte("created_at", since),
       sb.from("messages").select("id, created_at").gte("created_at", since),
       sb.from("activity_log")
-        .select("id, user_id, action, created_at")
+        .select("id, user_id, action, created_at, meta")
         .in("action", ["auth.signed_in", "auth.signed_out", "page.view"])
         .gte("created_at", since)
         .order("created_at", { ascending: false })
@@ -234,7 +234,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       profiles: pRes.data ?? [],
       messages: mRes.data ?? [],
       activity: (aRes.data ?? []) as Array<{
-        id: string; user_id: string | null; action: string; created_at: string;
+        id: string; user_id: string | null; action: string; created_at: string; meta: Record<string, unknown> | null;
       }>,
     };
   });
