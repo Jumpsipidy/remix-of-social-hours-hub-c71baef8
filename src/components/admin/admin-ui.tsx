@@ -102,7 +102,12 @@ export function Sparkline({
   });
   const pts = coords.map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
   const linePath = coords.map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(2)},${c.y.toFixed(2)}`).join(" ");
-  const area = `M0,${h} ${linePath} L${w},${h} Z`;
+  // Only build an area fill when we have ≥2 points; otherwise a single-vertex
+  // area produces a stray triangle from the SVG's bottom-left corner.
+  const area =
+    coords.length >= 2
+      ? `M${coords[0].x.toFixed(2)},${h} L${linePath.slice(1)} L${coords[coords.length - 1].x.toFixed(2)},${h} Z`
+      : null;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className={`h-7 w-full ${className}`}>
       <defs>
@@ -115,7 +120,7 @@ export function Sparkline({
           <stop offset="100%" stopColor="hsl(var(--primary) / 0)" />
         </linearGradient>
       </defs>
-      <path d={area} fill="url(#spark-fill)" />
+      {area && <path d={area} fill="url(#spark-fill)" />}
       <polyline points={pts} fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
