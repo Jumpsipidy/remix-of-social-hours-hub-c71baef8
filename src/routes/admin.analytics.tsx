@@ -730,7 +730,23 @@ function Page() {
 
       {/* Pies */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card delay={0.3} title="Rezervacijų būsenos" icon={TrendingUp}>
+        <Card
+          delay={0.3}
+          title="Rezervacijų būsenos"
+          icon={TrendingUp}
+          action={
+            drilldownStatus ? (
+              <button
+                onClick={() => setDrilldownStatus(null)}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-background/40 px-2 py-0.5 text-[10px] font-semibold hover:bg-accent"
+              >
+                <X className="h-3 w-3" /> {drilldownStatus}
+              </button>
+            ) : (
+              <span className="text-[10px] text-muted-foreground">Spausk skiltį</span>
+            )
+          }
+        >
           <div className="h-64">
             <ResponsiveContainer>
               <PieChart>
@@ -744,10 +760,27 @@ function Page() {
                   outerRadius={95}
                   paddingAngle={3}
                   animationDuration={1000}
+                  onClick={(e: any) =>
+                    setDrilldownStatus((cur) => (cur === e?.name ? null : (e?.name ?? null)))
+                  }
                 >
-                  {statusPie.map((_, i) => (
-                    <Cell key={i} fill={PIE[i % PIE.length]} stroke="hsl(var(--card))" strokeWidth={2} />
-                  ))}
+                  {statusPie.map((s, i) => {
+                    const dim = drilldownStatus && drilldownStatus !== s.name;
+                    return (
+                      <Cell
+                        key={i}
+                        fill={PIE[i % PIE.length]}
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                        style={{
+                          cursor: "pointer",
+                          opacity: dim ? 0.25 : 1,
+                          filter: drilldownStatus === s.name ? `drop-shadow(0 0 10px ${PIE[i % PIE.length]})` : undefined,
+                          transition: "opacity 200ms, filter 200ms",
+                        }}
+                      />
+                    );
+                  })}
                 </Pie>
                 <Tooltip content={<GlassTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
@@ -755,6 +788,7 @@ function Page() {
             </ResponsiveContainer>
           </div>
         </Card>
+
 
         <Card delay={0.35} title="Vartotojai pagal rolę" icon={Users} action={
           <button
