@@ -875,6 +875,7 @@ function AdminErrorsPage() {
                 </div>
               )}
 
+              {section === "lockdown" && (
                 <LockdownBanner
                   lockdown={lockdown}
                   site={site}
