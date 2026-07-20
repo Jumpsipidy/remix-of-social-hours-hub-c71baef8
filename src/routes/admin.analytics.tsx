@@ -148,6 +148,7 @@ function Page() {
   const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
   const [drilldownPath, setDrilldownPath] = useState<string | null>(null);
   const [drilldownStatus, setDrilldownStatus] = useState<string | null>(null);
+  const [kpiDetail, setKpiDetail] = useState<KpiKind | null>(null);
 
   const toggleMetric = useCallback((m: MetricKey) => {
     setActiveMetrics((prev) => {
