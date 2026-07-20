@@ -1107,7 +1107,28 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
             {KIND_LABEL[row.action] ?? row.action}
           </span>
           <span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString("lt-LT")}</span>
-          <button onClick={onDelete} className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Ištrinti">
+          <button
+            onClick={async () => {
+              try {
+                const m = row.meta ?? {};
+                const text = [
+                  `[${KIND_LABEL[row.action] ?? row.action}] ${new Date(row.created_at).toLocaleString("lt-LT")}`,
+                  `msg: ${m.message ?? "(no message)"}`,
+                  m.path ? `path: ${m.path}` : null,
+                  m.source ? `source: ${m.source}` : null,
+                  [m.browser, m.os, m.device].filter(Boolean).length ? `device: ${[m.browser, m.os, m.device].filter(Boolean).join(" · ")}` : null,
+                  m.stack ? `stack:\n${m.stack}` : null,
+                ].filter(Boolean).join("\n");
+                await navigator.clipboard.writeText(text);
+                toast.success("Nukopijuota");
+              } catch { toast.error("Nepavyko kopijuoti"); }
+            }}
+            className="ml-auto rounded-lg p-1.5 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+            aria-label="Kopijuoti"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <button onClick={onDelete} className="rounded-lg p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Ištrinti">
             <Trash2 className="h-4 w-4" />
           </button>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted" aria-label="Uždaryti">
