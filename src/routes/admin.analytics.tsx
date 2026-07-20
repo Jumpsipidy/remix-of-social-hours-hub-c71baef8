@@ -135,6 +135,30 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>(30);
   const [refreshTick, setRefreshTick] = useState(0);
+
+  // ---- Interactive state -------------------------------------------------
+  type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
+  const ALL_METRICS: MetricKey[] = ["Peržiūros", "Unikalūs", "Prisijungimai", "Atsijungimai"];
+  const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(new Set(ALL_METRICS));
+  const [chartKind, setChartKind] = useState<"area" | "line" | "bar">("area");
+  const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
+  const [drilldownPath, setDrilldownPath] = useState<string | null>(null);
+  const [drilldownStatus, setDrilldownStatus] = useState<string | null>(null);
+
+  const toggleMetric = useCallback((m: MetricKey) => {
+    setActiveMetrics((prev) => {
+      const next = new Set(prev);
+      // If the user clicks the only-active metric, treat it as "reset all" (nicer UX)
+      if (next.size === 1 && next.has(m)) return new Set(ALL_METRICS);
+      // If everything is on, isolate the clicked metric
+      if (next.size === ALL_METRICS.length) return new Set([m]);
+      if (next.has(m)) next.delete(m); else next.add(m);
+      if (next.size === 0) return new Set(ALL_METRICS);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const rangeSince = useMemo(
     () => new Date(Date.now() - range * 24 * 3600 * 1000).toISOString().slice(0, 10),
     [range],
