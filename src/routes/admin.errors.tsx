@@ -1180,3 +1180,83 @@ function relTime(iso: string) {
   if (diff < 86400) return `prieš ${Math.floor(diff / 3600)}h`;
   return new Date(iso).toLocaleString("lt-LT");
 }
+
+function SourceBreakdown({
+  title, items, total, onPick,
+}: {
+  title: string;
+  items: [string, number][];
+  total: number;
+  onPick: (v: string) => void;
+}) {
+  return (
+    <SaaSPanel>
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">{title}</div>
+        <span className="text-[10px] text-muted-foreground">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">Nėra duomenų.</p>
+      ) : (
+        <div className="mt-3 space-y-1.5">
+          {items.map(([label, count]) => {
+            const pct = total ? (count / total) * 100 : 0;
+            return (
+              <button
+                key={label}
+                onClick={() => onPick(label)}
+                className="group block w-full text-left"
+                title="Filtruoti Live srautą"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <span className="min-w-0 truncate font-mono">{label}</span>
+                  <span className="ml-2 shrink-0 tabular-nums text-muted-foreground">{count} · {pct.toFixed(0)}%</span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted/30">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                    className="h-full bg-gradient-primary"
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </SaaSPanel>
+  );
+}
+
+function ShortcutRow({ k, desc }: { k: string; desc: string }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background/40 px-3 py-2">
+      <span className="text-muted-foreground">{desc}</span>
+      <kbd className="inline-flex min-w-[28px] justify-center rounded border border-border bg-background px-2 py-0.5 font-mono text-[11px] font-bold">{k}</kbd>
+    </div>
+  );
+}
+
+function IgnoreRuleEditor({ onAdd }: { onAdd: (p: string) => void }) {
+  const [v, setV] = useState("");
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); onAdd(v); setV(""); }}
+      className="mt-3 flex gap-2"
+    >
+      <div className="relative flex-1">
+        <Filter className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          placeholder="Įrašyk fragmentą, pvz. „ResizeObserver" arba „/admin/errors""
+          className="pl-8 font-mono text-xs"
+        />
+      </div>
+      <Button type="submit" size="sm" disabled={!v.trim()}>
+        <Plus className="mr-1 h-4 w-4" /> Pridėti
+      </Button>
+    </form>
+  );
+}
