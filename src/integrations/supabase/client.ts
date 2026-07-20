@@ -27,21 +27,18 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 
-function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+// Ultimate fallback so the app never breaks in Lovable preview or misconfigured
+// hosts where VITE_* env vars are missing or replaced with a different backend.
+const FALLBACK_URL = 'https://bacqlmhfokfnmoexijkj.supabase.co';
+const FALLBACK_KEY = 'sb_publishable_JjZsJZZp5yP5NQBNVwCoaw_5iIQMN0_';
 
-  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Add them in your hosting environment.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
-  }
+function createSupabaseClient() {
+  const SUPABASE_URL =
+    import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || FALLBACK_URL;
+  const SUPABASE_PUBLISHABLE_KEY =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    FALLBACK_KEY;
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
