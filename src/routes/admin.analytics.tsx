@@ -834,11 +834,11 @@ function Page() {
       ) : null}
 
       <KpiDetailModal
-        open={detail !== null}
-        kind={detail ?? "views"}
+        kind={detail}
         onClose={() => setDetail(null)}
-        analytics={a}
-        rawActivity={(data?.rawActivity ?? []) as any}
+        activity={(data?.rawActivity ?? []).map((r) => ({ id: r.id, created_at: r.created_at, action: r.action, user_id: r.user_id, meta: r }))}
+        rangeSince={new Date(Date.now() - range * 24 * 3600 * 1000).toISOString().slice(0, 10)}
+        rangeDays={range}
       />
     </div>
   );
