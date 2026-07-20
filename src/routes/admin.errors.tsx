@@ -886,49 +886,75 @@ function AdminErrorsPage() {
               )}
 
               {section === "settings" && (
-                <SaaSPanel>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Priežiūra</div>
-                  <div className="mt-3 space-y-3">
-                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">Kopijuoti visas klaidas (tekstas)</p>
-                          <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį, kad greičiau debuginčiau.</p>
-                        </div>
-                        <div className="flex gap-2">
+                <div className="space-y-3">
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Diagnostika</div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+                        <p className="text-sm font-semibold">Kopijuoti klaidas</p>
+                        <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį.</p>
+                        <div className="mt-2 flex gap-2">
                           <Button variant="outline" size="sm" onClick={() => copyAll(rows)}>
-                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti visas ({rows.length})
+                            <Copy className="mr-1 h-4 w-4" /> Visas ({rows.length})
                           </Button>
                           <Button size="sm" onClick={() => copyAll(filtered)}>
-                            <Copy className="mr-1 h-4 w-4" /> Kopijuoti filtruotas ({filtered.length})
+                            <Copy className="mr-1 h-4 w-4" /> Filtruotos ({filtered.length})
                           </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-border/50 bg-background/40 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold">Eksportuoti JSON</p>
-                          <p className="text-xs text-muted-foreground">Atsisiųsti visus atmintyje esančius įrašus (iki 500).</p>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={exportJson}>
-                          Eksportuoti
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                        <p className="text-sm font-semibold text-emerald-200">Testinė klaida</p>
+                        <p className="text-xs text-emerald-200/70">Patikrina, ar log pipeline'as veikia (client → Supabase → live streamas).</p>
+                        <Button variant="outline" size="sm" className="mt-2 border-emerald-500/40" onClick={triggerTestError} disabled={testing}>
+                          <Zap className="mr-1 h-4 w-4" /> {testing ? "Siunčiu…" : "Sukurti testinę klaidą"}
                         </Button>
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-rose-200">Išvalyti visas klaidas</p>
-                          <p className="text-xs text-rose-200/70">Ištrinti visus client.error / supabase.error / app.* įrašus.</p>
-                        </div>
-                        <Button variant="destructive" size="sm" onClick={clear} disabled={busy}>
+                      <div className="rounded-xl border border-border/50 bg-background/40 p-3">
+                        <p className="text-sm font-semibold">Eksportuoti JSON</p>
+                        <p className="text-xs text-muted-foreground">Iki 500 įrašų (aktuali atmintis).</p>
+                        <Button variant="outline" size="sm" className="mt-2" onClick={exportJson}>Eksportuoti</Button>
+                      </div>
+                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3">
+                        <p className="text-sm font-semibold text-rose-200">Išvalyti visas klaidas</p>
+                        <p className="text-xs text-rose-200/70">Ištrina client.error / supabase.error / app.* įrašus.</p>
+                        <Button variant="destructive" size="sm" className="mt-2" onClick={clear} disabled={busy}>
                           <Trash2 className="mr-1 h-4 w-4" /> Išvalyti visus
                         </Button>
                       </div>
                     </div>
-                  </div>
-                </SaaSPanel>
+                  </SaaSPanel>
+
+                  <SaaSPanel>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Ignoravimo šablonai</div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Slepia įrašus, kurių žinutė / kelias / šaltinis atitinka bet kurį šabloną. Saugoma tik tavo naršyklėje.
+                        </p>
+                      </div>
+                      <label className="flex items-center gap-1.5 text-xs">
+                        <input type="checkbox" checked={showIgnored} onChange={(e) => setShowIgnored(e.target.checked)} className="accent-primary" />
+                        Rodyti paslėptus ({ignoredCount})
+                      </label>
+                    </div>
+                    <IgnoreRuleEditor onAdd={addIgnoreRule} />
+                    {ignoreRules.length === 0 ? (
+                      <p className="mt-2 text-xs text-muted-foreground">Šablonų nėra. Įrašyk fragmentą, pvz. „ResizeObserver".</p>
+                    ) : (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {ignoreRules.map((p) => (
+                          <span key={p} className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 text-xs">
+                            <EyeOff className="h-3 w-3 text-muted-foreground" />
+                            <code className="font-mono">{p}</code>
+                            <button onClick={() => removeIgnoreRule(p)} className="ml-1 rounded p-0.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-300" aria-label="Šalinti">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </SaaSPanel>
+                </div>
               )}
             </motion.div>
           </AnimatePresence>
