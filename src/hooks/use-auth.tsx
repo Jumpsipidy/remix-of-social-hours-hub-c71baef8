@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { logActivity } from "@/lib/activity-log";
 
 export type AppRole = "student" | "school_admin" | "organization" | "admin";
 
