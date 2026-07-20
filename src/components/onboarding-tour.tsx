@@ -10,74 +10,88 @@ type Step = {
   placement?: "bottom" | "top" | "auto";
 };
 
-const STORAGE_KEY = "sv_onboarding_v2";
+const STORAGE_KEY = "sv_onboarding_v3";
 const DELAY_MS = 800; // let the page settle before starting
 
 function stepsFor(role: AppRole | null): Step[] {
-  const dashLabel =
-    role === "student" ? "Mokinio sritis" :
-    role === "organization" ? "Organizacijos sritis" :
-    role === "school_admin" ? "Mokyklos sritis" :
-    role === "admin" ? "Sistemos administracija" :
-    "Sritis";
-
   const intro: Step = {
     title: "Sveikas Socialinėse Valandose 👋",
-    body: "Trumpa apžvalga — mažiau nei minutė. Bet kada gali praleisti.",
+    body: "Trumpa apžvalga (mažiau nei minutė). Šis vedlys paaiškins, kaip veikia platforma pagal tavo vaidmenį. Gali praleisti bet kada.",
   };
 
-  const common: Step[] = [
-    {
-      target: '[data-tour="dashboard"]',
-      title: dashLabel,
-      body: "Tavo asmeninė sritis — čia matai visą pažangą, rezervacijas ir pokalbius.",
-      placement: "bottom",
-    },
-    {
-      target: '[data-tour="tasks"]',
-      title: "Užduotys ir organizacijos",
-      body: "Naršyk aktyvias progas, filtruok pagal miestą ar temą, rezervuok valandas.",
-      placement: "bottom",
-    },
-    {
-      target: '[data-tour="notifications"]',
-      title: "Pranešimai",
-      body: "Naujienos apie tavo rezervacijas ir žinutes — realiu laiku, be perkrovimo.",
-      placement: "bottom",
-    },
-    {
-      target: '[data-tour="bug"]',
-      title: "Rasi klaidą?",
-      body: "Šiuo mygtuku gali pranešti apie problemą — mes atsakome greitai.",
-      placement: "top",
-    },
-  ];
+  if (role === "student") {
+    return [
+      intro,
+      { title: "Kaip veikia sistema",
+        body: "1) Randi užduotį → 2) rezervuoji → 3) organizacija patvirtina, kad atėjai → 4) po darbo pažymi „Užbaigta“ → 5) valandos automatiškai keliauja į tavo pažangą." },
+      { target: '[data-tour="dashboard"]', title: "Mokinio sritis", body: "Čia matai savo progresą, artimiausius vizitus, savaitinį grafiką ir pasiekimus.", placement: "bottom" },
+      { target: '[data-tour="tasks"]', title: "Naršyk užduotis", body: "Filtruok pagal miestą, temą arba organizaciją. Kiekviena kortelė turi žemėlapį ir aprašymą.", placement: "bottom" },
+      { title: "Pasiūlyk savo valandas",
+        body: "Jei jau kalbėjai su organizacija ne per platformą — mygtukas „Pasiūlyk rezervaciją“ leidžia įrašyti tai retrospektyviai (iki 8 val. per kartą)." },
+      { title: "Draugai ir grupinės rezervacijos",
+        body: "Susirask klasiokų per skiltį „Draugai“. Rezervuodamas užduotį galėsi juos pakviesti — jei organizacija patvirtins, valandos bus paskirtos visiems." },
+      { title: "Pasiekimai 🏆",
+        body: "Sistema automatiškai suteikia ženkliukus: pirma valanda, 10 val., pusiaukelė, 3 organizacijos, streak-ai. Rodomas iššokantis pranešimas." },
+      { title: "Sertifikatas",
+        body: "Pasiekus 100% tikslo — mygtukas „Sertifikatas“ sugeneruoja pasirašytą PDF su QR kodu, kurį galima verifikuoti /verify puslapyje." },
+      { target: '[data-tour="notifications"]', title: "Pranešimai realiu laiku", body: "Statusų pokyčiai ir naujos žinutės — be perkrovimo.", placement: "bottom" },
+    ];
+  }
 
-  const roleSpecific: Step[] =
-    role === "student"
-      ? [{
-          title: "Kaip skaičiuojamos valandos",
-          body: "Rezervuoji → organizacija patvirtina, kad atėjai → po darbo pažymi „Užbaigta“. Valandos automatiškai atsiranda tavo pažangoje.",
-        }]
-      : role === "organization"
-      ? [{
-          title: "Kaip valdai savanorius",
-          body: "Kuri užduotis, priimi rezervacijas, pažymi atliktus darbus. Sistema pati susumuos valandas moksleiviams.",
-        }]
-      : role === "school_admin"
-      ? [{
-          title: "Ką matai kaip mokyklos administratorius",
-          body: "Savo klasių moksleivių pažangą, jų pokalbius su organizacijomis (auditui) ir gali kurti privačius vienkartinius renginius.",
-        }]
-      : role === "admin"
-      ? [{
-          title: "Sistemos administracija",
-          body: "Šoninis meniu turi visus įrankius — mokyklos, kodai, paskyros, klaidų kodai, Lockdown režimas.",
-        }]
-      : [];
+  if (role === "organization") {
+    return [
+      intro,
+      { title: "Tavo vaidmuo",
+        body: "Skelbi savanorystės progas, priimi mokinių rezervacijas ir tvirtini atliktas valandas. Sistema pati skaičiuoja ir siunčia el. laiškus." },
+      { target: '[data-tour="dashboard"]', title: "Organizacijos sritis", body: "Suvestinė: aktyvūs vizitai, laukiančios rezervacijos, jau užbaigtos valandos.", placement: "bottom" },
+      { title: "Kurk užduotis",
+        body: "Mygtukas „Nauja užduotis“ atveria formą: pavadinimas, aprašymas, data, laikas, valandos, adresas su žemėlapiu, žymės, pasikartojimo grafikas (savaitinis/dvisavaitinis/mėnesinis)." },
+      { title: "Patvirtinimo eiga",
+        body: "Rezervacija → „Priimta“ (mokinys pradeda darbą) → „Užbaigk ir patvirtink“ (privalomas teisinis pažymėjimas). Tik po šio žingsnio valandos įskaitomos." },
+      { title: "Organizacijos profilis",
+        body: "Skiltyje „Profilis“ pridėk logotipą, aprašą, foto galeriją, adresą. Mokiniai matys tai užduočių kortelėse." },
+      { title: "Pokalbiai",
+        body: "Kiekviena rezervacija turi trišalį pokalbį: mokinys + organizacija + (jei įsijungs) mokyklos administratorius. Žinutės auto-ištrinamos po 12 dienų." },
+    ];
+  }
 
-  return [intro, ...common, ...roleSpecific];
+  if (role === "school_admin") {
+    return [
+      intro,
+      { title: "Mokyklos administratorius",
+        body: "Matai TIK tas klases, kurios tau priskirtos (arba visas, jei sąrašas tuščias). Kitos mokyklos ar klasės tau nematomos — apsauga per RLS." },
+      { target: '[data-tour="dashboard"]', title: "Mokyklos sritis", body: "Suvestinė: mokinių progresas, laukiančios patvirtinimo valandos, sukčiavimo signalai.", placement: "bottom" },
+      { title: "Sukčiavimo eilė",
+        body: "Sistema automatiškai pažymi įtartinas rezervacijas (per didelis valandų skaičius, per greitas patvirtinimas, ta pati organizacija daug kartų iš eilės). Peržiūrėk skiltyje „Sukčiavimas“." },
+      { title: "Masinis patvirtinimas",
+        body: "Skiltyje „Rezervacijos“ gali pažymėti daug rezervacijų iš karto ir jas patvirtinti / atmesti vienu paspaudimu." },
+      { title: "Individualus auditas",
+        body: "Spustelėk mokinį, kad pamatytum jo visą istoriją, valandų šaltinius ir pokalbius (auditui)." },
+      { title: "Mokyklos renginiai",
+        body: "Gali sukurti vienkartinį renginį visai mokyklai (pvz. talką) ir moksleiviai galės į jį užsirašyti." },
+    ];
+  }
+
+  if (role === "admin") {
+    return [
+      intro,
+      { title: "Super administratorius",
+        body: "Turi PILNĄ prieigą prie visos sistemos. Šoniniame meniu — 14 skilčių: analitika, rezervacijos, reitingas, organizacijos, veikla, auditas, kūrimas, mokyklos, žinutės, klaidos, lockdown, įrankiai." },
+      { target: '[data-tour="dashboard"]', title: "Apžvalga", body: "Realaus laiko statistika: naudotojai, rezervacijos, valandos, sistemos sveikata.", placement: "bottom" },
+      { title: "Veiklos žurnalas",
+        body: "Skiltis „Auditas“ automatiškai fiksuoja kiekvieną svarbų veiksmą: rezervacijos, draugystės, patvirtinimai. Galima eksportuoti CSV." },
+      { title: "Lockdown režimas 🔒",
+        body: "Skubaus atvejo mygtukas — uždaro platformą visiems išskyrus administratorius. Naudotojai mato kodą E-XXXX ir pranešimą. Įjungti ir išjungti gali tik super admin." },
+      { title: "Sveikatos patikra",
+        body: "Sistema kas 10 min. automatiškai vykdo gilų scan (18 patikrų). Jei randama kritinių gedimų — auto-lockdown su kodu E-4002." },
+      { title: "Įrankiai",
+        body: "Masinis duomenų valymas, mock paskyros, testinis email, žinučių purge — visi jautrūs įrankiai vienoje vietoje." },
+    ];
+  }
+
+  return [intro];
 }
+
 
 function useTargetRect(selector?: string) {
   const [rect, setRect] = useState<DOMRect | null>(null);
