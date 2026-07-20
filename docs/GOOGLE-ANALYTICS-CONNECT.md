@@ -3,7 +3,7 @@
 ## TL;DR (labai trumpai)
 
 - **G-XXX kodas jau įdėtas** į `src/routes/__root.tsx`. Nieko dėti į Vercel nereikia.
-- Dabartinis kodas: `G-6SM411VCPX`.
+- Dabartinis kodas: `G-4HRBLS0E3G`.
 - Kai deploy'insi į Vercel — GA pradės rinkti duomenis automatiškai.
 
 Tai viskas. Toliau — tik jei nori pakeisti domeną arba pridėti daugiau.
@@ -16,11 +16,11 @@ Failas: **`src/routes/__root.tsx`**
 
 Ten yra du script'ai:
 ```html
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-6SM411VCPX"></script>
-<script>gtag('config', 'G-6SM411VCPX');</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4HRBLS0E3G"></script>
+<script>gtag('config', 'G-4HRBLS0E3G');</script>
 ```
 
-Nori pakeisti į kitą ID? Tiesiog **replace** `G-6SM411VCPX` į savo naują ID toje pačioje vietoje. Viskas.
+Nori pakeisti į kitą ID? Tiesiog **replace** `G-4HRBLS0E3G` į savo naują ID toje pačioje vietoje. Viskas.
 
 ---
 
@@ -57,7 +57,7 @@ Vienintelis dalykas Vercel'yje reikalingas — Supabase env kintamieji (`VITE_SU
 4. Turi matyti savo apsilankymą per ~30 sek.
 
 Jei nematai:
-- Patikrink DevTools → Network tab → ar užsikrauna `gtag/js?id=G-6SM411VCPX`.
+- Patikrink DevTools → Network tab → ar užsikrauna `gtag/js?id=G-4HRBLS0E3G`.
 - Ad blocker'iai blokuoja GA — išjunk arba testuok incognito.
 
 ---
