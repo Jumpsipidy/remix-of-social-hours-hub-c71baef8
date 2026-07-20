@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
+import { AdminAurora } from "@/components/admin/admin-ui";
 import {
   Shield,
   LayoutDashboard,
@@ -20,20 +21,20 @@ import {
   Trophy,
   BarChart3,
   Lock,
+  MoreHorizontal,
 } from "lucide-react";
-
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Sistemos administracija — Socialinės Valandos" }] }),
   component: AdminLayout,
 });
 
-type NavItem = { to: string; label: string; icon: typeof Shield; exact?: boolean };
+type NavItem = { to: string; label: string; short?: string; icon: typeof Shield; exact?: boolean };
 const NAV: NavItem[] = [
-  { to: "/admin", label: "Apžvalga", icon: LayoutDashboard, exact: true },
-  { to: "/admin/analytics", label: "Analitika", icon: BarChart3 },
-  { to: "/admin/reservations", label: "Rezervacijos", icon: CalendarClock },
-  { to: "/admin/leaderboard", label: "Reitingas", icon: Trophy },
+  { to: "/admin", label: "Apžvalga", short: "Apžv.", icon: LayoutDashboard, exact: true },
+  { to: "/admin/analytics", label: "Analitika", short: "Analitika", icon: BarChart3 },
+  { to: "/admin/reservations", label: "Rezervacijos", short: "Rez.", icon: CalendarClock },
+  { to: "/admin/leaderboard", label: "Reitingas", short: "Reit.", icon: Trophy },
   { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
   { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
   { to: "/admin/audit", label: "Auditas (log)", icon: Activity },
@@ -46,12 +47,14 @@ const NAV: NavItem[] = [
   { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
 ];
 
+// primary bottom-nav items on mobile (5 max)
+const MOBILE_PRIMARY = ["/admin", "/admin/analytics", "/admin/reservations", "/admin/leaderboard"];
+
 function AdminLayout() {
   const { user, profile, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = useRouterState({ select: (r) => r.location.pathname });
 
-  // Lock body scroll while mobile sheet is open (must run before any early return)
   useEffect(() => {
     if (!mobileOpen) return;
     const prev = document.body.style.overflow;
@@ -59,6 +62,8 @@ function AdminLayout() {
     return () => { document.body.style.overflow = prev; };
   }, [mobileOpen]);
 
+  // close mobile sheet on route change
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   if (loading) {
     return (
@@ -88,8 +93,10 @@ function AdminLayout() {
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to || pathname === `${to}/` : pathname === to || pathname.startsWith(`${to}/`);
 
-  const NavList = ({ onClick, compact = false }: { onClick?: () => void; compact?: boolean }) => (
-    <nav className={`flex flex-col ${compact ? "gap-1" : "gap-1"}`}>
+  const currentLabel = NAV.find((n) => isActive(n.to, n.exact))?.label ?? "Valdymo skydas";
+
+  const NavList = ({ onClick }: { onClick?: () => void }) => (
+    <nav className="flex flex-col gap-1">
       {NAV.map((item) => {
         const active = isActive(item.to, item.exact);
         const Icon = item.icon;
@@ -99,12 +106,19 @@ function AdminLayout() {
             to={item.to}
             onClick={onClick}
             resetScroll={false}
-            className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+            className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
               active
                 ? "bg-gradient-primary text-primary-foreground shadow-glow"
                 : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
             }`}
           >
+            {active && (
+              <motion.span
+                layoutId="admin-nav-active"
+                className="absolute inset-0 -z-10 rounded-xl bg-gradient-primary shadow-glow"
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
             <Icon className="h-4 w-4 shrink-0" />
             <span className="truncate">{item.label}</span>
           </Link>
@@ -113,26 +127,26 @@ function AdminLayout() {
     </nav>
   );
 
-
-
-
   return (
     <PageShell>
+      <AdminAurora />
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 lg:hidden">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
-              Super Admin
-            </p>
-            <h1 className="mt-1 truncate font-display text-xl font-bold tracking-tight">Valdymo skydas</h1>
-          </div>
+        {/* Mobile top bar */}
+        <div className="sticky top-14 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card/70 backdrop-blur"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card/80 backdrop-blur active:scale-95"
             aria-label="Meniu"
           >
             <Menu className="h-4 w-4" />
           </button>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-primary">Super Admin</p>
+            <p className="truncate font-display text-base font-bold tracking-tight">{currentLabel}</p>
+          </div>
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
+            <Shield className="h-4 w-4" />
+          </div>
         </div>
 
         <AnimatePresence>
@@ -152,7 +166,7 @@ function AdminLayout() {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                className="fixed left-0 top-0 z-[81] flex h-full w-[86%] max-w-[320px] flex-col border-r border-border bg-card p-4 shadow-2xl lg:hidden"
+                className="fixed left-0 top-0 z-[81] flex h-full w-[86%] max-w-[320px] flex-col border-r border-border bg-card/95 p-4 shadow-2xl backdrop-blur-xl lg:hidden"
               >
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <div className="flex min-w-0 items-center gap-2">
@@ -173,23 +187,21 @@ function AdminLayout() {
                   </button>
                 </div>
                 <div className="mt-3 flex-1 overflow-y-auto pr-1">
-                  <NavList onClick={() => setMobileOpen(false)} compact />
+                  <NavList onClick={() => setMobileOpen(false)} />
                 </div>
               </motion.aside>
             </>
           )}
         </AnimatePresence>
 
-        <div className="grid gap-6 pb-16 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-10">
-          <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur lg:block">
+        <div className="grid gap-6 pb-28 pt-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-10 lg:pb-16">
+          <aside className="sticky top-24 hidden h-fit rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur-xl lg:block">
             <div className="mb-4 flex items-center gap-2 px-1">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
                 <Shield className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-                  Super Admin
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Super Admin</p>
                 <p className="truncate text-xs text-muted-foreground">{profile.email}</p>
               </div>
             </div>
@@ -200,8 +212,45 @@ function AdminLayout() {
             <Outlet />
           </div>
         </div>
+
+        {/* Mobile bottom nav */}
+        <nav
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+          aria-label="Admin greitas meniu"
+        >
+          <div className="mx-auto grid max-w-7xl grid-cols-5 gap-1 px-2 py-1.5">
+            {MOBILE_PRIMARY.map((to) => {
+              const item = NAV.find((n) => n.to === to)!;
+              const active = isActive(item.to, item.exact);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  resetScroll={false}
+                  className={`flex flex-col items-center gap-1 rounded-lg py-2 text-[10px] font-semibold transition ${
+                    active ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  <span className={`grid h-8 w-8 place-items-center rounded-lg transition ${active ? "bg-gradient-primary text-primary-foreground shadow-glow" : ""}`}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="truncate">{item.short ?? item.label}</span>
+                </Link>
+              );
+            })}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="flex flex-col items-center gap-1 rounded-lg py-2 text-[10px] font-semibold text-muted-foreground"
+            >
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-card/70">
+                <MoreHorizontal className="h-4 w-4" />
+              </span>
+              <span>Daugiau</span>
+            </button>
+          </div>
+        </nav>
       </div>
     </PageShell>
   );
 }
-
