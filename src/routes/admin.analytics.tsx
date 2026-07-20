@@ -68,6 +68,17 @@ const timeAgo = (iso: string) => {
   if (s < 86400) return `${Math.round(s / 3600)}val`;
   return `${Math.round(s / 86400)}d`;
 };
+function bucketViewport(vp: string): string {
+  const [wStr] = (vp || "").split("x");
+  const w = Number(wStr);
+  if (!w) return "";
+  if (w < 480) return "XS <480";
+  if (w < 768) return "SM <768";
+  if (w < 1024) return "MD <1024";
+  if (w < 1440) return "LG <1440";
+  if (w < 1920) return "XL <1920";
+  return "2XL 1920+";
+}
 
 // ============================================================================
 // Reusable primitives
