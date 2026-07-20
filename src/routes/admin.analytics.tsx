@@ -450,7 +450,7 @@ function Page() {
             CSV
           </button>
           <button
-            onClick={refresh}
+            onClick={() => refresh()}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur transition hover:bg-accent"
           >
             <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
