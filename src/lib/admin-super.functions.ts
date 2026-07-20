@@ -312,6 +312,13 @@ export const adminAnalytics = createServerFn({ method: "GET" })
         user_name: null,
         user_role: null,
       })) : feedRes.data ?? []) as FeedRow[],
+      rawActivity: fallbackRows.map((row) => ({
+        id: row.id,
+        created_at: row.created_at,
+        action: row.action,
+        user_id: row.user_id,
+        meta: row.meta ?? {},
+      })),
     };
   });
 
