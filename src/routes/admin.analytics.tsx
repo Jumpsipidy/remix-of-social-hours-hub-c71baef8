@@ -430,16 +430,20 @@ function Page() {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <HeroStat label="Peržiūros" value={totals.views} delta={pct(totals.views, prev.views)}
           icon={Eye} color={C.cyan} spark={traffic.map((t) => t.Peržiūros)}
-          active={activeMetrics.has("Peržiūros")} onClick={() => toggleMetric("Peržiūros")} />
+          active={activeMetrics.has("Peržiūros")} onClick={() => toggleMetric("Peržiūros")}
+          onExpand={() => setDetailKind("views")} />
         <HeroStat label="Unikalūs" value={totals.uniques} delta={pct(totals.uniques, prev.uniques)}
           icon={Users} color={C.violet} spark={traffic.map((t) => t.Unikalūs)}
-          active={activeMetrics.has("Unikalūs")} onClick={() => toggleMetric("Unikalūs")} />
+          active={activeMetrics.has("Unikalūs")} onClick={() => toggleMetric("Unikalūs")}
+          onExpand={() => setDetailKind("uniques")} />
         <HeroStat label="Prisijungimai" value={totals.signins} delta={pct(totals.signins, prev.signins)}
           icon={LogIn} color={C.emerald} spark={traffic.map((t) => t.Prisijungimai)} sub="tikri auth įvykiai"
-          active={activeMetrics.has("Prisijungimai")} onClick={() => toggleMetric("Prisijungimai")} />
+          active={activeMetrics.has("Prisijungimai")} onClick={() => toggleMetric("Prisijungimai")}
+          onExpand={() => setDetailKind("signIns")} />
         <HeroStat label="Atsijungimai" value={totals.signouts} delta={0} hideDelta
           icon={LogOut} color={C.rose} spark={traffic.map((t) => t.Atsijungimai)}
-          active={activeMetrics.has("Atsijungimai")} onClick={() => toggleMetric("Atsijungimai")} />
+          active={activeMetrics.has("Atsijungimai")} onClick={() => toggleMetric("Atsijungimai")}
+          onExpand={() => setDetailKind("signOuts")} />
       </div>
 
       {/* Secondary stats */}
