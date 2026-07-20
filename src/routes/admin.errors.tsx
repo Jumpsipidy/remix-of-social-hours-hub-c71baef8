@@ -479,6 +479,19 @@ function AdminErrorsPage() {
               {copied ? <Check className="mr-1 h-4 w-4 text-emerald-400" /> : <Copy className="mr-1 h-4 w-4" />}
               <span className="hidden sm:inline">{copied ? "Nukopijuota" : "Kopijuoti"}</span>
             </Button>
+            <div className="hidden items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 text-[11px] sm:inline-flex" title="Automatinis atnaujinimas">
+              {autoMs ? <Play className="h-3 w-3 text-emerald-400" /> : <Pause className="h-3 w-3 text-muted-foreground" />}
+              <select
+                value={autoMs}
+                onChange={(e) => setAutoInterval(Number(e.target.value))}
+                className="bg-transparent text-xs outline-none"
+              >
+                <option value={0}>Auto: išj.</option>
+                <option value={5000}>5s</option>
+                <option value={15000}>15s</option>
+                <option value={60000}>60s</option>
+              </select>
+            </div>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-1 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Atnaujinti</span>
