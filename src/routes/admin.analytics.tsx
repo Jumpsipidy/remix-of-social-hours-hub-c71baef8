@@ -158,6 +158,8 @@ function Page() {
   const [chartKind, setChartKind] = useState<"area" | "line" | "bar">("area");
   const [liveEvents, setLiveEvents] = useState<FeedRow[]>([]);
   const [pulse, setPulse] = useState(0);
+  const [detailKind, setDetailKind] = useState<KpiKind | null>(null);
+  const [fullscreenId, setFullscreenId] = useState<string | null>(null);
 
   const toggleMetric = useCallback((m: MetricKey) => {
     setActiveMetrics((prev) => {
