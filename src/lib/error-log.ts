@@ -1,10 +1,11 @@
 // Client-side error / Supabase-error monitor.
 // - Logs prominently to console (grouped, red)
 // - Persists to public.activity_log with action='client.error' or 'supabase.error'
-// - Admin dashboard reads these rows via /admin/errors and realtime subscription
+// - CRITICAL patterns are escalated via server fn → auto-lockdown + admin email
 import { supabase } from "@/integrations/supabase/client";
 import { insertActivityLogRow } from "@/lib/activity-log";
 import { deviceMeta } from "@/lib/device-meta";
+import { escalateAppError } from "@/lib/error-escalation.functions";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
@@ -13,7 +14,48 @@ const IGNORE_SUBSTRINGS = [
   "AbortError",
   "cancelled",
   "ERR_BLOCKED_BY_CLIENT",
+  // React hydration mismatch warnings are noisy; they're not user-facing outages.
+  "Minified React error #418",
+  "hydrated but some attributes",
 ];
+
+// Patterns that indicate a serious runtime failure worth auto-lockdown.
+const CRITICAL_PATTERNS = [
+  /ChunkLoadError/i,
+  /Loading chunk \d+ failed/i,
+  /Failed to load module script/i,
+  /Cannot read propert(y|ies) of (undefined|null)/i,
+  /is not a function/i,
+  /Maximum call stack/i,
+  /out of memory/i,
+];
+
+function isCriticalMessage(msg: string): boolean {
+  return CRITICAL_PATTERNS.some((rx) => rx.test(msg));
+}
+
+// Escalate rate-limit (client-side, best-effort — server also dedupes)
+const escalated = new Map<string, number>();
+const ESCALATE_MS = 60_000;
+async function maybeEscalate(level: "critical" | "warning", message: string, stack?: string | null) {
+  try {
+    const key = `${level}:${message.slice(0, 120)}`;
+    const now = Date.now();
+    const last = escalated.get(key);
+    if (last && now - last < ESCALATE_MS) return;
+    escalated.set(key, now);
+    await escalateAppError({
+      data: {
+        level,
+        message: message.slice(0, 500),
+        stack: stack ? stack.slice(0, 2000) : undefined,
+        path: typeof window !== "undefined" ? window.location.pathname : undefined,
+      },
+    });
+  } catch {
+    /* never crash reporting */
+  }
+}
 
 // Ring buffer + dedupe to avoid flooding the DB
 const seen = new Map<string, number>();
