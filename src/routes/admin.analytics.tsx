@@ -949,6 +949,8 @@ function HeroStat({
   color,
   spark,
   hideDelta,
+  active = true,
+  onClick,
 }: {
   label: string;
   value: number;
@@ -958,26 +960,58 @@ function HeroStat({
   color: string;
   spark: number[];
   hideDelta?: boolean;
+  active?: boolean;
+  onClick?: () => void;
 }) {
   const up = delta >= 0;
+  // Magnetic tilt on mouse move
+  const ref = useRef<HTMLButtonElement | null>(null);
+  const rx = useSpring(0, { stiffness: 300, damping: 20 });
+  const ry = useSpring(0, { stiffness: 300, damping: 20 });
+  const onMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    ry.set(px * 8);
+    rx.set(-py * 8);
+  };
+  const onLeave = () => { rx.set(0); ry.set(0); };
   return (
-    <motion.div
+    <motion.button
+      ref={ref}
+      type="button"
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={onClick}
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3, scale: 1.01 }}
+      animate={{ opacity: active ? 1 : 0.55, y: 0, scale: active ? 1 : 0.98 }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur"
+      style={{ rotateX: rx as any, rotateY: ry as any, transformPerspective: 800 }}
+      className={`group relative block w-full overflow-hidden rounded-2xl border p-4 text-left shadow-md backdrop-blur transition ${
+        active
+          ? "border-primary/50 bg-card/80 shadow-[0_0_0_1px_rgba(139,92,246,0.15),0_10px_40px_-12px_rgba(139,92,246,0.35)]"
+          : "border-border bg-card/50"
+      }`}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient} opacity-70`} />
       <div
-        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-40 transition-opacity group-hover:opacity-70"
+        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-40 transition-opacity group-hover:opacity-80"
         style={{ background: color }}
       />
+      {active && (
+        <motion.span
+          layoutId={`kpi-ring-${label}`}
+          className="pointer-events-none absolute inset-0 rounded-2xl"
+          style={{ boxShadow: `inset 0 0 0 1.5px ${color}55` }}
+        />
+      )}
       <div className="relative">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur"
-               style={{ color }}>
+          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
             <Icon className="h-3.5 w-3.5" />
           </div>
         </div>
@@ -1002,6 +1036,251 @@ function HeroStat({
           </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
+  );
+}
+
+// ---- Interactive traffic chart (area / line / bar + brush) ----------------
+type TrafficRow = {
+  label: string;
+  Peržiūros: number;
+  Unikalūs: number;
+  Prisijungimai: number;
+  Atsijungimai: number;
+};
+type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
+const METRIC_COLOR: Record<MetricKey, string> = {
+  "Peržiūros": C.cyan,
+  "Unikalūs": C.violet,
+  "Prisijungimai": C.emerald,
+  "Atsijungimai": C.rose,
+};
+
+function TrafficChart({
+  kind,
+  data,
+  active,
+  onBrushChange,
+}: {
+  kind: "area" | "line" | "bar";
+  data: TrafficRow[];
+  active: Set<MetricKey>;
+  onBrushChange: (r: { start: number; end: number } | null) => void;
+}) {
+  const keys: MetricKey[] = ["Peržiūros", "Unikalūs", "Prisijungimai", "Atsijungimai"];
+  const shared = (
+    <>
+      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.25} />
+      <XAxis dataKey="label" fontSize={10} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+      <YAxis fontSize={10} stroke="hsl(var(--muted-foreground))" allowDecimals={false} tickLine={false} axisLine={false} />
+      <Tooltip content={<GlassTooltip />} cursor={{ stroke: C.primary, strokeWidth: 1, strokeDasharray: "4 4" }} />
+      <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+      <Brush
+        dataKey="label"
+        height={22}
+        stroke={C.primary}
+        fill="hsl(var(--card))"
+        travellerWidth={10}
+        onChange={(e: any) => {
+          if (e && typeof e.startIndex === "number" && typeof e.endIndex === "number") {
+            onBrushChange({ start: e.startIndex, end: e.endIndex });
+          }
+        }}
+      />
+    </>
+  );
+
+  if (kind === "bar") {
+    return (
+      <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+        {shared}
+        {keys.map((k) => (
+          <Bar
+            key={k}
+            dataKey={k}
+            fill={METRIC_COLOR[k]}
+            radius={[6, 6, 0, 0]}
+            hide={!active.has(k)}
+            fillOpacity={active.has(k) ? 0.9 : 0.15}
+            animationDuration={800}
+          />
+        ))}
+      </BarChart>
+    );
+  }
+  if (kind === "line") {
+    return (
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+        {shared}
+        {keys.map((k) => (
+          <Line
+            key={k}
+            type="monotone"
+            dataKey={k}
+            stroke={METRIC_COLOR[k]}
+            strokeWidth={active.has(k) ? 2.6 : 1}
+            strokeOpacity={active.has(k) ? 1 : 0.2}
+            dot={false}
+            activeDot={{ r: 5 }}
+            hide={!active.has(k)}
+            animationDuration={800}
+          />
+        ))}
+      </LineChart>
+    );
+  }
+  // area (default)
+  return (
+    <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+      <defs>
+        {keys.map((k) => (
+          <linearGradient key={k} id={`ga-${k}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={METRIC_COLOR[k]} stopOpacity={0.85} />
+            <stop offset="100%" stopColor={METRIC_COLOR[k]} stopOpacity={0} />
+          </linearGradient>
+        ))}
+      </defs>
+      {shared}
+      {keys.map((k) => (
+        <Area
+          key={k}
+          type="monotone"
+          dataKey={k}
+          stroke={METRIC_COLOR[k]}
+          strokeWidth={active.has(k) ? 2.5 : 1}
+          fill={`url(#ga-${k})`}
+          fillOpacity={active.has(k) ? 1 : 0.15}
+          strokeOpacity={active.has(k) ? 1 : 0.25}
+          hide={!active.has(k)}
+          animationDuration={900}
+        />
+      ))}
+    </AreaChart>
+  );
+}
+
+// ---- Drill-down drawer for top-page clicks --------------------------------
+function DrilldownDrawer({
+  path,
+  onClose,
+  activity,
+  rangeSince,
+}: {
+  path: string | null;
+  onClose: () => void;
+  activity: Array<{ id: string; created_at: string; action: string; user_id: string | null; meta?: any }>;
+  rangeSince: string;
+}) {
+  const events = useMemo(() => {
+    if (!path) return [];
+    return activity
+      .filter(
+        (a) =>
+          a.action === "page.view" &&
+          a.created_at.slice(0, 10) >= rangeSince &&
+          ((a.meta?.path as string | undefined) ?? "/") === path,
+      )
+      .slice(0, 200);
+  }, [path, activity, rangeSince]);
+
+  const byDay = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of events) {
+      const d = e.created_at.slice(0, 10);
+      map[d] = (map[d] ?? 0) + 1;
+    }
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([day, count]) => ({ label: day.slice(5), count }));
+  }, [events]);
+
+  return (
+    <AnimatePresence>
+      {path && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm"
+          />
+          <motion.aside
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 32 }}
+            className="fixed right-0 top-0 z-[81] flex h-full w-full max-w-md flex-col border-l border-border bg-background/95 shadow-2xl backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Puslapio detalės</p>
+                <p className="mt-0.5 truncate font-mono text-sm font-semibold text-primary">{path}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 px-4 py-3">
+              <MiniStat label="Peržiūros" value={events.length} />
+              <MiniStat label="Unikalūs" value={new Set(events.map((e) => e.user_id ?? `a-${e.id}`)).size} />
+              <MiniStat label="Anonim." value={events.filter((e) => !e.user_id).length} />
+            </div>
+
+            <div className="h-40 px-3">
+              <ResponsiveContainer>
+                <AreaChart data={byDay} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="dd-area" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={C.primary} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={C.primary} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Area type="monotone" dataKey="count" stroke={C.primary} fill="url(#dd-area)" strokeWidth={2} animationDuration={700} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex-1 overflow-y-auto border-t border-border/60 px-3 py-2">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Paskutinės peržiūros ({events.length})
+              </p>
+              <div className="space-y-1">
+                {events.length === 0 && (
+                  <p className="rounded-lg border border-border/60 bg-card/40 p-3 text-xs text-muted-foreground">
+                    Nėra duomenų šiam laikotarpiui.
+                  </p>
+                )}
+                {events.slice(0, 60).map((e, i) => (
+                  <motion.div
+                    key={e.id}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.01 }}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-card/40 px-2.5 py-1.5 text-[11px]"
+                  >
+                    <span className="truncate font-mono text-muted-foreground">
+                      {new Date(e.created_at).toLocaleString("lt-LT")}
+                    </span>
+                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                      e.user_id ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {e.user_id ? "reg" : "anon"}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
