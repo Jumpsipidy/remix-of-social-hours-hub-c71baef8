@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, useSpring } from "framer-motion";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -20,6 +20,7 @@ import {
   Legend,
   RadialBarChart,
   RadialBar,
+  Brush,
 } from "recharts";
 import { adminAnalytics } from "@/lib/admin-super.functions";
 import {
@@ -39,6 +40,11 @@ import {
   Activity as ActivityIcon,
   Globe,
   Target,
+  X,
+  LineChart as LineIcon,
+  AreaChart as AreaIcon,
+  BarChart2,
+  MousePointerClick,
 } from "lucide-react";
 import { toast } from "sonner";
 
