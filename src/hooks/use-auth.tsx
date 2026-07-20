@@ -191,6 +191,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isImpersonating: !!mock,
       loading,
       signOut: async () => {
+        try {
+          const { deviceMeta } = await import("@/lib/device-meta");
+          await logActivity("auth.signed_out", { meta: deviceMeta() });
+        } catch {}
         try { localStorage.removeItem(MOCK_KEY); } catch {}
         try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
         setMock(null);
