@@ -218,14 +218,23 @@ export const adminAnalytics = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sb = await assertAdmin(context.userId);
     const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-    const [rRes, pRes, mRes] = await Promise.all([
+    const [rRes, pRes, mRes, aRes] = await Promise.all([
       sb.from("reservations").select("id, status, hours_to_earn, created_at").gte("created_at", since),
       sb.from("profiles").select("id, role, created_at").gte("created_at", since),
       sb.from("messages").select("id, created_at").gte("created_at", since),
+      sb.from("activity_log")
+        .select("id, user_id, action, created_at")
+        .in("action", ["auth.signed_in", "auth.signed_out", "page.view"])
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(20000),
     ]);
     return {
       reservations: rRes.data ?? [],
       profiles: pRes.data ?? [],
       messages: mRes.data ?? [],
+      activity: (aRes.data ?? []) as Array<{
+        id: string; user_id: string | null; action: string; created_at: string;
+      }>,
     };
   });

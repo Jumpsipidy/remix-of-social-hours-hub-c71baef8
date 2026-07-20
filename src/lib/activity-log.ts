@@ -19,7 +19,8 @@ export type ActivityAction =
   | "profile.updated"
   | "certificate.generated"
   | "auth.signed_in"
-  | "auth.signed_out";
+  | "auth.signed_out"
+  | "page.view";
 
 /** Fire-and-forget activity logger. Silently ignores errors. */
 export async function logActivity(
@@ -62,4 +63,5 @@ export const ACTION_LABELS: Record<string, { label: string; tone: "info" | "ok" 
   "certificate.generated": { label: "Sugeneravo sertifikatą", tone: "ok" },
   "auth.signed_in": { label: "Prisijungė", tone: "info" },
   "auth.signed_out": { label: "Atsijungė", tone: "info" },
+  "page.view": { label: "Peržiūrėjo puslapį", tone: "info" },
 };

@@ -17,6 +17,7 @@ import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
+import { PageViewTracker } from "@/components/page-view-tracker";
 
 function NotFoundComponent() {
   return (
@@ -146,6 +147,7 @@ function RootComponent() {
         <MockTesterPanel />
         <LockdownGate />
         <ErrorMonitor />
+        <PageViewTracker />
       </AuthProvider>
     </QueryClientProvider>
 

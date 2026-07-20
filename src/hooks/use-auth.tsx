@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { logActivity } from "@/lib/activity-log";
 
 export type AppRole = "student" | "school_admin" | "organization" | "admin";
 
@@ -146,8 +147,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(async () => {
           await loadProfile(u.id);
           if (mounted) setLoading(false);
+          if (event === "SIGNED_IN") {
+            try { logActivity("auth.signed_in", { entityType: "user", entityId: u.id }); } catch {}
+          }
         }, 0);
       } else {
+        if (event === "SIGNED_OUT") {
+          try { logActivity("auth.signed_out"); } catch {}
+        }
         setProfile(null);
         setLoading(false);
       }
