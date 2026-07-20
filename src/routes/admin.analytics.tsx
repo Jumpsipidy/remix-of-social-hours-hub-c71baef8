@@ -921,6 +921,15 @@ function Page() {
         activity={data?.activity ?? []}
         rangeSince={rangeSince}
       />
+
+      {/* KPI detail modal — rich motion drill-down opened from any KPI card */}
+      <KpiDetailModal
+        kind={kpiDetail}
+        onClose={() => setKpiDetail(null)}
+        activity={data?.activity ?? []}
+        rangeSince={rangeSince}
+        rangeDays={range}
+      />
     </div>
   );
 }
