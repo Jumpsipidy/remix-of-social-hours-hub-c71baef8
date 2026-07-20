@@ -1,66 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, animate } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
 import {
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line,
-  PieChart, Pie, Cell, XAxis, YAxis, Tooltip, CartesianGrid, RadialBarChart, RadialBar, Brush,
+  ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Brush, PieChart, Pie, Cell,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin-super.functions";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  BarChart3, RefreshCw, LogIn, LogOut, Eye, Users, Download, Zap, Clock,
-  ArrowUp, ArrowDown, Activity as ActivityIcon, Globe, LineChart as LineIcon,
-  AreaChart as AreaIcon, BarChart2, Smartphone, Tablet, Monitor, Wifi,
-  Chrome, Languages, ExternalLink, ShieldCheck, Maximize2, Minimize2, MapPin, MonitorSmartphone,
-} from "lucide-react";
-import { toast } from "sonner";
 import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
+import { toast } from "sonner";
+import {
+  Activity, Eye, Users, LogIn, LogOut, RefreshCw, Download, Maximize2, Minimize2,
+  Zap, Clock, Globe2, MonitorSmartphone, Chrome, Languages, MapPin, ArrowUp, ArrowDown,
+  Sparkles, Radio, Search, Filter, ChevronRight, Layers, Fingerprint, Timer,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
 
-// ============================================================================
-// Design tokens
-// ============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// TOKENS
+// ─────────────────────────────────────────────────────────────────────────────
 const C = {
-  cyan: "#06b6d4", emerald: "#10b981", rose: "#f43f5e", amber: "#f59e0b",
-  violet: "#a855f7", indigo: "#6366f1", primary: "#8b5cf6", pink: "#ec4899",
-  sky: "#0ea5e9", teal: "#14b8a6",
+  cyan: "#06b6d4", violet: "#a855f7", emerald: "#10b981", rose: "#f43f5e",
+  amber: "#f59e0b", pink: "#ec4899", sky: "#0ea5e9", indigo: "#6366f1",
 };
-const PIE = [C.violet, C.cyan, C.emerald, C.amber, C.rose, C.pink, C.sky, C.teal];
-const WD_LT = ["Sk", "Pr", "An", "Tr", "Kt", "Pn", "Št"];
-type Range = 7 | 14 | 30;
+const PIE = [C.violet, C.cyan, C.emerald, C.amber, C.rose, C.pink, C.sky, C.indigo];
+const WD = ["Sk", "Pr", "An", "Tr", "Kt", "Pn", "Št"];
+type Range = 7 | 14 | 30 | 60;
+type Data = Awaited<ReturnType<typeof adminAnalytics>>;
 
-// ============================================================================
-// Helpers
-// ============================================================================
-function downloadCsv(filename: string, rows: Record<string, string | number>[]) {
-  if (!rows.length) return toast.error("Nėra duomenų eksportui");
-  const headers = Object.keys(rows[0]);
-  const esc = (v: unknown) => {
-    const s = v == null ? "" : String(v);
-    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const csv = [headers.join(",")]
-    .concat(rows.map((r) => headers.map((h) => esc(r[h])).join(",")))
-    .join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast.success("CSV atsisiųsta");
-}
-
-const pct = (now: number, prev: number) => {
-  if (!prev && !now) return 0;
-  if (!prev) return 100;
-  return Math.round(((now - prev) / prev) * 100);
-};
-
-const fmt = (n: number) => n.toLocaleString("lt-LT");
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+const fmt = (n: number) => (n ?? 0).toLocaleString("lt-LT");
+const pct = (a: number, b: number) => (!b && !a ? 0 : !b ? 100 : Math.round(((a - b) / b) * 100));
 const timeAgo = (iso: string) => {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return `${Math.round(s)}s`;
@@ -68,10 +43,9 @@ const timeAgo = (iso: string) => {
   if (s < 86400) return `${Math.round(s / 3600)}val`;
   return `${Math.round(s / 86400)}d`;
 };
-function bucketViewport(vp: string): string {
-  const [wStr] = (vp || "").split("x");
-  const w = Number(wStr);
-  if (!w) return "";
+function bucketVp(vp: string) {
+  const w = Number((vp || "").split("x")[0]);
+  if (!w) return "unknown";
   if (w < 480) return "XS <480";
   if (w < 768) return "SM <768";
   if (w < 1024) return "MD <1024";
@@ -79,888 +53,907 @@ function bucketViewport(vp: string): string {
   if (w < 1920) return "XL <1920";
   return "2XL 1920+";
 }
-
-// ============================================================================
-// Reusable primitives
-// ============================================================================
-function AnimatedNumber({ value }: { value: number }) {
-  const mv = useMotionValue(0);
-  const rounded = useTransform(mv, (v) => Math.round(v).toLocaleString("lt-LT"));
-  useEffect(() => {
-    const c = animate(mv, value, { duration: 0.9, ease: [0.22, 1, 0.36, 1] });
-    return c.stop;
-  }, [value, mv]);
-  return <motion.span>{rounded}</motion.span>;
+function toCsv(name: string, rows: Record<string, unknown>[]) {
+  if (!rows.length) return toast.error("Nėra duomenų");
+  const heads = Object.keys(rows[0]);
+  const esc = (v: unknown) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [heads.join(",")].concat(rows.map((r) => heads.map((h) => esc(r[h])).join(","))).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+  toast.success("Eksportuota");
 }
 
-/** 3D tilt wrapper — pointer-tracking, smooth spring, no jitter on touch. */
-function Tilt3D({ children, className, intensity = 8 }: { children: React.ReactNode; className?: string; intensity?: number }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// PRIMITIVES
+// ─────────────────────────────────────────────────────────────────────────────
+function CountUp({ value }: { value: number }) {
+  const mv = useMotionValue(0);
+  const t = useTransform(mv, (v) => Math.round(v).toLocaleString("lt-LT"));
+  useEffect(() => { const c = animate(mv, value, { duration: 0.8, ease: [0.22, 1, 0.36, 1] }); return c.stop; }, [value, mv]);
+  return <motion.span>{t}</motion.span>;
+}
+
+function Tilt({ children, className, intensity = 6 }: { children: React.ReactNode; className?: string; intensity?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0.5);
-  const my = useMotionValue(0.5);
-  const rx = useSpring(useTransform(my, [0, 1], [intensity, -intensity]), { stiffness: 220, damping: 22 });
-  const ry = useSpring(useTransform(mx, [0, 1], [-intensity, intensity]), { stiffness: 220, damping: 22 });
+  const mx = useMotionValue(0.5), my = useMotionValue(0.5);
+  const rx = useSpring(useTransform(my, [0, 1], [intensity, -intensity]), { stiffness: 200, damping: 20 });
+  const ry = useSpring(useTransform(mx, [0, 1], [-intensity, intensity]), { stiffness: 200, damping: 20 });
   const gx = useTransform(mx, (v) => `${v * 100}%`);
   const gy = useTransform(my, (v) => `${v * 100}%`);
-
-  const onMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === "touch") return;
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return;
-    mx.set((e.clientX - r.left) / r.width);
-    my.set((e.clientY - r.top) / r.height);
-  };
-  const onLeave = () => { mx.set(0.5); my.set(0.5); };
-
+  const bg = useTransform([gx, gy], ([x, y]) => `radial-gradient(400px circle at ${x} ${y}, rgba(255,255,255,0.10), transparent 55%)`);
   return (
     <motion.div
       ref={ref}
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000, transformStyle: "preserve-3d" }}
+      onPointerMove={(e) => {
+        if (e.pointerType === "touch") return;
+        const r = ref.current?.getBoundingClientRect(); if (!r) return;
+        mx.set((e.clientX - r.left) / r.width); my.set((e.clientY - r.top) / r.height);
+      }}
+      onPointerLeave={() => { mx.set(0.5); my.set(0.5); }}
+      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1200 }}
       className={`relative ${className ?? ""}`}
     >
       {children}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit] mix-blend-overlay opacity-0 transition-opacity duration-200 hover:opacity-100"
-        style={{ background: useTransform([gx, gy], ([x, y]) => `radial-gradient(300px circle at ${x} ${y}, rgba(255,255,255,0.16), transparent 55%)`) as never }}
-      />
+      <motion.div aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit]" style={{ background: bg as never }} />
     </motion.div>
   );
 }
 
-function GlassTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
+function Sparkline({ data, color, height = 40 }: { data: number[]; color: string; height?: number }) {
+  const max = Math.max(1, ...data);
+  const pts = data.map((v, i) => `${(i / Math.max(1, data.length - 1)) * 100},${100 - (v / max) * 100}`).join(" ");
+  const area = `0,100 ${pts} 100,100`;
+  const id = useRef(`sp-${Math.random().toString(36).slice(2)}`).current;
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: "100%", height }}>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill={`url(#${id})`} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RICH FLOATING TOOLTIP (cursor-follow) — the "SaaS" hover experience
+// ─────────────────────────────────────────────────────────────────────────────
+type HoverPayload = {
+  x: number; y: number;
+  title: string;
+  primary: { label: string; value: number; color: string }[];
+  breakdown?: { label: string; value: number }[];
+  spark?: number[];
+  sparkColor?: string;
+  meta?: { label: string; value: string }[];
+};
+function FloatingTooltip({ p }: { p: HoverPayload | null }) {
+  const x = useSpring(0, { stiffness: 500, damping: 40 });
+  const y = useSpring(0, { stiffness: 500, damping: 40 });
+  useEffect(() => { if (p) { x.set(p.x + 16); y.set(p.y + 16); } }, [p, x, y]);
+  if (!p) return null;
+  const total = p.primary.reduce((a, b) => a + b.value, 0);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl border border-white/10 bg-black/85 px-3 py-2 text-xs shadow-2xl backdrop-blur-md"
+      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+      style={{ x, y }}
+      className="pointer-events-none fixed left-0 top-0 z-[100] w-[300px] overflow-hidden rounded-2xl border border-white/15 bg-slate-950/95 shadow-[0_20px_60px_-15px_rgba(139,92,246,0.4)] backdrop-blur-xl"
     >
-      {label != null && <p className="mb-1.5 font-semibold text-white/90">{label}</p>}
-      <div className="space-y-1">
-        {payload.map((p: any, i: number) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color, boxShadow: `0 0 8px ${p.color}` }} />
-            <span className="text-white/70">{p.name}</span>
-            <span className="ml-auto font-bold text-white">{fmt(Number(p.value))}</span>
+      <div className="relative border-b border-white/10 px-4 py-2.5">
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 via-cyan-500/10 to-transparent" />
+        <div className="relative flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-violet-300" />
+          <span className="text-xs font-bold uppercase tracking-widest text-white">{p.title}</span>
+        </div>
+      </div>
+      <div className="space-y-2.5 p-3">
+        {p.primary.map((it, i) => (
+          <div key={i} className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ background: it.color, boxShadow: `0 0 10px ${it.color}` }} />
+                <span className="text-white/70">{it.label}</span>
+              </div>
+              <span className="font-bold tabular-nums text-white">{fmt(it.value)}</span>
+            </div>
+            <div className="h-1 overflow-hidden rounded-full bg-white/5">
+              <motion.div
+                initial={{ width: 0 }} animate={{ width: `${total ? (it.value / Math.max(...p.primary.map((x) => x.value), 1)) * 100 : 0}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="h-full rounded-full" style={{ background: it.color, boxShadow: `0 0 12px ${it.color}` }}
+              />
+            </div>
           </div>
         ))}
+        {p.spark && p.spark.length > 1 && (
+          <div className="mt-2 rounded-lg bg-white/[0.03] p-2">
+            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/40">Tendencija</div>
+            <Sparkline data={p.spark} color={p.sparkColor ?? C.cyan} height={30} />
+          </div>
+        )}
+        {p.breakdown && p.breakdown.length > 0 && (
+          <div className="border-t border-white/10 pt-2">
+            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/40">Top pasiskirstymas</div>
+            {p.breakdown.slice(0, 4).map((b, i) => (
+              <div key={i} className="flex items-center justify-between py-0.5 text-[11px]">
+                <span className="truncate text-white/60">{b.label}</span>
+                <span className="ml-2 font-semibold tabular-nums text-white/90">{fmt(b.value)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {p.meta && p.meta.length > 0 && (
+          <div className="grid grid-cols-2 gap-2 border-t border-white/10 pt-2">
+            {p.meta.map((m, i) => (
+              <div key={i} className="rounded-md bg-white/[0.03] px-2 py-1">
+                <div className="text-[9px] uppercase tracking-widest text-white/40">{m.label}</div>
+                <div className="text-[11px] font-semibold text-white/90">{m.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
 }
 
-// ============================================================================
-// Page
-// ============================================================================
-type Data = Awaited<ReturnType<typeof adminAnalytics>>;
-type MetricKey = "Peržiūros" | "Unikalūs" | "Prisijungimai" | "Atsijungimai";
-const ALL_METRICS: MetricKey[] = ["Peržiūros", "Unikalūs", "Prisijungimai", "Atsijungimai"];
-
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE
+// ─────────────────────────────────────────────────────────────────────────────
 function Page() {
   const fn = useServerFn(adminAnalytics);
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
   const [range, setRange] = useState<Range>(30);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
-  const [activeMetrics, setActiveMetrics] = useState<Set<MetricKey>>(new Set(ALL_METRICS));
-  const [chartKind, setChartKind] = useState<"area" | "line" | "bar">("area");
-  const [liveEvents, setLiveEvents] = useState<FeedRow[]>([]);
-  const [pulse, setPulse] = useState(0);
-  const [detailKind, setDetailKind] = useState<KpiKind | null>(null);
-  const [fullscreenId, setFullscreenId] = useState<string | null>(null);
+  const [live, setLive] = useState(true);
+  const [pulseTick, setPulseTick] = useState(0);
+  const [lastAt, setLastAt] = useState<Date | null>(null);
+  const [detail, setDetail] = useState<KpiKind | null>(null);
+  const [full, setFull] = useState<string | null>(null);
+  const [tip, setTip] = useState<HoverPayload | null>(null);
+  const [sessionFilter, setSessionFilter] = useState<string | null>(null);
+  const [pageFilter, setPageFilter] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  const toggleMetric = useCallback((m: MetricKey) => {
-    setActiveMetrics((prev) => {
-      const next = new Set(prev);
-      if (next.size === 1 && next.has(m)) return new Set(ALL_METRICS);
-      if (next.size === ALL_METRICS.length) return new Set([m]);
-      if (next.has(m)) next.delete(m); else next.add(m);
-      if (next.size === 0) return new Set(ALL_METRICS);
-      return next;
-    });
-  }, []);
-
-  const refresh = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  const load = useCallback(async () => {
     try {
-      const res = await fn({ data: { days: range } });
-      setData(res);
-      setLiveEvents(res.feed ?? []);
-      setLastRefreshAt(new Date());
+      const d = await fn({ data: { days: range } });
+      setData(d); setErr(null); setLastAt(new Date());
     } catch (e) {
-      if (!silent) toast.error(e instanceof Error ? e.message : "Klaida");
-    } finally {
-      if (!silent) setLoading(false);
-    }
+      const msg = e instanceof Error ? e.message : String(e);
+      setErr(msg);
+    } finally { setLoading(false); }
   }, [fn, range]);
 
-  useEffect(() => { refresh(); }, [refresh]);
-
-  // Auto-refresh (silent) — analytics feel live
+  useEffect(() => { setLoading(true); load(); }, [load]);
   useEffect(() => {
-    if (!autoRefresh) return;
-    const id = setInterval(() => refresh(true), 15_000);
-    return () => clearInterval(id);
-  }, [autoRefresh, refresh]);
+    if (!live) return;
+    const iv = setInterval(load, 15000);
+    return () => clearInterval(iv);
+  }, [live, load]);
 
-  // Realtime — subscribe to activity_log so the live feed updates instantly
+  // Realtime pulse on new activity_log row
   useEffect(() => {
-    const ch = supabase.channel("analytics:activity_log")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "activity_log" }, (payload) => {
-        const row = payload.new as { id: string; created_at: string; action: string; user_id: string | null; meta: Record<string, unknown> | null };
-        const meta = row.meta ?? {};
-        const path = (meta.path as string) ?? "/";
-        // Skip admin console traffic from the live feed
-        if (path.startsWith("/admin")) return;
-        const feedRow: FeedRow = {
-          id: row.id, created_at: row.created_at, action: row.action, user_id: row.user_id,
-          path,
-          device: (meta.device as string) ?? "unknown",
-          browser: (meta.browser as string) ?? "unknown",
-          os: (meta.os as string) ?? "unknown",
-          ref_host: (meta.ref_host as string) ?? "",
-          lang: (meta.lang as string) ?? "",
-          user_name: null, user_role: null,
-        };
-        setLiveEvents((prev) => [feedRow, ...prev].slice(0, 80));
-        setPulse((p) => p + 1);
+    const ch = supabase
+      .channel("analytics-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "activity_log" }, () => {
+        setPulseTick((p) => p + 1);
+        if (live) load();
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, []);
+  }, [live, load]);
 
-  const analytics = data?.analytics;
-  const totals = analytics?.totals ?? { views: 0, uniques: 0, signins: 0, signouts: 0, sessions: 0, signed_in_users: 0 };
-  const prev = analytics?.prev_totals ?? { views: 0, uniques: 0, signins: 0, signouts: 0 };
-  const adminHidden = analytics?.admin_hidden_events ?? 0;
-  const activeNow = analytics?.active_now ?? 0;
+  const a: AdminAnalyticsV2 | null = data?.analytics ?? null;
 
-  // Daily series shaped for recharts
-  const traffic = useMemo(() => {
-    if (!analytics) return [];
-    return analytics.daily.map((d) => ({
-      label: d.d.slice(5),
-      Peržiūros: d.views,
-      Unikalūs: d.uniques,
-      Prisijungimai: d.signins,
-      Atsijungimai: d.signouts,
-    }));
-  }, [analytics]);
-
-  const hours = useMemo(() => {
-    const buckets = Array.from({ length: 24 }, (_, h) => ({
-      hour: `${String(h).padStart(2, "0")}h`, Peržiūros: 0, Prisijungimai: 0, Unikalūs: 0,
-    }));
-    analytics?.hourly.forEach((r) => {
-      buckets[r.h] = { hour: buckets[r.h].hour, Peržiūros: r.views, Prisijungimai: r.signins, Unikalūs: r.uniques };
+  const filteredActivity = useMemo(() => {
+    if (!data) return [];
+    return data.rawActivity.filter((r) => {
+      if (sessionFilter && r.session_id !== sessionFilter) return false;
+      if (pageFilter && r.path !== pageFilter) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (!(r.path.toLowerCase().includes(s) || r.device.toLowerCase().includes(s) || r.browser.toLowerCase().includes(s) || (r.session_id ?? "").toLowerCase().includes(s))) return false;
+      }
+      return true;
     });
-    return buckets;
-  }, [analytics]);
+  }, [data, sessionFilter, pageFilter, search]);
 
-  const weekdays = useMemo(() => {
-    const base = WD_LT.map((w) => ({ diena: w, Peržiūros: 0 }));
-    analytics?.weekday.forEach((r) => { base[r.w].Peržiūros = r.views; });
-    return [1, 2, 3, 4, 5, 6, 0].map((i) => base[i]);
-  }, [analytics]);
+  const dailySeries = a?.daily ?? [];
+  const dailyViews = dailySeries.map((d) => d.views);
 
-  const topPages = useMemo(() => (analytics?.top_pages ?? []).slice(0, 10), [analytics]);
-  const devices = useMemo(() => analytics?.devices ?? [], [analytics]);
-  const browsers = useMemo(() => analytics?.browsers ?? [], [analytics]);
-  const oses = useMemo(() => analytics?.os ?? [], [analytics]);
-  const referrers = useMemo(() => analytics?.referrers ?? [], [analytics]);
-  const languages = useMemo(() => analytics?.languages ?? [], [analytics]);
-
-  // Deep device breakdowns from raw meta
-  const raw = data?.rawActivity ?? [];
-  const groupTop = (fn: (r: typeof raw[number]) => string, min = 1) => {
-    const map: Record<string, number> = {};
-    for (const r of raw) {
-      if (r.action !== "page.view") continue;
-      const k = fn(r);
-      if (!k) continue;
-      map[k] = (map[k] ?? 0) + 1;
+  // Session index: sessionId -> full journey
+  const sessionMap = useMemo(() => {
+    type RawRow = NonNullable<Data>["rawActivity"][number];
+    const m = new Map<string, RawRow[]>();
+    if (!data) return m;
+    for (const r of data.rawActivity) {
+      if (!r.session_id) continue;
+      const arr = m.get(r.session_id) ?? [];
+      arr.push(r); m.set(r.session_id, arr);
     }
-    return Object.entries(map).filter(([, n]) => n >= min).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  };
-  const timezones = useMemo(() => groupTop((r) => r.tz), [raw]);
-  const screens = useMemo(() => groupTop((r) => r.screen), [raw]);
-  const viewports = useMemo(() => groupTop((r) => bucketViewport(r.vp)), [raw]);
-  // Data shaped for the KpiDetailModal (needs .meta shape)
-  const activityForModal = useMemo(
-    () => raw.map((r) => ({
-      id: r.id, created_at: r.created_at, action: r.action, user_id: r.user_id,
-      meta: { path: r.path, device: r.device, browser: r.browser, os: r.os, lang: r.lang, ref_host: r.ref_host, session_id: r.session_id, screen: r.screen, vp: r.vp, tz: r.tz },
-    })),
-    [raw],
-  );
-  const rangeSince = useMemo(
-    () => new Date(Date.now() - range * 86400000).toISOString().slice(0, 10),
-    [range],
-  );
-
-  const rolePie = useMemo(() => {
-    if (!data) return [];
-    const map: Record<string, number> = {};
-    data.profiles.forEach((p) => { map[p.role] = (map[p.role] ?? 0) + 1; });
-    const labels: Record<string, string> = {
-      student: "Mokiniai", organization: "Organizacijos", school_admin: "Mokyklos adm.", admin: "Super admin",
-    };
-    return Object.entries(map).map(([k, v]) => ({ name: labels[k] ?? k, value: v }));
+    for (const [, arr] of m) arr.sort((x, y) => x.created_at.localeCompare(y.created_at));
+    return m;
   }, [data]);
 
-  const statusPie = useMemo(() => {
+  const sessions = useMemo(() => {
+    const rows: { id: string; start: string; end: string; pages: number; device: string; browser: string; os: string; tz: string; user_id: string | null; duration: number }[] = [];
+    for (const [id, arr] of sessionMap) {
+      if (!arr.length) continue;
+      const start = arr[0].created_at;
+      const end = arr[arr.length - 1].created_at;
+      rows.push({
+        id, start, end,
+        pages: arr.filter((r) => r.action === "page.view").length,
+        device: arr[0].device, browser: arr[0].browser, os: arr[0].os, tz: arr[0].tz,
+        user_id: arr[0].user_id,
+        duration: Math.max(0, (new Date(end).getTime() - new Date(start).getTime()) / 1000),
+      });
+    }
+    return rows.sort((a, b) => b.end.localeCompare(a.end));
+  }, [sessionMap]);
+
+  // Heatmap (day-of-week × hour) from rawActivity
+  const heat = useMemo(() => {
+    const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+    if (!data) return grid;
+    for (const r of data.rawActivity) {
+      if (r.action !== "page.view") continue;
+      const d = new Date(r.created_at);
+      grid[d.getDay()][d.getHours()] += 1;
+    }
+    return grid;
+  }, [data]);
+  const heatMax = Math.max(1, ...heat.flat());
+
+  // Timezones
+  const timezones = useMemo(() => {
+    const map = new Map<string, number>();
     if (!data) return [];
-    const map: Record<string, number> = {};
-    data.reservations.forEach((r) => { map[r.status] = (map[r.status] ?? 0) + 1; });
-    const labels: Record<string, string> = {
-      pending: "Laukia", approved: "Vykdoma", completed: "Užbaigta", declined: "Atmesta", confirmed: "Patvirtinta",
-    };
-    return Object.entries(map).map(([k, v]) => ({ name: labels[k] ?? k, value: v }));
+    for (const r of data.rawActivity) if (r.action === "page.view") map.set(r.tz || "unknown", (map.get(r.tz || "unknown") ?? 0) + 1);
+    return [...map.entries()].map(([tz, n]) => ({ tz, n })).sort((a, b) => b.n - a.n).slice(0, 10);
   }, [data]);
 
-  const reservationsCount = data?.reservations.length ?? 0;
-  const totalHours = (data?.reservations ?? [])
-    .reduce((s, r) => s + (r.status === "completed" ? (r.hours_to_earn ?? 0) : 0), 0);
-  const completedRate = reservationsCount
-    ? Math.round((data!.reservations.filter((r) => r.status === "completed").length / reservationsCount) * 100)
-    : 0;
+  // Viewport buckets
+  const viewports = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!data) return [];
+    for (const r of data.rawActivity) if (r.action === "page.view") map.set(bucketVp(r.vp), (map.get(bucketVp(r.vp)) ?? 0) + 1);
+    return [...map.entries()].map(([b, n]) => ({ b, n })).sort((a, b) => b.n - a.n);
+  }, [data]);
 
-  const exportSummary = () =>
-    downloadCsv(`analitika-suvestine-${new Date().toISOString().slice(0, 10)}.csv`, [
-      { rodiklis: "Peržiūros", reikšmė: totals.views },
-      { rodiklis: "Unikalūs sesijos", reikšmė: totals.uniques },
-      { rodiklis: "Prisijungimai (auth)", reikšmė: totals.signins },
-      { rodiklis: "Atsijungimai (auth)", reikšmė: totals.signouts },
-      { rodiklis: "Prisijunge dabar (5 min)", reikšmė: activeNow },
-      { rodiklis: "Iš viso sesijų", reikšmė: totals.sessions },
-      { rodiklis: "Iš viso naudotojų (prisijungusių)", reikšmė: totals.signed_in_users },
-      { rodiklis: "Super admin peržiūros (paslėptos)", reikšmė: adminHidden },
-      { rodiklis: "Rezervacijos", reikšmė: reservationsCount },
-      { rodiklis: "Užbaigimo %", reikšmė: completedRate },
-      { rodiklis: "Suteikta valandų", reikšmė: totalHours },
-    ]);
+  // New vs returning (sessions with >1 page = returning-intent proxy)
+  const engagement = useMemo(() => {
+    let bounce = 0, deep = 0, returning = 0;
+    for (const s of sessions) {
+      if (s.pages <= 1) bounce++; else deep++;
+      if (s.pages >= 3) returning++;
+    }
+    return { bounce, deep, returning, total: sessions.length };
+  }, [sessions]);
 
-  const exportFeed = () =>
-    downloadCsv(`analitika-feed-${new Date().toISOString().slice(0, 10)}.csv`,
-      liveEvents.map((e) => ({
-        laikas: e.created_at, veiksmas: e.action, naudotojas: e.user_name ?? "(anon)", vaidmuo: e.user_role ?? "",
-        kelias: e.path, irenginys: e.device, narsykle: e.browser, os: e.os, kalba: e.lang, salt: e.ref_host,
+  // Top pages
+  const topPages = a?.top_pages ?? [];
+
+  // Path transitions (from → to)
+  const flows = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const arr of sessionMap.values()) {
+      const pages = arr.filter((r) => r.action === "page.view");
+      for (let i = 1; i < pages.length; i++) {
+        const key = `${pages[i - 1].path} → ${pages[i].path}`;
+        map.set(key, (map.get(key) ?? 0) + 1);
+      }
+    }
+    return [...map.entries()].map(([k, n]) => ({ k, n })).sort((a, b) => b.n - a.n).slice(0, 12);
+  }, [sessionMap]);
+
+  // Per-day breakdown cache for chart hover
+  const dayBreakdown = useMemo(() => {
+    const map = new Map<string, { pages: { label: string; value: number }[]; devices: { label: string; value: number }[] }>();
+    if (!data) return map;
+    const byDay = new Map<string, typeof data.rawActivity>();
+    for (const r of data.rawActivity) {
+      const d = r.created_at.slice(0, 10);
+      const arr = byDay.get(d) ?? []; arr.push(r); byDay.set(d, arr);
+    }
+    for (const [d, rows] of byDay) {
+      const pm = new Map<string, number>(), dm = new Map<string, number>();
+      for (const r of rows) if (r.action === "page.view") {
+        pm.set(r.path, (pm.get(r.path) ?? 0) + 1);
+        dm.set(r.device, (dm.get(r.device) ?? 0) + 1);
+      }
+      map.set(d, {
+        pages: [...pm.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value),
+        devices: [...dm.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value),
+      });
+    }
+    return map;
+  }, [data]);
+
+  const exportAll = () => {
+    if (!data) return;
+    toCsv(`analytics_${range}d_${new Date().toISOString().slice(0,10)}.csv`,
+      data.rawActivity.map((r) => ({
+        laikas: r.created_at, veiksmas: r.action, kelias: r.path, irenginys: r.device,
+        narsykle: r.browser, os: r.os, kalba: r.lang, laiko_juosta: r.tz, sesija: r.session_id, vartotojas: r.user_id ?? "",
       })));
+  };
 
   return (
-    <div className="relative space-y-5 pb-8">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-20 -left-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute top-40 right-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+    <div className="relative min-h-screen">
+      <FloatingTooltip p={tip} />
+
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-violet-500/10 blur-[120px]" />
+        <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px]" />
       </div>
 
-      {/* Header */}
-      <header className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-        <div className="min-w-0">
+      {/* HEADER */}
+      <div className="mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <motion.h1 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-3xl font-black tracking-tight text-white">
+              <span className="relative">
+                <span className="absolute inset-0 -z-10 bg-gradient-to-r from-violet-500 via-cyan-500 to-emerald-500 opacity-30 blur-2xl" />
+                Analytics
+              </span>
+              <span className="rounded-full bg-gradient-to-r from-violet-500 to-cyan-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white">v3</span>
+            </motion.h1>
+            <p className="mt-1 text-sm text-white/50">Realaus laiko, 100% iš jūsų Supabase — jokių išgalvotų duomenų.</p>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
-            <motion.span
-              key={pulse}
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.7] }}
-              transition={{ duration: 1 }}
-              className="grid h-2 w-2 place-items-center rounded-full bg-emerald-400 shadow-[0_0_10px_rgb(52,211,153)]"
-            />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-400">
-              Live · {activeNow} dabar
-            </span>
-            {adminHidden > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
-                <ShieldCheck className="h-3 w-3" />
-                Super admin ({fmt(adminHidden)}) – paslėpta
+            {/* Live pulse */}
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5">
+              <motion.span key={pulseTick} initial={{ scale: 0.5 }} animate={{ scale: [0.6, 1.3, 1] }} className="relative flex h-2 w-2">
+                <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/60" />
+                <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
+              </motion.span>
+              <span className="text-xs font-semibold text-white/70">
+                {a?.active_now ?? 0} aktyvūs • {lastAt ? timeAgo(lastAt.toISOString()) + " atgal" : "…"}
               </span>
-            )}
-          </div>
-          <h1 className="mt-1 flex items-center gap-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            <BarChart3 className="h-6 w-6 shrink-0 text-primary" />
-            <span className="truncate">Analitika</span>
-            <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-              {range} d.
-            </span>
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Realūs duomenys iš serverio · realaus laiko srautas · įrenginiai · konversijos.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
-            {([7, 14, 30] as Range[]).map((r) => (
-              <button key={r} onClick={() => setRange(r)}
-                className={`relative rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                  range === r ? "text-white" : "text-muted-foreground hover:text-foreground"
-                }`}>
-                {range === r && (
-                  <motion.span layoutId="range-pill"
-                    className="absolute inset-0 rounded-full bg-gradient-primary shadow-glow"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }} />
-                )}
-                <span className="relative">{r} d.</span>
-              </button>
-            ))}
-          </div>
-          <button onClick={exportSummary}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur transition hover:bg-accent">
-            <Download className="h-3.5 w-3.5" /> CSV
-          </button>
-          <button onClick={() => setAutoRefresh((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-semibold backdrop-blur transition ${
-              autoRefresh ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-300" : "border-border bg-card/70 hover:bg-accent"
-            }`} title="Automatiškai atnaujinti kas 15 s">
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${autoRefresh ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground"}`} />
-            {autoRefresh ? "Live" : "Auto"}
-          </button>
-          <button onClick={() => refresh()}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur transition hover:bg-accent"
-            title={lastRefreshAt ? `Atnaujinta ${lastRefreshAt.toLocaleTimeString("lt-LT")}` : "Atnaujinti"}>
-            <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-      </header>
+            </div>
 
-      {/* KPI row */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <HeroStat label="Peržiūros" value={totals.views} delta={pct(totals.views, prev.views)}
-          icon={Eye} color={C.cyan} spark={traffic.map((t) => t.Peržiūros)}
-          active={activeMetrics.has("Peržiūros")} onClick={() => toggleMetric("Peržiūros")}
-          onExpand={() => setDetailKind("views")} />
-        <HeroStat label="Unikalūs" value={totals.uniques} delta={pct(totals.uniques, prev.uniques)}
-          icon={Users} color={C.violet} spark={traffic.map((t) => t.Unikalūs)}
-          active={activeMetrics.has("Unikalūs")} onClick={() => toggleMetric("Unikalūs")}
-          onExpand={() => setDetailKind("uniques")} />
-        <HeroStat label="Prisijungimai" value={totals.signins} delta={pct(totals.signins, prev.signins)}
-          icon={LogIn} color={C.emerald} spark={traffic.map((t) => t.Prisijungimai)} sub="tikri auth įvykiai"
-          active={activeMetrics.has("Prisijungimai")} onClick={() => toggleMetric("Prisijungimai")}
-          onExpand={() => setDetailKind("signIns")} />
-        <HeroStat label="Atsijungimai" value={totals.signouts} delta={0} hideDelta
-          icon={LogOut} color={C.rose} spark={traffic.map((t) => t.Atsijungimai)}
-          active={activeMetrics.has("Atsijungimai")} onClick={() => toggleMetric("Atsijungimai")}
-          onExpand={() => setDetailKind("signOuts")} />
-      </div>
+            {/* Range */}
+            <div className="flex overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+              {[7, 14, 30, 60].map((r) => (
+                <button key={r} onClick={() => setRange(r as Range)}
+                  className={`px-3 py-1.5 text-xs font-semibold transition ${range === r ? "bg-gradient-to-r from-violet-500 to-cyan-500 text-white" : "text-white/60 hover:text-white"}`}>
+                  {r}d
+                </button>
+              ))}
+            </div>
 
-      {/* Secondary stats */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <MiniStat icon={Wifi} label="Aktyvūs dabar" value={activeNow} color={C.emerald} hint="paskutinės 5 min" />
-        <MiniStat icon={Zap} label="Sesijos" value={totals.sessions} color={C.cyan} hint="unikalūs session ID" />
-        <MiniStat icon={Users} label="Prisijungę naudotojai" value={totals.signed_in_users} color={C.violet} hint="unikalūs auth user_id" />
-        <MiniStat icon={ShieldCheck} label="Paslėpta (super admin)" value={adminHidden} color={C.amber} hint="/admin peržiūros" />
-      </div>
-
-      {/* Traffic chart */}
-      <Card title="Srautas laike" icon={ActivityIcon}
-        expanded={fullscreenId === "traffic"}
-        onToggleExpand={() => setFullscreenId(fullscreenId === "traffic" ? null : "traffic")}
-        tools={
-        <div className="inline-flex rounded-full border border-border bg-card/60 p-0.5 text-[10px]">
-          {(["area", "line", "bar"] as const).map((k) => {
-            const Icon = k === "area" ? AreaIcon : k === "line" ? LineIcon : BarChart2;
-            return (
-              <button key={k} onClick={() => setChartKind(k)}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 font-semibold transition ${
-                  chartKind === k ? "bg-white/10 text-white" : "text-muted-foreground hover:text-foreground"
-                }`}>
-                <Icon className="h-3 w-3" />
-              </button>
-            );
-          })}
-        </div>
-      }>
-        <div className="h-72">
-          <ResponsiveContainer>
-            {chartKind === "area" ? (
-              <AreaChart data={traffic}>
-                <defs>
-                  {ALL_METRICS.map((m, i) => (
-                    <linearGradient key={m} id={`g-${m}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={PIE[i]} stopOpacity={0.55} />
-                      <stop offset="100%" stopColor={PIE[i]} stopOpacity={0.02} />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                <XAxis dataKey="label" stroke="rgba(255,255,255,0.5)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.5)" fontSize={11} allowDecimals={false} />
-                <Tooltip content={<GlassTooltip />} />
-                {ALL_METRICS.map((m, i) => activeMetrics.has(m) && (
-                  <Area key={m} type="monotone" dataKey={m} stroke={PIE[i]} strokeWidth={2}
-                    fill={`url(#g-${m})`} isAnimationActive activeDot={{ r: 5, strokeWidth: 0 }} />
-                ))}
-                <Brush dataKey="label" height={22} stroke={C.primary} fill="rgba(139,92,246,0.06)" travellerWidth={8} />
-              </AreaChart>
-            ) : chartKind === "line" ? (
-              <LineChart data={traffic}>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                <XAxis dataKey="label" stroke="rgba(255,255,255,0.5)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.5)" fontSize={11} allowDecimals={false} />
-                <Tooltip content={<GlassTooltip />} />
-                {ALL_METRICS.map((m, i) => activeMetrics.has(m) && (
-                  <Line key={m} type="monotone" dataKey={m} stroke={PIE[i]} strokeWidth={2} dot={false}
-                    activeDot={{ r: 5, strokeWidth: 0 }} />
-                ))}
-              </LineChart>
-            ) : (
-              <BarChart data={traffic}>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                <XAxis dataKey="label" stroke="rgba(255,255,255,0.5)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.5)" fontSize={11} allowDecimals={false} />
-                <Tooltip content={<GlassTooltip />} />
-                {ALL_METRICS.map((m, i) => activeMetrics.has(m) && (
-                  <Bar key={m} dataKey={m} fill={PIE[i]} radius={[4, 4, 0, 0]} />
-                ))}
-              </BarChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {ALL_METRICS.map((m, i) => (
-            <button key={m} onClick={() => toggleMetric(m)}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition ${
-                activeMetrics.has(m)
-                  ? "border-white/20 bg-white/10 text-white"
-                  : "border-border bg-transparent text-muted-foreground hover:text-foreground"
-              }`}>
-              <span className="h-2 w-2 rounded-full" style={{ background: PIE[i] }} />
-              {m}
+            <button onClick={() => setLive((v) => !v)}
+              className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${live ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300" : "border-white/10 bg-white/[0.03] text-white/60"}`}>
+              <Radio className={`h-3.5 w-3.5 ${live ? "animate-pulse" : ""}`} /> {live ? "Live" : "Pauzė"}
             </button>
-          ))}
+            <button onClick={load} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/70 hover:text-white">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Atnaujinti
+            </button>
+            <button onClick={exportAll} className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-gradient-to-r from-violet-500/20 to-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-white hover:from-violet-500/30 hover:to-cyan-500/30">
+              <Download className="h-3.5 w-3.5" /> CSV
+            </button>
+          </div>
         </div>
-      </Card>
-
-      {/* Device / Browser / OS row */}
-      <div className="grid gap-3 lg:grid-cols-3">
-        <DeviceCard devices={devices} />
-        <BreakdownCard title="Naršyklės" icon={Chrome} items={browsers.map((b) => ({ label: b.browser, n: b.n }))} color={C.cyan} />
-        <BreakdownCard title="Operacinės sistemos" icon={Monitor} items={oses.map((o) => ({ label: o.os, n: o.n }))} color={C.emerald} />
       </div>
 
-      {/* Deep device breakdowns (from raw meta) */}
-      <div className="grid gap-3 lg:grid-cols-3">
-        <BreakdownCard title="Laiko juostos" icon={MapPin} items={timezones.map(([label, n]) => ({ label, n }))} color={C.violet} />
-        <BreakdownCard title="Ekranai (raiška)" icon={Monitor} items={screens.map(([label, n]) => ({ label, n }))} color={C.cyan} />
-        <BreakdownCard title="Lango dydžiai" icon={MonitorSmartphone} items={viewports.map(([label, n]) => ({ label, n }))} color={C.pink} />
-      </div>
+      {err && (
+        <div className="mb-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+          Klaida kraunant analitiką: {err}
+        </div>
+      )}
 
-      {/* Referrers + Languages + Hourly */}
-      <div className="grid gap-3 lg:grid-cols-3">
-        <BreakdownCard title="Šaltiniai (referrer)" icon={ExternalLink} items={referrers.map((r) => ({ label: r.host, n: r.n }))} color={C.amber} />
-        <BreakdownCard title="Kalbos" icon={Languages} items={languages.map((l) => ({ label: l.lang, n: l.n }))} color={C.pink} />
-        <Card title="Aktyvumas per parą" icon={Clock}>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <BarChart data={hours}>
-                <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-                <XAxis dataKey="hour" stroke="rgba(255,255,255,0.5)" fontSize={10} interval={2} />
-                <YAxis stroke="rgba(255,255,255,0.5)" fontSize={11} allowDecimals={false} />
-                <Tooltip content={<GlassTooltip />} />
-                <Bar dataKey="Peržiūros" fill={C.cyan} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Prisijungimai" fill={C.emerald} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      {loading && !a ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-32 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" />)}
+        </div>
+      ) : a ? (
+        <div className="space-y-6">
+          {/* KPI GRID */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <KpiCard kind="views" icon={<Eye className="h-4 w-4" />} label="Peržiūros" value={a.totals.views} prev={a.prev_totals.views} spark={dailyViews} color={C.cyan} onOpen={() => setDetail("views")} />
+            <KpiCard kind="uniques" icon={<Users className="h-4 w-4" />} label="Unikalūs lankytojai" value={a.totals.uniques} prev={a.prev_totals.uniques} spark={a.daily.map((d) => d.uniques)} color={C.violet} onOpen={() => setDetail("uniques")} />
+            <KpiCard kind="signIns" icon={<LogIn className="h-4 w-4" />} label="Prisijungimai" value={a.totals.signins} prev={a.prev_totals.signins} spark={a.daily.map((d) => d.signins)} color={C.emerald} onOpen={() => setDetail("signIns")} />
+            <KpiCard kind="signOuts" icon={<LogOut className="h-4 w-4" />} label="Atsijungimai" value={a.totals.signouts} prev={a.prev_totals.signouts} spark={a.daily.map((d) => d.signouts)} color={C.rose} onOpen={() => setDetail("signOuts")} />
           </div>
-        </Card>
-      </div>
 
-      {/* Weekday + Top pages */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Card title="Savaitės dienos" icon={BarChart3}>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <RadialBarChart innerRadius="30%" outerRadius="90%" data={weekdays} startAngle={90} endAngle={-270}>
-                <RadialBar dataKey="Peržiūros" background cornerRadius={8}>
-                  {weekdays.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
-                </RadialBar>
-                <Tooltip content={<GlassTooltip />} />
-              </RadialBarChart>
-            </ResponsiveContainer>
+          {/* SECONDARY STATS */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+            <StatChip icon={<Fingerprint className="h-3.5 w-3.5" />} label="Sesijos" value={sessions.length} />
+            <StatChip icon={<Users className="h-3.5 w-3.5" />} label="Prisijungę" value={a.totals.signed_in_users} />
+            <StatChip icon={<Zap className="h-3.5 w-3.5" />} label="Gilios sesijos" value={engagement.deep} tint="cyan" />
+            <StatChip icon={<Timer className="h-3.5 w-3.5" />} label="Atmetimo" value={engagement.total ? Math.round((engagement.bounce / engagement.total) * 100) : 0} suffix="%" tint="rose" />
+            <StatChip icon={<Layers className="h-3.5 w-3.5" />} label="Grįžę (3+ psl.)" value={engagement.returning} tint="violet" />
+            <StatChip icon={<Sparkles className="h-3.5 w-3.5" />} label="Admin (paslėpta)" value={a.admin_hidden_events} tint="amber" />
           </div>
-          <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-            {weekdays.map((w, i) => (
-              <span key={w.diena} className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full" style={{ background: PIE[i % PIE.length] }} />
-                {w.diena} · {fmt(w.Peržiūros)}
-              </span>
-            ))}
-          </div>
-        </Card>
-        <Card title="Populiariausi puslapiai" icon={Globe}>
-          <div className="space-y-1.5">
-            {topPages.length === 0 && <p className="text-xs text-muted-foreground">Kol kas nėra duomenų.</p>}
-            {topPages.map((p, i) => {
-              const max = topPages[0]?.n ?? 1;
-              const w = Math.round((p.n / max) * 100);
-              return (
-                <motion.div key={p.path} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="group relative overflow-hidden rounded-lg border border-white/5 bg-white/[0.02] p-2 transition hover:bg-white/[0.05]">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="truncate font-mono text-white/90">{p.path}</span>
-                    <span className="shrink-0 font-bold tabular-nums text-white">{fmt(p.n)}</span>
+
+          {/* TRAFFIC — with rich cursor-follow tooltip */}
+          <ChartCard id="traffic" title="Srautas laike" subtitle={`${range} dienų • paspausk stulpelį fokusuoti`} full={full} setFull={setFull}>
+            <div
+              onPointerMove={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                const r = el.getBoundingClientRect();
+                const relX = (e.clientX - r.left) / r.width;
+                const idx = Math.max(0, Math.min(a.daily.length - 1, Math.round(relX * (a.daily.length - 1))));
+                const d = a.daily[idx]; if (!d) return;
+                const bd = dayBreakdown.get(d.d);
+                setTip({
+                  x: e.clientX, y: e.clientY,
+                  title: new Date(d.d).toLocaleDateString("lt-LT", { weekday: "long", day: "numeric", month: "long" }),
+                  primary: [
+                    { label: "Peržiūros", value: d.views, color: C.cyan },
+                    { label: "Unikalūs", value: d.uniques, color: C.violet },
+                    { label: "Prisijungimai", value: d.signins, color: C.emerald },
+                  ],
+                  spark: dailyViews,
+                  sparkColor: C.cyan,
+                  breakdown: bd?.pages,
+                  meta: [
+                    { label: "Įrenginiai", value: (bd?.devices ?? []).slice(0, 2).map((x) => x.label).join(", ") || "—" },
+                    { label: "Sesijos", value: fmt(d.uniques) },
+                  ],
+                });
+              }}
+              onPointerLeave={() => setTip(null)}
+              className="h-[340px] w-full"
+            >
+              <ResponsiveContainer>
+                <AreaChart data={a.daily}>
+                  <defs>
+                    <linearGradient id="g-views" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={C.cyan} stopOpacity={0.5} />
+                      <stop offset="100%" stopColor={C.cyan} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="g-uniques" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={C.violet} stopOpacity={0.5} />
+                      <stop offset="100%" stopColor={C.violet} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis dataKey="d" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} tickFormatter={(v) => v.slice(5)} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip content={() => null} cursor={{ stroke: "rgba(139,92,246,0.5)", strokeWidth: 2, strokeDasharray: "4 4" }} />
+                  <Area type="monotone" dataKey="views" stroke={C.cyan} strokeWidth={2.5} fill="url(#g-views)" name="Peržiūros" />
+                  <Area type="monotone" dataKey="uniques" stroke={C.violet} strokeWidth={2.5} fill="url(#g-uniques)" name="Unikalūs" />
+                  <Line type="monotone" dataKey="signins" stroke={C.emerald} strokeWidth={2} dot={{ r: 3, fill: C.emerald }} name="Prisijungimai" />
+                  <Brush dataKey="d" height={22} stroke="rgba(139,92,246,0.5)" fill="rgba(139,92,246,0.05)" travellerWidth={8} tickFormatter={(v) => String(v).slice(5)} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </ChartCard>
+
+          {/* HEATMAP + HOURLY */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <ChartCard id="heat" title="Aktyvumo šilumos žemėlapis" subtitle="Savaitės diena × valanda • užvesk pele" full={full} setFull={setFull}>
+              <div className="overflow-x-auto pb-2">
+                <div className="flex gap-1 text-[10px] text-white/40">
+                  <div className="w-8" />
+                  {Array.from({ length: 24 }, (_, h) => (
+                    <div key={h} className="w-6 text-center">{h}</div>
+                  ))}
+                </div>
+                {heat.map((row, d) => (
+                  <div key={d} className="mt-1 flex items-center gap-1">
+                    <div className="w-8 text-[10px] font-semibold text-white/50">{WD[d]}</div>
+                    {row.map((v, h) => {
+                      const intensity = v / heatMax;
+                      return (
+                        <motion.div
+                          key={h}
+                          whileHover={{ scale: 1.4, zIndex: 10 }}
+                          onPointerMove={(e) => setTip({
+                            x: e.clientX, y: e.clientY,
+                            title: `${WD[d]} • ${String(h).padStart(2, "0")}:00`,
+                            primary: [{ label: "Peržiūros", value: v, color: C.cyan }],
+                            meta: [
+                              { label: "% max", value: `${Math.round(intensity * 100)}%` },
+                              { label: "Vidurkis/val.", value: fmt(Math.round(row.reduce((a, b) => a + b, 0) / 24)) },
+                            ],
+                          })}
+                          onPointerLeave={() => setTip(null)}
+                          className="h-6 w-6 rounded-md transition"
+                          style={{
+                            background: v === 0 ? "rgba(255,255,255,0.03)" : `rgba(139,92,246,${0.15 + intensity * 0.85})`,
+                            boxShadow: intensity > 0.6 ? `0 0 12px rgba(139,92,246,${intensity})` : "none",
+                          }}
+                        />
+                      );
+                    })}
                   </div>
-                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${w}%` }}
-                      transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.04 }}
-                      className="h-full rounded-full"
-                      style={{ background: `linear-gradient(90deg, ${PIE[i % PIE.length]}, ${PIE[(i + 1) % PIE.length]})` }} />
-                  </div>
-                  <div className="mt-0.5 text-[9px] text-muted-foreground">
-                    {fmt(p.u)} unikalių sesijų
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
+                ))}
+              </div>
+            </ChartCard>
 
-      {/* Roles + Reservation status */}
-      <div className="grid gap-3 lg:grid-cols-2">
-        <Card title="Naudotojų vaidmenys" icon={Users}>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={rolePie} innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" nameKey="name" stroke="none">
-                  {rolePie.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
-                </Pie>
-                <Tooltip content={<GlassTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
+            <ChartCard id="hourly" title="Valandinis pulsas" subtitle="Kada vartotojai aktyviausi" full={full} setFull={setFull}>
+              <div className="h-[280px]">
+                <ResponsiveContainer>
+                  <BarChart data={a.hourly}>
+                    <defs>
+                      <linearGradient id="g-hour" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={C.cyan} />
+                        <stop offset="100%" stopColor={C.violet} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                    <XAxis dataKey="h" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={({ active, payload, label }: any) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className="rounded-xl border border-white/15 bg-slate-950/95 p-3 shadow-2xl backdrop-blur">
+                          <div className="text-xs font-bold text-white">{String(label).padStart(2, "0")}:00 – {String(label).padStart(2, "0")}:59</div>
+                          {payload.map((p: any, i: number) => (
+                            <div key={i} className="mt-1 flex items-center gap-2 text-xs">
+                              <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+                              <span className="text-white/60">{p.name}</span>
+                              <span className="ml-auto font-bold text-white">{fmt(Number(p.value))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }} cursor={{ fill: "rgba(139,92,246,0.08)" }} />
+                    <Bar dataKey="views" fill="url(#g-hour)" name="Peržiūros" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="signins" fill={C.emerald} name="Prisijungimai" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
           </div>
-          <div className="mt-1 flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
-            {rolePie.map((r, i) => (
-              <span key={r.name} className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full" style={{ background: PIE[i % PIE.length] }} />
-                {r.name} · {fmt(r.value)}
-              </span>
-            ))}
-          </div>
-        </Card>
-        <Card title="Rezervacijų būsenos" icon={BarChart3}>
-          <div className="h-56">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={statusPie} innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" nameKey="name" stroke="none">
-                  {statusPie.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
-                </Pie>
-                <Tooltip content={<GlassTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-1 flex flex-wrap justify-center gap-2 text-[10px] text-muted-foreground">
-            {statusPie.map((r, i) => (
-              <span key={r.name} className="inline-flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full" style={{ background: PIE[i % PIE.length] }} />
-                {r.name} · {fmt(r.value)}
-              </span>
-            ))}
-          </div>
-        </Card>
-      </div>
 
-      {/* Live feed */}
-      <Card title="Live veiklos srautas" icon={ActivityIcon} tools={
-        <button onClick={exportFeed}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-2.5 py-1 text-[10px] font-semibold backdrop-blur transition hover:bg-accent">
-          <Download className="h-3 w-3" /> CSV
-        </button>
-      }>
-        <div className="max-h-[380px] overflow-y-auto pr-1">
-          <AnimatePresence initial={false}>
-            {liveEvents.length === 0 && (
-              <p className="text-xs text-muted-foreground">Laukiama pirmų įvykių…</p>
+          {/* DEVICES + BROWSERS + OS */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <BreakdownCard title="Įrenginiai" icon={<MonitorSmartphone className="h-4 w-4" />} rows={a.devices.map((d) => ({ label: d.device, n: d.n }))} onHover={(row, e) => setTip({
+              x: e.clientX, y: e.clientY, title: `Įrenginys • ${row.label}`,
+              primary: [{ label: "Sesijos", value: row.n, color: C.cyan }],
+              meta: [{ label: "Dalis", value: `${Math.round((row.n / Math.max(1, a.totals.views)) * 100)}%` }],
+            })} onLeave={() => setTip(null)} />
+            <BreakdownCard title="Naršyklės" icon={<Chrome className="h-4 w-4" />} rows={a.browsers.map((d) => ({ label: d.browser, n: d.n }))} onHover={(row, e) => setTip({
+              x: e.clientX, y: e.clientY, title: `Naršyklė • ${row.label}`,
+              primary: [{ label: "Peržiūros", value: row.n, color: C.violet }],
+            })} onLeave={() => setTip(null)} color={C.violet} />
+            <BreakdownCard title="Operacinės sistemos" icon={<Layers className="h-4 w-4" />} rows={a.os.map((d) => ({ label: d.os, n: d.n }))} onHover={(row, e) => setTip({
+              x: e.clientX, y: e.clientY, title: `OS • ${row.label}`,
+              primary: [{ label: "Peržiūros", value: row.n, color: C.emerald }],
+            })} onLeave={() => setTip(null)} color={C.emerald} />
+          </div>
+
+          {/* GEO + VIEWPORTS + LANG */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <ChartCard id="tz" title="Laiko juostos" subtitle="Iš kur lankomasi (geo proxy)" full={full} setFull={setFull} icon={<Globe2 className="h-4 w-4" />}>
+              <div className="space-y-2">
+                {timezones.length === 0 && <div className="py-8 text-center text-xs text-white/40">Duomenų dar nėra</div>}
+                {timezones.map((t) => {
+                  const pctv = Math.round((t.n / Math.max(1, timezones[0].n)) * 100);
+                  return (
+                    <motion.div key={t.tz}
+                      onPointerMove={(e) => setTip({ x: e.clientX, y: e.clientY, title: t.tz, primary: [{ label: "Peržiūros", value: t.n, color: C.cyan }] })}
+                      onPointerLeave={() => setTip(null)}
+                      whileHover={{ x: 4 }} className="group">
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 font-medium text-white/70"><MapPin className="h-3 w-3" />{t.tz}</span>
+                        <span className="font-bold text-white">{fmt(t.n)}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pctv}%` }} className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${C.cyan}, ${C.violet})`, boxShadow: `0 0 10px ${C.cyan}` }} />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </ChartCard>
+
+            <ChartCard id="vp" title="Ekrano dydžiai" subtitle="Viewport pasiskirstymas" full={full} setFull={setFull}>
+              <div className="h-[240px]">
+                <ResponsiveContainer>
+                  <RadarChart data={viewports}>
+                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                    <PolarAngleAxis dataKey="b" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 10 }} />
+                    <PolarRadiusAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 9 }} />
+                    <Radar dataKey="n" stroke={C.pink} fill={C.pink} fillOpacity={0.35} />
+                    <Tooltip content={({ active, payload }: any) => active && payload?.length ? (
+                      <div className="rounded-lg border border-white/15 bg-slate-950/95 px-3 py-2 text-xs shadow-2xl">
+                        <div className="font-bold text-white">{payload[0].payload.b}</div>
+                        <div className="text-white/60">Sesijų: <b className="text-white">{fmt(payload[0].value)}</b></div>
+                      </div>
+                    ) : null} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+
+            <ChartCard id="lang" title="Kalbos" subtitle="Browser locale" full={full} setFull={setFull} icon={<Languages className="h-4 w-4" />}>
+              <div className="h-[240px]">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={a.languages} dataKey="n" nameKey="lang" innerRadius={45} outerRadius={90} paddingAngle={4}>
+                      {a.languages.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
+                    </Pie>
+                    <Tooltip content={({ active, payload }: any) => active && payload?.length ? (
+                      <div className="rounded-lg border border-white/15 bg-slate-950/95 px-3 py-2 text-xs shadow-2xl">
+                        <div className="font-bold text-white">{payload[0].payload.lang}</div>
+                        <div className="text-white/60">n: <b className="text-white">{fmt(payload[0].value)}</b></div>
+                      </div>
+                    ) : null} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </div>
+
+          {/* TOP PAGES + PATH FLOWS */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <ChartCard id="pages" title="Populiariausi puslapiai" subtitle="Su unikaliais lankytojais" full={full} setFull={setFull}>
+              <div className="space-y-1.5">
+                {topPages.length === 0 && <div className="py-8 text-center text-xs text-white/40">Dar nėra duomenų</div>}
+                {topPages.map((p, i) => (
+                  <motion.button
+                    key={p.path}
+                    onClick={() => setPageFilter(pageFilter === p.path ? null : p.path)}
+                    onPointerMove={(e) => setTip({ x: e.clientX, y: e.clientY, title: p.path, primary: [{ label: "Peržiūros", value: p.n, color: C.cyan }, { label: "Unikalūs", value: p.u, color: C.violet }] })}
+                    onPointerLeave={() => setTip(null)}
+                    whileHover={{ x: 6 }}
+                    className={`group flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition ${pageFilter === p.path ? "border-cyan-400/40 bg-cyan-400/5" : "border-white/5 bg-white/[0.02] hover:bg-white/[0.04]"}`}
+                  >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-[10px] font-bold text-white">{i + 1}</span>
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs text-white/80">{p.path}</span>
+                    <div className="h-1.5 w-20 overflow-hidden rounded-full bg-white/5">
+                      <div className="h-full rounded-full" style={{ width: `${(p.n / topPages[0].n) * 100}%`, background: `linear-gradient(90deg, ${C.cyan}, ${C.violet})` }} />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-white">{fmt(p.n)}</div>
+                      <div className="text-[10px] text-white/40">{fmt(p.u)} u</div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </ChartCard>
+
+            <ChartCard id="flows" title="Vartotojų kelias" subtitle="Iš kur → kur (sesijų navigacija)" full={full} setFull={setFull}>
+              <div className="space-y-1.5">
+                {flows.length === 0 && <div className="py-8 text-center text-xs text-white/40">Reikia bent 2-jų peržiūrų vienoje sesijoje</div>}
+                {flows.map((f, i) => {
+                  const [from, to] = f.k.split(" → ");
+                  return (
+                    <motion.div key={f.k} whileHover={{ x: 4 }}
+                      onPointerMove={(e) => setTip({ x: e.clientX, y: e.clientY, title: "Perėjimas", primary: [{ label: "Perėjimų", value: f.n, color: C.emerald }], meta: [{ label: "Iš", value: from }, { label: "Į", value: to }] })}
+                      onPointerLeave={() => setTip(null)}
+                      className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] p-2 text-xs">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-[10px] font-bold text-emerald-300">{i + 1}</span>
+                      <span className="max-w-[35%] truncate font-mono text-white/70">{from}</span>
+                      <ChevronRight className="h-3 w-3 shrink-0 text-white/30" />
+                      <span className="max-w-[35%] truncate font-mono text-white/90">{to}</span>
+                      <span className="ml-auto rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">{f.n}×</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </ChartCard>
+          </div>
+
+          {/* SESSION EXPLORER */}
+          <ChartCard id="sessions" title="Sesijų naršyklė" subtitle="Paspausk sesiją — pamatyk pilną kelionę" full={full} setFull={setFull} icon={<Fingerprint className="h-4 w-4" />}>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Filtruoti pagal kelią, įrenginį, sesiją…"
+                  className="w-full rounded-lg border border-white/10 bg-white/[0.03] py-2 pl-9 pr-3 text-xs text-white outline-none placeholder:text-white/30 focus:border-violet-400/40" />
+              </div>
+              {sessionFilter && (
+                <button onClick={() => setSessionFilter(null)} className="rounded-lg border border-violet-400/40 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-200">
+                  Sesija: {sessionFilter.slice(0, 12)}… ✕
+                </button>
+              )}
+              {pageFilter && (
+                <button onClick={() => setPageFilter(null)} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+                  Puslapis: {pageFilter} ✕
+                </button>
+              )}
+            </div>
+
+            {sessionFilter ? (
+              <div className="max-h-[360px] overflow-y-auto rounded-lg border border-white/5">
+                {(sessionMap.get(sessionFilter) ?? []).map((r, i) => (
+                  <motion.div key={r.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.02 }}
+                    className="flex items-center gap-3 border-b border-white/5 px-3 py-2 text-xs last:border-0">
+                    <span className="text-white/40">{new Date(r.created_at).toLocaleTimeString("lt-LT")}</span>
+                    <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase text-white/60">{r.action.replace("page.view", "peržiūra").replace("auth.signed_in", "prisijungimas").replace("auth.signed_out", "atsijungimas")}</span>
+                    <span className="min-w-0 flex-1 truncate font-mono text-white/80">{r.path}</span>
+                    <span className="text-[10px] text-white/40">{r.browser} • {r.os}</span>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="max-h-[360px] overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-slate-950/80 backdrop-blur">
+                    <tr className="text-left text-white/40">
+                      <th className="px-2 py-2 font-medium">Sesija</th>
+                      <th className="px-2 py-2 font-medium">Pradžia</th>
+                      <th className="px-2 py-2 font-medium">Trukmė</th>
+                      <th className="px-2 py-2 font-medium">Puslapiai</th>
+                      <th className="px-2 py-2 font-medium">Įrenginys</th>
+                      <th className="px-2 py-2 font-medium">TZ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessions.slice(0, 60).map((s) => (
+                      <motion.tr key={s.id} onClick={() => setSessionFilter(s.id)}
+                        whileHover={{ backgroundColor: "rgba(139,92,246,0.06)" }}
+                        onPointerMove={(e) => setTip({ x: e.clientX, y: e.clientY, title: `Sesija ${s.id.slice(0, 10)}…`, primary: [{ label: "Puslapiai", value: s.pages, color: C.cyan }, { label: "Trukmė (s)", value: Math.round(s.duration), color: C.violet }], meta: [{ label: "OS", value: s.os }, { label: "Naršyklė", value: s.browser }] })}
+                        onPointerLeave={() => setTip(null)}
+                        className="cursor-pointer border-t border-white/5">
+                        <td className="px-2 py-2 font-mono text-white/70">{s.id.slice(-10)}</td>
+                        <td className="px-2 py-2 text-white/60">{timeAgo(s.start)}</td>
+                        <td className="px-2 py-2 text-white/60">{s.duration < 60 ? `${Math.round(s.duration)}s` : `${Math.round(s.duration / 60)}min`}</td>
+                        <td className="px-2 py-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.pages >= 3 ? "bg-emerald-500/20 text-emerald-300" : s.pages > 1 ? "bg-cyan-500/20 text-cyan-300" : "bg-white/5 text-white/50"}`}>{s.pages}</span></td>
+                        <td className="px-2 py-2 text-white/60">{s.device} / {s.browser}</td>
+                        <td className="px-2 py-2 text-white/40">{s.tz}</td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
-            {liveEvents.map((e) => (
-              <motion.div key={e.id}
-                layout
-                initial={{ opacity: 0, x: -16, backgroundColor: "rgba(16,185,129,0.15)" }}
-                animate={{ opacity: 1, x: 0, backgroundColor: "rgba(255,255,255,0.02)" }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="mb-1.5 flex flex-wrap items-center gap-2 rounded-lg border border-white/5 px-2.5 py-1.5 text-[11px]">
-                <ActionBadge action={e.action} />
-                <span className="truncate font-mono text-white/80">{e.path}</span>
-                <span className="ml-auto flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <DeviceIcon d={e.device} />
-                  <span className="hidden sm:inline">{e.browser}</span>
-                  <span className="hidden md:inline">· {e.os}</span>
-                  {e.lang && <span className="hidden md:inline">· {e.lang}</span>}
-                  {e.user_role && (
-                    <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold text-white/80">
-                      {e.user_role}
-                    </span>
-                  )}
-                  {e.user_name && <span className="hidden lg:inline">· {e.user_name}</span>}
-                  <span>· {timeAgo(e.created_at)}</span>
-                </span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          </ChartCard>
+
+          {/* LIVE FEED */}
+          <ChartCard id="feed" title="Realaus laiko srautas" subtitle={`${filteredActivity.length} įvykiai${sessionFilter || pageFilter || search ? " (filtruojama)" : ""}`} full={full} setFull={setFull} icon={<Activity className="h-4 w-4" />}>
+            <div className="max-h-[400px] space-y-1 overflow-y-auto pr-1">
+              <AnimatePresence initial={false}>
+                {filteredActivity.slice(0, 100).map((r) => (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                    className="flex items-center gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs hover:bg-white/[0.05]"
+                  >
+                    <span className="w-14 text-white/40">{timeAgo(r.created_at)}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full ${r.action === "auth.signed_in" ? "bg-emerald-400" : r.action === "auth.signed_out" ? "bg-rose-400" : "bg-cyan-400"}`} style={{ boxShadow: `0 0 8px currentColor` }} />
+                    <span className="min-w-0 flex-1 truncate font-mono text-white/80">{r.path}</span>
+                    <button onClick={() => setSessionFilter(r.session_id || null)} className="hidden text-[10px] text-white/40 hover:text-white sm:inline">{(r.session_id || "").slice(-6)}</button>
+                    <span className="hidden text-[10px] text-white/40 md:inline">{r.browser} · {r.os}</span>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {filteredActivity.length === 0 && <div className="py-10 text-center text-xs text-white/40">Nėra atitikimų</div>}
+            </div>
+          </ChartCard>
         </div>
-      </Card>
+      ) : null}
 
       <KpiDetailModal
-        kind={detailKind}
-        onClose={() => setDetailKind(null)}
-        activity={activityForModal}
-        rangeSince={rangeSince}
+        kind={detail}
+        onClose={() => setDetail(null)}
+        activity={(data?.rawActivity ?? []).map((r) => ({ id: r.id, created_at: r.created_at, action: r.action, user_id: r.user_id, meta: r }))}
+        rangeSince={new Date(Date.now() - range * 24 * 3600 * 1000).toISOString().slice(0, 10)}
         rangeDays={range}
       />
     </div>
   );
 }
 
-// ============================================================================
-// Sub-components
-// ============================================================================
-function Card({ title, icon: Icon, tools, children, expanded, onToggleExpand }: {
-  title: string; icon: React.ComponentType<{ className?: string }>;
-  tools?: React.ReactNode; children: React.ReactNode;
-  expanded?: boolean; onToggleExpand?: () => void;
+// ─────────────────────────────────────────────────────────────────────────────
+// SUB-COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+function KpiCard({ kind, icon, label, value, prev, spark, color, onOpen }: {
+  kind: KpiKind; icon: React.ReactNode; label: string; value: number; prev: number; spark: number[]; color: string; onOpen: () => void;
 }) {
-  const body = (
-    <div className={`relative overflow-hidden rounded-2xl border border-white/10 bg-card/80 p-4 backdrop-blur-xl ${expanded ? "h-full" : ""}`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <Icon className="h-4 w-4 text-primary" />
-          <span className="truncate">{title}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {tools}
-          {onToggleExpand && (
-            <button
-              type="button"
-              onClick={onToggleExpand}
-              className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-muted-foreground transition hover:bg-white/10 hover:text-white"
-              title={expanded ? "Sumažinti" : "Fullscreen"}
-              aria-label="Fullscreen"
-            >
-              {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-            </button>
-          )}
-        </div>
-      </div>
-      <div className={expanded ? "h-[calc(100%-52px)]" : ""}>{children}</div>
-    </div>
-  );
-  if (!expanded) return body;
+  const change = pct(value, prev);
+  const up = change >= 0;
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[80] bg-black/80 p-3 backdrop-blur-md sm:p-6"
-      onClick={onToggleExpand}
-    >
-      <motion.div
-        initial={{ scale: 0.94, y: 12 }} animate={{ scale: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 26 }}
-        className="mx-auto h-full max-w-[1500px]"
-        onClick={(e) => e.stopPropagation()}
+    <Tilt className="rounded-2xl">
+      <motion.button
+        onClick={onOpen}
+        whileHover={{ y: -2 }}
+        className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.01] p-5 text-left shadow-xl"
       >
-        {body}
-      </motion.div>
+        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-30 blur-2xl transition group-hover:opacity-60" style={{ background: color }} />
+        <div className="relative flex items-start justify-between">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/50">
+            <span className="rounded-lg p-1.5" style={{ background: `${color}22`, color }}>{icon}</span>
+            {label}
+          </div>
+          <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${up ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
+            {up ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+            {Math.abs(change)}%
+          </div>
+        </div>
+        <div className="relative mt-4 text-4xl font-black tabular-nums text-white">
+          <CountUp value={value} />
+        </div>
+        <div className="relative mt-3 -mx-1">
+          <Sparkline data={spark} color={color} />
+        </div>
+        <div className="relative mt-2 flex items-center justify-between text-[10px] text-white/40">
+          <span>vs praėję: {fmt(prev)}</span>
+          <span className="flex items-center gap-1 text-violet-300 opacity-0 transition group-hover:opacity-100"><Sparkles className="h-3 w-3" /> Detaliau</span>
+        </div>
+      </motion.button>
+    </Tilt>
+  );
+}
+
+function StatChip({ icon, label, value, tint = "cyan", suffix }: { icon: React.ReactNode; label: string; value: number; tint?: "cyan" | "violet" | "emerald" | "rose" | "amber"; suffix?: string }) {
+  const map: Record<string, string> = { cyan: C.cyan, violet: C.violet, emerald: C.emerald, rose: C.rose, amber: C.amber };
+  return (
+    <motion.div whileHover={{ y: -2 }} className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/40">
+        <span style={{ color: map[tint] }}>{icon}</span> {label}
+      </div>
+      <div className="mt-1 text-xl font-bold text-white">
+        <CountUp value={value} />{suffix ?? ""}
+      </div>
     </motion.div>
   );
 }
 
-function HeroStat({
-  label, value, delta, icon: Icon, color, spark, active = true, onClick, hideDelta, sub, onExpand,
-}: {
-  label: string; value: number; delta: number;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string; spark: number[]; active?: boolean; onClick?: () => void;
-  hideDelta?: boolean; sub?: string; onExpand?: () => void;
+function ChartCard({ id, title, subtitle, icon, children, full, setFull }: {
+  id: string; title: string; subtitle?: string; icon?: React.ReactNode;
+  children: React.ReactNode; full: string | null; setFull: (v: string | null) => void;
 }) {
-  const isUp = delta >= 0;
+  const isFull = full === id;
   return (
-    <Tilt3D intensity={7} className="rounded-2xl">
-      <motion.div
-        whileTap={{ scale: 0.98 }}
-        onClick={onClick}
-        className={`group relative w-full cursor-pointer overflow-hidden rounded-2xl border p-3 text-left backdrop-blur-xl transition-all sm:p-4 ${
-          active ? "border-white/15 bg-card/70" : "border-white/5 bg-card/30 opacity-60"
-        }`}
-        style={{ boxShadow: active ? `0 20px 60px -30px ${color}` : "none" }}
-      >
-        <div
-          className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-2xl transition-opacity group-hover:opacity-70"
-          style={{ background: color }}
-        />
-        {onExpand && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onExpand(); }}
-            className="absolute right-2 top-2 z-10 grid h-6 w-6 place-items-center rounded-lg border border-white/10 bg-black/30 text-white/70 opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-white/10 hover:text-white"
-            aria-label="Išplėsti"
-            title="Išsamiau"
-          >
-            <Maximize2 className="h-3 w-3" />
-          </button>
-        )}
-        <div className="relative flex items-start justify-between">
-          <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground sm:text-[10px]">
-              {label}
-            </p>
-            <p className="mt-0.5 font-display text-xl font-bold sm:text-2xl" style={{ color }}>
-              <AnimatedNumber value={value} />
-            </p>
-            {sub && <p className="mt-0.5 text-[9px] text-muted-foreground">{sub}</p>}
+    <motion.div
+      layout
+      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-5 shadow-xl ${isFull ? "fixed inset-4 z-50 !m-0" : ""}`}
+    >
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-bold text-white">
+            {icon && <span className="text-violet-300">{icon}</span>}
+            {title}
           </div>
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/5" style={{ color }}>
-            <Icon className="h-4 w-4" />
-          </div>
+          {subtitle && <div className="mt-0.5 text-xs text-white/40">{subtitle}</div>}
         </div>
-        {!hideDelta && (
-          <div className="mt-1.5 flex items-center gap-1 text-[10px]">
-            <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-semibold ${
-              isUp ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300"
-            }`}>
-              {isUp ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
-              {Math.abs(delta)}%
-            </span>
-            <span className="text-muted-foreground">vs. pra. periodas</span>
-          </div>
-        )}
-        {/* mini spark */}
-        <div className="mt-2 h-8">
-          <ResponsiveContainer>
-            <AreaChart data={spark.map((v, i) => ({ i, v }))}>
-              <defs>
-                <linearGradient id={`sp-${label}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={color} stopOpacity={0.7} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#sp-${label})`} isAnimationActive />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
-    </Tilt3D>
-  );
-}
-
-function MiniStat({ icon: Icon, label, value, color, hint }: {
-  icon: React.ComponentType<{ className?: string }>; label: string; value: number; color: string; hint?: string;
-}) {
-  return (
-    <Tilt3D intensity={5} className="rounded-xl">
-      <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card/60 p-3 backdrop-blur">
-        <div className="pointer-events-none absolute -right-4 -top-4 h-14 w-14 rounded-full opacity-40 blur-2xl" style={{ background: color }} />
-        <div className="relative flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/5" style={{ color }}>
-            <Icon className="h-3.5 w-3.5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-            <p className="font-display text-lg font-bold" style={{ color }}><AnimatedNumber value={value} /></p>
-            {hint && <p className="text-[9px] text-muted-foreground">{hint}</p>}
-          </div>
-        </div>
+        <button onClick={() => setFull(isFull ? null : id)} className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/5 hover:text-white">
+          {isFull ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+        </button>
       </div>
-    </Tilt3D>
+      <div className={isFull ? "h-[calc(100%-3rem)] overflow-auto" : ""}>{children}</div>
+    </motion.div>
   );
 }
 
-function DeviceCard({ devices }: { devices: { device: string; n: number }[] }) {
-  const total = devices.reduce((s, d) => s + d.n, 0) || 1;
-  const iconFor = (d: string) =>
-    d === "mobile" ? Smartphone : d === "tablet" ? Tablet : Monitor;
-  const colorFor = (d: string) =>
-    d === "mobile" ? C.cyan : d === "tablet" ? C.amber : C.violet;
-  const labelFor = (d: string) =>
-    d === "mobile" ? "Telefonas" : d === "tablet" ? "Planšetė" : d === "desktop" ? "Kompiuteris" : "Kita";
+function BreakdownCard({ title, icon, rows, onHover, onLeave, color = C.cyan }: {
+  title: string; icon: React.ReactNode;
+  rows: { label: string; n: number }[];
+  onHover: (row: { label: string; n: number }, e: React.PointerEvent) => void;
+  onLeave: () => void;
+  color?: string;
+}) {
+  const max = Math.max(1, ...rows.map((r) => r.n));
   return (
-    <Card title="Įrenginiai" icon={Smartphone}>
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] p-5 shadow-xl">
+      <div className="mb-3 flex items-center gap-2 text-sm font-bold text-white"><span className="text-violet-300">{icon}</span>{title}</div>
       <div className="space-y-2">
-        {devices.length === 0 && <p className="text-xs text-muted-foreground">Nėra duomenų.</p>}
-        {devices.map((d, i) => {
-          const p = Math.round((d.n / total) * 100);
-          const Icon = iconFor(d.device);
-          const color = colorFor(d.device);
-          return (
-            <motion.div key={d.device} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="relative overflow-hidden rounded-lg border border-white/5 bg-white/[0.02] p-2.5">
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/5" style={{ color }}>
-                  <Icon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-white">{labelFor(d.device)}</span>
-                    <span className="tabular-nums text-muted-foreground">{fmt(d.n)} · {p}%</span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/5">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${p}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full rounded-full" style={{ background: color, boxShadow: `0 0 12px ${color}` }} />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+        {rows.length === 0 && <div className="py-6 text-center text-xs text-white/40">Nėra duomenų</div>}
+        {rows.slice(0, 8).map((r) => (
+          <motion.div key={r.label} whileHover={{ x: 4 }}
+            onPointerMove={(e) => onHover(r, e)} onPointerLeave={onLeave}
+            className="cursor-pointer">
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className="truncate font-medium text-white/70">{r.label || "unknown"}</span>
+              <span className="font-bold tabular-nums text-white">{fmt(r.n)}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-white/5">
+              <motion.div initial={{ width: 0 }} animate={{ width: `${(r.n / max) * 100}%` }} transition={{ duration: 0.6, ease: "easeOut" }}
+                className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${color}, ${C.violet})`, boxShadow: `0 0 12px ${color}` }} />
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </Card>
-  );
-}
-
-function BreakdownCard({ title, icon, items, color }: {
-  title: string; icon: React.ComponentType<{ className?: string }>;
-  items: { label: string; n: number }[]; color: string;
-}) {
-  const total = items.reduce((s, d) => s + d.n, 0) || 1;
-  return (
-    <Card title={title} icon={icon}>
-      <div className="space-y-1.5">
-        {items.length === 0 && <p className="text-xs text-muted-foreground">Nėra duomenų.</p>}
-        {items.slice(0, 8).map((d, i) => {
-          const p = Math.round((d.n / total) * 100);
-          return (
-            <motion.div key={d.label + i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className="group relative overflow-hidden rounded-md border border-white/5 bg-white/[0.02] p-2">
-              <div className="flex items-center justify-between gap-2 text-[11px]">
-                <span className="truncate font-semibold text-white/90">{d.label}</span>
-                <span className="shrink-0 tabular-nums text-muted-foreground">{fmt(d.n)} · {p}%</span>
-              </div>
-              <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${p}%` }}
-                  transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.04 }}
-                  className="h-full rounded-full" style={{ background: color }} />
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
-    </Card>
-  );
-}
-
-function DeviceIcon({ d }: { d: string }) {
-  const Icon = d === "mobile" ? Smartphone : d === "tablet" ? Tablet : Monitor;
-  return <Icon className="h-3 w-3" />;
-}
-
-function ActionBadge({ action }: { action: string }) {
-  const map: Record<string, { label: string; color: string; Icon: React.ComponentType<{ className?: string }> }> = {
-    "page.view": { label: "Peržiūra", color: C.cyan, Icon: Eye },
-    "auth.signed_in": { label: "Prisijungimas", color: C.emerald, Icon: LogIn },
-    "auth.signed_out": { label: "Atsijungimas", color: C.rose, Icon: LogOut },
-  };
-  const entry = map[action] ?? { label: action, color: C.violet, Icon: ActivityIcon };
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold"
-      style={{ color: entry.color, borderColor: `${entry.color}55`, background: `${entry.color}15` }}>
-      <entry.Icon className="h-2.5 w-2.5" />
-      {entry.label}
-    </span>
+    </div>
   );
 }
