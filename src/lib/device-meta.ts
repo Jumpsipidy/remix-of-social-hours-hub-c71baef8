@@ -74,7 +74,9 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
   } catch { /* noop */ }
   return {
     session_id: sessionId(),
+    visitor_id: visitorId(),
     ua: ua.slice(0, 220),
+
     device,
     browser,
     os,
