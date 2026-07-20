@@ -198,15 +198,31 @@ export function LockdownGate() {
   async function runCheck(auto = false) {
     setRefreshing(true); setRefreshOk(null);
     try {
-      const { data, error } = await readPublicSettings();
+      let enabled = false;
+      let msg: string | null = null;
+      let cid: string | null = null;
+      try {
+        const { data, error } = await readPublicSettings();
+        if (error) throw new Error(error.message);
+        enabled = Boolean(data?.lockdown_enabled);
+        msg = data?.lockdown_message ?? null;
+        cid = data?.lockdown_code ?? null;
+      } catch {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.rpc("get_lockdown_public");
+        const row = Array.isArray(data) ? data[0] : data;
+        enabled = Boolean(row?.lockdown_enabled);
+        msg = row?.lockdown_message ?? null;
+        cid = row?.lockdown_code ?? null;
+      }
       await new Promise((r) => setTimeout(r, auto ? 400 : 900));
-      if (!error && !data?.lockdown_enabled) {
+      if (!enabled) {
         setRefreshOk(true);
         setTimeout(() => setLockdown(false), 550);
       } else {
-        setLockdown(Boolean(data?.lockdown_enabled));
-        setMessage(data?.lockdown_message ?? null);
-        setCodeId(data?.lockdown_code ?? null);
+        setLockdown(true);
+        setMessage(msg);
+        setCodeId(cid);
         setRefreshOk(false);
       }
     } catch { setRefreshOk(false); }
