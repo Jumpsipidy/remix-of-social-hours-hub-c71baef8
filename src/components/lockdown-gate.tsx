@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
 import { RefreshCw, X, Copy, Check, ShieldCheck, BookOpen, ChevronDown, Lock } from "lucide-react";
-import { readSiteSettings } from "@/lib/site-settings";
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
+import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 import { Captcha } from "@/components/captcha";
 
 
@@ -76,6 +76,7 @@ export function LockdownGate() {
   const bufferRef = useRef("");
   const verifyToken = useServerFn(verifyBypassToken);
   const readBypassStatus = useServerFn(bypassStatus);
+  const readPublicSettings = useServerFn(getPublicSiteSettings);
 
   const submitCodeFn = useServerFn(verifyBypassCode);
 
@@ -92,7 +93,7 @@ export function LockdownGate() {
   useEffect(() => {
     let mounted = true;
     const load = async () => {
-      const { data, error } = await readSiteSettings();
+      const { data, error } = await readPublicSettings();
       if (!mounted) return;
       if (error) { setLockdown(false); return; }
       setLockdown(Boolean(data?.lockdown_enabled));
@@ -176,7 +177,7 @@ export function LockdownGate() {
   async function runCheck(auto = false) {
     setRefreshing(true); setRefreshOk(null);
     try {
-      const { data, error } = await readSiteSettings();
+      const { data, error } = await readPublicSettings();
       await new Promise((r) => setTimeout(r, auto ? 400 : 900));
       if (!error && !data?.lockdown_enabled) {
         setRefreshOk(true);

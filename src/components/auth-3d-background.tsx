@@ -184,14 +184,14 @@ export function Auth3DBackground() {
     const onVis = () => { visible = document.visibilityState === "visible"; };
     document.addEventListener("visibilitychange", onVis);
 
-    const clock = new THREE.Clock();
+    const startedAt = performance.now();
     let raf = 0;
     const dustPosAttr = dustGeo.getAttribute("position") as THREE.BufferAttribute;
 
     const tick = () => {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startedAt) / 1000;
 
       mouse.x += (mouse.tx - mouse.x) * 0.05;
       mouse.y += (mouse.ty - mouse.y) * 0.05;

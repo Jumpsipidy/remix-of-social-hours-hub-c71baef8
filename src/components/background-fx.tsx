@@ -90,12 +90,12 @@ export function BackgroundFX() {
     const onVis = () => { visible = document.visibilityState === "visible"; };
     document.addEventListener("visibilitychange", onVis);
 
-    const clock = new THREE.Clock();
+    const startedAt = performance.now();
     let raf = 0;
     const tick = () => {
       raf = requestAnimationFrame(tick);
       if (!visible) return;
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startedAt) / 1000;
       mouse.x += (mouse.tx - mouse.x) * 0.04;
       mouse.y += (mouse.ty - mouse.y) * 0.04;
       const s = Math.min(scrollY / (window.innerHeight * 2.5), 1);
