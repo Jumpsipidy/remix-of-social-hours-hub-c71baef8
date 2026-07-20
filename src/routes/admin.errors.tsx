@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   RefreshCw,
@@ -21,6 +21,13 @@ import {
   Menu,
   Copy,
   Check,
+  EyeOff,
+  Plus,
+  Globe,
+  Filter,
+  Keyboard,
+  Play,
+  Pause,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -30,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
+import { logClientError } from "@/lib/error-log";
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
