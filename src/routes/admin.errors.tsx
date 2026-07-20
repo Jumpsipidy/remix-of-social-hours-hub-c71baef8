@@ -667,6 +667,7 @@ function AdminErrorsPage() {
                       <div className="relative min-w-[200px] flex-1">
                         <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
+                          ref={searchRef}
                           placeholder={regexMode ? "Regex, pvz. ^Cannot read|is not a function" : "Ieškoti žinutėje, kelyje, stack…"}
                           value={filter}
                           onChange={(e) => setFilter(e.target.value)}
