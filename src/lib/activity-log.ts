@@ -63,4 +63,5 @@ export const ACTION_LABELS: Record<string, { label: string; tone: "info" | "ok" 
   "certificate.generated": { label: "Sugeneravo sertifikatą", tone: "ok" },
   "auth.signed_in": { label: "Prisijungė", tone: "info" },
   "auth.signed_out": { label: "Atsijungė", tone: "info" },
+  "page.view": { label: "Peržiūrėjo puslapį", tone: "info" },
 };
