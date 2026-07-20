@@ -1,10 +1,50 @@
 # Analytics v3 — SQL Reference
 
-**Good news:** if you already ran the previous analytics migrations
+**Svarbu tavo dabartinei klaidai:** jei konsolėje matai
+`record "new" has no field "is_admin_event"` arba `column activity_log.is_admin_event does not exist`,
+reiškia tavo production DB turi triggerį, bet neturi pačio stulpelio. Paleisk šitą trumpą fix'ą:
+
+```sql
+alter table public.activity_log
+  add column if not exists is_admin_event boolean not null default false;
+
+create index if not exists activity_log_admin_event_idx
+  on public.activity_log (is_admin_event, created_at desc);
+
+update public.activity_log
+set is_admin_event = true
+where is_admin_event = false
+  and coalesce(meta->>'path', '') like '/admin%';
+
+create or replace function public.tg_activity_log_flag_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_path text := coalesce(new.meta->>'path','');
+begin
+  new.is_admin_event := v_path like '/admin%';
+  return new;
+end $$;
+
+drop trigger if exists tg_activity_log_flag_admin on public.activity_log;
+create trigger tg_activity_log_flag_admin
+  before insert on public.activity_log
+  for each row execute function public.tg_activity_log_flag_admin();
+
+notify pgrst, 'reload schema';
+```
+
+Po to perkrauk svetainę ir atsidaryk ne `/admin` puslapį — `activity_log` 400 klaida turi dingti.
+
+---
+
+Jei jau paleidai visas ankstesnes analytics migracijas
 (`activity_log`, `admin_analytics_v2`, `admin_recent_activity`,
-`tg_activity_log_flag_admin`), you do **not** need to run anything new.
-The v3 dashboard is a pure frontend rewrite — it uses the same server
-function `adminAnalytics` and the same RPCs.
+`tg_activity_log_flag_admin`), daugiau nieko nereikia.
+V3 dashboardas naudoja tuos pačius duomenis ir RPC.
 
 If you're starting from scratch or want to re-verify, this is the complete,
 idempotent SQL. Run it in the Supabase SQL editor as `postgres`.
