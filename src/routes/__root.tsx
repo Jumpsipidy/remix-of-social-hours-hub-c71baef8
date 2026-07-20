@@ -85,9 +85,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
     ],
     scripts: [
-      { src: "https://www.googletagmanager.com/gtag/js?id=G-6SM411VCPX", async: true },
+      { src: "https://www.googletagmanager.com/gtag/js?id=G-4HRBLS0E3G", async: true },
       {
-        children: "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-6SM411VCPX');",
+        children: "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-4HRBLS0E3G');",
       },
       {
         type: "application/ld+json",
