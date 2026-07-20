@@ -1104,8 +1104,22 @@ function HeroStat({
       <div className="relative">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-          <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
-            <Icon className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5">
+            {onExpand && (
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.stopPropagation(); onExpand(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onExpand(); } }}
+                title="Detalus vaizdas"
+                className="grid h-6 w-6 cursor-pointer place-items-center rounded-md border border-white/10 bg-white/5 text-muted-foreground opacity-0 backdrop-blur transition group-hover:opacity-100 hover:bg-white/10 hover:text-foreground"
+              >
+                <Maximize2 className="h-3 w-3" />
+              </span>
+            )}
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-white/5 backdrop-blur" style={{ color }}>
+              <Icon className="h-3.5 w-3.5" />
+            </div>
           </div>
         </div>
         <p className="mt-2 font-display text-3xl font-bold tracking-tight">
