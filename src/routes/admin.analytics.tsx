@@ -659,18 +659,21 @@ function Page() {
               const max = topPages[0]?.count ?? 1;
               const w = Math.max(6, (p.count / max) * 100);
               return (
-                <motion.div
+                <motion.button
                   key={p.path}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.02 * i }}
-                  className="group relative overflow-hidden rounded-xl border border-border/60 bg-background/40 px-3 py-2"
+                  whileHover={{ x: 2, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => setDrilldownPath(p.path)}
+                  className="group relative block w-full overflow-hidden rounded-xl border border-border/60 bg-background/40 px-3 py-2 text-left transition hover:border-primary/40"
                 >
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${w}%` }}
                     transition={{ duration: 0.9, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/30 to-cyan-500/20"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary/30 to-cyan-500/20 group-hover:from-primary/50 group-hover:to-cyan-500/30"
                   />
                   <div className="relative flex items-center justify-between gap-2 text-xs">
                     <span className="truncate font-mono text-foreground">{p.path}</span>
@@ -678,7 +681,7 @@ function Page() {
                       {p.count.toLocaleString("lt-LT")}
                     </span>
                   </div>
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>
