@@ -859,7 +859,22 @@ function AdminErrorsPage() {
                 </SaaSPanel>
               )}
 
-              {section === "lockdown" && (
+              {section === "sources" && (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <SourceBreakdown title="Puslapiai" items={topSources.paths} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SourceBreakdown title="Naršyklės" items={topSources.browsers} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SourceBreakdown title="OS" items={topSources.oses} total={rows.length} onPick={(v) => { setFilter(v); setSection("live"); }} />
+                  <SaaSPanel>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Klavišų kombinacijos</div>
+                    <div className="mt-3 space-y-2 text-xs">
+                      <ShortcutRow k="/" desc="Fokusuoti paiešką (Live)" />
+                      <ShortcutRow k="L" desc="Įjungti / išjungti Live streamą" />
+                      <ShortcutRow k="Esc" desc="Išvalyti paiešką" />
+                    </div>
+                  </SaaSPanel>
+                </div>
+              )}
+
                 <LockdownBanner
                   lockdown={lockdown}
                   site={site}
