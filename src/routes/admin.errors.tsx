@@ -98,12 +98,15 @@ function AdminErrorsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [kind, setKind] = useState<"all" | ErrAction>("all");
+  const [regexMode, setRegexMode] = useState(false);
+  const [timeWindow, setTimeWindow] = useState<"5m" | "1h" | "24h" | "all">("all");
   const [selected, setSelected] = useState<ErrRow | null>(null);
   const [site, setSite] = useState<SiteSettings | null>(null);
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState(true);
   const [section, setSection] = useState<Section>("overview");
   const [mobileNav, setMobileNav] = useState(false);
+  const [copied, setCopied] = useState(false);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
 
