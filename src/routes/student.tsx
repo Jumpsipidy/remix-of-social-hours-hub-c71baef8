@@ -112,6 +112,39 @@ function StudentDashboard() {
     return s;
   }, [weeklyData]);
 
+  const uniqueOrgs = useMemo(() => new Set(reservations.map((r) => r.organization_id)).size, [reservations]);
+  const [unlockedKeys, setUnlockedKeys] = useState<Set<string>>(new Set());
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [groupJoined, setGroupJoined] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [{ count: fc }, { count: gc }] = await Promise.all([
+        supabase.from("friendships").select("id", { count: "exact", head: true })
+          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`).eq("status", "accepted"),
+        supabase.from("reservation_participants").select("id", { count: "exact", head: true })
+          .eq("student_id", user.id).eq("status", "accepted"),
+      ]);
+      setFriendsCount(fc ?? 0);
+      setGroupJoined(gc ?? 0);
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !profile) return;
+    const ctx: AchievementCtx = {
+      hoursEarned: Number(profile.hours_earned ?? 0),
+      hoursNeeded: Number(profile.hours_needed ?? 0),
+      completedCount: reservations.filter((r) => r.status === "completed" || r.status === "confirmed").length,
+      uniqueOrgs,
+      streakWeeks: streak,
+      friendsCount,
+      groupJoined,
+    };
+    syncAchievements(user.id, ctx).then(setUnlockedKeys);
+  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined]);
+
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
     return (
@@ -145,39 +178,6 @@ function StudentDashboard() {
     return r.status === filter;
   });
 
-  // Achievements — DB-backed via useEffect below
-  const [unlockedKeys, setUnlockedKeys] = useState<Set<string>>(new Set());
-  const uniqueOrgs = useMemo(() => new Set(reservations.map((r) => r.organization_id)).size, [reservations]);
-  const [friendsCount, setFriendsCount] = useState(0);
-  const [groupJoined, setGroupJoined] = useState(0);
-
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const [{ count: fc }, { count: gc }] = await Promise.all([
-        supabase.from("friendships").select("id", { count: "exact", head: true })
-          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`).eq("status", "accepted"),
-        supabase.from("reservation_participants").select("id", { count: "exact", head: true })
-          .eq("student_id", user.id).eq("status", "accepted"),
-      ]);
-      setFriendsCount(fc ?? 0);
-      setGroupJoined(gc ?? 0);
-    })();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !profile) return;
-    const ctx: AchievementCtx = {
-      hoursEarned: Number(profile.hours_earned ?? 0),
-      hoursNeeded: Number(profile.hours_needed ?? 0),
-      completedCount: reservations.filter((r) => r.status === "completed" || r.status === "confirmed").length,
-      uniqueOrgs,
-      streakWeeks: streak,
-      friendsCount,
-      groupJoined,
-    };
-    syncAchievements(user.id, ctx).then(setUnlockedKeys);
-  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined]);
 
   return (
     <PageShell>
