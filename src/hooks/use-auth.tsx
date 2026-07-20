@@ -147,12 +147,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(async () => {
           await loadProfile(u.id);
           if (mounted) setLoading(false);
-          if (event === "SIGNED_IN") {
-            try {
-              const { deviceMeta } = await import("@/lib/device-meta");
-              logActivity("auth.signed_in", { entityType: "user", entityId: u.id, meta: deviceMeta() });
-            } catch {}
-          }
         }, 0);
       } else {
         if (event === "SIGNED_OUT") {
@@ -208,8 +202,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
         try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
         setMock(null);
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user?.id) {
+          try {
+            const { deviceMeta } = await import("@/lib/device-meta");
+            await logActivity("auth.signed_in", { entityType: "user", entityId: data.user.id, meta: deviceMeta({ method: "debug_impersonate_real" }) });
+          } catch {}
+        }
       },
       clearImpersonation: () => {
         try { localStorage.removeItem(MOCK_KEY); } catch {}

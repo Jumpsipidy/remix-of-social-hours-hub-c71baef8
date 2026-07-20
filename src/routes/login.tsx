@@ -6,6 +6,8 @@ import { Heart, Mail, Lock, Sparkles, ShieldCheck, ArrowRight, Loader2, Eye, Eye
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { deviceMeta } from "@/lib/device-meta";
+import { insertActivityLogRow } from "@/lib/activity-log";
 import { Captcha } from "@/components/captcha";
 import { toast } from "sonner";
 
@@ -86,9 +88,18 @@ function LoginPage() {
     try {
       clearImpersonation();
       try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       const ensured = await ensureProfile();
+      if (signIn.user?.id) {
+        await insertActivityLogRow({
+          user_id: signIn.user.id,
+          action: "auth.signed_in",
+          entity_type: "user",
+          entity_id: signIn.user.id,
+          meta: deviceMeta({ method: "password", path: "/login" }),
+        });
+      }
       const role = ensured.profile?.role ?? "student";
       const target = DASH_BY_ROLE[role] ?? "/";
       if (role) { try { localStorage.setItem("sv_last_role_v1", role); } catch {} }
