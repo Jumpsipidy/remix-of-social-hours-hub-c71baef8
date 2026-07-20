@@ -231,7 +231,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       sb.from("messages").select("id, created_at").gte("created_at", since),
       userSb.rpc("admin_analytics_v2", { _days: days }),
       userSb.rpc("admin_recent_activity", { _limit: 80 }),
-      sb.from("activity_log").select("id, created_at, action, user_id, meta, is_admin_event").gte("created_at", since).order("created_at", { ascending: false }).limit(2500),
+      sb.from("activity_log").select("id, created_at, action, user_id, meta").gte("created_at", since).order("created_at", { ascending: false }).limit(2500),
     ]);
     const fallbackRows = ((rawActivityRes.data ?? []) as Array<{
       id: string;
@@ -239,8 +239,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       action: string;
       user_id: string | null;
       meta: Record<string, unknown> | null;
-      is_admin_event?: boolean | null;
-    }>).filter((row) => !row.is_admin_event && !String(row.meta?.path ?? "").startsWith("/admin"));
+    }>).filter((row) => !String(row.meta?.path ?? "").startsWith("/admin"));
 
     const fallbackDaily = Array.from({ length: days }, (_, i) => {
       const date = new Date();
@@ -275,7 +274,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       },
       prev_totals: { views: 0, uniques: 0, signins: 0, signouts: 0 },
       active_now: pageViews.filter((row) => Date.now() - new Date(row.created_at).getTime() <= 5 * 60 * 1000).length,
-      admin_hidden_events: ((rawActivityRes.data ?? []) as Array<{ is_admin_event?: boolean | null }>).filter((row) => row.is_admin_event).length,
+      admin_hidden_events: ((rawActivityRes.data ?? []) as Array<{ meta?: Record<string, unknown> | null }>).filter((row) => String(row.meta?.path ?? "").startsWith("/admin")).length,
       daily: fallbackDaily,
       hourly: Array.from({ length: 24 }, (_, h) => {
         const rows = fallbackRows.filter((row) => new Date(row.created_at).getHours() === h);
