@@ -26,7 +26,7 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/socialines-valandos-motion.mp4",
+  outputLocation: "/mnt/documents/socialines-valandos-launch.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
