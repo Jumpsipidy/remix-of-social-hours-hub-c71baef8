@@ -562,6 +562,9 @@ export type Database = {
       }
       reservation_participants: {
         Row: {
+          check_in_code: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           hours_awarded: number
           id: string
@@ -572,6 +575,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          check_in_code?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           hours_awarded?: number
           id?: string
@@ -582,6 +588,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          check_in_code?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           hours_awarded?: number
           id?: string
@@ -592,6 +601,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservation_participants_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservation_participants_reservation_id_fkey"
             columns: ["reservation_id"]
@@ -604,6 +620,9 @@ export type Database = {
       reservations: {
         Row: {
           address: string | null
+          check_in_code: string | null
+          checked_in_at: string | null
+          checked_in_by: string | null
           created_at: string
           end_time: string
           hours_to_earn: number
@@ -624,6 +643,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          check_in_code?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           end_time: string
           hours_to_earn?: number
@@ -644,6 +666,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          check_in_code?: string | null
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           created_at?: string
           end_time?: string
           hours_to_earn?: number
@@ -663,6 +688,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_student_id_fkey"
             columns: ["student_id"]
@@ -889,6 +921,8 @@ export type Database = {
         }[]
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
+      check_in_by_code: { Args: { _code: string }; Returns: Json }
+      generate_check_in_code: { Args: never; Returns: string }
       generate_recurring_tasks: { Args: never; Returns: number }
       get_lockdown_public: {
         Args: never
