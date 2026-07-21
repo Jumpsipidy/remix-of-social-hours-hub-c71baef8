@@ -847,6 +847,18 @@ Vite plugin flag'as `serverFns.disableCsrfMiddlewareWarning: true` — server fu
 
 ---
 
+### 24.11 QR + 6 skaitmenų įsiregistravimas (naujausia)
+- Mokinys `/checkin` mato **sukamą QR kodą** (keičiasi kas 30s, HMAC parašas serveryje).
+- Po juo — **6 skaitmenų statinis kodas**, unikalus rezervacijai, veikia be interneto.
+- Organizacija `/organization/scan` — kameros skeneris (`@zxing/browser`) arba rankinis 6 skaitmenų įvedimas.
+- Grupinės rezervacijos — kiekvienas draugas turi savo kodą.
+- DB: `reservations.check_in_code / checked_in_at / checked_in_by` + tie patys stulpeliai `reservation_participants` lentelėje.
+- Trigeriai automatiškai sugeneruoja kodą kai statusas → `approved`.
+- RPC `check_in_by_code(_code)` tikrina organizacijos priklausomybę — kitos org kodas atmetamas.
+- Pilna dokumentacija: [`docs/QR-CHECKIN.md`](docs/QR-CHECKIN.md).
+
+---
+
 ## 25. Ateities planai (dar neįdiegta)
 
 - Bulk student import iš CSV.

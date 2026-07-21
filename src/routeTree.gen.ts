@@ -21,6 +21,7 @@ import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -42,6 +43,8 @@ import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
+import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
+import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -101,6 +104,10 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -209,6 +216,17 @@ const AdminAccountsRoute = AdminAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrganizationScanRoute =
+  AuthenticatedOrganizationScanRouteImport.update({
+    id: '/organization/scan',
+    path: '/organization/scan',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -224,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -244,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -258,6 +278,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -278,10 +299,12 @@ export interface FileRoutesByTo {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
+  '/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -294,6 +317,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -314,6 +338,7 @@ export interface FileRoutesById {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -331,6 +356,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -351,6 +377,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/organization/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -365,6 +392,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -385,9 +413,11 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin'
     | '/verify'
+    | '/organization/scan'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/admin'
     | '/forgot-password'
     | '/login'
@@ -400,6 +430,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/_authenticated/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -420,10 +451,12 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/_authenticated/organization/scan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -527,6 +560,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -676,8 +716,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccountsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_authenticated/checkin': {
+      id: '/_authenticated/checkin'
+      path: '/checkin'
+      fullPath: '/checkin'
+      preLoaderRoute: typeof AuthenticatedCheckinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/organization/scan': {
+      id: '/_authenticated/organization/scan'
+      path: '/organization/scan'
+      fullPath: '/organization/scan'
+      preLoaderRoute: typeof AuthenticatedOrganizationScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
+  AuthenticatedOrganizationScanRoute: typeof AuthenticatedOrganizationScanRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
+  AuthenticatedOrganizationScanRoute: AuthenticatedOrganizationScanRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AdminRouteChildren {
   AdminAccountsRoute: typeof AdminAccountsRoute
@@ -719,6 +786,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
