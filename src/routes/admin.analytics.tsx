@@ -534,7 +534,7 @@ function Page() {
           {/* KPI GRID */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <KpiCard kind="views" icon={<Eye className="h-4 w-4" />} label="Peržiūros" value={a.totals.views} prev={a.prev_totals.views} spark={dailyViews} color={C.cyan} onOpen={() => setDetail("views")} />
-            <KpiCard kind="uniques" icon={<Users className="h-4 w-4" />} label="Unikalūs lankytojai" value={a.totals.uniques} prev={a.prev_totals.uniques} spark={a.daily.map((d) => d.uniques)} color={C.violet} onOpen={() => setDetail("uniques")} />
+            <KpiCard kind="uniques" icon={<Fingerprint className="h-4 w-4" />} label="Unikalūs įrenginiai" value={a.totals.uniques} prev={a.prev_totals.uniques} spark={a.daily.map((d) => d.uniques)} color={C.violet} onOpen={() => setDetail("uniques")} />
             <KpiCard kind="signIns" icon={<LogIn className="h-4 w-4" />} label="Prisijungimai" value={a.totals.signins} prev={a.prev_totals.signins} spark={a.daily.map((d) => d.signins)} color={C.emerald} onOpen={() => setDetail("signIns")} />
             <KpiCard kind="signOuts" icon={<LogOut className="h-4 w-4" />} label="Atsijungimai" value={a.totals.signouts} prev={a.prev_totals.signouts} spark={a.daily.map((d) => d.signouts)} color={C.rose} onOpen={() => setDetail("signOuts")} />
           </div>
