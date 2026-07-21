@@ -1,6 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/** Wipe the entire activity_log analytics history. Super admin only. */
+export const adminResetAnalytics = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
+    if ((me as { role?: string } | null)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
+    const { error, count } = await supabaseAdmin
+      .from("activity_log")
+      .delete({ count: "exact" })
+      .not("id", "is", null);
+    if (error) throw new Error(error.message);
+    return { deleted: count ?? 0 };
+  });
+
 export const adminListAllAccounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
