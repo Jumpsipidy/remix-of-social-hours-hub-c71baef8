@@ -922,6 +922,17 @@ export type Database = {
         Returns: boolean
       }
       run_deep_health_scan: { Args: never; Returns: Json }
+      search_classmates: {
+        Args: { _q?: string }
+        Returns: {
+          class_year: string
+          full_name: string
+          hours_earned: number
+          id: string
+          public_email: string
+          school_id: string
+        }[]
+      }
       verify_certificate: { Args: { _code: string }; Returns: Json }
       verify_school_signup_code: {
         Args: { _code: string; _school_id: string }

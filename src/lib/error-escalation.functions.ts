@@ -7,11 +7,31 @@
 // Skips test / hot-reload / decorative-WebGL noise so real signal isn't buried.
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { clientFingerprint } from "@/lib/security-crypto.server";
 
 const CRITICAL_THRESHOLD = 3;
 const CRITICAL_WINDOW_MIN = 5;
 const EMAIL_DEDUPE_MIN = 15;
+
+// Per-IP rate limit (in-memory, per-worker). Prevents an anonymous flood from
+// tripping the auto-lockdown threshold with three trivial requests.
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_PER_WINDOW = 5;
+const rateBuckets = new Map<string, number[]>();
+function checkRate(fp: string): boolean {
+  const now = Date.now();
+  const cutoff = now - RATE_WINDOW_MS;
+  const bucket = (rateBuckets.get(fp) ?? []).filter((t) => t > cutoff);
+  if (bucket.length >= RATE_MAX_PER_WINDOW) {
+    rateBuckets.set(fp, bucket);
+    return false;
+  }
+  bucket.push(now);
+  rateBuckets.set(fp, bucket);
+  return true;
+}
 
 // Server-side ignore list (belt + braces alongside client filter)
 const IGNORE_RX = [
@@ -122,9 +142,33 @@ export const escalateAppError = createServerFn({ method: "POST" })
       return { ok: true, ignored: true };
     }
 
+    // Per-IP rate limit — stops an anonymous flood from tripping auto-lockdown
+    // with three trivial requests. Beyond the cap we drop silently.
+    let fp = "unknown";
+    try {
+      const req = getRequest();
+      if (req) fp = clientFingerprint(req);
+    } catch { /* ignore — SSR / missing request */ }
+    if (!checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Only reports from an authenticated user (identified via provided userEmail
+    // matched against a real profile) may count toward the auto-lockdown
+    // threshold. Anonymous reports are still logged, but they can't take the
+    // site down.
+    let authedUserId: string | null = null;
+    if (data.userEmail) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", data.userEmail.toLowerCase())
+        .maybeSingle();
+      authedUserId = (prof as { id: string } | null)?.id ?? null;
+    }
+
     await supabaseAdmin.from("activity_log").insert({
+      user_id: authedUserId,
       action: data.level === "critical" ? "app.critical" : "app.warning",
       entity_type: "auto-monitor",
       meta: {
@@ -132,17 +176,21 @@ export const escalateAppError = createServerFn({ method: "POST" })
         path: data.path ?? null,
         stack: data.stack?.slice(0, 500) ?? null,
         userAgent: data.userAgent ?? null,
+        anon: authedUserId === null,
+        fp,
       },
     });
 
     let lockdownTriggered = false;
     let criticalCount = 0;
-    if (data.level === "critical") {
+    if (data.level === "critical" && authedUserId !== null) {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
+      // Count only critical events tied to a real signed-in user in the window.
       const { count } = await supabaseAdmin
         .from("activity_log")
         .select("*", { count: "exact", head: true })
         .eq("action", "app.critical")
+        .not("user_id", "is", null)
         .gte("created_at", since);
       criticalCount = count ?? 0;
 

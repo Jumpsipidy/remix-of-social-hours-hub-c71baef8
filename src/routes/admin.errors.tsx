@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
+import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
 
 export const Route = createFileRoute("/admin/errors")({
@@ -132,6 +133,7 @@ function AdminErrorsPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+  const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
@@ -152,13 +154,14 @@ function AdminErrorsPage() {
         .limit(500),
       supabase
         .from("site_settings")
-        .select("lockdown_enabled,lockdown_code,lockdown_message,updated_at")
+        .select("lockdown_enabled,lockdown_message,updated_at")
         .eq("id", true)
         .maybeSingle(),
     ]);
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
-    setSite((ss.data as SiteSettings) ?? null);
+    // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
+    setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
   };
 
@@ -369,18 +372,24 @@ function AdminErrorsPage() {
 
   const toggleLockdown = async (enable: boolean) => {
     setBusy(true);
-    const { error } = await supabase.from("site_settings").upsert({
-      id: true,
-      lockdown_enabled: enable,
-      lockdown_code: enable ? "E-MANUAL" : null,
-      lockdown_message: enable
-        ? "[rankinis] Super admin užrakino svetainę iš klaidų stebėsenos."
-        : null,
-      updated_at: new Date().toISOString(),
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success(enable ? "🔒 Lockdown ĮJUNGTAS" : "🔓 Lockdown išjungtas");
+    try {
+      // Write via admin-gated server fn — lockdown_code column privileges are
+      // revoked from authenticated, so a direct client upsert would fail.
+      await updateLockdownFn({
+        data: {
+          lockdown_enabled: enable,
+          lockdown_code: enable ? "E-MANUAL" : null,
+          lockdown_message: enable
+            ? "[rankinis] Super admin užrakino svetainę iš klaidų stebėsenos."
+            : null,
+        },
+      });
+      toast.success(enable ? "🔒 Lockdown ĮJUNGTAS" : "🔓 Lockdown išjungtas");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const lockdown = site?.lockdown_enabled === true;

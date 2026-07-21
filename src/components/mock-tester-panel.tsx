@@ -82,15 +82,12 @@ export function MockTesterPanel() {
   const handleImpersonate = async (p: Profile) => {
     setBusy(p.id);
     try {
-      // Real sign-in so RLS treats us as this user (hours, chat, reservations work).
-      // All debug accounts share DevPass123!. Falls back to mock if password differs.
-      if (p.email?.endsWith("@dev.local")) {
-        await impersonateReal(p.email, "DevPass123!");
-        toast.success(`Prisijungta kaip ${ROLE_LABEL[p.role]} (tikra sesija)`);
-      } else {
-        impersonate(p);
-        toast.success(`Mock: ${ROLE_LABEL[p.role]} (be RLS)`);
-      }
+      // Passwords are randomised per-account and only shown to the admin at
+      // creation time — real sign-in from the list isn't possible. Fall back
+      // to a client-side mock session (no RLS), which is fine for a DEV-only
+      // build.
+      impersonate(p);
+      toast.success(`Mock: ${ROLE_LABEL[p.role]} (be RLS)`);
       navigate({ to: DASH_BY_ROLE[p.role] ?? "/" });
       setOpen(false);
     } catch (e: any) {
@@ -196,7 +193,7 @@ export function MockTesterPanel() {
 
             {tab === "create" && (
               <>
-                <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis: <code className="rounded bg-muted px-1">DevPass123!</code></p>
+                <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis generuojamas atsitiktinai kiekvienai paskyrai — parodomas tik sukūrimo metu.</p>
                 <button
                   onClick={() => {
                     const w = window as any;

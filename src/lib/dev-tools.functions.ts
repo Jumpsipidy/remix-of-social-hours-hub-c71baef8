@@ -30,6 +30,14 @@ const ADMIN_POOL = [
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function randSuffix() { return Math.random().toString(36).slice(2, 7); }
+// Cryptographically-strong per-account password. Returned to the calling admin
+// once; never stored in code, UI, or the profile row.
+function randPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = new Uint8Array(20);
+  (globalThis.crypto ?? require("node:crypto").webcrypto).getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("") + "!Aa1";
+}
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, ".").replace(/^\.|\.$/g, "").slice(0, 20);
 }
@@ -54,7 +62,7 @@ function generateEcosystem(): DevAccount[] {
     {
       role: "student",
       email: `${slugify(s)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: s,
       hours_needed: 20 + Math.floor(Math.random() * 40),
       hours_earned: Math.floor(Math.random() * 8),
@@ -62,20 +70,20 @@ function generateEcosystem(): DevAccount[] {
     {
       role: "organization",
       email: `${slugify(o.org)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: o.contact,
       organization_name: o.org,
     },
     {
       role: "school_admin",
       email: `${slugify(sa)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: sa,
     },
     {
       role: "admin",
       email: `${slugify(ad)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: ad,
     },
   ];
@@ -116,7 +124,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" })
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const accs = generateEcosystem();
-    const results: Array<{ email: string; role: string; id: string }> = [];
+    const results: Array<{ email: string; role: string; id: string; password: string }> = [];
 
     for (const acc of accs) {
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -145,7 +153,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" })
         },
         { onConflict: "id" },
       );
-      results.push({ email: acc.email, role: acc.role, id: userId });
+      results.push({ email: acc.email, role: acc.role, id: userId, password: acc.password });
     }
     return { ok: true, accounts: results };
   });
@@ -193,16 +201,16 @@ export const createTestAccount = createServerFn({ method: "POST" })
     let acc: DevAccount;
     if (data.role === "student") {
       const n = pick(STUDENT_POOL);
-      acc = { role: "student", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n, hours_needed: 20 };
+      acc = { role: "student", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n, hours_needed: 20 };
     } else if (data.role === "organization") {
       const o = pick(ORG_POOL);
-      acc = { role: "organization", email: `${slugify(o.org)}.${suf}@dev.local`, password: "DevPass123!", full_name: o.contact, organization_name: o.org };
+      acc = { role: "organization", email: `${slugify(o.org)}.${suf}@dev.local`, password: randPassword(), full_name: o.contact, organization_name: o.org };
     } else if (data.role === "school_admin") {
       const n = pick(SCHOOL_ADMIN_POOL);
-      acc = { role: "school_admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+      acc = { role: "school_admin", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n };
     } else {
       const n = pick(ADMIN_POOL);
-      acc = { role: "admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+      acc = { role: "admin", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n };
     }
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: acc.email, password: acc.password, email_confirm: true,
