@@ -24,6 +24,7 @@ import {
   Lock,
   MoreHorizontal,
   AlertTriangle,
+  ScanLine,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
