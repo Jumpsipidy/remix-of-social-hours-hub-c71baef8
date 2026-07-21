@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { AdminAurora } from "@/components/admin/admin-ui";
+import { AdminMobileBoot } from "@/components/admin/mobile-boot";
 import {
   Shield,
   LayoutDashboard,
@@ -147,7 +148,9 @@ function AdminLayout() {
   return (
     <PageShell>
       <AdminAurora />
+      <AdminMobileBoot />
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
+
         {/* Mobile top bar */}
         <div className="sticky top-14 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
           <motion.button
