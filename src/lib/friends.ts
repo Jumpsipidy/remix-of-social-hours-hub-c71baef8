@@ -32,33 +32,33 @@ export async function listMyFriendships(userId: string): Promise<FriendshipRow[]
   return (data as FriendshipRow[]) ?? [];
 }
 
-/** Fetch profiles for a set of user ids. */
+/** Fetch profiles for a set of user ids (non-sensitive columns only — no login email). */
 export async function fetchFriendProfiles(ids: string[]): Promise<Record<string, FriendProfile>> {
   if (!ids.length) return {};
   const { data } = await supabase
     .from("profiles")
-    .select("id, full_name, email, class_year, hours_earned, school_id")
+    .select("id, full_name, class_year, hours_earned, school_id, public_email")
     .in("id", ids);
   const map: Record<string, FriendProfile> = {};
-  (data as FriendProfile[] | null)?.forEach((p) => (map[p.id] = p));
+  (data as Array<Omit<FriendProfile, "email"> & { public_email: string | null }> | null)?.forEach((p) => {
+    map[p.id] = { ...p, email: p.public_email ?? null };
+  });
   return map;
 }
 
-/** Students at my school (excluding me). Simple prefix search. */
-export async function searchClassmates(myId: string, mySchoolId: string, q: string): Promise<FriendProfile[]> {
+/** Students at my school (excluding me). Uses SECURITY DEFINER RPC that returns only non-sensitive columns. */
+export async function searchClassmates(_myId: string, mySchoolId: string, q: string): Promise<FriendProfile[]> {
   if (!mySchoolId) return [];
-  const query = supabase
-    .from("profiles")
-    .select("id, full_name, email, class_year, hours_earned, school_id")
-    .eq("school_id", mySchoolId)
-    .eq("role", "student")
-    .neq("id", myId)
-    .limit(20);
-  const term = q.trim();
-  if (term) query.ilike("full_name", `%${term}%`);
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("search_classmates" as never, { _q: q.trim() } as never);
   if (error) throw error;
-  return (data as FriendProfile[]) ?? [];
+  return ((data as Array<{ id: string; full_name: string | null; class_year: string | null; hours_earned: number | null; school_id: string | null; public_email: string | null }> | null) ?? []).map((p) => ({
+    id: p.id,
+    full_name: p.full_name,
+    class_year: p.class_year,
+    hours_earned: p.hours_earned,
+    school_id: p.school_id,
+    email: p.public_email, // expose only opt-in public_email, never login email
+  }));
 }
 
 export async function sendFriendRequest(fromId: string, toId: string) {
