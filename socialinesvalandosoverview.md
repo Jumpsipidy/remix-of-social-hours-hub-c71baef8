@@ -2,7 +2,7 @@
 
 Šis dokumentas paprasta kalba paaiškina **kiekvieną** mygtuką, laukelį, puslapį ir funkciją visoje platformoje. Skirtas tau, savininkui, kad greitai suprastum bet kurią vietą sistemoje — net jei nesi programuotojas.
 
-**Techninis pagrindas** (trumpai): TanStack Start (React) frontendas + Lovable Cloud (Supabase) backendas su RLS taisyklėmis. Vercel hosting. Domenas šiuo metu `socialinesvalandos.vercel.app`, vėliau bus `socialinesvalandos.lt`.
+**Techninis pagrindas** (trumpai): TanStack Start (React) frontendas + Lovable Cloud (Supabase) backendas su RLS taisyklėmis. Vercel hosting. Domenas šiuo metu `socialinesvalandos.dev`, vėliau bus `socialinesvalandos.lt`.
 
 ---
 

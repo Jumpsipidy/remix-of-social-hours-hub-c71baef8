@@ -44,7 +44,7 @@ Yra 2 tipai:
    ```
    arba jei turi Vercel:
    ```
-   https://socialinesvalandos.vercel.app
+   https://socialinesvalandos.dev
    ```
 3. Spausk **Continue**
 

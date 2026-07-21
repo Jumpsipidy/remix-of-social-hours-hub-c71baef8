@@ -15,7 +15,7 @@ error log ir grants.
 2. Nukopijuok visą SQL bloką žemiau.
 3. Paleisk (Run).
 4. Vercel → Deployments → Redeploy (be cache).
-5. Įeik į `socialinesvalandos.vercel.app`, paspaudinėk po puslapius.
+5. Įeik į `socialinesvalandos.dev`, paspaudinėk po puslapius.
 6. Grįžk į `/admin/analytics` — turi rodyti tikrus skaičius.
 
 ---
@@ -161,7 +161,7 @@ select 'last 5min public views',
 ## Po paleidimo
 
 1. Vercel → Deployments → **Redeploy** (išjunk "Use existing Build Cache").
-2. Atidaryk `socialinesvalandos.vercel.app` incognito lange, paspaudinėk po puslapius.
+2. Atidaryk `socialinesvalandos.dev` incognito lange, paspaudinėk po puslapius.
 3. Įeik kaip admin → `/admin/analytics` → turi matyti realius skaičius.
 4. Jei nori nuresetinti senus duomenis: `/admin/analytics` → **Reset** mygtukas.
 

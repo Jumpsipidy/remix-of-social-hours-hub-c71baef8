@@ -100,8 +100,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" },
       { rel: "stylesheet", href: appCss },
-      { rel: "alternate", hrefLang: "lt", href: "https://socialinesvalandos.vercel.app/" },
-      { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.vercel.app/" },
+      { rel: "alternate", hrefLang: "lt", href: "https://socialinesvalandos.dev/" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.dev/" },
     ],
     scripts: [
       { src: "https://www.googletagmanager.com/gtag/js?id=G-4HRBLS0E3G", async: true },
@@ -115,13 +115,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "WebSite",
           name: "Socialinės Valandos",
           alternateName: "Soc. Valandos",
-          url: "https://socialinesvalandos.vercel.app/",
+          url: "https://socialinesvalandos.dev/",
           inLanguage: "lt-LT",
           description:
             "Moksleivių socialinių (savanorystės) valandų valdymo platforma Lietuvos mokykloms — mokiniai rezervuoja valandas, organizacijos patvirtina, mokyklos auklėtojai ir direktoriai stebi progresą.",
           potentialAction: {
             "@type": "SearchAction",
-            target: "https://socialinesvalandos.vercel.app/tasks?q={search_term_string}",
+            target: "https://socialinesvalandos.dev/tasks?q={search_term_string}",
             "query-input": "required name=search_term_string",
           },
         }),
@@ -135,7 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           applicationCategory: "EducationalApplication",
           operatingSystem: "Web",
           inLanguage: "lt-LT",
-          url: "https://socialinesvalandos.vercel.app/",
+          url: "https://socialinesvalandos.dev/",
           description:
             "SaaS platforma socialinių valandų apskaitai: rezervacijos, QR įsiregistravimai, PDF sertifikatai su parašu, klasės auklėtojo kabinetas, direktoriaus stebėsena.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
@@ -159,8 +159,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Socialinės Valandos",
-          url: "https://socialinesvalandos.vercel.app/",
-          logo: "https://socialinesvalandos.vercel.app/favicon.ico",
+          url: "https://socialinesvalandos.dev/",
+          logo: "https://socialinesvalandos.dev/favicon.ico",
           areaServed: "LT",
           description:
             "Lietuvos moksleiviams skirta savanorystės valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas.",

@@ -24,7 +24,7 @@ Nori pakeisti į kitą ID? Tiesiog **replace** `G-4HRBLS0E3G` į savo naują ID 
 
 ---
 
-## 2. „Kodėl domenas `jumpsipidy.online`, o ne `socialinesvalandos.vercel.app`?"
+## 2. „Kodėl domenas `jumpsipidy.online`, o ne `socialinesvalandos.dev`?"
 
 **Trumpai:** niekur mano kode `jumpsipidy.online` nėra nustatytas kaip domenas. Jei matai jį GA — tai reiškia, kad **Google Analytics property'ėje** (analytics.google.com) buvo įrašytas tas domenas kaip „website URL".
 
@@ -33,7 +33,7 @@ Nori pakeisti į kitą ID? Tiesiog **replace** `G-4HRBLS0E3G` į savo naują ID 
 2. Admin (apačioje kairėj, krumpliaratis ⚙️)
 3. **Data Streams** → paspausk savo stream'ą
 4. Matysi „Stream URL" — ten pakeisk į:
-   - `https://socialinesvalandos.vercel.app` (jei naudoji Vercel default)
+   - `https://socialinesvalandos.dev` (jei naudoji Vercel default)
    - arba tavo custom domain (pvz. `https://socialinesvalandos.lt`)
 5. Save.
 
