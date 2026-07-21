@@ -152,13 +152,14 @@ function AdminErrorsPage() {
         .limit(500),
       supabase
         .from("site_settings")
-        .select("lockdown_enabled,lockdown_code,lockdown_message,updated_at")
+        .select("lockdown_enabled,lockdown_message,updated_at")
         .eq("id", true)
         .maybeSingle(),
     ]);
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
-    setSite((ss.data as SiteSettings) ?? null);
+    // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
+    setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
   };
 
