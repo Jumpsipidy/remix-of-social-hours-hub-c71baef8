@@ -100,8 +100,27 @@ export function KpiDetailModal({
   }, [kind, filtered]);
 
   const total = events.length;
-  const anonCount = events.filter((e) => !e.user_id).length;
-  const regCount = total - anonCount;
+  // Distinct signed-in users vs. distinct guest devices — NOT event counts.
+  // (Previously this counted every activity row from signed-in users, so a
+  // single account clicking around read as "32 registered".)
+  const regCount = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of events) if (e.user_id) s.add(e.user_id);
+    return s.size;
+  }, [events]);
+  const anonCount = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of events) {
+      if (e.user_id) continue;
+      const m = (e.meta ?? {}) as Record<string, unknown>;
+      const k =
+        (typeof m.visitor_id === "string" && m.visitor_id) ||
+        (typeof m.session_id === "string" && m.session_id) ||
+        `a-${e.id}`;
+      s.add(k);
+    }
+    return s.size;
+  }, [events]);
 
   // Daily breakdown
   const byDay = useMemo(() => {
@@ -380,8 +399,8 @@ export function KpiDetailModal({
               {/* Right: hour radial + KPIs + latest */}
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
-                  <StatChip label="Registruoti" value={regCount} icon={Users} color="#10b981" />
-                  <StatChip label="Anoniminiai" value={anonCount} icon={Eye} color="#f59e0b" />
+                  <StatChip label="Prisijungę (unikalūs)" value={regCount} icon={Users} color="#10b981" />
+                  <StatChip label="Svečiai (unikalūs)" value={anonCount} icon={Eye} color="#f59e0b" />
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur">
