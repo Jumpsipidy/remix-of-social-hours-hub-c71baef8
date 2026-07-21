@@ -844,16 +844,16 @@ export const PDFShowcase: React.FC = () => {
     <AbsoluteFill style={{ background: BG, fontFamily: body }}>
       <Backdrop />
       <Series>
-        <Series.Sequence durationInFrames={90}>
+        <Series.Sequence durationInFrames={120}>
           <SceneHook />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={150}>
+        <Series.Sequence durationInFrames={220}>
           <SceneMethod1 />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={165}>
+        <Series.Sequence durationInFrames={230}>
           <SceneMethod2 />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={135}>
+        <Series.Sequence durationInFrames={210}>
           <SceneVerify />
         </Series.Sequence>
       </Series>
