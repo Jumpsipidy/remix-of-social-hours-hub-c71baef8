@@ -201,16 +201,16 @@ export const createTestAccount = createServerFn({ method: "POST" })
     let acc: DevAccount;
     if (data.role === "student") {
       const n = pick(STUDENT_POOL);
-      acc = { role: "student", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n, hours_needed: 20 };
+      acc = { role: "student", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n, hours_needed: 20 };
     } else if (data.role === "organization") {
       const o = pick(ORG_POOL);
-      acc = { role: "organization", email: `${slugify(o.org)}.${suf}@dev.local`, password: "DevPass123!", full_name: o.contact, organization_name: o.org };
+      acc = { role: "organization", email: `${slugify(o.org)}.${suf}@dev.local`, password: randPassword(), full_name: o.contact, organization_name: o.org };
     } else if (data.role === "school_admin") {
       const n = pick(SCHOOL_ADMIN_POOL);
-      acc = { role: "school_admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+      acc = { role: "school_admin", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n };
     } else {
       const n = pick(ADMIN_POOL);
-      acc = { role: "admin", email: `${slugify(n)}.${suf}@dev.local`, password: "DevPass123!", full_name: n };
+      acc = { role: "admin", email: `${slugify(n)}.${suf}@dev.local`, password: randPassword(), full_name: n };
     }
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: acc.email, password: acc.password, email_confirm: true,
