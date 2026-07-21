@@ -399,8 +399,8 @@ export function KpiDetailModal({
               {/* Right: hour radial + KPIs + latest */}
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
-                  <StatChip label="Registruoti" value={regCount} icon={Users} color="#10b981" />
-                  <StatChip label="Anoniminiai" value={anonCount} icon={Eye} color="#f59e0b" />
+                  <StatChip label="Prisijungę (unikalūs)" value={regCount} icon={Users} color="#10b981" />
+                  <StatChip label="Svečiai (unikalūs)" value={anonCount} icon={Eye} color="#f59e0b" />
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-card/60 p-4 backdrop-blur">
