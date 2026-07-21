@@ -133,6 +133,7 @@ function AdminErrorsPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+  const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
