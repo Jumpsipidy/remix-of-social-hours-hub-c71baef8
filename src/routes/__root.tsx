@@ -148,7 +148,7 @@ function RootComponent() {
         <Toaster />
         <BugReportWidget />
         <CookieConsent />
-        <MockTesterPanel />
+        {import.meta.env.DEV && <MockTesterPanel />}
         <LockdownGate />
         <ErrorMonitor />
         <PageViewTracker />
