@@ -157,7 +157,7 @@ export const adminTableSample = createServerFn({ method: "POST" })
       .limit(limit);
     if (error) {
       // Some tables (site_settings) have no created_at → retry without order
-      const retry = await supabaseAdmin.from(data.table).select("*", { count: "exact" }).limit(limit);
+      const retry = await (supabaseAdmin as any).from(data.table).select("*", { count: "exact" }).limit(limit);
       if (retry.error) throw new Error(retry.error.message);
       return { rows: retry.data ?? [], total: retry.count ?? 0 };
     }
@@ -179,7 +179,7 @@ export const adminDeepHealth = createServerFn({ method: "GET" })
     ];
     const results = await Promise.all(tables.map(async (t) => {
       const t0 = performance.now();
-      const { count, error } = await supabaseAdmin.from(t).select("id", { count: "exact", head: true });
+      const { count, error } = await (supabaseAdmin as any).from(t).select("id", { count: "exact", head: true });
       const ms = Math.round(performance.now() - t0);
       return { table: t, count: count ?? 0, ms, ok: !error, error: error?.message ?? null };
     }));
