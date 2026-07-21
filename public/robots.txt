@@ -1,10 +1,33 @@
 User-agent: *
 Allow: /
+Allow: /tasks
+Allow: /blog/
+Allow: /register
+Allow: /login
+Allow: /terms
+Allow: /verify
 Disallow: /admin
 Disallow: /organization
 Disallow: /school
 Disallow: /student
 Disallow: /forgot-password
 Disallow: /update-password
+Disallow: /auth/callback
+
+# AI crawlers — welcome
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: Google-Extended
+Allow: /
 
 Sitemap: https://socialinesvalandos.vercel.app/sitemap.xml
