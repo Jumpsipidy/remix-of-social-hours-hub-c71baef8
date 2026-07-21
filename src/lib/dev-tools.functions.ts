@@ -124,7 +124,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" })
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const accs = generateEcosystem();
-    const results: Array<{ email: string; role: string; id: string }> = [];
+    const results: Array<{ email: string; role: string; id: string; password: string }> = [];
 
     for (const acc of accs) {
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -153,7 +153,7 @@ export const seedDevEcosystem = createServerFn({ method: "POST" })
         },
         { onConflict: "id" },
       );
-      results.push({ email: acc.email, role: acc.role, id: userId });
+      results.push({ email: acc.email, role: acc.role, id: userId, password: acc.password });
     }
     return { ok: true, accounts: results };
   });
