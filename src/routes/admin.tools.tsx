@@ -29,6 +29,10 @@ import {
   KeyRound,
   CheckCircle2,
   FileText,
+  X,
+  Search,
+  Eye,
+  Zap,
 } from "lucide-react";
 import { CertificateButton } from "@/components/certificate-button";
 
