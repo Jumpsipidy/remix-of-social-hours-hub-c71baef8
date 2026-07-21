@@ -97,39 +97,67 @@ function alertEmailHtml(opts: {
 }) {
   const isLock = !!opts.lockdown;
   const isCrit = opts.level === "critical";
-  const accent = isLock ? "#f43f5e" : isCrit ? "#f97316" : "#facc15";
-  const banner = isLock ? "🔒 LOCKDOWN AKTYVUOTAS" : isCrit ? "🚨 KRITINĖ KLAIDA" : "⚠️ ĮSPĖJIMAS";
+  const accent = isLock ? "#ef4444" : isCrit ? "#f97316" : "#eab308";
+  const accent2 = isLock ? "#f43f5e" : isCrit ? "#fb923c" : "#facc15";
+  const banner = isLock ? "🔒 LOCKDOWN — SVETAINĖ UŽRAKINTA" : isCrit ? "🚨 KRITINĖ SISTEMOS KLAIDA" : "⚠️ ĮSPĖJIMAS";
+  const severity = isLock ? "P0 · IMMEDIATE" : isCrit ? "P1 · HIGH" : "P3 · INFO";
   const subtitle = isLock
-    ? `Sistema aptiko ${opts.criticalCount ?? CRITICAL_THRESHOLD}+ kritines klaidas per ${CRITICAL_WINDOW_MIN} min. Svetainė automatiškai užrakinta.`
+    ? `Aptikta ${opts.criticalCount ?? CRITICAL_THRESHOLD}+ kritinių klaidų per ${CRITICAL_WINDOW_MIN} min. Svetainė automatiškai užrakinta lankytojams. Reikia rankinio įsikišimo.`
     : isCrit
-      ? "Viena kritinė kliento klaida — jei jų susikaups per 5 min, svetainė automatiškai užsirakins."
-      : "Ne kritinė klaida — signalas archyvui.";
+      ? `Užregistruota kritinė kliento klaida. Jei per ${CRITICAL_WINDOW_MIN} min susikaups ${CRITICAL_THRESHOLD}+ — svetainė bus automatiškai užrakinta.`
+      : "Neaukšto prioriteto įspėjimas — signalas archyvui, be automatinių veiksmų.";
   const time = new Date().toLocaleString("lt-LT", { timeZone: "Europe/Vilnius" });
+  const incidentId = `INC-${Date.now().toString(36).toUpperCase()}`;
 
-  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#0b1220;font-family:'SF Pro Display',system-ui,sans-serif;color:#e5e7eb">
-<div style="max-width:600px;margin:0 auto;background:#0f172a;border:1px solid ${accent}55;border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-  <div style="padding:28px 28px 24px;background:linear-gradient(135deg,${accent}33,transparent 70%);border-bottom:1px solid ${accent}33">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:${accent}">Socialinės Valandos · Auto-monitoringas · ${escapeHtml(time)} LT</div>
-    <div style="margin-top:10px;font-size:26px;font-weight:900;color:#fff;letter-spacing:-.02em">${banner}</div>
-    <div style="margin-top:8px;font-size:13px;color:#cbd5e1;line-height:1.5">${escapeHtml(subtitle)}</div>
+  const badge = (label: string, color: string) =>
+    `<span style="display:inline-block;padding:4px 10px;background:${color}22;color:${color};border:1px solid ${color}55;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-right:6px">${label}</span>`;
+
+  return `<!doctype html><html><body style="margin:0;padding:32px 16px;background:#050915;font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:#e2e8f0">
+<div style="max-width:640px;margin:0 auto;background:linear-gradient(180deg,#0b1220,#0f172a);border:1px solid ${accent}66;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px ${accent}22,0 8px 24px rgba(0,0,0,.6)">
+
+  <!-- Emergency stripe -->
+  <div style="height:6px;background:linear-gradient(90deg,${accent},${accent2},${accent})"></div>
+
+  <!-- Header -->
+  <div style="padding:32px 32px 24px;background:radial-gradient(1000px 200px at 100% 0%,${accent}22,transparent 60%),radial-gradient(600px 240px at 0% 100%,${accent2}18,transparent 70%);border-bottom:1px solid ${accent}33">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:${accent}">Socialinės Valandos · Auto-monitor</div>
+      <div style="font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;color:#64748b">${incidentId}</div>
+    </div>
+    <div style="font-size:30px;font-weight:900;color:#fff;letter-spacing:-.02em;line-height:1.1">${banner}</div>
+    <div style="margin-top:10px">${badge(severity, accent)}${badge(time + " LT", "#64748b")}${isLock ? badge("E-5001", "#f43f5e") : ""}</div>
+    <div style="margin-top:14px;font-size:14px;color:#cbd5e1;line-height:1.6;max-width:520px">${escapeHtml(subtitle)}</div>
   </div>
-  <div style="padding:24px 28px">
-    ${isLock ? `<div style="margin:0 0 18px;padding:14px 16px;background:#f43f5e1a;border:1px solid #f43f5e55;border-radius:12px;color:#fecaca;font-size:13px;line-height:1.5">
-      <b style="color:#fca5a5">Reikalingas veiksmas:</b> Prisijunk kaip super admin ir eik į <b>/admin/lockdown</b>, kad išjungtum. Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b>E-5001</b>).
+
+  <!-- Body -->
+  <div style="padding:28px 32px">
+    ${isLock ? `<div style="margin:0 0 22px;padding:16px 18px;background:linear-gradient(135deg,${accent}18,${accent2}10);border:1px solid ${accent}66;border-radius:14px;color:#fee2e2;font-size:13px;line-height:1.6">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:${accent};margin-bottom:6px">Reikalingas veiksmas</div>
+      <div><b style="color:#fff">Prisijunk kaip super admin ir eik į <a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="color:#fca5a5">/admin/lockdown</a>, kad išjungtum apsaugą.</b> Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b style="color:#fff">E-5001</b>).</div>
     </div>` : ""}
-    <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px">Klaidos žinutė</div>
-    <pre style="margin:0 0 16px;padding:14px;background:#020617;border:1px solid #1e293b;border-radius:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55;color:#f1f5f9;font-family:'JetBrains Mono',ui-monospace,monospace">${escapeHtml(opts.message)}</pre>
-    ${opts.path ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">📄 <b style="color:#e2e8f0">Puslapis:</b> <code style="color:#f1f5f9;background:#0b1220;padding:2px 8px;border-radius:6px">${escapeHtml(opts.path)}</code></div>` : ""}
-    ${opts.userEmail ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">👤 <b style="color:#e2e8f0">Vartotojas:</b> <code style="color:#f1f5f9">${escapeHtml(opts.userEmail)}</code></div>` : ""}
-    ${opts.userAgent ? `<div style="margin-bottom:10px;font-size:12px;color:#94a3b8">🖥️ <b style="color:#e2e8f0">Įrenginys:</b> <code style="color:#cbd5e1;font-size:11px">${escapeHtml(opts.userAgent.slice(0, 180))}</code></div>` : ""}
-    ${opts.stack ? `<details style="margin-top:14px"><summary style="cursor:pointer;font-size:11px;color:#94a3b8;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Stack trace</summary><pre style="margin-top:8px;padding:12px;background:#020617;border:1px solid #1e293b;border-radius:10px;font-size:11px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow:auto">${escapeHtml(opts.stack)}</pre></details>` : ""}
-    <div style="margin-top:22px;display:flex;gap:10px;flex-wrap:wrap">
-      <a href="https://socialinesvalandos.vercel.app/admin/errors" style="display:inline-block;padding:13px 22px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#0b1220;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px">Atidaryti klaidų žurnalą →</a>
-      ${isLock ? `<a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="display:inline-block;padding:13px 22px;background:linear-gradient(135deg,#f43f5e,#ef4444);color:#fff;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px">Išjungti Lockdown →</a>` : ""}
+
+    <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px">▸ Klaidos žinutė</div>
+    <pre style="margin:0 0 18px;padding:16px;background:#020617;border:1px solid ${accent}44;border-left:3px solid ${accent};border-radius:12px;white-space:pre-wrap;word-break:break-word;font-size:12.5px;line-height:1.6;color:#f8fafc;font-family:'JetBrains Mono',ui-monospace,monospace">${escapeHtml(opts.message)}</pre>
+
+    <table style="width:100%;border-collapse:collapse;margin-bottom:6px">
+      ${opts.path ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase;width:110px">Puslapis</td><td style="padding:8px 0;font-size:13px"><code style="color:#e2e8f0;background:#020617;padding:3px 8px;border-radius:6px;border:1px solid #1e293b">${escapeHtml(opts.path)}</code></td></tr>` : ""}
+      ${opts.userEmail ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Vartotojas</td><td style="padding:8px 0;font-size:13px"><code style="color:#67e8f9">${escapeHtml(opts.userEmail)}</code></td></tr>` : ""}
+      ${opts.userAgent ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase;vertical-align:top">Įrenginys</td><td style="padding:8px 0;font-size:11.5px;color:#cbd5e1;line-height:1.5">${escapeHtml(opts.userAgent.slice(0, 220))}</td></tr>` : ""}
+      ${typeof opts.criticalCount === "number" && opts.criticalCount > 0 ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Kritinių ${CRITICAL_WINDOW_MIN} min</td><td style="padding:8px 0"><span style="display:inline-block;padding:4px 12px;background:${accent}22;color:${accent};border-radius:999px;font-weight:800;font-size:12px">${opts.criticalCount} / ${CRITICAL_THRESHOLD}</span></td></tr>` : ""}
+    </table>
+
+    ${opts.stack ? `<details style="margin-top:18px;padding:12px 14px;background:#020617;border:1px solid #1e293b;border-radius:12px"><summary style="cursor:pointer;font-size:10px;color:#94a3b8;font-weight:800;letter-spacing:.16em;text-transform:uppercase">▸ Stack trace</summary><pre style="margin:12px 0 0;font-size:11px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;font-family:'JetBrains Mono',ui-monospace,monospace;line-height:1.55">${escapeHtml(opts.stack)}</pre></details>` : ""}
+
+    <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
+      <a href="https://socialinesvalandos.vercel.app/admin/errors" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#0b1220;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px rgba(99,102,241,.3)">Atidaryti klaidų centrą →</a>
+      ${isLock ? `<a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,${accent},${accent2});color:#fff;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px ${accent}55">🔓 Išjungti Lockdown →</a>` : ""}
     </div>
   </div>
-  <div style="padding:14px 28px;background:#020617;border-top:1px solid #1e293b;font-size:11px;color:#64748b">
-    Šis pranešimas išsiųstas automatiškai iš klaidų monitoringo sistemos. Nekartojamas per ${EMAIL_DEDUPE_MIN} min.
+
+  <!-- Footer -->
+  <div style="padding:16px 32px;background:#020617;border-top:1px solid #1e293b;font-size:11px;color:#64748b;line-height:1.6">
+    Automatinis pranešimas · Slenkstis: ${CRITICAL_THRESHOLD} kritinės / ${CRITICAL_WINDOW_MIN} min · Dedupe: ${EMAIL_DEDUPE_MIN} min<br/>
+    Incident: <code style="color:#94a3b8">${incidentId}</code>
   </div>
 </div></body></html>`;
 }
