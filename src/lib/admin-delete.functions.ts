@@ -150,7 +150,7 @@ export const adminTableSample = createServerFn({ method: "POST" })
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
     if (!INSPECTABLE.has(data.table)) throw new Error("Lentelė neprieinama");
     const limit = Math.min(Math.max(data.limit ?? 50, 1), 200);
-    const { data: rows, count, error } = await supabaseAdmin
+    const { data: rows, count, error } = await (supabaseAdmin as any)
       .from(data.table)
       .select("*", { count: "exact" })
       .order("created_at", { ascending: false, nullsFirst: false })
