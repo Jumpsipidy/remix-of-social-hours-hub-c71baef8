@@ -78,7 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [ensureProfile]);
 
   useEffect(() => {
-    // Load mock from storage
+    // Debug-only mock impersonation. In production builds this branch is
+    // stripped, so writing localStorage['sv_mock_session_v1'] can't fake an
+    // admin role in the UI.
+    if (!import.meta.env.DEV) return;
     try {
       const raw = localStorage.getItem(MOCK_KEY);
       if (raw) {
