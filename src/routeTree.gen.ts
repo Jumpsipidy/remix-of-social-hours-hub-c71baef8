@@ -38,6 +38,7 @@ import { Route as AdminManageRouteImport } from './routes/admin.manage'
 import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
 import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
+import { Route as AdminCheckinRouteImport } from './routes/admin.checkin'
 import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -191,6 +192,11 @@ const AdminErrorsRoute = AdminErrorsRouteImport.update({
   path: '/errors',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCheckinRoute = AdminCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBugsRoute = AdminBugsRouteImport.update({
   id: '/bugs',
   path: '/bugs',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/checkin': typeof AdminCheckinRoute
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/checkin': typeof AdminCheckinRoute
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -323,6 +331,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bugs': typeof AdminBugsRoute
+  '/admin/checkin': typeof AdminCheckinRoute
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -362,6 +371,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bugs'
+    | '/admin/checkin'
     | '/admin/errors'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bugs'
+    | '/admin/checkin'
     | '/admin/errors'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -436,6 +447,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bugs'
+    | '/admin/checkin'
     | '/admin/errors'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -681,6 +693,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminErrorsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/checkin': {
+      id: '/admin/checkin'
+      path: '/checkin'
+      fullPath: '/admin/checkin'
+      preLoaderRoute: typeof AdminCheckinRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bugs': {
       id: '/admin/bugs'
       path: '/bugs'
@@ -752,6 +771,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBugsRoute: typeof AdminBugsRoute
+  AdminCheckinRoute: typeof AdminCheckinRoute
   AdminErrorsRoute: typeof AdminErrorsRoute
   AdminLeaderboardRoute: typeof AdminLeaderboardRoute
   AdminLockdownRoute: typeof AdminLockdownRoute
@@ -770,6 +790,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBugsRoute: AdminBugsRoute,
+  AdminCheckinRoute: AdminCheckinRoute,
   AdminErrorsRoute: AdminErrorsRoute,
   AdminLeaderboardRoute: AdminLeaderboardRoute,
   AdminLockdownRoute: AdminLockdownRoute,
