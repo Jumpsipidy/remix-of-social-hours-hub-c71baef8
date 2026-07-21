@@ -1,11 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 
 
