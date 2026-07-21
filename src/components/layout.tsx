@@ -22,6 +22,13 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
   const [cachedRole, setCachedRole] = useState<AppRole | null>(null);
 
   // Cache last known role so the dashboard link stays stable across route
