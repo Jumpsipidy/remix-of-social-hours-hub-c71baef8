@@ -11,7 +11,7 @@ const STEPS = [
   { t: "Sužinok kiek valandų reikia", d: "5–7 klasėms — 20 val., 8+ klasėms — bent 8 val. per mokslo metus. Pasitikslink pas savo klasės auklėtoją." },
   { t: "Užsiregistruok platformoje", d: "Registruokis kaip mokinys, įvesk savo mokyklos kodą ir pasirink klasę. Užtrunka <60 sekundžių." },
   { t: "Naršyk patvirtintas užduotis", d: "Puslapyje /tasks matai realias organizacijas ir renginius su vietomis, aprašymais ir laikais." },
-  { t: "Rezervuok laiką", d: "Spausk „Rezervuoti" ir pasirink datą bei valandų skaičių. Gali kviesti draugus — grupinės rezervacijos leidžiamos." },
+  { t: "Rezervuok laiką", d: "Spausk mygtuką Rezervuoti ir pasirink datą bei valandų skaičių. Gali kviesti draugus — grupinės rezervacijos leidžiamos." },
   { t: "Nueik ir atlik veiklą", d: "Nueik į vietą sutartu laiku. Turėk telefone rotuojantį QR kodą arba užsirašyk savo 6 skaitmenų atsarginį kodą." },
   { t: "Patvirtink QR kodu", d: "Organizacija nuskaito tavo QR arba įveda tavo kodą. Sistema iškart užfiksuoja įsiregistravimą." },
   { t: "Gauk PDF sertifikatą", d: "Kai organizacija patvirtina valandas, gauni oficialų PDF su parašu ir QR verifikacija. Klasės auklėtoja mato viską realiu laiku." },
