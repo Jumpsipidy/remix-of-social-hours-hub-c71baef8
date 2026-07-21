@@ -30,6 +30,14 @@ const ADMIN_POOL = [
 
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function randSuffix() { return Math.random().toString(36).slice(2, 7); }
+// Cryptographically-strong per-account password. Returned to the calling admin
+// once; never stored in code, UI, or the profile row.
+function randPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = new Uint8Array(20);
+  (globalThis.crypto ?? require("node:crypto").webcrypto).getRandomValues(bytes);
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("") + "!Aa1";
+}
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, ".").replace(/^\.|\.$/g, "").slice(0, 20);
 }
