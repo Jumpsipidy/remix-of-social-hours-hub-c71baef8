@@ -207,7 +207,15 @@ function OrgDashboard() {
             <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">{orgLabel}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to="/organization/scan"
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
+            >
+              <ScanLine className="h-3.5 w-3.5" /> Skenuoti QR
+            </Link>
+            <span className="rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
+          </div>
         </div>
 
         {/* View switcher */}
