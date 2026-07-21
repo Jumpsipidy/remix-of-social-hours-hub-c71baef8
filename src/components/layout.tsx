@@ -1,11 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 
 
@@ -22,6 +22,13 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
   const [cachedRole, setCachedRole] = useState<AppRole | null>(null);
 
   // Cache last known role so the dashboard link stays stable across route
@@ -119,40 +126,68 @@ export function Navbar() {
             </>
           )}
           <button
-            className="grid h-10 w-10 place-items-center rounded-full border border-border md:hidden"
+            className="grid h-11 w-11 place-items-center rounded-full border border-border/80 bg-background/60 backdrop-blur active:scale-95 transition md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Meniu"
+            aria-expanded={open}
           >
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            <motion.span key={open ? "x" : "m"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </motion.span>
           </button>
         </div>
       </div>
-      {open && (
-        <div className="border-t border-border bg-background md:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="mt-2 flex gap-2">
-              {isAuthenticated ? (
-                <button onClick={handleSignOut} className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium">Atsijungti</button>
-              ) : (
-                <>
-                  <Link to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-border px-4 py-2 text-center text-sm font-medium">Prisijungti</Link>
-                  <Link to="/register" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-gradient-primary px-4 py-2 text-center text-sm font-semibold text-primary-foreground">Registruotis</Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 top-[64px] z-40 bg-background/70 backdrop-blur-sm md:hidden"
+            />
+            <motion.div
+              key="drawer"
+              initial={{ y: -12, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -12, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
+              className="fixed inset-x-0 top-[64px] z-50 border-y border-border bg-background/95 backdrop-blur-xl shadow-2xl md:hidden"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            >
+              <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
+                {links.map((l, i) => (
+                  <motion.div
+                    key={l.to}
+                    initial={{ x: -14, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.04 * i, duration: 0.25 }}
+                  >
+                    <Link
+                      to={l.to}
+                      onClick={() => setOpen(false)}
+                      className="block rounded-xl px-4 py-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:scale-[0.98] transition"
+                    >
+                      {l.label}
+                    </Link>
+                  </motion.div>
+                ))}
+                <div className="mt-3 flex gap-2">
+                  {isAuthenticated ? (
+                    <button onClick={handleSignOut} className="flex-1 rounded-full border border-border px-4 py-3 text-center text-sm font-medium active:scale-95 transition">Atsijungti</button>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-border px-4 py-3 text-center text-sm font-medium active:scale-95 transition">Prisijungti</Link>
+                      <Link to="/register" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-gradient-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground active:scale-95 transition">Registruotis</Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
