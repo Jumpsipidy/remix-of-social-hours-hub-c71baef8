@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   adminListSchools,
   adminUpsertSchool,
   adminDeleteSchool,
 } from "@/lib/admin-super.functions";
 import { toast } from "sonner";
-import { GraduationCap, Loader2, Plus, Save, Trash2, RefreshCw, Copy } from "lucide-react";
+import { GraduationCap, Loader2, Plus, Save, Trash2, RefreshCw, Copy, KeyRound, CheckCircle2, XCircle } from "lucide-react";
+import { SectionHeader, SaaSPanel, SaaSKpi } from "@/components/admin/admin-ui";
 
 export const Route = createFileRoute("/admin/schools")({
   component: SchoolsPage,
@@ -42,9 +44,13 @@ function SchoolsPage() {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    refresh();
-  }, []);
+  useEffect(() => { refresh(); }, []);
+
+  const kpis = useMemo(() => ({
+    total: rows.length,
+    active: rows.filter((r) => r.is_active).length,
+    inactive: rows.filter((r) => !r.is_active).length,
+  }), [rows]);
 
   const addSchool = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +59,11 @@ function SchoolsPage() {
     try {
       await upsert({ data: { name: newName.trim(), signup_code: newCode.trim(), is_active: true } });
       toast.success("Mokykla pridėta");
-      setNewName("");
-      setNewCode("");
+      setNewName(""); setNewCode("");
       await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Klaida");
-    } finally {
-      setBusy(null);
-    }
+    } finally { setBusy(null); }
   };
 
   const save = async (s: School, patch: Partial<School>) => {
@@ -78,14 +81,11 @@ function SchoolsPage() {
       await refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Klaida");
-    } finally {
-      setBusy(null);
-    }
+    } finally { setBusy(null); }
   };
 
   const remove = async (s: School) => {
-    if (!confirm(`Ištrinti „${s.name}“? Mokiniai, prijungti prie šios mokyklos, liks be mokyklos.`))
-      return;
+    if (!confirm(`Ištrinti „${s.name}“? Mokiniai, prijungti prie šios mokyklos, liks be mokyklos.`)) return;
     setBusy(s.id);
     try {
       await del({ data: { id: s.id } });
@@ -93,9 +93,7 @@ function SchoolsPage() {
       setRows((r) => r.filter((x) => x.id !== s.id));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Klaida");
-    } finally {
-      setBusy(null);
-    }
+    } finally { setBusy(null); }
   };
 
   const random = () => {
@@ -105,76 +103,86 @@ function SchoolsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 font-display text-3xl font-bold tracking-tight">
-            <GraduationCap className="h-6 w-6 text-primary" /> Mokyklos & registracijos kodai
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Kiekviena mokykla turi unikalų kodą, kurį mokiniai suveda registruodamiesi.
-          </p>
-        </div>
-        <button
-          onClick={refresh}
-          className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur hover:bg-accent"
-        >
-          <RefreshCw className="h-3 w-3" /> Atnaujinti
-        </button>
-      </header>
+      <SectionHeader
+        eyebrow="Mokyklų tinklas"
+        title="Mokyklos & registracijos kodai"
+        icon={GraduationCap}
+        description="Kiekviena mokykla turi unikalų kodą, kurį mokiniai suveda registruodamiesi."
+        action={
+          <button
+            onClick={refresh}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-2 text-xs font-semibold backdrop-blur hover:bg-accent"
+          >
+            <RefreshCw className="h-3 w-3" /> Atnaujinti
+          </button>
+        }
+      />
 
-      <form
-        onSubmit={addSchool}
-        className="grid gap-3 rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur sm:grid-cols-[1fr_1fr_auto_auto]"
-      >
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          placeholder="Mokyklos pavadinimas (pvz. Šeduvos gimnazija)"
-          className="h-10 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-        />
-        <input
-          value={newCode}
-          onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-          placeholder="Kodas (pvz. SEDUVOS2026)"
-          className="h-10 rounded-xl border border-border bg-background px-3 text-sm uppercase outline-none focus:border-primary"
-        />
-        <button
-          type="button"
-          onClick={random}
-          className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-semibold hover:bg-accent"
+      <div className="grid gap-3 sm:grid-cols-3">
+        <SaaSKpi icon={GraduationCap} label="Iš viso mokyklų" value={kpis.total} accent="primary" />
+        <SaaSKpi icon={CheckCircle2} label="Aktyvios" value={kpis.active} accent="success" />
+        <SaaSKpi icon={XCircle} label="Neaktyvios" value={kpis.inactive} accent="warn" />
+      </div>
+
+      <SaaSPanel>
+        <div className="mb-3 flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-primary" />
+          <p className="text-sm font-semibold">Pridėti naują mokyklą</p>
+        </div>
+        <form
+          onSubmit={addSchool}
+          className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto]"
         >
-          Generuoti
-        </button>
-        <button
-          type="submit"
-          disabled={busy === "new"}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60"
-        >
-          {busy === "new" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Pridėti
-        </button>
-      </form>
+          <input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Mokyklos pavadinimas (pvz. Šeduvos gimnazija)"
+            className="h-10 rounded-xl border border-border bg-background/60 px-3 text-sm outline-none focus:border-primary"
+          />
+          <input
+            value={newCode}
+            onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+            placeholder="Kodas (pvz. SEDUVOS2026)"
+            className="h-10 rounded-xl border border-border bg-background/60 px-3 font-mono text-sm uppercase tracking-wider outline-none focus:border-primary"
+          />
+          <button type="button" onClick={random}
+            className="h-10 rounded-xl border border-border bg-background/60 px-3 text-xs font-semibold hover:bg-accent">
+            Generuoti
+          </button>
+          <button type="submit" disabled={busy === "new"}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
+            {busy === "new" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Pridėti
+          </button>
+        </form>
+      </SaaSPanel>
 
       <div className="space-y-2">
-        {loading && (
-          <p className="py-10 text-center text-sm text-muted-foreground">Kraunama…</p>
-        )}
+        {loading && <p className="py-10 text-center text-sm text-muted-foreground">Kraunama…</p>}
         {!loading && rows.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted-foreground">Nėra mokyklų.</p>
+          <p className="rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">Nėra mokyklų.</p>
         )}
-        {rows.map((s) => (
-          <SchoolRow key={s.id} s={s} onSave={save} onDelete={remove} busy={busy === s.id} />
-        ))}
+        <AnimatePresence initial={false}>
+          {rows.map((s, i) => (
+            <motion.div
+              key={s.id}
+              layout
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -20, height: 0 }}
+              transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.22 }}
+            >
+              <SchoolRow s={s} onSave={save} onDelete={remove} busy={busy === s.id} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
 function SchoolRow({
-  s,
-  onSave,
-  onDelete,
-  busy,
+  s, onSave, onDelete, busy,
 }: {
   s: School;
   onSave: (s: School, patch: Partial<School>) => Promise<void>;
@@ -186,53 +194,55 @@ function SchoolRow({
   const dirty = name !== s.name || code !== s.signup_code;
 
   return (
-    <div className="grid gap-2 rounded-2xl border border-border bg-card/70 p-4 shadow-sm backdrop-blur sm:grid-cols-[1fr_220px_auto_auto_auto] sm:items-center">
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="h-10 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-      />
-      <div className="flex items-center gap-1">
+    <div className="group relative overflow-hidden rounded-2xl border border-border/70 bg-card/60 p-4 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.5)] backdrop-blur-xl transition hover:border-primary/40">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+      <div className="grid gap-2 sm:grid-cols-[1fr_220px_auto_auto_auto] sm:items-center">
         <input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className="h-10 flex-1 rounded-xl border border-border bg-background px-3 font-mono text-sm uppercase tracking-wider outline-none focus:border-primary"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="h-10 rounded-xl border border-border bg-background/60 px-3 text-sm outline-none focus:border-primary"
         />
+        <div className="flex items-center gap-1">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            className="h-10 flex-1 rounded-xl border border-border bg-background/60 px-3 font-mono text-sm uppercase tracking-wider outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(code); toast.success("Nukopijuota"); }}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-border transition hover:bg-accent"
+            title="Kopijuoti kodą"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <label className="inline-flex items-center gap-2 text-xs font-semibold">
+          <input
+            type="checkbox"
+            checked={s.is_active}
+            onChange={(e) => onSave(s, { is_active: e.target.checked })}
+            className="h-4 w-4 accent-primary"
+          />
+          <span className={s.is_active ? "text-emerald-400" : "text-muted-foreground"}>
+            {s.is_active ? "Aktyvi" : "Neaktyvi"}
+          </span>
+        </label>
         <button
-          type="button"
-          onClick={() => {
-            navigator.clipboard.writeText(code);
-            toast.success("Nukopijuota");
-          }}
-          className="grid h-10 w-10 place-items-center rounded-xl border border-border hover:bg-accent"
-          title="Kopijuoti kodą"
+          disabled={busy || !dirty}
+          onClick={() => onSave(s, { name, signup_code: code })}
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary/15 px-3 text-xs font-semibold text-primary transition hover:bg-primary/25 disabled:opacity-40"
         >
-          <Copy className="h-3.5 w-3.5" />
+          <Save className="h-3.5 w-3.5" /> Saugoti
+        </button>
+        <button
+          disabled={busy}
+          onClick={() => onDelete(s)}
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-destructive/15 px-3 text-xs font-semibold text-destructive transition hover:bg-destructive/25 disabled:opacity-40"
+        >
+          <Trash2 className="h-3.5 w-3.5" /> Trinti
         </button>
       </div>
-      <label className="inline-flex items-center gap-2 text-xs font-semibold">
-        <input
-          type="checkbox"
-          checked={s.is_active}
-          onChange={(e) => onSave(s, { is_active: e.target.checked })}
-          className="h-4 w-4 accent-primary"
-        />
-        Aktyvi
-      </label>
-      <button
-        disabled={busy || !dirty}
-        onClick={() => onSave(s, { name, signup_code: code })}
-        className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary/15 px-3 text-xs font-semibold text-primary hover:bg-primary/25 disabled:opacity-40"
-      >
-        <Save className="h-3.5 w-3.5" /> Saugoti
-      </button>
-      <button
-        disabled={busy}
-        onClick={() => onDelete(s)}
-        className="inline-flex h-10 items-center gap-2 rounded-xl bg-destructive/15 px-3 text-xs font-semibold text-destructive hover:bg-destructive/25 disabled:opacity-40"
-      >
-        <Trash2 className="h-3.5 w-3.5" /> Trinti
-      </button>
     </div>
   );
 }
