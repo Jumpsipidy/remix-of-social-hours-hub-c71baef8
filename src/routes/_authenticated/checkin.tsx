@@ -45,7 +45,7 @@ function CheckinPage() {
   const active = tokens.filter((t) => !t.checked_in);
 
   return (
-    <Layout>
+    <PageShell>
       <div className="min-h-screen bg-background pb-16">
         <div className="mx-auto max-w-3xl px-4 pt-6">
           <Link to="/student" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -92,7 +92,7 @@ function CheckinPage() {
           )}
         </div>
       </div>
-    </Layout>
+    </PageShell>
   );
 }
 
