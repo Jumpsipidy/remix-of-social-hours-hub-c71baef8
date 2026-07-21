@@ -324,6 +324,35 @@ const SceneMethod1: React.FC = () => {
             socialinesvalandos.lt / mokykla
           </div>
         </div>
+        {/* Live sync pill */}
+        <div
+          style={{
+            position: "absolute",
+            top: 28,
+            right: 30,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "6px 12px",
+            borderRadius: 999,
+            background: "rgba(16,185,129,0.12)",
+            border: `1px solid rgba(16,185,129,0.35)`,
+            opacity: interpolate(frame, [16, 32], [0, 1], { extrapolateRight: "clamp" }),
+          }}
+        >
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              background: EMERALD,
+              opacity: 0.5 + Math.sin(frame / 4) * 0.5,
+            }}
+          />
+          <div style={{ fontFamily: mono, fontSize: 12, color: EMERALD, letterSpacing: 2, textTransform: "uppercase" }}>
+            LIVE · realaus laiko
+          </div>
+        </div>
         <div
           style={{
             fontFamily: display,
@@ -844,16 +873,16 @@ export const PDFShowcase: React.FC = () => {
     <AbsoluteFill style={{ background: BG, fontFamily: body }}>
       <Backdrop />
       <Series>
-        <Series.Sequence durationInFrames={90}>
+        <Series.Sequence durationInFrames={120}>
           <SceneHook />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={150}>
+        <Series.Sequence durationInFrames={220}>
           <SceneMethod1 />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={165}>
+        <Series.Sequence durationInFrames={230}>
           <SceneMethod2 />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={135}>
+        <Series.Sequence durationInFrames={210}>
           <SceneVerify />
         </Series.Sequence>
       </Series>
