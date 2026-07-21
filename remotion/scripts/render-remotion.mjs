@@ -18,7 +18,7 @@ const browser = await openBrowser("chrome", {
 
 const composition = await selectComposition({
   serveUrl: bundled,
-  id: "main",
+  id: "qr-checkin",
   puppeteerInstance: browser,
 });
 
@@ -26,7 +26,7 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/socialines-valandos-launch.mp4",
+  outputLocation: "/mnt/documents/qr-checkin-showcase.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
