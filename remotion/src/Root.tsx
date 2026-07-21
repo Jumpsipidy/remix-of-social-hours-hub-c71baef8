@@ -24,7 +24,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition
       id="pdf-cert"
       component={PDFShowcase}
-      durationInFrames={540}
+      durationInFrames={780}
       fps={30}
       width={1920}
       height={1080}
