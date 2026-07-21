@@ -62,7 +62,7 @@ function generateEcosystem(): DevAccount[] {
     {
       role: "student",
       email: `${slugify(s)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: s,
       hours_needed: 20 + Math.floor(Math.random() * 40),
       hours_earned: Math.floor(Math.random() * 8),
@@ -70,20 +70,20 @@ function generateEcosystem(): DevAccount[] {
     {
       role: "organization",
       email: `${slugify(o.org)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: o.contact,
       organization_name: o.org,
     },
     {
       role: "school_admin",
       email: `${slugify(sa)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: sa,
     },
     {
       role: "admin",
       email: `${slugify(ad)}.${suf}@dev.local`,
-      password: "DevPass123!",
+      password: randPassword(),
       full_name: ad,
     },
   ];
