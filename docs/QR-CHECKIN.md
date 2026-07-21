@@ -91,10 +91,11 @@ ALTER TABLE public.reservation_participants
 CREATE UNIQUE INDEX reservations_check_in_code_key
   ON public.reservations (check_in_code) WHERE check_in_code IS NOT NULL;
 
--- RPC (naudoja tik organizacija)
-public.check_in_by_code(_code TEXT) RETURNS jsonb  -- SECURITY DEFINER
+-- RPC (naudoja tik organizacija) — SECURITY DEFINER
+-- Funkcija: public.check_in_by_code(_code TEXT) RETURNS jsonb
+-- Pilnas kūnas yra migracijoje 20260721_qr_checkin.
 
--- Trigeris
-public.tg_reservations_assign_checkin_code  -- prieš INSERT/UPDATE status
-public.tg_participants_assign_checkin_code  -- prieš INSERT/UPDATE status
+-- Trigeriai (prieš INSERT/UPDATE status):
+--   public.tg_reservations_assign_checkin_code
+--   public.tg_participants_assign_checkin_code
 ```
