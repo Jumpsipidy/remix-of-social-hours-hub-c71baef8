@@ -108,6 +108,25 @@ function ToolsPage() {
       run: () => run("health", () => health()),
     },
     {
+      key: "deep",
+      label: "Giluminis sveikatos skenavimas",
+      desc: "Patikrina kiekvienos kritinės lentelės pasiekiamumą, delsą (ms) ir 24h kritinių klaidų skaičių.",
+      icon: Zap,
+      variant: "default" as const,
+      run: async () => {
+        setBusy("deep");
+        try {
+          const r = (await deepHealth()) as any;
+          setDeep(r);
+          toast.success(`Skenavimas baigtas · ${r.tables.length} lentelės`);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Klaida");
+        } finally {
+          setBusy(null);
+        }
+      },
+    },
+    {
       key: "purge",
       label: "Išvalyti senas žinutes (12 d.)",
       desc: "Ištrina visas žinutes senesnes nei 12 dienų. Naudinga prieš auditą.",
