@@ -32,15 +32,15 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
     // Owner reservations (approved, not yet checked in / not yet completed)
     const { data: owned } = await supabase
       .from("reservations")
-      .select("id, check_in_code, checked_in_at, status, task_date, organization_id")
+      .select("id, check_in_code, checked_in_at, status, reservation_date, organization_id")
       .eq("student_id", userId)
-      .in("status", ["approved"])
+      .eq("status", "approved")
       .not("check_in_code", "is", null);
 
     // Group participant rows
     const { data: parts } = await supabase
       .from("reservation_participants")
-      .select("id, reservation_id, check_in_code, checked_in_at, status, reservations!inner(id,status,task_date,organization_id)")
+      .select("id, reservation_id, check_in_code, checked_in_at, status")
       .eq("student_id", userId)
       .eq("status", "accepted")
       .not("check_in_code", "is", null);
