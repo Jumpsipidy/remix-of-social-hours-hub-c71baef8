@@ -47,6 +47,7 @@ const NAV: NavItem[] = [
   { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
   { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
   { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
+  { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
   { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
 ];
 
