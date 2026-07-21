@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyCheckInTokens } from "@/lib/checkin.functions";
 import { ArrowLeft, RefreshCw, ShieldCheck, WifiOff, CheckCircle2 } from "lucide-react";
-import { Layout } from "@/components/layout";
+import { PageShell } from "@/components/layout";
 
 export const Route = createFileRoute("/_authenticated/checkin")({
   component: CheckinPage,
