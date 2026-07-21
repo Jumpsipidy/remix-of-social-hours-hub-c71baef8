@@ -43,6 +43,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
+import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -215,6 +216,12 @@ const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOrganizationScanRoute =
+  AuthenticatedOrganizationScanRouteImport.update({
+    id: '/_authenticated/organization/scan',
+    path: '/organization/scan',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -286,6 +294,7 @@ export interface FileRoutesByTo {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
+  '/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -323,6 +332,7 @@ export interface FileRoutesById {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/organization/scan'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin'
     | '/verify'
+    | '/organization/scan'
   id:
     | '__root__'
     | '/'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/_authenticated/organization/scan'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -454,6 +467,7 @@ export interface RootRouteChildren {
   OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   VerifyIndexRoute: typeof VerifyIndexRoute
+  AuthenticatedOrganizationScanRoute: typeof AuthenticatedOrganizationScanRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -696,6 +710,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/organization/scan': {
+      id: '/_authenticated/organization/scan'
+      path: '/organization/scan'
+      fullPath: '/organization/scan'
+      preLoaderRoute: typeof AuthenticatedOrganizationScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -757,6 +778,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   VerifyIndexRoute: VerifyIndexRoute,
+  AuthenticatedOrganizationScanRoute: AuthenticatedOrganizationScanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
