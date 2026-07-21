@@ -11,7 +11,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { clientFingerprint } from "@/lib/security-crypto.server";
 
-const CRITICAL_THRESHOLD = 3;
+const CRITICAL_THRESHOLD = 2;
 const CRITICAL_WINDOW_MIN = 5;
 const EMAIL_DEDUPE_MIN = 15;
 
