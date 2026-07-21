@@ -28,6 +28,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as OrgIdRouteImport } from './routes/org.$id'
 import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
+import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
@@ -140,6 +141,12 @@ const BlogKasYraSocialinesValandosRoute =
   BlogKasYraSocialinesValandosRouteImport.update({
     id: '/blog/kas-yra-socialines-valandos',
     path: '/blog/kas-yra-socialines-valandos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const BlogKaipSurinktiSocialinesValandasRoute =
+  BlogKaipSurinktiSocialinesValandasRouteImport.update({
+    id: '/blog/kaip-surinkti-socialines-valandas',
+    path: '/blog/kaip-surinkti-socialines-valandas',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -302,6 +310,7 @@ export interface FileRoutesByTo {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -342,6 +351,7 @@ export interface FileRoutesById {
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
     | '/verify/$code'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
     | '/verify/$code'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/admin/schools'
     | '/admin/tools'
     | '/auth/callback'
+    | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
     | '/verify/$code'
@@ -482,6 +495,7 @@ export interface RootRouteChildren {
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  BlogKaipSurinktiSocialinesValandasRoute: typeof BlogKaipSurinktiSocialinesValandasRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
   OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
@@ -621,6 +635,13 @@ declare module '@tanstack/react-router' {
       path: '/blog/kas-yra-socialines-valandos'
       fullPath: '/blog/kas-yra-socialines-valandos'
       preLoaderRoute: typeof BlogKasYraSocialinesValandosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/kaip-surinkti-socialines-valandas': {
+      id: '/blog/kaip-surinkti-socialines-valandas'
+      path: '/blog/kaip-surinkti-socialines-valandas'
+      fullPath: '/blog/kaip-surinkti-socialines-valandas'
+      preLoaderRoute: typeof BlogKaipSurinktiSocialinesValandasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -821,6 +842,8 @@ const rootRouteChildren: RootRouteChildren = {
   UpdatePasswordRoute: UpdatePasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  BlogKaipSurinktiSocialinesValandasRoute:
+    BlogKaipSurinktiSocialinesValandasRoute,
   BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
   OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
