@@ -7,12 +7,40 @@ export const adminListAllAccounts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
-    const { data } = await supabaseAdmin
+
+    const { data: profiles } = await supabaseAdmin
       .from("profiles")
       .select("id, email, full_name, role, organization_name, org_category, school_id, created_at")
       .order("created_at", { ascending: false });
-    return { profiles: data ?? [] };
+
+    // Merge auth.users so orphan accounts (created via OAuth or where
+    // handle_new_user failed) also appear and can be deleted.
+    const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.id, p]));
+    try {
+      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      for (const u of usersPage.users) {
+        if (!profileMap.has(u.id)) {
+          profileMap.set(u.id, {
+            id: u.id,
+            email: u.email ?? null,
+            full_name: (u.user_metadata as any)?.full_name ?? null,
+            role: (u.user_metadata as any)?.role ?? "orphan",
+            organization_name: (u.user_metadata as any)?.organization_name ?? null,
+            org_category: (u.user_metadata as any)?.org_category ?? null,
+            school_id: null,
+            created_at: u.created_at ?? new Date().toISOString(),
+            orphan: true,
+          });
+        }
+      }
+    } catch { /* auth listing best-effort */ }
+
+    const all = Array.from(profileMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return { profiles: all };
   });
+
 
 export const adminDeleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -103,3 +131,66 @@ export const adminPlatformHealth = createServerFn({ method: "GET" })
     };
   });
 
+
+// ---- Table inspection (admin/tools drill-down) ---------------------------
+
+const INSPECTABLE = new Set([
+  "profiles", "reservations", "tasks", "messages", "chat_rooms",
+  "schools", "bug_reports", "organization_access_requests",
+  "site_settings", "activity_log", "certificates", "dm_messages",
+  "dm_rooms", "friendships", "user_achievements",
+]);
+
+export const adminTableSample = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: { table: string; limit?: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
+    if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
+    if (!INSPECTABLE.has(data.table)) throw new Error("Lentelė neprieinama");
+    const limit = Math.min(Math.max(data.limit ?? 50, 1), 200);
+    const { data: rows, count, error } = await (supabaseAdmin as any)
+      .from(data.table)
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .limit(limit);
+    if (error) {
+      // Some tables (site_settings) have no created_at → retry without order
+      const retry = await (supabaseAdmin as any).from(data.table).select("*", { count: "exact" }).limit(limit);
+      if (retry.error) throw new Error(retry.error.message);
+      return { rows: retry.data ?? [], total: retry.count ?? 0 };
+    }
+    return { rows: rows ?? [], total: count ?? 0 };
+  });
+
+// Deep health scan: reachability + row counts + latency per critical table.
+export const adminDeepHealth = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
+    if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
+    const tables = [
+      "profiles", "reservations", "tasks", "messages", "chat_rooms",
+      "schools", "bug_reports", "organization_access_requests",
+      "site_settings", "activity_log", "certificates", "dm_messages",
+      "friendships", "user_achievements",
+    ];
+    const results = await Promise.all(tables.map(async (t) => {
+      const t0 = performance.now();
+      const { count, error } = await (supabaseAdmin as any).from(t).select("id", { count: "exact", head: true });
+      const ms = Math.round(performance.now() - t0);
+      return { table: t, count: count ?? 0, ms, ok: !error, error: error?.message ?? null };
+    }));
+    // Bonus: recent critical errors count
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const { count: critCount } = await supabaseAdmin
+      .from("activity_log").select("*", { count: "exact", head: true })
+      .eq("action", "app.critical").gte("created_at", since);
+    return {
+      tables: results,
+      recent_critical_24h: critCount ?? 0,
+      generated_at: new Date().toISOString(),
+    };
+  });

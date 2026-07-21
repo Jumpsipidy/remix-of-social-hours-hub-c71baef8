@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   adminPurgeOldMessages,
   adminWipeAllReservations,
   adminWipeAllTasks,
   adminPlatformHealth,
+  adminTableSample,
+  adminDeepHealth,
 } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
 import {
@@ -26,6 +29,10 @@ import {
   KeyRound,
   CheckCircle2,
   FileText,
+  X,
+  Search,
+  Eye,
+  Zap,
 } from "lucide-react";
 import { CertificateButton } from "@/components/certificate-button";
 
@@ -51,8 +58,27 @@ function ToolsPage() {
   const wipeRes = useServerFn(adminWipeAllReservations);
   const wipeTasks = useServerFn(adminWipeAllTasks);
   const health = useServerFn(adminPlatformHealth);
+  const deepHealth = useServerFn(adminDeepHealth);
+  const sample = useServerFn(adminTableSample);
   const [busy, setBusy] = useState<string | null>(null);
   const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
+  const [deep, setDeep] = useState<null | {
+    tables: { table: string; count: number; ms: number; ok: boolean; error: string | null }[];
+    recent_critical_24h: number;
+    generated_at: string;
+  }>(null);
+  const [inspect, setInspect] = useState<null | { table: string; rows: any[]; total: number; loading: boolean }>(null);
+
+  const openInspector = async (table: string) => {
+    setInspect({ table, rows: [], total: 0, loading: true });
+    try {
+      const r = (await sample({ data: { table, limit: 100 } })) as { rows: any[]; total: number };
+      setInspect({ table, rows: r.rows, total: r.total, loading: false });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti");
+      setInspect(null);
+    }
+  };
 
   const run = async (key: string, fn: () => Promise<unknown>, confirmMsg?: string) => {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
@@ -80,6 +106,25 @@ function ToolsPage() {
       icon: Activity,
       variant: "default" as const,
       run: () => run("health", () => health()),
+    },
+    {
+      key: "deep",
+      label: "Giluminis sveikatos skenavimas",
+      desc: "Patikrina kiekvienos kritinės lentelės pasiekiamumą, delsą (ms) ir 24h kritinių klaidų skaičių.",
+      icon: Zap,
+      variant: "default" as const,
+      run: async () => {
+        setBusy("deep");
+        try {
+          const r = (await deepHealth()) as any;
+          setDeep(r);
+          toast.success(`Skenavimas baigtas · ${r.tables.length} lentelės`);
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Klaida");
+        } finally {
+          setBusy(null);
+        }
+      },
     },
     {
       key: "purge",
@@ -223,18 +268,27 @@ function ToolsPage() {
                 const Icon = meta.icon;
                 const count = Number(v);
                 const pct = (count / max) * 100;
+                const tableName = k === "access_requests" ? "organization_access_requests" : k;
                 return (
-                  <div key={k} className="group relative overflow-hidden rounded-2xl border border-border bg-background/60 p-4 transition hover:border-primary/40 hover:shadow-glow">
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => openInspector(tableName)}
+                    className="group relative overflow-hidden rounded-2xl border border-border bg-background/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-glow"
+                  >
                     <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.tone} opacity-60`} />
                     <div className="relative">
                       <div className="flex items-center justify-between">
                         <div className="grid h-10 w-10 place-items-center rounded-xl bg-background/80 shadow-sm">
                           <Icon className="h-5 w-5 text-primary" />
                         </div>
-                        <span className="rounded-full bg-background/80 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{k}</span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary opacity-0 transition group-hover:opacity-100">
+                          <Eye className="h-3 w-3" /> Peržiūrėti
+                        </span>
                       </div>
                       <p className="mt-4 font-display text-3xl font-bold tabular-nums">{count.toLocaleString("lt-LT")}</p>
                       <p className="text-xs font-semibold text-muted-foreground">{meta.label}</p>
+                      <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/70">{tableName}</p>
                       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border/50">
                         <div
                           className="h-full rounded-full bg-gradient-primary transition-[width] duration-700"
@@ -242,13 +296,130 @@ function ToolsPage() {
                         />
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </div>
         );
       })()}
+
+      {deep && (
+        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="flex items-center gap-2 font-display text-xl font-bold">
+                <Zap className="h-5 w-5 text-amber-400" /> Giluminis skenavimas
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {new Date(deep.generated_at).toLocaleString("lt-LT")} · 24h kritinių: <b className={deep.recent_critical_24h > 0 ? "text-destructive" : "text-success"}>{deep.recent_critical_24h}</b>
+              </p>
+            </div>
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${deep.tables.every(t => t.ok) ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+              {deep.tables.every(t => t.ok) ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+              {deep.tables.filter(t => t.ok).length}/{deep.tables.length} OK
+            </span>
+          </div>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <th className="px-3 py-2">Lentelė</th>
+                  <th className="px-3 py-2 text-right">Įrašai</th>
+                  <th className="px-3 py-2 text-right">Delsa</th>
+                  <th className="px-3 py-2 text-right">Būklė</th>
+                  <th className="px-3 py-2 text-right"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {deep.tables.map((t) => (
+                  <tr key={t.table} className="border-b border-border/60 hover:bg-accent/30">
+                    <td className="px-3 py-2 font-mono text-xs">{t.table}</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums">{t.count.toLocaleString("lt-LT")}</td>
+                    <td className={`px-3 py-2 text-right tabular-nums text-xs ${t.ms > 500 ? "text-destructive" : t.ms > 200 ? "text-amber-400" : "text-success"}`}>{t.ms}ms</td>
+                    <td className="px-3 py-2 text-right">
+                      {t.ok ? <span className="text-success">✓ OK</span> : <span className="text-destructive" title={t.error ?? ""}>✗ ERR</span>}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      <button onClick={() => openInspector(t.table)} className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
+                        Peržiūrėti
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <AnimatePresence>
+        {inspect && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur"
+            onClick={() => setInspect(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 10 }}
+              className="relative flex max-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-border p-4">
+                <div>
+                  <h3 className="flex items-center gap-2 font-display text-lg font-bold">
+                    <Database className="h-4 w-4 text-primary" />
+                    <span className="font-mono">{inspect.table}</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {inspect.loading ? "Kraunama…" : `${inspect.rows.length} / ${inspect.total.toLocaleString("lt-LT")} įrašų (naujausi pirmi, max 100)`}
+                  </p>
+                </div>
+                <button onClick={() => setInspect(null)} className="rounded-full p-2 hover:bg-accent">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-auto p-4">
+                {inspect.loading ? (
+                  <div className="flex h-40 items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : inspect.rows.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-muted-foreground">Lentelė tuščia.</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="w-full text-xs">
+                      <thead className="bg-background/60">
+                        <tr className="border-b border-border">
+                          {Object.keys(inspect.rows[0]).map((col) => (
+                            <th key={col} className="px-3 py-2 text-left font-mono font-semibold uppercase tracking-wider text-[10px] text-muted-foreground whitespace-nowrap">{col}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inspect.rows.map((row, i) => (
+                          <tr key={i} className="border-b border-border/50 hover:bg-accent/30">
+                            {Object.entries(row).map(([col, val]) => (
+                              <td key={col} className="max-w-xs truncate px-3 py-2 font-mono text-[11px]" title={String(val ?? "")}>
+                                {val === null ? <span className="text-muted-foreground/60">null</span>
+                                  : typeof val === "object" ? <span className="text-primary">{JSON.stringify(val).slice(0, 60)}</span>
+                                  : typeof val === "boolean" ? <span className={val ? "text-success" : "text-muted-foreground"}>{String(val)}</span>
+                                  : String(val).length > 80 ? String(val).slice(0, 80) + "…"
+                                  : String(val)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
