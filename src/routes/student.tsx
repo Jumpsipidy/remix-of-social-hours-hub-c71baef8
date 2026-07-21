@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare,
   CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School,
-  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star,
+  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star, ShieldCheck,
 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
@@ -196,7 +196,7 @@ function StudentDashboard() {
               <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
             </button>
             <CertificateButton />
-            <Link to="/_authenticated/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
+            <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
               <ShieldCheck className="h-4 w-4" /> Mano QR kodas
             </Link>
             <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
