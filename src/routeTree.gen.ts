@@ -42,6 +42,7 @@ import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
+import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
@@ -209,6 +210,11 @@ const AdminAccountsRoute = AdminAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
+  id: '/_authenticated/checkin',
+  path: '/checkin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/_authenticated/checkin'
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
@@ -436,6 +448,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
   OrgIdRoute: typeof OrgIdRoute
@@ -676,6 +689,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccountsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_authenticated/checkin': {
+      id: '/_authenticated/checkin'
+      path: '/checkin'
+      fullPath: '/checkin'
+      preLoaderRoute: typeof AuthenticatedCheckinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -731,6 +751,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
   OrgIdRoute: OrgIdRoute,
