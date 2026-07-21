@@ -58,8 +58,27 @@ function ToolsPage() {
   const wipeRes = useServerFn(adminWipeAllReservations);
   const wipeTasks = useServerFn(adminWipeAllTasks);
   const health = useServerFn(adminPlatformHealth);
+  const deepHealth = useServerFn(adminDeepHealth);
+  const sample = useServerFn(adminTableSample);
   const [busy, setBusy] = useState<string | null>(null);
   const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
+  const [deep, setDeep] = useState<null | {
+    tables: { table: string; count: number; ms: number; ok: boolean; error: string | null }[];
+    recent_critical_24h: number;
+    generated_at: string;
+  }>(null);
+  const [inspect, setInspect] = useState<null | { table: string; rows: any[]; total: number; loading: boolean }>(null);
+
+  const openInspector = async (table: string) => {
+    setInspect({ table, rows: [], total: 0, loading: true });
+    try {
+      const r = (await sample({ data: { table, limit: 100 } })) as { rows: any[]; total: number };
+      setInspect({ table, rows: r.rows, total: r.total, loading: false });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti");
+      setInspect(null);
+    }
+  };
 
   const run = async (key: string, fn: () => Promise<unknown>, confirmMsg?: string) => {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
