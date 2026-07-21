@@ -1,7 +1,7 @@
 // Shared shell + primitives for premium 3D-feeling emails.
 // Inline-styles only. Layered gradients + soft shadow rings = depth on Apple Mail / Gmail Web.
 
-export const APP_URL = "https://socialinesvalandos.vercel.app";
+export const APP_URL = "https://socialinesvalandos.dev";
 export const SUPPORT_EMAIL = "pagalba@socialinesvalandos.lt";
 
 export function escape(s: string): string {
@@ -106,7 +106,7 @@ export function renderShell(opts: ShellOptions): string {
         Automatinis pranešimas iš Socialinės Valandos platformos.<br/>
         Klausimai? <a href="mailto:${SUPPORT_EMAIL}" style="color:#a5b4fc;text-decoration:none;">${SUPPORT_EMAIL}</a>
         <div style="margin-top:14px;height:1px;background:linear-gradient(90deg,transparent,rgba(148,163,184,.25),transparent);"></div>
-        <div style="margin-top:14px;color:#475569;">© ${new Date().getFullYear()} Socialinės Valandos · <a href="${APP_URL}" style="color:#64748b;text-decoration:none;">socialinesvalandos.vercel.app</a></div>
+        <div style="margin-top:14px;color:#475569;">© ${new Date().getFullYear()} Socialinės Valandos · <a href="${APP_URL}" style="color:#64748b;text-decoration:none;">socialinesvalandos.dev</a></div>
       </td></tr>
     </table>
   </div>

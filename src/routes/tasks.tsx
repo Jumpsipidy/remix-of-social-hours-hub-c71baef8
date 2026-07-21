@@ -21,9 +21,9 @@ export const Route = createFileRoute("/tasks")({
       { name: "description", content: "Naršyk realias savanorystės užduotis ir organizacijų profilius: filtruok pagal kategoriją bei valandas ir rezervuok socialines valandas." },
       { property: "og:title", content: "Savanorystės užduotys ir organizacijos" },
       { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
-      { property: "og:url", content: "https://socialinesvalandos.vercel.app/tasks" },
+      { property: "og:url", content: "https://socialinesvalandos.dev/tasks" },
     ],
-    links: [{ rel: "canonical", href: "https://socialinesvalandos.vercel.app/tasks" }],
+    links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/tasks" }],
   }),
   component: TasksPage,
 });

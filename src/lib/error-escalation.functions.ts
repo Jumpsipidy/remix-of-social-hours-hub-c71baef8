@@ -133,7 +133,7 @@ function alertEmailHtml(opts: {
   <div style="padding:28px 32px">
     ${isLock ? `<div style="margin:0 0 22px;padding:16px 18px;background:linear-gradient(135deg,${accent}18,${accent2}10);border:1px solid ${accent}66;border-radius:14px;color:#fee2e2;font-size:13px;line-height:1.6">
       <div style="font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:${accent};margin-bottom:6px">Reikalingas veiksmas</div>
-      <div><b style="color:#fff">Prisijunk kaip super admin ir eik į <a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="color:#fca5a5">/admin/lockdown</a>, kad išjungtum apsaugą.</b> Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b style="color:#fff">E-5001</b>).</div>
+      <div><b style="color:#fff">Prisijunk kaip super admin ir eik į <a href="https://socialinesvalandos.dev/admin/lockdown" style="color:#fca5a5">/admin/lockdown</a>, kad išjungtum apsaugą.</b> Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b style="color:#fff">E-5001</b>).</div>
     </div>` : ""}
 
     <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-bottom:8px">▸ Klaidos žinutė</div>
@@ -149,8 +149,8 @@ function alertEmailHtml(opts: {
     ${opts.stack ? `<details style="margin-top:18px;padding:12px 14px;background:#020617;border:1px solid #1e293b;border-radius:12px"><summary style="cursor:pointer;font-size:10px;color:#94a3b8;font-weight:800;letter-spacing:.16em;text-transform:uppercase">▸ Stack trace</summary><pre style="margin:12px 0 0;font-size:11px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;font-family:'JetBrains Mono',ui-monospace,monospace;line-height:1.55">${escapeHtml(opts.stack)}</pre></details>` : ""}
 
     <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
-      <a href="https://socialinesvalandos.vercel.app/admin/errors" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#0b1220;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px rgba(99,102,241,.3)">Atidaryti klaidų centrą →</a>
-      ${isLock ? `<a href="https://socialinesvalandos.vercel.app/admin/lockdown" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,${accent},${accent2});color:#fff;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px ${accent}55">🔓 Išjungti Lockdown →</a>` : ""}
+      <a href="https://socialinesvalandos.dev/admin/errors" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#0b1220;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px rgba(99,102,241,.3)">Atidaryti klaidų centrą →</a>
+      ${isLock ? `<a href="https://socialinesvalandos.dev/admin/lockdown" style="display:inline-block;padding:14px 24px;background:linear-gradient(135deg,${accent},${accent2});color:#fff;font-weight:800;text-decoration:none;border-radius:999px;font-size:13px;letter-spacing:.02em;box-shadow:0 8px 24px ${accent}55">🔓 Išjungti Lockdown →</a>` : ""}
     </div>
   </div>
 

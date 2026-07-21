@@ -32,14 +32,14 @@ Nueik į **Vercel → Project → Settings → Environment Variables** ir įdėk
 
 Po pakeitimų — spausk **Redeploy** Vercel'yje.
 
-## Domain migracijai (`socialinesvalandos.vercel.app` → `socialinesvalandos.lt`)
+## Domain migracijai (`socialinesvalandos.dev` → `socialinesvalandos.lt`)
 
 1. Vercel → Project → Settings → Domains → Add `socialinesvalandos.lt` ir `www.socialinesvalandos.lt`.
 2. DNS registratoriuje pridėk Vercel nurodytus A/CNAME įrašus.
 3. **Nekeisk** `CERT_SIGNING_SECRET` — leisk sertifikatams veikti toliau.
 4. Supabase Dashboard → Authentication → URL Configuration:
    - **Site URL:** `https://socialinesvalandos.lt`
-   - **Redirect URLs:** pridėk `https://socialinesvalandos.lt/**` **ir palik** `https://socialinesvalandos.vercel.app/**` senosioms sesijoms.
+   - **Redirect URLs:** pridėk `https://socialinesvalandos.lt/**` **ir palik** `https://socialinesvalandos.dev/**` senosioms sesijoms.
 5. Google/Discord OAuth Console → pridėk `https://socialinesvalandos.lt/auth/callback` prie leidžiamų redirect URI (senojo netrink 30 dienų).
 6. QR kodai naujuose PDF'uose automatiškai naudos `window.location.origin`, taigi po domeno pakeitimo jie rodys `socialinesvalandos.lt/verify/...`. Seni PDF'ai vis dar veiks — Vercel gali palikti senąjį domeną kaip alias, arba pridėk 301 redirect `.vercel.app/verify/*` → `.lt/verify/*`.
 
