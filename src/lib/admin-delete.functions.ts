@@ -7,12 +7,40 @@ export const adminListAllAccounts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
-    const { data } = await supabaseAdmin
+
+    const { data: profiles } = await supabaseAdmin
       .from("profiles")
       .select("id, email, full_name, role, organization_name, org_category, school_id, created_at")
       .order("created_at", { ascending: false });
-    return { profiles: data ?? [] };
+
+    // Merge auth.users so orphan accounts (created via OAuth or where
+    // handle_new_user failed) also appear and can be deleted.
+    const profileMap = new Map<string, any>((profiles ?? []).map((p: any) => [p.id, p]));
+    try {
+      const { data: usersPage } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      for (const u of usersPage.users) {
+        if (!profileMap.has(u.id)) {
+          profileMap.set(u.id, {
+            id: u.id,
+            email: u.email ?? null,
+            full_name: (u.user_metadata as any)?.full_name ?? null,
+            role: (u.user_metadata as any)?.role ?? "orphan",
+            organization_name: (u.user_metadata as any)?.organization_name ?? null,
+            org_category: (u.user_metadata as any)?.org_category ?? null,
+            school_id: null,
+            created_at: u.created_at ?? new Date().toISOString(),
+            orphan: true,
+          });
+        }
+      }
+    } catch { /* auth listing best-effort */ }
+
+    const all = Array.from(profileMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    return { profiles: all };
   });
+
 
 export const adminDeleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
