@@ -513,14 +513,17 @@ function SchoolDashboard() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  {nav.find((n) => n.id === tab)?.label}
+                  {classRestricted ? "Klasės auklėtojo kabinetas" : "Direktoriaus kabinetas"} · {nav.find((n) => n.id === tab)?.label}
                 </p>
                 <h2 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                  Mokinių stebėsena pagal priskirtas klases
+                  {classRestricted
+                    ? `Tavo auklėjamosios klasės (${assignedClasses.join(", ")})`
+                    : "Visos mokyklos apžvalga"}
                 </h2>
                 <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                  Šis kabinetas rodo tik tuos mokinius ir rezervacijas, kurioms mokyklos
-                  administratoriui suteikta klasės prieiga.
+                  {classRestricted
+                    ? "Kaip klasės auklėtoja(s) matai tik savo priskirtų klasių mokinius, jų rezervacijas, sukauptas valandas ir riziką."
+                    : "Kaip mokyklos vadovas matai visą įstaigą — kiekvieną klasę, mokinį ir organizaciją vienoje vietoje."}
                 </p>
               </div>
               <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3">

@@ -1,13 +1,41 @@
 # Socialinės Valandos
 
-> Moksleivių savanorystės valandų valdymo platforma Lietuvos mokykloms — mokiniai randa organizacijas, rezervuoja valandas, o mokyklos administratoriai jas patvirtina.
+> Moksleivių socialinių (savanorystės) valandų valdymo platforma Lietuvos mokykloms — mokiniai randa organizacijas, rezervuoja valandas, o klasės auklėtojai ir mokyklos direktoriai jas patvirtina realiu laiku.
 
-Socialinės Valandos jungia moksleivius, savanorystės organizacijas ir mokyklų administratorius į vieną erdvę. Platformoje galima naršyti realias užduotis, rezervuoti savanorystės laiką, bendrauti trišaliame pokalbyje ir automatiškai skaičiuoti surinktas valandas.
+Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puses: moksleivius, savanorystės organizacijas / bendruomenes ir mokyklas. Platforma automatizuoja visą socialinių valandų procesą — nuo užduoties radimo iki oficialaus PDF sertifikato su parašu.
+
+## Kam skirta
+
+- **Moksleiviams (5–12 kl.)** — rasti realias savanorystės užduotis, rezervuoti valandas, kviesti draugus į grupę, gauti oficialų PDF sertifikatą.
+- **Klasės auklėtojams** — matyti tik savo auklėjamosios klasės mokinius, jų rezervacijas, sukauptas valandas, sukčiavimo signalus.
+- **Mokyklos direktoriams** — matyti visą įstaigą, valdyti klases, kurti mokyklos administratorių paskyras.
+- **Organizacijoms ir bendruomenėms** — skelbti užduotis, patvirtinti mokinius per QR kodą arba 6 skaitmenų kodą, uždaryti valandas.
+
+## Kaip veikia socialinės valandos Lietuvoje
+
+- 5, 6, 7 klasėms — reikia surinkti 20 valandų per mokslo metus.
+- 8, 9, 10, 11, 12 klasėms — reikia surinkti bent 8 valandas per mokslo metus.
+- Valandas patvirtina organizacija; jos automatiškai keliauja į klasės auklėtojos kabinetą.
 
 ## Pages
 
-- [Pradžia](/): Platformos apžvalga, kaip veikia socialinių valandų rinkimas.
+- [Pradžia](/): Platformos apžvalga, statistika, kaip veikia socialinių valandų rinkimas.
 - [Užduotys ir organizacijos](/tasks): Realių organizacijų sąrašas ir atviros savanorystės užduotys.
-- [Registruotis](/register): Moksleivio paskyros kūrimas su mokyklos kodu ir klase.
+- [Kas yra socialinės valandos](/blog/kas-yra-socialines-valandos): Detalus paaiškinimas apie socialines valandas Lietuvos mokyklose.
+- [Registruotis](/register): Moksleivio paskyros kūrimas su mokyklos kodu ir klase; organizacijų prieigos prašymas.
 - [Prisijungti](/login): Prisijungimas su Google, Discord arba el. paštu.
+- [Sertifikato patikra](/verify): Viešas oficialaus PDF sertifikato tikrinimas pagal QR kodą arba unikalų kodą.
 - [Naudojimosi taisyklės](/terms): Platformos taisyklės, privatumo politika ir atsakomybės.
+
+## Pagrindinės funkcijos
+
+- Rezervacijų valdymas su statusų grandine: `pending → approved → completed`.
+- QR įsiregistravimas — rotuojantis QR kodas + 6 skaitmenų atsarginis kodas (be interneto).
+- Oficialūs PDF sertifikatai su HMAC parašu ir viešu patikros URL.
+- Klasės auklėtojo kabinetas su sukčiavimo aptikimu ir masiniu patvirtinimu.
+- Realaus laiko pokalbiai tarp mokinio, organizacijos ir mokyklos.
+- Grupinės rezervacijos — mokinys kviečia draugus atlikti valandas kartu.
+
+## Optional
+
+- [Blog: kas yra socialinės valandos](/blog/kas-yra-socialines-valandos): Gilesnis kontekstas Lietuvos švietimo sistemai.
