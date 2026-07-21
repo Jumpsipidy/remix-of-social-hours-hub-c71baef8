@@ -193,7 +193,7 @@ export function MockTesterPanel() {
 
             {tab === "create" && (
               <>
-                <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis: <code className="rounded bg-muted px-1">DevPass123!</code></p>
+                <p className="text-[11px] text-muted-foreground">Vieno mygtuko debug. Slaptažodis generuojamas atsitiktinai kiekvienai paskyrai — parodomas tik sukūrimo metu.</p>
                 <button
                   onClick={() => {
                     const w = window as any;
