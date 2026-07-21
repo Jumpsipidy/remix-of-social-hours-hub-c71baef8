@@ -8,6 +8,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin-super.functions";
+import { adminResetAnalytics } from "@/lib/admin-delete.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 import { toast } from "sonner";
