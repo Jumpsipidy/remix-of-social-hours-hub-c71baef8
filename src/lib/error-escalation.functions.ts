@@ -142,9 +142,33 @@ export const escalateAppError = createServerFn({ method: "POST" })
       return { ok: true, ignored: true };
     }
 
+    // Per-IP rate limit — stops an anonymous flood from tripping auto-lockdown
+    // with three trivial requests. Beyond the cap we drop silently.
+    let fp = "unknown";
+    try {
+      const req = getRequest();
+      if (req) fp = clientFingerprint(req);
+    } catch { /* ignore — SSR / missing request */ }
+    if (!checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Only reports from an authenticated user (identified via provided userEmail
+    // matched against a real profile) may count toward the auto-lockdown
+    // threshold. Anonymous reports are still logged, but they can't take the
+    // site down.
+    let authedUserId: string | null = null;
+    if (data.userEmail) {
+      const { data: prof } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("email", data.userEmail.toLowerCase())
+        .maybeSingle();
+      authedUserId = (prof as { id: string } | null)?.id ?? null;
+    }
+
     await supabaseAdmin.from("activity_log").insert({
+      user_id: authedUserId,
       action: data.level === "critical" ? "app.critical" : "app.warning",
       entity_type: "auto-monitor",
       meta: {
@@ -152,17 +176,21 @@ export const escalateAppError = createServerFn({ method: "POST" })
         path: data.path ?? null,
         stack: data.stack?.slice(0, 500) ?? null,
         userAgent: data.userAgent ?? null,
+        anon: authedUserId === null,
+        fp,
       },
     });
 
     let lockdownTriggered = false;
     let criticalCount = 0;
-    if (data.level === "critical") {
+    if (data.level === "critical" && authedUserId !== null) {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
+      // Count only critical events tied to a real signed-in user in the window.
       const { count } = await supabaseAdmin
         .from("activity_log")
         .select("*", { count: "exact", head: true })
         .eq("action", "app.critical")
+        .not("user_id", "is", null)
         .gte("created_at", since);
       criticalCount = count ?? 0;
 
