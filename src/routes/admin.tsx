@@ -25,6 +25,7 @@ import {
   MoreHorizontal,
   AlertTriangle,
   ScanLine,
+  Send,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -49,6 +50,7 @@ const NAV: NavItem[] = [
   { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
   { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
   { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
+  { to: "/admin/push", label: "Push pranešimai", icon: Send },
   { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
 ];
 
