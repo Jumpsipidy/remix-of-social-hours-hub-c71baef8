@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { insertActivityLogRow } from "@/lib/activity-log";
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
+import { getBreadcrumbs } from "@/lib/user-breadcrumbs";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
@@ -112,6 +113,7 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
         source: payload.source ?? "runtime",
         path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
         extra: payload.extra ?? {},
+        breadcrumbs: getBreadcrumbs().slice(-15),
         ...dev,
       },
     });

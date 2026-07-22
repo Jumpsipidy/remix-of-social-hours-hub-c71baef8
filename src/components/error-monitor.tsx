@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { reportCriticalIncident } from "@/lib/incident.functions";
 import { useAuth } from "@/hooks/use-auth";
-import { installGlobalErrorLogging } from "@/lib/error-log";
+import { installGlobalErrorLogging, logClientError } from "@/lib/error-log";
+import { installBreadcrumbs, pushBreadcrumb } from "@/lib/user-breadcrumbs";
 
 /**
  * Client-side automatic error monitor.
@@ -38,6 +39,14 @@ export function ErrorMonitor() {
   // anon-safe inserts are dropped by RLS but console output still fires).
   useEffect(() => {
     installGlobalErrorLogging();
+    installBreadcrumbs(({ label, count }) => {
+      // Rage-click: user hammered same element — likely a broken button.
+      pushBreadcrumb({ kind: "custom", label: `auto-report rage-click x${count}` });
+      void logClientError(new Error(`Rage click detected: ${label} (${count}x)`), {
+        source: "rage-click",
+        extra: { count, label },
+      });
+    });
   }, []);
 
   useEffect(() => {
