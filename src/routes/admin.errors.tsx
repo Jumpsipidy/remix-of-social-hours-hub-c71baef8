@@ -710,53 +710,140 @@ function AdminErrorsPage() {
               transition={{ duration: 0.22 }}
               className="space-y-4"
             >
-              {section === "overview" && (
-                <>
-                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                    <StatCard label="Iš viso (500)" value={rows.length} icon={Activity} accent="text-primary" />
-                    <StatCard label="Paskutinė val." value={lastHour.length} icon={Zap} accent="text-amber-300" />
-                    <StatCard
-                      label="Kritinės 5min"
-                      value={criticalRecent.length}
-                      icon={AlertTriangle}
-                      accent={criticalRecent.length >= 3 ? "text-rose-300" : "text-fuchsia-300"}
-                    />
-                    <StatCard
-                      label="Email siųsta"
-                      value={rows.filter((r) => r.action === "app.email_sent").length}
-                      icon={Mail}
-                      accent="text-cyan-300"
-                    />
-                  </div>
-
-                  <SaaSPanel>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Klaidų srautas · 24h</div>
-                        <div className="mt-0.5 text-lg font-semibold">
-                          {spark.reduce((a, b) => a + b, 0)}{" "}
-                          <span className="text-xs font-normal text-muted-foreground">įvykių</span>
-                        </div>
+              {section === "overview" && (() => {
+                const now = Date.now();
+                const burstWindow = rows.filter(
+                  (r) => CRITICAL_KINDS.has(r.action) && now - new Date(r.created_at).getTime() < 90_000,
+                );
+                const burstUsers = new Set(burstWindow.map((r) => r.user_id ?? r.meta?.browser ?? r.id)).size;
+                const burstActive = burstUsers >= 3;
+                const replayCount = rows.filter((r) => {
+                  const m = r.meta as any;
+                  return Array.isArray(m?.replay) || Array.isArray(m?.breadcrumbs);
+                }).length;
+                const newGroupsToday = groups.filter((g) => g.isNewToday).length;
+                const topGroup = topGroups[0];
+                const uniqueFps = groups.length;
+                return (
+                  <>
+                    {/* Feature status strip */}
+                    <SaaSPanel padded={false}>
+                      <div className="flex flex-wrap items-center gap-2 p-3 text-[11px]">
+                        <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 font-bold uppercase tracking-widest text-emerald-300">
+                          v3 · fingerprint aktyvus
+                        </span>
+                        <span className={`rounded-full border px-2.5 py-1 font-bold uppercase tracking-widest ${burstActive ? "border-rose-500/50 bg-rose-500/15 text-rose-300 animate-pulse" : "border-border/60 bg-background/40 text-muted-foreground"}`}>
+                          {burstActive ? `🔥 Burst · ${burstUsers} vart / 90s` : "Burst detektorius: rimta"}
+                        </span>
+                        <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-400/10 px-2.5 py-1 font-bold uppercase tracking-widest text-fuchsia-300">
+                          Replay: {replayCount}
+                        </span>
+                        <span className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2.5 py-1 font-bold uppercase tracking-widest text-cyan-300">
+                          Auto-recovery: 10 min
+                        </span>
+                        {muted.length > 0 && (
+                          <span className="rounded-full border border-border/60 bg-background/40 px-2.5 py-1 font-bold uppercase tracking-widest text-muted-foreground">
+                            Nutildyta: {muted.length}
+                          </span>
+                        )}
+                        <span className="ml-auto text-muted-foreground">
+                          {live ? "🟢 Realtime kanalas" : "⚪️ Realtime pauzėje"}
+                        </span>
                       </div>
-                      <span className="rounded-full border border-border/50 bg-background/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        30-min buckets
-                      </span>
-                    </div>
-                    <div className="mt-3">
-                      <Sparkline values={spark} className="!h-20" />
-                    </div>
-                  </SaaSPanel>
+                    </SaaSPanel>
 
-                  <LockdownBanner
-                    lockdown={lockdown}
-                    site={site}
-                    criticalPressure={criticalPressure}
-                    busy={busy}
-                    onToggle={toggleLockdown}
-                    compact
-                  />
-                </>
-              )}
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      <StatCard label="Iš viso (500)" value={rows.length} icon={Activity} accent="text-primary" />
+                      <StatCard label="Paskutinė val." value={lastHour.length} icon={Zap} accent="text-amber-300" />
+                      <StatCard
+                        label="Kritinės 5min"
+                        value={criticalRecent.length}
+                        icon={AlertTriangle}
+                        accent={criticalRecent.length >= 2 ? "text-rose-300" : "text-fuchsia-300"}
+                      />
+                      <StatCard
+                        label="Email siųsta"
+                        value={rows.filter((r) => r.action === "app.email_sent").length}
+                        icon={Mail}
+                        accent="text-cyan-300"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                      <StatCard label="Unikalios grupės" value={uniqueFps} icon={ListOrdered} accent="text-violet-300" />
+                      <StatCard label="🆕 Naujos (24h)" value={newGroupsToday} icon={Plus} accent="text-emerald-300" />
+                      <StatCard label="Su session replay" value={replayCount} icon={Radio} accent="text-fuchsia-300" />
+                      <StatCard label="Nutildytos grupės" value={muted.length} icon={EyeOff} accent="text-muted-foreground" />
+                    </div>
+
+                    {topGroup && (
+                      <SaaSPanel className="border-rose-500/30">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-rose-300">
+                                🔥 Aukščiausio severity grupė
+                              </span>
+                              <span className="rounded-md bg-rose-500/20 px-2 py-0.5 text-[10px] font-black text-rose-200 tabular-nums">
+                                sev {topGroup.severity}
+                              </span>
+                              {topGroup.isNewToday && (
+                                <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-200">🆕 NAUJA</span>
+                              )}
+                            </div>
+                            <div className="mt-1.5 line-clamp-2 break-words font-mono text-[13px] text-rose-100/90">
+                              {topGroup.message}
+                            </div>
+                            <div className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                              <span>#{topGroup.fp.slice(0, 8)}</span>
+                              <span>{topGroup.count}× įvykių</span>
+                              <span>{topGroup.users.size} vartotojų</span>
+                              <span>{topGroup.paths.size} puslapių</span>
+                              <span>paskutinį kartą {relTime(new Date(topGroup.lastMs).toISOString())}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setSection("top")}
+                            className="shrink-0 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-[11px] font-bold text-rose-200 hover:bg-rose-500/20 transition"
+                          >
+                            Visos grupės →
+                          </button>
+                        </div>
+                        <div className="mt-3">
+                          <Sparkline values={topGroup.trend} className="!h-14" />
+                        </div>
+                      </SaaSPanel>
+                    )}
+
+                    <SaaSPanel>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Klaidų srautas · 24h</div>
+                          <div className="mt-0.5 text-lg font-semibold">
+                            {spark.reduce((a, b) => a + b, 0)}{" "}
+                            <span className="text-xs font-normal text-muted-foreground">įvykių</span>
+                          </div>
+                        </div>
+                        <span className="rounded-full border border-border/50 bg-background/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          30-min buckets
+                        </span>
+                      </div>
+                      <div className="mt-3">
+                        <Sparkline values={spark} className="!h-20" />
+                      </div>
+                    </SaaSPanel>
+
+                    <LockdownBanner
+                      lockdown={lockdown}
+                      site={site}
+                      criticalPressure={criticalPressure}
+                      busy={busy}
+                      onToggle={toggleLockdown}
+                      compact
+                    />
+                  </>
+                );
+              })()}
 
               {section === "live" && (
                 <>
