@@ -273,7 +273,7 @@ function AdminErrorsPage() {
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
-      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack]
+      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack, fpOfRow(r)]
         .filter(Boolean).join(" \n ");
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
