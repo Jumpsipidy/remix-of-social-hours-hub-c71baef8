@@ -204,6 +204,7 @@ function AdminErrorsPage() {
             row.action === "app.email_sent"
           ) {
             setRows((r) => [row, ...r].slice(0, 500));
+            setNewSinceLoad((n) => n + 1);
             if (row.action === "app.critical" || row.action === "client.error") {
               const msg = row.meta?.message ?? "Nauja klaida";
               toast.error(`🚨 ${msg.slice(0, 90)}`, { duration: 4500 });
