@@ -28,6 +28,17 @@ const IGNORE_SUBSTRINGS = [
   "[vite]",
   // Manual test errors triggered from /admin/errors "Trigger test error" button
   "[TEST]",
+  // Stale-deploy noise: browser cached old HTML → hashed bundle 404s and the
+  // browser tries to parse the JSON body as JS. Handled by stale-deploy-guard
+  // which force-reloads. Don't log or escalate — it's a cache miss, not a bug.
+  "Unexpected token '{'",
+  "Unexpected token '<'",
+  "Minified React error #520",
+  "Minified React error #418",
+  "Loading chunk",
+  "Loading CSS chunk",
+  "ChunkLoadError",
+
 ];
 
 // Patterns that indicate a serious runtime failure worth auto-lockdown.
