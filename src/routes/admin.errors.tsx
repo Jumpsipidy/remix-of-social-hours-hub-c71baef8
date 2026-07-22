@@ -1158,6 +1158,7 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
             {row.meta?.device && <Kv k="Įrenginys" v={row.meta.device} />}
             {row.user_id && <Kv k="Vartotojas" v={row.user_id.slice(0, 8)} />}
           </div>
+          <ReplayTimeline meta={row.meta} />
           {row.meta?.stack && (
             <div>
               <div className="text-[10px] font-bold uppercase text-muted-foreground">Stack</div>
@@ -1187,6 +1188,96 @@ function relTime(iso: string) {
   if (diff < 3600) return `prieš ${Math.floor(diff / 60)}m`;
   if (diff < 86400) return `prieš ${Math.floor(diff / 3600)}h`;
   return new Date(iso).toLocaleString("lt-LT");
+}
+
+type ReplayEvent = { t?: number; dt?: number; kind: string; label: string; path?: string; extra?: Record<string, unknown> };
+
+const KIND_COLOR: Record<string, string> = {
+  click: "text-sky-300 border-sky-500/40 bg-sky-500/10",
+  nav: "text-violet-300 border-violet-500/40 bg-violet-500/10",
+  input: "text-emerald-300 border-emerald-500/40 bg-emerald-500/10",
+  scroll: "text-slate-300 border-slate-500/40 bg-slate-500/10",
+  resize: "text-slate-300 border-slate-500/40 bg-slate-500/10",
+  visibility: "text-amber-300 border-amber-500/40 bg-amber-500/10",
+  "fetch-fail": "text-rose-300 border-rose-500/50 bg-rose-500/10",
+  rage: "text-fuchsia-300 border-fuchsia-500/50 bg-fuchsia-500/15",
+  net: "text-cyan-300 border-cyan-500/40 bg-cyan-500/10",
+  key: "text-slate-300 border-slate-500/40 bg-slate-500/10",
+  custom: "text-white/70 border-white/20 bg-white/5",
+};
+
+function ReplayTimeline({ meta }: { meta: ErrRow["meta"] }) {
+  const replay = (meta as any)?.replay as ReplayEvent[] | undefined;
+  const crumbs = (meta as any)?.breadcrumbs as ReplayEvent[] | undefined;
+  const events = (replay && replay.length ? replay : crumbs) ?? [];
+  if (events.length === 0) return null;
+
+  // normalize to relative timestamps (dt in ms from first event)
+  const t0 = events[0].t ?? 0;
+  const normalized = events.map((e, i) => ({
+    ...e,
+    dtMs: typeof e.dt === "number" ? e.dt : (e.t ?? 0) - t0,
+    idx: i,
+  }));
+  const totalMs = Math.max(1, normalized[normalized.length - 1].dtMs);
+
+  return (
+    <div className="rounded-xl border border-border/50 bg-black/30 p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Radio className="h-3.5 w-3.5 text-rose-300" />
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Session Replay · paskutinės {(totalMs / 1000).toFixed(1)}s prieš klaidą
+          </div>
+        </div>
+        <div className="text-[10px] tabular-nums text-muted-foreground">{events.length} įvykių</div>
+      </div>
+
+      {/* Density strip */}
+      <div className="relative mb-3 h-6 overflow-hidden rounded-md border border-border/40 bg-background/40">
+        {normalized.map((e, i) => {
+          const left = totalMs > 0 ? (e.dtMs / totalMs) * 100 : 0;
+          const color =
+            e.kind === "fetch-fail" || e.kind === "rage" ? "#f43f5e"
+            : e.kind === "click" ? "#38bdf8"
+            : e.kind === "nav" ? "#a78bfa"
+            : e.kind === "input" ? "#34d399"
+            : "#64748b";
+          return (
+            <span
+              key={i}
+              className="absolute top-0 h-full w-[2px] opacity-80"
+              style={{ left: `${left}%`, background: color }}
+              title={`${(e.dtMs / 1000).toFixed(2)}s · ${e.kind} · ${e.label}`}
+            />
+          );
+        })}
+        <span className="absolute right-0 top-0 h-full w-[3px] bg-rose-500" title="Crash" />
+      </div>
+
+      {/* Event list */}
+      <ol className="max-h-64 space-y-1 overflow-auto pr-1">
+        {normalized.map((e, i) => (
+          <li key={i} className="flex items-start gap-2 rounded-md border border-transparent px-2 py-1 hover:border-border/50 hover:bg-background/40">
+            <span className="mt-0.5 shrink-0 rounded font-mono text-[10px] tabular-nums text-muted-foreground">
+              {(e.dtMs / 1000).toFixed(2)}s
+            </span>
+            <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${KIND_COLOR[e.kind] ?? "border-white/20 bg-white/5 text-white/70"}`}>
+              {e.kind}
+            </span>
+            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/85">
+              {e.label}
+              {e.path && <span className="ml-1 text-muted-foreground">· {e.path}</span>}
+            </span>
+          </li>
+        ))}
+        <li className="flex items-center gap-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1">
+          <span className="mt-0.5 shrink-0 font-mono text-[10px] tabular-nums text-rose-300">💥 crash</span>
+          <span className="font-mono text-[11px] text-rose-200">{(meta as any)?.message ?? "unknown error"}</span>
+        </li>
+      </ol>
+    </div>
+  );
 }
 
 function SourceBreakdown({
