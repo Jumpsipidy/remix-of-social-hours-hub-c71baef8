@@ -253,6 +253,8 @@ function RootComponent() {
         <LockdownGate />
         <ErrorMonitor />
         <AdminAlertMonitor />
+        <AdminErrorHud />
+
         <PageViewTracker />
 
       </AuthProvider>
