@@ -88,6 +88,81 @@ async function sendResendEmail(to: string, subject: string, html: string, opts: 
   }
 }
 
+// -----------------------------------------------------------------------------
+// Discord webhook — realtime pings alongside email. Silent no-op if secret
+// missing. Uses rich embed with color-coded severity + button-style link.
+// -----------------------------------------------------------------------------
+async function sendDiscordAlert(opts: {
+  level: "critical" | "warning";
+  lockdown: boolean;
+  lockdownReason: "critical-threshold" | "burst" | null;
+  message: string;
+  path?: string;
+  userEmail?: string;
+  criticalCount?: number;
+  burstUsers?: number;
+  fingerprint?: string;
+}) {
+  const url = process.env.DISCORD_WEBHOOK_URL;
+  if (!url) return;
+  const isLock = opts.lockdown;
+  const isBurst = opts.lockdownReason === "burst";
+  const color = isLock
+    ? (isBurst ? 0xf43f5e : 0xef4444) // rose / red
+    : opts.level === "critical" ? 0xf97316 // orange
+    : 0xeab308; // yellow
+  const title = isLock
+    ? (isBurst ? "🔥 LOCKDOWN — BURST" : "🔒 LOCKDOWN — Kritinis slenkstis")
+    : opts.level === "critical" ? "🚨 Kritinė klaida" : "⚠️ Įspėjimas";
+  const fields: { name: string; value: string; inline?: boolean }[] = [];
+  if (opts.path) fields.push({ name: "Kelias", value: `\`${opts.path}\``, inline: true });
+  if (opts.userEmail) fields.push({ name: "Vartotojas", value: `\`${opts.userEmail}\``, inline: true });
+  if (opts.fingerprint) fields.push({ name: "Fingerprint", value: `\`${opts.fingerprint}\``, inline: true });
+  if (typeof opts.criticalCount === "number" && opts.criticalCount > 0) {
+    fields.push({ name: `Kritinių (${CRITICAL_WINDOW_MIN}min)`, value: `**${opts.criticalCount}** / ${CRITICAL_THRESHOLD}`, inline: true });
+  }
+  if (typeof opts.burstUsers === "number" && opts.burstUsers > 0) {
+    fields.push({ name: `Burst (${BURST_WINDOW_S}s)`, value: `**${opts.burstUsers}** vartotojai`, inline: true });
+  }
+  const description = opts.message.length > 1800 ? opts.message.slice(0, 1800) + "…" : opts.message;
+  const body = {
+    username: "Socialinės Valandos · Monitor",
+    embeds: [
+      {
+        title,
+        description: "```" + description.replace(/```/g, "ʼʼʼ") + "```",
+        color,
+        fields,
+        timestamp: new Date().toISOString(),
+        footer: {
+          text: isLock
+            ? "Automatinis lockdown · Reikalingas rankinis įsikišimas"
+            : "Auto-monitor · Fingerprint-grouped",
+        },
+        url: isLock
+          ? "https://socialinesvalandos.dev/admin/lockdown"
+          : "https://socialinesvalandos.dev/admin/errors",
+      },
+    ],
+  };
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      console.error("[discord] failed", res.status, await res.text().catch(() => ""));
+    }
+  } catch (err) {
+    console.error("[discord] threw", err);
+  }
+}
+
 function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
