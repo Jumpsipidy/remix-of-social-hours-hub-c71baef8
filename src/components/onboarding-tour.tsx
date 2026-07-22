@@ -1,153 +1,223 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, ArrowRight, Sparkles } from "lucide-react";
+import {
+  X, ArrowRight, ArrowLeft, Sparkles, Rocket, Calendar, MapPin,
+  Users, Trophy, FileCheck, Building2, ClipboardList, MessageSquare,
+  Shield, ShieldAlert, ListChecks, Search, GraduationCap,
+  BarChart3, Lock, Activity, Wrench, CheckCircle2,
+} from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
+
+/* ----------------------------------------------------------------------- */
+/*  Modal-based onboarding wizard — no DOM anchoring, works on any page.   */
+/*  Mobile-first: full-screen sheet on <sm, centered card on ≥sm.          */
+/* ----------------------------------------------------------------------- */
 
 type Step = {
-  target?: string; // CSS selector; if omitted → centered modal
+  icon: React.ComponentType<{ className?: string }>;
+  tone: string; // gradient class
   title: string;
   body: string;
-  placement?: "bottom" | "top" | "auto";
+  bullets?: string[];
+  cta?: { label: string; to: string };
 };
 
-const STORAGE_KEY = "sv_onboarding_v3";
-const DELAY_MS = 800; // let the page settle before starting
+const STORAGE_KEY = "sv_onboarding_v5";
 
-function stepsFor(role: AppRole | null): Step[] {
+function stepsFor(role: AppRole | null, name?: string | null): Step[] {
+  const first = name?.split(" ")[0]?.trim();
   const intro: Step = {
-    title: "Sveikas Socialinėse Valandose 👋",
-    body: "Trumpa apžvalga (mažiau nei minutė). Šis vedlys paaiškins, kaip veikia platforma pagal tavo vaidmenį. Gali praleisti bet kada.",
+    icon: Sparkles,
+    tone: "from-violet-500 via-fuchsia-500 to-rose-500",
+    title: first ? `Sveikas, ${first}! 👋` : "Sveikas Socialinėse Valandose 👋",
+    body: "Trumpa apžvalga — mažiau nei minutė. Paaiškinsiu, kaip viskas veikia pagal tavo vaidmenį. Gali praleisti bet kada.",
+    bullets: ["✨ Mobile-friendly", "⏱️ ~45 sekundės", "🎯 Pritaikyta tau"],
   };
 
   if (role === "student") {
     return [
       intro,
-      { title: "Kaip veikia sistema",
-        body: "1) Randi užduotį → 2) rezervuoji → 3) organizacija patvirtina, kad atėjai → 4) po darbo pažymi „Užbaigta“ → 5) valandos automatiškai keliauja į tavo pažangą." },
-      { target: '[data-tour="dashboard"]', title: "Mokinio sritis", body: "Čia matai savo progresą, artimiausius vizitus, savaitinį grafiką ir pasiekimus.", placement: "bottom" },
-      { target: '[data-tour="tasks"]', title: "Naršyk užduotis", body: "Filtruok pagal miestą, temą arba organizaciją. Kiekviena kortelė turi žemėlapį ir aprašymą.", placement: "bottom" },
-      { title: "Pasiūlyk savo valandas",
-        body: "Jei jau kalbėjai su organizacija ne per platformą — mygtukas „Pasiūlyk rezervaciją“ leidžia įrašyti tai retrospektyviai (iki 8 val. per kartą)." },
-      { title: "Draugai ir grupinės rezervacijos",
-        body: "Susirask klasiokų per skiltį „Draugai“. Rezervuodamas užduotį galėsi juos pakviesti — jei organizacija patvirtins, valandos bus paskirtos visiems." },
-      { title: "Pasiekimai 🏆",
-        body: "Sistema automatiškai suteikia ženkliukus: pirma valanda, 10 val., pusiaukelė, 3 organizacijos, streak-ai. Rodomas iššokantis pranešimas." },
-      { title: "Sertifikatas",
-        body: "Pasiekus 100% tikslo — mygtukas „Sertifikatas“ sugeneruoja pasirašytą PDF su QR kodu, kurį galima verifikuoti /verify puslapyje." },
-      { target: '[data-tour="notifications"]', title: "Pranešimai realiu laiku", body: "Statusų pokyčiai ir naujos žinutės — be perkrovimo.", placement: "bottom" },
+      {
+        icon: Rocket,
+        tone: "from-sky-500 via-cyan-400 to-emerald-400",
+        title: "Kaip surenkamos valandos",
+        body: "Penki paprasti žingsniai:",
+        bullets: [
+          "1️⃣ Randi užduotį naršyklėje",
+          "2️⃣ Rezervuoji laiką",
+          "3️⃣ Organizacija patvirtina",
+          "4️⃣ Ateiini ir dirbi",
+          "5️⃣ Valandos keliauja į tavo pažangą 🎉",
+        ],
+      },
+      {
+        icon: Calendar,
+        tone: "from-blue-500 to-indigo-500",
+        title: "Mokinio sritis",
+        body: "Suvestinė su tavo progresu, artimiausiais vizitais, savaitiniu grafiku ir pasiekimais.",
+        cta: { label: "Atidaryti dashboard", to: "/student" },
+      },
+      {
+        icon: MapPin,
+        tone: "from-emerald-500 to-teal-500",
+        title: "Naršyk užduotis",
+        body: "Filtruok pagal miestą, temą ar organizaciją. Kiekviena kortelė turi žemėlapį ir aprašymą.",
+        cta: { label: "Peržiūrėti užduotis", to: "/tasks" },
+      },
+      {
+        icon: ClipboardList,
+        tone: "from-amber-500 to-orange-500",
+        title: "Pasiūlyk savo valandas",
+        body: "Jei jau kalbėjai su organizacija ne per platformą — mygtukas „Pasiūlyk rezervaciją” leidžia įrašyti retrospektyviai (iki 8 val. per kartą).",
+      },
+      {
+        icon: Users,
+        tone: "from-pink-500 to-rose-500",
+        title: "Draugai ir grupės",
+        body: "Susirask klasiokų per „Draugai”. Rezervuodamas gali juos pakviesti — jei organizacija patvirtins, valandos bus paskirtos VISIEMS.",
+      },
+      {
+        icon: Trophy,
+        tone: "from-yellow-500 to-amber-500",
+        title: "Pasiekimai 🏆",
+        body: "Automatiniai ženkliukai: pirma valanda, 10 val., pusiaukelė, 3 organizacijos, streak-ai. Rodo iššokantį pranešimą.",
+      },
+      {
+        icon: FileCheck,
+        tone: "from-emerald-500 to-lime-500",
+        title: "Sertifikatas",
+        body: "Pasiekus 100% — mygtukas „Sertifikatas” sugeneruoja pasirašytą PDF su QR kodu. Verifikuoti galima /verify puslapyje.",
+      },
     ];
   }
 
   if (role === "organization") {
     return [
       intro,
-      { title: "Tavo vaidmuo",
-        body: "Skelbi savanorystės progas, priimi mokinių rezervacijas ir tvirtini atliktas valandas. Sistema pati skaičiuoja ir siunčia el. laiškus." },
-      { target: '[data-tour="dashboard"]', title: "Organizacijos sritis", body: "Suvestinė: aktyvūs vizitai, laukiančios rezervacijos, jau užbaigtos valandos.", placement: "bottom" },
-      { title: "Kurk užduotis",
-        body: "Mygtukas „Nauja užduotis“ atveria formą: pavadinimas, aprašymas, data, laikas, valandos, adresas su žemėlapiu, žymės, pasikartojimo grafikas (savaitinis/dvisavaitinis/mėnesinis)." },
-      { title: "Patvirtinimo eiga",
-        body: "Rezervacija → „Priimta“ (mokinys pradeda darbą) → „Užbaigk ir patvirtink“ (privalomas teisinis pažymėjimas). Tik po šio žingsnio valandos įskaitomos." },
-      { title: "Organizacijos profilis",
-        body: "Skiltyje „Profilis“ pridėk logotipą, aprašą, foto galeriją, adresą. Mokiniai matys tai užduočių kortelėse." },
-      { title: "Pokalbiai",
-        body: "Kiekviena rezervacija turi trišalį pokalbį: mokinys + organizacija + (jei įsijungs) mokyklos administratorius. Žinutės auto-ištrinamos po 12 dienų." },
+      {
+        icon: Building2,
+        tone: "from-blue-500 to-cyan-500",
+        title: "Tavo vaidmuo",
+        body: "Skelbi progas, priimi rezervacijas, patvirtini atliktas valandas. Sistema pati skaičiuoja ir siunčia el. laiškus.",
+      },
+      {
+        icon: ClipboardList,
+        tone: "from-emerald-500 to-teal-500",
+        title: "Organizacijos sritis",
+        body: "Suvestinė: aktyvūs vizitai, laukiančios rezervacijos, užbaigtos valandos.",
+        cta: { label: "Atidaryti dashboard", to: "/organization" },
+      },
+      {
+        icon: Rocket,
+        tone: "from-fuchsia-500 to-pink-500",
+        title: "Kurk užduotis",
+        body: "„Nauja užduotis” forma: pavadinimas, aprašymas, data, laikas, valandos, adresas su žemėlapiu, žymės, pasikartojimo grafikas.",
+      },
+      {
+        icon: CheckCircle2,
+        tone: "from-amber-500 to-orange-500",
+        title: "Patvirtinimo eiga",
+        body: "Rezervacija → „Priimta” (mokinys pradeda) → „Užbaigk ir patvirtink” (privalomas teisinis pažymėjimas). Tik po to valandos įskaitomos.",
+      },
+      {
+        icon: MessageSquare,
+        tone: "from-indigo-500 to-violet-500",
+        title: "Pokalbiai",
+        body: "Kiekviena rezervacija turi trišalį pokalbį (mokinys + organizacija + mokyklos admin). Žinutės auto-ištrinamos po 12 dienų.",
+      },
     ];
   }
 
   if (role === "school_admin") {
     return [
       intro,
-      { title: "Mokyklos administratorius",
-        body: "Matai TIK tas klases, kurios tau priskirtos (arba visas, jei sąrašas tuščias). Kitos mokyklos ar klasės tau nematomos — apsauga per RLS." },
-      { target: '[data-tour="dashboard"]', title: "Mokyklos sritis", body: "Suvestinė: mokinių progresas, laukiančios patvirtinimo valandos, sukčiavimo signalai.", placement: "bottom" },
-      { title: "Sukčiavimo eilė",
-        body: "Sistema automatiškai pažymi įtartinas rezervacijas (per didelis valandų skaičius, per greitas patvirtinimas, ta pati organizacija daug kartų iš eilės). Peržiūrėk skiltyje „Sukčiavimas“." },
-      { title: "Masinis patvirtinimas",
-        body: "Skiltyje „Rezervacijos“ gali pažymėti daug rezervacijų iš karto ir jas patvirtinti / atmesti vienu paspaudimu." },
-      { title: "Individualus auditas",
-        body: "Spustelėk mokinį, kad pamatytum jo visą istoriją, valandų šaltinius ir pokalbius (auditui)." },
-      { title: "Mokyklos renginiai",
-        body: "Gali sukurti vienkartinį renginį visai mokyklai (pvz. talką) ir moksleiviai galės į jį užsirašyti." },
+      {
+        icon: GraduationCap,
+        tone: "from-blue-500 to-cyan-500",
+        title: "Mokyklos administratorius",
+        body: "Matai TIK priskirtas klases (arba visas, jei sąrašas tuščias). Kitos mokyklos tau nematomos — apsauga per RLS.",
+      },
+      {
+        icon: BarChart3,
+        tone: "from-emerald-500 to-teal-500",
+        title: "Mokyklos sritis",
+        body: "Suvestinė: mokinių progresas, laukiančios patvirtinimo valandos, sukčiavimo signalai.",
+        cta: { label: "Atidaryti dashboard", to: "/school" },
+      },
+      {
+        icon: ShieldAlert,
+        tone: "from-rose-500 to-orange-500",
+        title: "Sukčiavimo eilė",
+        body: "Sistema pažymi įtartinas rezervacijas: per didelis val. skaičius, per greitas patvirtinimas, ta pati organizacija daug kartų iš eilės.",
+      },
+      {
+        icon: ListChecks,
+        tone: "from-amber-500 to-yellow-500",
+        title: "Masinis patvirtinimas",
+        body: "„Rezervacijos” skiltyje pažymėk daug ir patvirtink/atmesk vienu paspaudimu.",
+      },
+      {
+        icon: Search,
+        tone: "from-fuchsia-500 to-pink-500",
+        title: "Individualus auditas",
+        body: "Spustelėk mokinį, kad pamatytum jo visą istoriją, valandų šaltinius ir pokalbius.",
+      },
     ];
   }
 
   if (role === "admin") {
     return [
       intro,
-      { title: "Super administratorius",
-        body: "Turi PILNĄ prieigą prie visos sistemos. Šoniniame meniu — 14 skilčių: analitika, rezervacijos, reitingas, organizacijos, veikla, auditas, kūrimas, mokyklos, žinutės, klaidos, lockdown, įrankiai." },
-      { target: '[data-tour="dashboard"]', title: "Apžvalga", body: "Realaus laiko statistika: naudotojai, rezervacijos, valandos, sistemos sveikata.", placement: "bottom" },
-      { title: "Veiklos žurnalas",
-        body: "Skiltis „Auditas“ automatiškai fiksuoja kiekvieną svarbų veiksmą: rezervacijos, draugystės, patvirtinimai. Galima eksportuoti CSV." },
-      { title: "Lockdown režimas 🔒",
-        body: "Skubaus atvejo mygtukas — uždaro platformą visiems išskyrus administratorius. Naudotojai mato kodą E-XXXX ir pranešimą. Įjungti ir išjungti gali tik super admin." },
-      { title: "Sveikatos patikra",
-        body: "Sistema kas 10 min. automatiškai vykdo gilų scan (18 patikrų). Jei randama kritinių gedimų — auto-lockdown su kodu E-4002." },
-      { title: "Įrankiai",
-        body: "Masinis duomenų valymas, mock paskyros, testinis email, žinučių purge — visi jautrūs įrankiai vienoje vietoje." },
+      {
+        icon: Shield,
+        tone: "from-rose-500 via-fuchsia-500 to-purple-500",
+        title: "Super administratorius",
+        body: "Pilna prieiga prie visos sistemos. Šoniniame meniu — 14 skilčių.",
+        cta: { label: "Atidaryti /admin", to: "/admin" },
+      },
+      {
+        icon: BarChart3,
+        tone: "from-blue-500 to-cyan-500",
+        title: "Analitika",
+        body: "Realaus laiko statistika: unikalūs įrenginiai, sesijos, top puslapiai, naršyklės, OS.",
+      },
+      {
+        icon: Activity,
+        tone: "from-emerald-500 to-teal-500",
+        title: "Veiklos žurnalas",
+        body: "„Auditas” fiksuoja kiekvieną svarbų veiksmą. Eksportuoti — CSV.",
+      },
+      {
+        icon: Lock,
+        tone: "from-amber-500 to-rose-500",
+        title: "Lockdown 🔒",
+        body: "Skubaus atvejo mygtukas — uždaro platformą visiems išskyrus adminus. Auto-lockdown įsijungia po 2 kritinių klaidų arba burst detekcijos.",
+      },
+      {
+        icon: Wrench,
+        tone: "from-indigo-500 to-violet-500",
+        title: "Įrankiai",
+        body: "Sveikatos patikra, mass reset, mock accounts, test email, žinučių purge — viskas vienoje vietoje.",
+      },
     ];
   }
 
   return [intro];
 }
 
-
-function useTargetRect(selector?: string) {
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  useLayoutEffect(() => {
-    if (!selector) { setRect(null); return; }
-    let cancelled = false;
-    let ro: ResizeObserver | null = null;
-    let mo: MutationObserver | null = null;
-    let attached: HTMLElement | null = null;
-
-    const measure = () => {
-      if (cancelled) return;
-      const el = document.querySelector(selector) as HTMLElement | null;
-      if (!el) { setRect(null); return; }
-      if (el !== attached) {
-        attached = el;
-        ro?.disconnect();
-        ro = new ResizeObserver(() => setRect(el.getBoundingClientRect()));
-        ro.observe(el);
-      }
-      const r = el.getBoundingClientRect();
-      if (r.top < 40 || r.bottom > window.innerHeight - 40) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-      setRect(el.getBoundingClientRect());
-    };
-
-    measure();
-    // Watch DOM changes (route changes, async renders) instead of a RAF hot loop.
-    mo = new MutationObserver(() => measure());
-    mo.observe(document.body, { childList: true, subtree: true });
-    const onScroll = () => measure();
-    window.addEventListener("resize", onScroll);
-    window.addEventListener("scroll", onScroll, true);
-    return () => {
-      cancelled = true;
-      ro?.disconnect();
-      mo?.disconnect();
-      window.removeEventListener("resize", onScroll);
-      window.removeEventListener("scroll", onScroll, true);
-    };
-  }, [selector]);
-  return rect;
-}
-
 export function OnboardingTour() {
   const { isAuthenticated, profile, loading } = useAuth();
+  const navigate = useNavigate();
   const [active, setActive] = useState(false);
   const [i, setI] = useState(0);
-  const [targetTimedOut, setTargetTimedOut] = useState(false);
 
-  const steps = useMemo(() => stepsFor(profile?.role ?? null), [profile?.role]);
+  const steps = useMemo(
+    () => stepsFor(profile?.role ?? null, profile?.full_name ?? null),
+    [profile?.role, profile?.full_name],
+  );
   const step = steps[i];
-  const rect = useTargetRect(step?.target);
 
-  // Decide whether to start the tour: authed + not-yet-seen + not on auth-ish routes
   useEffect(() => {
     if (loading || !isAuthenticated || !profile?.id) return;
     const key = `${STORAGE_KEY}:${profile.id}`;
@@ -155,8 +225,8 @@ export function OnboardingTour() {
     try { seen = localStorage.getItem(key) === "1"; } catch {}
     if (seen) return;
     const path = window.location.pathname;
-    if (/^\/(login|register|auth|forgot-password|update-password|verify-email|status)/.test(path)) return;
-    const t = setTimeout(() => setActive(true), DELAY_MS);
+    if (/^\/(login|register|auth|forgot-password|update-password|verify-email|status|checkin|verify|terms|privacy)/.test(path)) return;
+    const t = setTimeout(() => setActive(true), 700);
     return () => clearTimeout(t);
   }, [loading, isAuthenticated, profile?.id]);
 
@@ -167,18 +237,6 @@ export function OnboardingTour() {
     }
   };
 
-  // If a target selector doesn't resolve within 1.2s, gracefully fall back
-  // to a centered popover instead of freezing or auto-skipping. This is what
-  // fixes the "sometimes it can't find the button" complaint.
-  useEffect(() => {
-    setTargetTimedOut(false);
-    if (!active || !step?.target) return;
-    if (rect) return; // already found
-    const t = setTimeout(() => setTargetTimedOut(true), 1200);
-    return () => clearTimeout(t);
-  }, [active, step?.target, rect, i]);
-
-  // Keyboard navigation: Esc, →, ←
   useEffect(() => {
     if (!active) return;
     const onKey = (e: KeyboardEvent) => {
@@ -191,126 +249,166 @@ export function OnboardingTour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, steps.length]);
 
+  // Prevent body scroll while open (mobile-friendly)
+  useEffect(() => {
+    if (!active) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [active]);
+
   if (!active || !step) return null;
 
-  const isCentered = !step.target || !rect;
-  const pad = 8;
-  const hole = rect
-    ? { top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }
-    : null;
-
-  // Popover positioning
-  const popW = 340;
-  const popMaxRight = window.innerWidth - 16;
-  let popStyle: React.CSSProperties = { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
-  if (rect) {
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const placeBelow = step.placement === "bottom" || (step.placement !== "top" && spaceBelow > 220);
-    const top = placeBelow ? rect.bottom + pad + 8 : Math.max(16, rect.top - pad - 200);
-    let left = Math.min(popMaxRight - popW, Math.max(16, rect.left + rect.width / 2 - popW / 2));
-    if (window.innerWidth < 420) left = 12; // fill mobile
-    popStyle = {
-      top,
-      left,
-      width: window.innerWidth < 420 ? window.innerWidth - 24 : popW,
-      transform: "none",
-    };
-  }
-
   const isLast = i === steps.length - 1;
+  const Icon = step.icon;
 
   return (
     <AnimatePresence>
       <motion.div
-        key="onboarding"
+        key="onboarding-root"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[10002]"
+        className="fixed inset-0 z-[10002] flex items-end sm:items-center justify-center p-0 sm:p-4"
         aria-modal
         role="dialog"
       >
-        {/* Backdrop with cutout via massive box-shadow */}
-        {hole ? (
-          <motion.div
-            key={`hole-${i}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="pointer-events-auto absolute rounded-2xl"
-            style={{
-              top: hole.top,
-              left: hole.left,
-              width: hole.width,
-              height: hole.height,
-              boxShadow: "0 0 0 9999px rgba(4, 6, 12, 0.72)",
-              outline: "2px solid rgba(255,255,255,0.55)",
-              outlineOffset: "0px",
-              transition: "top 200ms ease, left 200ms ease, width 200ms ease, height 200ms ease",
-            }}
-            onClick={finish}
-          />
-        ) : (
-          <div className="pointer-events-auto absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={finish} />
-        )}
-
-        {/* Popover */}
+        {/* Backdrop */}
         <motion.div
-          key={`pop-${i}`}
-          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+          onClick={finish}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        />
+
+        {/* Card / Sheet */}
+        <motion.div
+          key={`card-${i}`}
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 240, damping: 24 }}
-          className="pointer-events-auto absolute z-10 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-2xl backdrop-blur-xl"
-          style={popStyle}
+          exit={{ opacity: 0, y: 40, scale: 0.96 }}
+          transition={{ type: "spring", stiffness: 260, damping: 26 }}
+          className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
         >
-          <div className="flex items-start justify-between gap-3">
+          {/* Ambient glow */}
+          <div className={`pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full bg-gradient-to-br ${step.tone} opacity-30 blur-3xl`} />
+          <div className={`pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-gradient-to-br ${step.tone} opacity-20 blur-3xl`} />
+
+          {/* Grabber (mobile) */}
+          <div className="sm:hidden pt-2.5 pb-1 flex justify-center">
+            <span className="h-1 w-10 rounded-full bg-white/20" />
+          </div>
+
+          {/* Header */}
+          <div className="relative flex items-center justify-between gap-3 px-5 pt-3 sm:pt-6">
             <div className="flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
-                <Sparkles className="h-3.5 w-3.5" />
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/50">
                 {i + 1} / {steps.length}
               </span>
+              <span className="text-[10px] font-medium text-white/40">·</span>
+              <span className="text-[10px] font-medium text-white/50 capitalize">
+                {profile?.role === "student" ? "Mokinys"
+                  : profile?.role === "organization" ? "Organizacija"
+                  : profile?.role === "school_admin" ? "Mokyklos admin"
+                  : profile?.role === "admin" ? "Super admin"
+                  : "Naujokas"}
+              </span>
             </div>
-            <button onClick={finish} aria-label="Uždaryti" className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <button
+              onClick={finish}
+              aria-label="Uždaryti"
+              className="rounded-full p-2 -mr-2 text-white/60 hover:bg-white/10 hover:text-white transition"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          <h3 className="mt-3 font-display text-lg font-semibold tracking-tight">{step.title}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-
-          {/* Progress dots */}
-          <div className="mt-4 flex items-center gap-1.5">
-            {steps.map((_, k) => (
-              <span
-                key={k}
-                className={`h-1.5 rounded-full transition-all ${k === i ? "w-6 bg-gradient-primary" : "w-1.5 bg-muted"}`}
+          {/* Progress bar */}
+          <div className="relative px-5 pt-3">
+            <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full bg-gradient-to-r ${step.tone}`}
+                initial={false}
+                animate={{ width: `${((i + 1) / steps.length) * 100}%` }}
+                transition={{ type: "spring", stiffness: 200, damping: 24 }}
               />
-            ))}
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between gap-2">
+          {/* Body */}
+          <div className="relative px-5 pt-5 pb-4 overflow-y-auto flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`step-${i}`}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.22 }}
+              >
+                {/* Icon badge */}
+                <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.tone} shadow-2xl mb-4`}>
+                  <Icon className="h-7 w-7 text-white drop-shadow" />
+                </div>
+
+                <h2 className="font-display text-2xl font-black tracking-tight text-white leading-tight">
+                  {step.title}
+                </h2>
+                <p className="mt-2 text-[15px] leading-relaxed text-white/70">
+                  {step.body}
+                </p>
+
+                {step.bullets && step.bullets.length > 0 && (
+                  <ul className="mt-4 space-y-2">
+                    {step.bullets.map((b, idx) => (
+                      <motion.li
+                        key={idx}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 + idx * 0.05 }}
+                        className="flex items-start gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-white/85"
+                      >
+                        <span className="leading-relaxed">{b}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                )}
+
+                {step.cta && (
+                  <button
+                    onClick={() => {
+                      finish();
+                      navigate({ to: step.cta!.to as any }).catch(() => {});
+                    }}
+                    className={`mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10`}
+                  >
+                    {step.cta.label} <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Footer */}
+          <div className="relative border-t border-white/5 bg-black/20 px-5 py-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] flex items-center justify-between gap-2">
             <button
               onClick={finish}
-              className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              className="text-xs font-medium text-white/50 hover:text-white/80 transition"
             >
-              {isCentered ? "Praleisti" : "Praleisti apžvalgą"}
+              Praleisti
             </button>
             <div className="flex items-center gap-2">
-              {i > 0 && (
-                <button
-                  onClick={() => setI(i - 1)}
-                  className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-                >
-                  Atgal
-                </button>
-              )}
+              <button
+                onClick={() => setI((v) => Math.max(0, v - 1))}
+                disabled={i === 0}
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Atgal
+              </button>
               <button
                 onClick={() => (isLast ? finish() : setI(i + 1))}
-                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow"
+                className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${step.tone} px-4 py-2 text-xs font-bold text-white shadow-lg hover:shadow-xl transition`}
               >
-                {isLast ? "Baigti" : "Toliau"}
+                {isLast ? "Baigti 🎉" : "Toliau"}
                 {!isLast && <ArrowRight className="h-3.5 w-3.5" />}
               </button>
             </div>
