@@ -17,6 +17,7 @@ import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -87,6 +88,11 @@ const SchoolRoute = SchoolRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrganizationRoute = OrganizationRouteImport.update({
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -334,6 +342,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/organization'
+    | '/privacy'
     | '/register'
     | '/school'
     | '/status'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/organization'
+    | '/privacy'
     | '/register'
     | '/school'
     | '/status'
@@ -456,6 +467,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/organization'
+    | '/privacy'
     | '/register'
     | '/school'
     | '/status'
@@ -498,6 +510,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   OrganizationRoute: typeof OrganizationRoute
+  PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   SchoolRoute: typeof SchoolRoute
   StatusRoute: typeof StatusRoute
@@ -570,6 +583,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/organization': {
@@ -854,6 +874,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   OrganizationRoute: OrganizationRoute,
+  PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   SchoolRoute: SchoolRoute,
   StatusRoute: StatusRoute,

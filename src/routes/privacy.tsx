@@ -23,7 +23,7 @@ const SECTIONS: Section[] = [
     icon: Shield,
     h: "1. Ką reiškia ši politika",
     body: [
-      "Šis puslapis paaiškina, kaip platforma „Socialinės Valandos" (toliau — Platforma) renka, saugo ir tvarko tavo asmens duomenis. Politika parašyta aiškiai, be teisinės miglos — jei kažkas neaišku, parašyk mums per pagalbos formą.",
+      "Šis puslapis paaiškina, kaip platforma „Socialinės Valandos” (toliau — Platforma) renka, saugo ir tvarko tavo asmens duomenis. Politika parašyta aiškiai, be teisinės miglos — jei kažkas neaišku, parašyk mums per pagalbos formą.",
       "Ši politika galioja kartu su Naudojimosi taisyklėmis (/terms). Kai kur sąlygos persidengia — visada taikoma griežtesnė nuostata.",
       "Platforma nėra sertifikuota pagal SOC 2, ISO 27001 ar panašius auditus, tačiau taikome pramonės standartines apsaugos priemones ir esame atviri dėl to, kaip veikia sistema.",
     ],
