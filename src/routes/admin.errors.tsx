@@ -158,6 +158,7 @@ function AdminErrorsPage() {
   const [groupSort, setGroupSort] = useState<"severity" | "count" | "recent" | "users">("severity");
   const [groupNewOnly, setGroupNewOnly] = useState(false);
   const [newSinceLoad, setNewSinceLoad] = useState(0);
+  const [resolvedMap, setResolvedMap] = useState<Record<string, ResolvedEntry>>({});
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
