@@ -14,6 +14,7 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
+import { PushToggle } from "@/components/push-toggle";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { LeafletMap } from "@/components/leaflet-map";
@@ -344,6 +345,7 @@ function StudentDashboard() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-4">
             <GroupInvitesInbox userId={user.id} />
+            <PushToggle />
           </div>
           <div>
             <div className="mb-3 flex items-center gap-2">
