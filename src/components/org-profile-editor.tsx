@@ -153,7 +153,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
       {/* Cover + logo */}
       <div className="overflow-hidden rounded-3xl border border-border bg-card">
         <div className="relative h-40 sm:h-56 bg-gradient-to-br from-slate-800 to-slate-900">
-          {p.cover_url && <img src={p.cover_url} alt="Cover" className="h-full w-full object-cover" />}
+          {p.cover_url && <img src={p.cover_url} alt="Organizacijos profilio viršelio nuotrauka" className="h-full w-full object-cover" />}
           <button
             onClick={() => coverRef.current?.click()}
             className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80"
@@ -166,7 +166,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
         <div className="flex flex-wrap items-end gap-4 px-6 pb-6">
           <div className="relative -mt-10 h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-background bg-gradient-primary shadow-glow">
             {p.logo_url ? (
-              <img src={p.logo_url} alt="Logo" className="h-full w-full object-cover" />
+              <img src={p.logo_url} alt="Organizacijos profilio logotipas" className="h-full w-full object-cover" />
             ) : (
               <div className="grid h-full w-full place-items-center text-2xl font-bold text-primary-foreground">
                 {(p.organization_name ?? "?")[0]}
@@ -298,7 +298,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {(p.gallery_urls ?? []).map((url) => (
             <div key={url} className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted">
-              <img src={url} alt="Galerija" className="h-full w-full object-cover" />
+              <img src={url} alt="Organizacijos veiklos galerijos nuotrauka" className="h-full w-full object-cover" />
               <button
                 onClick={() => removeGallery(url)}
                 className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/70 text-white opacity-0 transition group-hover:opacity-100 hover:bg-destructive"
