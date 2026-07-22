@@ -18,6 +18,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
+import { AdminErrorHud } from "@/components/admin-error-hud";
+
 
 import { PageViewTracker } from "@/components/page-view-tracker";
 
@@ -251,6 +253,8 @@ function RootComponent() {
         <LockdownGate />
         <ErrorMonitor />
         <AdminAlertMonitor />
+        <AdminErrorHud />
+
         <PageViewTracker />
 
       </AuthProvider>
