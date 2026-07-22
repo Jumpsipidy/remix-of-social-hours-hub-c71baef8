@@ -155,6 +155,16 @@ function AdminErrorsPage() {
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
   const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
+  const sendTestAlertFn = useServerFn(sendTestAlert);
+  const [alertResult, setAlertResult] = useState<null | {
+    mode: string;
+    discord?: { ok: boolean; error: string | null };
+    email?: { ok: boolean; recipients: number; error: string | null };
+    hasDiscordWebhook?: boolean;
+    hasResend?: boolean;
+    ts: number;
+  }>(null);
+
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
