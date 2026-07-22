@@ -5,6 +5,7 @@ import { RefreshCw, X, Copy, Check, ShieldCheck, BookOpen, ChevronDown, Lock } f
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
+import { tryLockdownAutoRecovery } from "@/lib/lockdown-recovery.functions";
 import { Captcha } from "@/components/captcha";
 
 
