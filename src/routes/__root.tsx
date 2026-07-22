@@ -250,7 +250,9 @@ function RootComponent() {
         {import.meta.env.DEV && <MockTesterPanel />}
         <LockdownGate />
         <ErrorMonitor />
+        <AdminAlertMonitor />
         <PageViewTracker />
+
       </AuthProvider>
     </QueryClientProvider>
 
