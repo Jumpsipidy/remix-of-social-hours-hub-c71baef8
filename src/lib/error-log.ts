@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { insertActivityLogRow } from "@/lib/activity-log";
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
+import { getBreadcrumbs } from "@/lib/user-breadcrumbs";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
