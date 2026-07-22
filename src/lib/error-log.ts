@@ -7,6 +7,7 @@ import { insertActivityLogRow } from "@/lib/activity-log";
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
 import { getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
+import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
@@ -114,6 +115,7 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id ?? null;
 
+    const fp = computeFingerprint(payload.message, payload.stack ?? null);
     await insertActivityLogRow({
       user_id: uid,
       action,
@@ -126,6 +128,9 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
         extra: payload.extra ?? {},
         breadcrumbs: getBreadcrumbs().slice(-15),
         replay: getSessionReplay(60_000).slice(-40),
+        fingerprint: fp.id,
+        fingerprint_norm: fp.norm,
+        fingerprint_frame: fp.frame,
         ...dev,
       },
     });

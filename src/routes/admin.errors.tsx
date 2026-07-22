@@ -38,6 +38,7 @@ import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
+import { fingerprint as fpOf, severityScore } from "@/lib/error-fingerprint";
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
@@ -104,12 +105,26 @@ const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[]
 
 const IGNORE_KEY = "admin-errors-ignore-rules";
 const AUTO_KEY = "admin-errors-auto-refresh";
+const MUTE_KEY = "admin-errors-muted-fingerprints";
 function loadIgnore(): string[] {
   if (typeof window === "undefined") return [];
   try { return JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]") as string[]; } catch { return []; }
 }
 function saveIgnore(list: string[]) {
   try { localStorage.setItem(IGNORE_KEY, JSON.stringify(list)); } catch {}
+}
+function loadMuted(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(MUTE_KEY) ?? "[]") as string[]; } catch { return []; }
+}
+function saveMuted(list: string[]) {
+  try { localStorage.setItem(MUTE_KEY, JSON.stringify(list)); } catch {}
+}
+
+function fpOfRow(r: { meta: any }): string {
+  const stored = r.meta?.fingerprint as string | undefined;
+  if (stored) return stored;
+  return fpOf(r.meta?.message ?? "", r.meta?.stack ?? null).id;
 }
 
 function AdminErrorsPage() {
@@ -130,6 +145,10 @@ function AdminErrorsPage() {
   const [showIgnored, setShowIgnored] = useState(false);
   const [autoMs, setAutoMs] = useState<number>(0);
   const [testing, setTesting] = useState(false);
+  const [muted, setMuted] = useState<string[]>([]);
+  const [groupSort, setGroupSort] = useState<"severity" | "count" | "recent" | "users">("severity");
+  const [groupNewOnly, setGroupNewOnly] = useState(false);
+  const [newSinceLoad, setNewSinceLoad] = useState(0);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
@@ -137,6 +156,7 @@ function AdminErrorsPage() {
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
+    setMuted(loadMuted());
     try {
       const v = Number(localStorage.getItem(AUTO_KEY));
       if (Number.isFinite(v) && v > 0) setAutoMs(v);
@@ -160,6 +180,7 @@ function AdminErrorsPage() {
     ]);
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
+    setNewSinceLoad(0);
     // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
     setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
@@ -183,6 +204,7 @@ function AdminErrorsPage() {
             row.action === "app.email_sent"
           ) {
             setRows((r) => [row, ...r].slice(0, 500));
+            setNewSinceLoad((n) => n + 1);
             if (row.action === "app.critical" || row.action === "client.error") {
               const msg = row.meta?.message ?? "Nauja klaida";
               toast.error(`🚨 ${msg.slice(0, 90)}`, { duration: 4500 });
@@ -251,7 +273,7 @@ function AdminErrorsPage() {
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
-      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack]
+      const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack, fpOfRow(r)]
         .filter(Boolean).join(" \n ");
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
@@ -276,22 +298,90 @@ function AdminErrorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
-  const topMessages = useMemo(() => {
-    const map = new Map<string, { count: number; last: string; action: string }>();
-    for (const r of rows.slice(0, 300)) {
-      const key = (r.meta?.message ?? "(no message)").slice(0, 140);
-      const prev = map.get(key);
-      if (prev) {
-        prev.count += 1;
-        if (r.created_at > prev.last) prev.last = r.created_at;
-      } else {
-        map.set(key, { count: 1, last: r.created_at, action: r.action });
+  type Group = {
+    fp: string;
+    sample: ErrRow;
+    message: string;
+    action: string;
+    count: number;
+    critCount: number;
+    users: Set<string>;
+    paths: Set<string>;
+    browsers: Set<string>;
+    firstMs: number;
+    lastMs: number;
+    trend: number[]; // 24 buckets = 1h each
+    frame?: string;
+  };
+
+  const groups = useMemo(() => {
+    const map = new Map<string, Group>();
+    const now = Date.now();
+    const trendStart = now - 24 * 3_600_000;
+    for (const r of rows) {
+      const id = fpOfRow(r);
+      const ts = new Date(r.created_at).getTime();
+      const isCrit = CRITICAL_KINDS.has(r.action);
+      let g = map.get(id);
+      if (!g) {
+        g = {
+          fp: id,
+          sample: r,
+          message: (r.meta?.message ?? "(no message)").slice(0, 200),
+          action: r.action,
+          count: 0,
+          critCount: 0,
+          users: new Set(),
+          paths: new Set(),
+          browsers: new Set(),
+          firstMs: ts,
+          lastMs: ts,
+          trend: new Array(24).fill(0),
+          frame: (r.meta as any)?.fingerprint_frame,
+        };
+        map.set(id, g);
+      }
+      g.count += 1;
+      if (isCrit) g.critCount += 1;
+      if (r.user_id) g.users.add(r.user_id);
+      if (r.meta?.path) g.paths.add(String(r.meta.path).split("?")[0]);
+      if (r.meta?.browser) g.browsers.add(String(r.meta.browser));
+      if (ts < g.firstMs) g.firstMs = ts;
+      if (ts > g.lastMs) { g.lastMs = ts; g.sample = r; }
+      if (ts >= trendStart) {
+        const idx = Math.min(23, Math.floor((ts - trendStart) / 3_600_000));
+        g.trend[idx] += 1;
       }
     }
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 10);
+    return Array.from(map.values()).map((g) => ({
+      ...g,
+      severity: severityScore({
+        count: g.count,
+        users: g.users.size,
+        paths: g.paths.size,
+        criticalCount: g.critCount,
+        lastSeenMs: g.lastMs,
+      }),
+      isNewToday: g.firstMs > now - 24 * 3_600_000,
+    }));
   }, [rows]);
+
+  const topGroups = useMemo(() => {
+    const list = groups.filter((g) => (groupNewOnly ? g.isNewToday : true))
+      .filter((g) => !muted.includes(g.fp));
+    return [...list].sort((a, b) => {
+      if (groupSort === "count") return b.count - a.count;
+      if (groupSort === "users") return b.users.size - a.users.size;
+      if (groupSort === "recent") return b.lastMs - a.lastMs;
+      return b.severity - a.severity;
+    });
+  }, [groups, groupSort, groupNewOnly, muted]);
+
+  const toggleMute = (fp: string) => {
+    const next = muted.includes(fp) ? muted.filter((x) => x !== fp) : [...muted, fp];
+    setMuted(next); saveMuted(next);
+    toast.success(muted.includes(fp) ? "Grupė vėl matoma" : "Grupė nutildyta");
+  };
 
   const topSources = useMemo(() => {
     const paths = new Map<string, number>();
@@ -410,7 +500,7 @@ function AdminErrorsPage() {
     return header + list.map((r) => {
       const m = r.meta ?? {};
       return [
-        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")}`,
+        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fpOfRow(r)}`,
         `msg:    ${m.message ?? "(no message)"}`,
         m.path ? `path:   ${m.path}` : null,
         m.source ? `source: ${m.source}` : null,
@@ -841,31 +931,81 @@ function AdminErrorsPage() {
               )}
 
               {section === "top" && (
-                <SaaSPanel>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Dažniausios klaidos (top 10)</div>
-                  {topMessages.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">Nėra duomenų.</p>
-                  ) : (
-                    <div className="mt-3 space-y-2">
-                      {topMessages.map(([msg, info]) => (
+                <div className="space-y-3">
+                  <SaaSPanel padded={false}>
+                    <div className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                        Grupuota pagal fingerprint · {topGroups.length} grupių
+                      </div>
+                      <div className="ml-auto flex flex-wrap gap-1.5">
+                        {(["severity", "count", "users", "recent"] as const).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setGroupSort(s)}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                              groupSort === s
+                                ? "border-primary/60 bg-primary/15 text-primary"
+                                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            {s === "severity" ? "Severity" : s === "count" ? "Kiekis" : s === "users" ? "Vartotojai" : "Naujausia"}
+                          </button>
+                        ))}
                         <button
-                          key={msg}
-                          onClick={() => {
-                            setFilter(msg.slice(0, 40));
-                            setSection("live");
-                          }}
-                          className="group flex w-full items-center gap-3 rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                          onClick={() => setGroupNewOnly((v) => !v)}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                            groupNewOnly
+                              ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-300"
+                              : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          }`}
                         >
-                          <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[info.action] ?? ""}`}>
-                            {KIND_LABEL[info.action] ?? info.action}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate font-mono text-xs">{msg}</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold tabular-nums">×{info.count}</span>
+                          🆕 Tik nauja (24h)
                         </button>
-                      ))}
+                      </div>
                     </div>
+                  </SaaSPanel>
+
+                  {topGroups.length === 0 ? (
+                    <SaaSPanel>
+                      <div className="p-8 text-center text-sm text-muted-foreground">
+                        <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-emerald-400" />
+                        Grupių nėra — sistema švari.
+                      </div>
+                    </SaaSPanel>
+                  ) : (
+                    topGroups.slice(0, 30).map((g) => (
+                      <ErrorGroupCard
+                        key={g.fp}
+                        g={g}
+                        onOpen={() => setSelected(g.sample)}
+                        onFilterLive={() => { setFilter(g.fp); setSection("live"); }}
+                        onMute={() => toggleMute(g.fp)}
+                      />
+                    ))
                   )}
-                </SaaSPanel>
+
+                  {muted.length > 0 && (
+                    <SaaSPanel>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                          Nutildyta ({muted.length})
+                        </div>
+                        <button onClick={() => { setMuted([]); saveMuted([]); toast.success("Visos grupės atkurtos"); }}
+                          className="text-[11px] text-primary hover:underline">
+                          Atkurti visas
+                        </button>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {muted.map((fp) => (
+                          <button key={fp} onClick={() => toggleMute(fp)}
+                            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] hover:border-primary/40">
+                            #{fp} <X className="h-3 w-3" />
+                          </button>
+                        ))}
+                      </div>
+                    </SaaSPanel>
+                  )}
+                </div>
               )}
 
               {section === "sources" && (
@@ -1358,4 +1498,140 @@ function IgnoreRuleEditor({ onAdd }: { onAdd: (p: string) => void }) {
       </Button>
     </form>
   );
+}
+
+type GroupCardProps = {
+  g: {
+    fp: string;
+    message: string;
+    action: string;
+    count: number;
+    critCount: number;
+    users: Set<string>;
+    paths: Set<string>;
+    browsers: Set<string>;
+    firstMs: number;
+    lastMs: number;
+    trend: number[];
+    severity: number;
+    isNewToday: boolean;
+    frame?: string;
+    sample: ErrRow;
+  };
+  onOpen: () => void;
+  onFilterLive: () => void;
+  onMute: () => void;
+};
+
+function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
+  const sevColor =
+    g.severity >= 70 ? "from-rose-500 to-fuchsia-500 text-rose-200 border-rose-500/50"
+    : g.severity >= 40 ? "from-amber-500 to-orange-500 text-amber-100 border-amber-500/40"
+    : "from-emerald-500 to-sky-500 text-emerald-100 border-emerald-500/40";
+  const sevBadge =
+    g.severity >= 70 ? "bg-rose-500/20 text-rose-200 border-rose-500/50"
+    : g.severity >= 40 ? "bg-amber-500/20 text-amber-200 border-amber-500/40"
+    : "bg-emerald-500/15 text-emerald-200 border-emerald-500/40";
+  const maxTrend = Math.max(1, ...g.trend);
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 240, damping: 24 }}
+    >
+      <SaaSPanel className="group relative overflow-hidden">
+        <div
+          className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${sevColor}`}
+        />
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[g.action] ?? ""}`}>
+                {KIND_LABEL[g.action] ?? g.action}
+              </span>
+              <code className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] tracking-wider">
+                #{g.fp}
+              </code>
+              {g.isNewToday && (
+                <span className="rounded-full border border-emerald-500/50 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-300">
+                  🆕 nauja
+                </span>
+              )}
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${sevBadge}`}>
+                Severity {g.severity}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                pirmas: {relTimeShort(g.firstMs)} · paskutinis: {relTimeShort(g.lastMs)}
+              </span>
+            </div>
+            <div className="mt-1.5 line-clamp-2 break-words font-mono text-[13px] text-rose-200/90">
+              {g.message}
+            </div>
+            {g.frame && (
+              <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">↳ {g.frame}</div>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="tabular-nums"><b className="text-foreground">{g.count}×</b> įvykių</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.users.size}</b> vartotojų</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.paths.size}</b> puslapių</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.browsers.size}</b> naršyklių</span>
+              {g.critCount > 0 && (
+                <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">
+                  {g.critCount} kritinės
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Trend sparkline (24h · 1h buckets) */}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex h-10 w-32 items-end gap-[2px]">
+              {g.trend.map((n, i) => (
+                <span
+                  key={i}
+                  className={`flex-1 rounded-sm ${
+                    n > 0
+                      ? g.severity >= 70 ? "bg-gradient-to-t from-rose-500 to-fuchsia-400"
+                        : g.severity >= 40 ? "bg-gradient-to-t from-amber-500 to-orange-400"
+                        : "bg-gradient-to-t from-emerald-500 to-sky-400"
+                      : "bg-muted/30"
+                  }`}
+                  style={{ height: `${(n / maxTrend) * 100}%`, minHeight: n > 0 ? 3 : 2 }}
+                  title={`${n} įvykių prieš ${23 - i}h`}
+                />
+              ))}
+            </div>
+            <span className="text-[9px] text-muted-foreground">24h srautas</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Button variant="outline" size="sm" onClick={onOpen}>
+            <Search className="mr-1 h-3.5 w-3.5" /> Detalės
+          </Button>
+          <Button variant="outline" size="sm" onClick={onFilterLive}>
+            <Radio className="mr-1 h-3.5 w-3.5" /> Live filtras
+          </Button>
+          <Button variant="outline" size="sm" onClick={onMute}>
+            <EyeOff className="mr-1 h-3.5 w-3.5" /> Nutildyti
+          </Button>
+          <button
+            onClick={() => { try { navigator.clipboard.writeText(`#${g.fp} · ${g.message}`); toast.success("Nukopijuota"); } catch {} }}
+            className="ml-auto rounded-lg border border-border/50 px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          >
+            <Copy className="mr-1 inline h-3 w-3" /> #{g.fp}
+          </button>
+        </div>
+      </SaaSPanel>
+    </motion.div>
+  );
+}
+
+function relTimeShort(ms: number): string {
+  const diff = (Date.now() - ms) / 1000;
+  if (diff < 60) return `${Math.floor(diff)}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
 }
