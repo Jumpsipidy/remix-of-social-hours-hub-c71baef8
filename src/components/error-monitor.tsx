@@ -4,6 +4,8 @@ import { reportCriticalIncident } from "@/lib/incident.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { installGlobalErrorLogging, logClientError } from "@/lib/error-log";
 import { installBreadcrumbs, pushBreadcrumb } from "@/lib/user-breadcrumbs";
+import { installStaleDeployGuard } from "@/lib/stale-deploy-guard";
+
 
 /**
  * Client-side automatic error monitor.
