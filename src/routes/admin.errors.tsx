@@ -1144,6 +1144,8 @@ function AdminErrorsPage() {
                         onOpen={() => setSelected(g.sample)}
                         onFilterLive={() => { setFilter(g.fp); setSection("live"); }}
                         onMute={() => toggleMute(g.fp)}
+                        onResolve={() => resolveGroup(g.fp)}
+                        onUnresolve={() => unresolveGroup(g.fp)}
                       />
                     ))
                   )}
