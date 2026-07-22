@@ -931,31 +931,81 @@ function AdminErrorsPage() {
               )}
 
               {section === "top" && (
-                <SaaSPanel>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Dažniausios klaidos (top 10)</div>
-                  {topMessages.length === 0 ? (
-                    <p className="mt-4 text-sm text-muted-foreground">Nėra duomenų.</p>
-                  ) : (
-                    <div className="mt-3 space-y-2">
-                      {topMessages.map(([msg, info]) => (
+                <div className="space-y-3">
+                  <SaaSPanel padded={false}>
+                    <div className="flex flex-wrap items-center gap-2 p-3">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                        Grupuota pagal fingerprint · {topGroups.length} grupių
+                      </div>
+                      <div className="ml-auto flex flex-wrap gap-1.5">
+                        {(["severity", "count", "users", "recent"] as const).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setGroupSort(s)}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                              groupSort === s
+                                ? "border-primary/60 bg-primary/15 text-primary"
+                                : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                            }`}
+                          >
+                            {s === "severity" ? "Severity" : s === "count" ? "Kiekis" : s === "users" ? "Vartotojai" : "Naujausia"}
+                          </button>
+                        ))}
                         <button
-                          key={msg}
-                          onClick={() => {
-                            setFilter(msg.slice(0, 40));
-                            setSection("live");
-                          }}
-                          className="group flex w-full items-center gap-3 rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                          onClick={() => setGroupNewOnly((v) => !v)}
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition ${
+                            groupNewOnly
+                              ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-300"
+                              : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                          }`}
                         >
-                          <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[info.action] ?? ""}`}>
-                            {KIND_LABEL[info.action] ?? info.action}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate font-mono text-xs">{msg}</span>
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold tabular-nums">×{info.count}</span>
+                          🆕 Tik nauja (24h)
                         </button>
-                      ))}
+                      </div>
                     </div>
+                  </SaaSPanel>
+
+                  {topGroups.length === 0 ? (
+                    <SaaSPanel>
+                      <div className="p-8 text-center text-sm text-muted-foreground">
+                        <ShieldCheck className="mx-auto mb-2 h-8 w-8 text-emerald-400" />
+                        Grupių nėra — sistema švari.
+                      </div>
+                    </SaaSPanel>
+                  ) : (
+                    topGroups.slice(0, 30).map((g) => (
+                      <ErrorGroupCard
+                        key={g.fp}
+                        g={g}
+                        onOpen={() => setSelected(g.sample)}
+                        onFilterLive={() => { setFilter(g.fp); setSection("live"); }}
+                        onMute={() => toggleMute(g.fp)}
+                      />
+                    ))
                   )}
-                </SaaSPanel>
+
+                  {muted.length > 0 && (
+                    <SaaSPanel>
+                      <div className="flex items-center justify-between">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
+                          Nutildyta ({muted.length})
+                        </div>
+                        <button onClick={() => { setMuted([]); saveMuted([]); toast.success("Visos grupės atkurtos"); }}
+                          className="text-[11px] text-primary hover:underline">
+                          Atkurti visas
+                        </button>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {muted.map((fp) => (
+                          <button key={fp} onClick={() => toggleMute(fp)}
+                            className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] hover:border-primary/40">
+                            #{fp} <X className="h-3 w-3" />
+                          </button>
+                        ))}
+                      </div>
+                    </SaaSPanel>
+                  )}
+                </div>
               )}
 
               {section === "sources" && (
