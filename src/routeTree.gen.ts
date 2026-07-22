@@ -33,6 +33,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
 import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
+import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
@@ -169,6 +170,11 @@ const AdminReservationsRoute = AdminReservationsRouteImport.update({
   path: '/reservations',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPushRoute = AdminPushRouteImport.update({
+  id: '/push',
+  path: '/push',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
   id: '/organizations',
   path: '/organizations',
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
   '/admin/tools': typeof AdminToolsRoute
@@ -388,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
@@ -426,6 +436,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
@@ -466,6 +477,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
     | '/admin/tools'
@@ -672,6 +684,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReservationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/push': {
+      id: '/admin/push'
+      path: '/push'
+      fullPath: '/admin/push'
+      preLoaderRoute: typeof AdminPushRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/organizations': {
       id: '/admin/organizations'
       path: '/organizations'
@@ -799,6 +818,7 @@ interface AdminRouteChildren {
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
+  AdminPushRoute: typeof AdminPushRoute
   AdminReservationsRoute: typeof AdminReservationsRoute
   AdminSchoolsRoute: typeof AdminSchoolsRoute
   AdminToolsRoute: typeof AdminToolsRoute
@@ -818,6 +838,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
+  AdminPushRoute: AdminPushRoute,
   AdminReservationsRoute: AdminReservationsRoute,
   AdminSchoolsRoute: AdminSchoolsRoute,
   AdminToolsRoute: AdminToolsRoute,
