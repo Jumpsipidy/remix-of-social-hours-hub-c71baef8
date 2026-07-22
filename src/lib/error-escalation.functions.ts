@@ -217,10 +217,33 @@ export const escalateAppError = createServerFn({ method: "POST" })
     });
 
     let lockdownTriggered = false;
+    let lockdownReason: "critical-threshold" | "burst" | null = null;
     let criticalCount = 0;
-    if (data.level === "critical" && authedUserId !== null) {
+    let burstUsers = 0;
+
+    // BURST DETECTION — check every request. If many distinct signed-in users
+    // hit errors within a short window, the site is broken for many users;
+    // lockdown immediately.
+    {
+      const burstSince = new Date(Date.now() - BURST_WINDOW_S * 1000).toISOString();
+      const { data: recent } = await supabaseAdmin
+        .from("activity_log")
+        .select("user_id")
+        .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+        .not("user_id", "is", null)
+        .gte("created_at", burstSince)
+        .limit(500);
+      const distinct = new Set(
+        (recent ?? []).map((r: { user_id: string | null }) => r.user_id).filter(Boolean) as string[],
+      );
+      burstUsers = distinct.size;
+      if (burstUsers >= BURST_MIN_USERS) {
+        lockdownReason = "burst";
+      }
+    }
+
+    if (data.level === "critical" && authedUserId !== null && !lockdownReason) {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
-      // Count only critical events tied to a real signed-in user in the window.
       const { count } = await supabaseAdmin
         .from("activity_log")
         .select("*", { count: "exact", head: true })
@@ -228,24 +251,52 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .not("user_id", "is", null)
         .gte("created_at", since);
       criticalCount = count ?? 0;
+      if (criticalCount >= CRITICAL_THRESHOLD) lockdownReason = "critical-threshold";
+    }
 
-      if (criticalCount >= CRITICAL_THRESHOLD) {
-        const { data: ss } = await supabaseAdmin
-          .from("site_settings")
-          .select("lockdown_enabled")
-          .eq("id", true)
-          .maybeSingle();
-        if (!ss?.lockdown_enabled) {
-          await supabaseAdmin.from("site_settings").upsert({
-            id: true,
-            lockdown_enabled: true,
-            lockdown_code: "E-5001",
-            lockdown_message: `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`,
-            updated_at: new Date().toISOString(),
-          });
-          lockdownTriggered = true;
-        }
+    if (lockdownReason) {
+      const { data: ss } = await supabaseAdmin
+        .from("site_settings")
+        .select("lockdown_enabled")
+        .eq("id", true)
+        .maybeSingle();
+      if (!ss?.lockdown_enabled) {
+        const code = lockdownReason === "burst" ? "E-5002" : "E-5001";
+        const msg = lockdownReason === "burst"
+          ? `[auto] Aptikta ${burstUsers} vartotojų su klaidomis per ${BURST_WINDOW_S}s (burst). Prieiga ribojama.`
+          : `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`;
+        await supabaseAdmin.from("site_settings").upsert({
+          id: true,
+          lockdown_enabled: true,
+          lockdown_code: code,
+          lockdown_message: msg,
+          updated_at: new Date().toISOString(),
+        });
+        lockdownTriggered = true;
       }
+    }
+
+    // Fetch recent errors digest for the email (last 15 min, grouped)
+    let digest: { msg: string; count: number }[] = [];
+    if (lockdownTriggered || data.level === "critical") {
+      const digestSince = new Date(Date.now() - 15 * 60_000).toISOString();
+      const { data: recentErrs } = await supabaseAdmin
+        .from("activity_log")
+        .select("meta")
+        .in("action", ["client.error", "supabase.error", "app.critical"])
+        .gte("created_at", digestSince)
+        .order("created_at", { ascending: false })
+        .limit(80);
+      const counts = new Map<string, number>();
+      for (const r of (recentErrs ?? []) as { meta: { message?: string } | null }[]) {
+        const m = (r.meta?.message ?? "").slice(0, 100);
+        if (!m) continue;
+        counts.set(m, (counts.get(m) ?? 0) + 1);
+      }
+      digest = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([msg, count]) => ({ msg, count }));
     }
 
     // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
@@ -271,11 +322,20 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .filter((e): e is string => !!e);
       if (recipients.length) {
         const subject = lockdownTriggered
-          ? `🔒 URGENT — LOCKDOWN AKTYVUOTAS · Socialinės Valandos`
+          ? lockdownReason === "burst"
+            ? `🔒 URGENT — LOCKDOWN (burst · ${burstUsers} vartotojų) · Socialinės Valandos`
+            : `🔒 URGENT — LOCKDOWN AKTYVUOTAS · Socialinės Valandos`
           : data.level === "critical"
             ? `🚨 Kritinė klaida svetainėje · ${data.path ?? "/"}`
             : `⚠️ Klaidos įspėjimas · ${data.path ?? "/"}`;
-        const html = alertEmailHtml({ ...data, lockdown: lockdownTriggered, criticalCount });
+        const html = alertEmailHtml({
+          ...data,
+          lockdown: lockdownTriggered,
+          criticalCount,
+          burstUsers,
+          lockdownReason,
+          digest,
+        });
         await Promise.all(recipients.map((to) => sendResendEmail(to, subject, html, { urgent: lockdownTriggered || data.level === "critical" })));
         await supabaseAdmin.from("activity_log").insert({
           action: "app.email_sent",
@@ -284,11 +344,14 @@ export const escalateAppError = createServerFn({ method: "POST" })
             message: data.message.slice(0, 80),
             recipients: recipients.length,
             lockdown: lockdownTriggered,
+            lockdown_reason: lockdownReason,
+            burst_users: burstUsers,
             level: data.level,
           },
         });
       }
     }
 
-    return { ok: true, lockdownTriggered, criticalCount };
+    return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
   });
+
