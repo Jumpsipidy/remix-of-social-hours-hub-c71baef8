@@ -105,12 +105,26 @@ const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[]
 
 const IGNORE_KEY = "admin-errors-ignore-rules";
 const AUTO_KEY = "admin-errors-auto-refresh";
+const MUTE_KEY = "admin-errors-muted-fingerprints";
 function loadIgnore(): string[] {
   if (typeof window === "undefined") return [];
   try { return JSON.parse(localStorage.getItem(IGNORE_KEY) ?? "[]") as string[]; } catch { return []; }
 }
 function saveIgnore(list: string[]) {
   try { localStorage.setItem(IGNORE_KEY, JSON.stringify(list)); } catch {}
+}
+function loadMuted(): string[] {
+  if (typeof window === "undefined") return [];
+  try { return JSON.parse(localStorage.getItem(MUTE_KEY) ?? "[]") as string[]; } catch { return []; }
+}
+function saveMuted(list: string[]) {
+  try { localStorage.setItem(MUTE_KEY, JSON.stringify(list)); } catch {}
+}
+
+function fpOfRow(r: { meta: any }): string {
+  const stored = r.meta?.fingerprint as string | undefined;
+  if (stored) return stored;
+  return fpOf(r.meta?.message ?? "", r.meta?.stack ?? null).id;
 }
 
 function AdminErrorsPage() {
