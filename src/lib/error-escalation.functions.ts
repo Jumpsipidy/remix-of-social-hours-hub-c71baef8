@@ -463,3 +463,152 @@ export const escalateAppError = createServerFn({ method: "POST" })
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
   });
 
+// -----------------------------------------------------------------------------
+// TEST ALERT — bypasses IGNORE_RX, rate limit, and dedupe. Admin-only.
+// Modes: 'discord' | 'email' | 'both' | 'lockdown-sim' (email+discord but no
+// actual lockdown flip). Returns which channels fired so the UI can show it.
+// -----------------------------------------------------------------------------
+const testAlertSchema = z.object({
+  mode: z.enum(["discord", "email", "both", "lockdown-sim"]),
+});
+
+export const sendTestAlert = createServerFn({ method: "POST" })
+  .validator((v: unknown) => testAlertSchema.parse(v))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Admin gate — use bearer from request (server fn is called from admin UI only,
+    // but double-check to prevent abuse if someone finds the RPC path).
+    let callerEmail: string | null = null;
+    try {
+      const req = getRequest();
+      const auth = req?.headers.get("authorization") ?? "";
+      const token = auth.replace(/^Bearer\s+/i, "");
+      if (token) {
+        const { data: u } = await supabaseAdmin.auth.getUser(token);
+        callerEmail = u.user?.email ?? null;
+        if (u.user?.id) {
+          const { data: prof } = await supabaseAdmin
+            .from("profiles").select("role").eq("id", u.user.id).maybeSingle();
+          if ((prof as { role?: string } | null)?.role !== "admin") {
+            return { ok: false, error: "not_admin" as const };
+          }
+        } else {
+          return { ok: false, error: "not_authenticated" as const };
+        }
+      } else {
+        return { ok: false, error: "no_token" as const };
+      }
+    } catch {
+      return { ok: false, error: "auth_check_failed" as const };
+    }
+
+    const isLock = data.mode === "lockdown-sim";
+    const level: "critical" | "warning" = isLock || data.mode !== "email" ? "critical" : "warning";
+    const stamp = new Date().toLocaleTimeString("lt-LT");
+    const message = isLock
+      ? `[TEST-LOCKDOWN-SIM] Simuliacija: kritinis slenkstis pasiektas — ${stamp}`
+      : `[TEST-ALERT] Testinė signalizacija — ${stamp}. Jei tai matai — sistema veikia.`;
+
+    let discordOk = false;
+    let discordError: string | null = null;
+    let emailOk = false;
+    let emailRecipients = 0;
+    let emailError: string | null = null;
+
+    // Discord
+    if (data.mode === "discord" || data.mode === "both" || data.mode === "lockdown-sim") {
+      const url = process.env.DISCORD_WEBHOOK_URL;
+      if (!url) {
+        discordError = "DISCORD_WEBHOOK_URL not configured";
+      } else {
+        try {
+          await sendDiscordAlert({
+            level,
+            lockdown: isLock,
+            lockdownReason: isLock ? "critical-threshold" : null,
+            message,
+            path: "/admin/errors",
+            userEmail: callerEmail ?? undefined,
+            criticalCount: isLock ? CRITICAL_THRESHOLD : 0,
+            burstUsers: 0,
+            fingerprint: "test-alert",
+          });
+          discordOk = true;
+        } catch (err) {
+          discordError = err instanceof Error ? err.message : "unknown";
+        }
+      }
+    }
+
+    // Email
+    if (data.mode === "email" || data.mode === "both" || data.mode === "lockdown-sim") {
+      const key = process.env.RESEND_API_KEY;
+      if (!key) {
+        emailError = "RESEND_API_KEY not configured";
+      } else {
+        try {
+          const { data: admins } = await supabaseAdmin
+            .from("profiles")
+            .select("email")
+            .eq("role", "admin");
+          const recipients = (admins ?? [])
+            .map((a: { email: string | null }) => a.email)
+            .filter((e): e is string => !!e);
+          emailRecipients = recipients.length;
+          if (recipients.length) {
+            const subject = isLock
+              ? "🧪 [TEST] LOCKDOWN SIMULIACIJA · Socialinės Valandos"
+              : "🧪 [TEST] Testinis signalas · Socialinės Valandos";
+            const html = alertEmailHtml({
+              level: "critical",
+              message,
+              path: "/admin/errors",
+              userEmail: callerEmail ?? undefined,
+              userAgent: "TestAlert · Admin manual trigger",
+              lockdown: isLock,
+              criticalCount: isLock ? CRITICAL_THRESHOLD : 0,
+              lockdownReason: isLock ? "critical-threshold" : null,
+              digest: [
+                { msg: "Testinė žinutė A", count: 5 },
+                { msg: "Testinė žinutė B", count: 3 },
+                { msg: "Testinė žinutė C", count: 2 },
+              ],
+            });
+            await Promise.all(
+              recipients.map((to) => sendResendEmail(to, subject, html, { urgent: true })),
+            );
+            emailOk = true;
+          } else {
+            emailError = "no admin recipients";
+          }
+        } catch (err) {
+          emailError = err instanceof Error ? err.message : "unknown";
+        }
+      }
+    }
+
+    await supabaseAdmin.from("activity_log").insert({
+      action: "app.test_alert",
+      entity_type: "auto-monitor",
+      meta: {
+        mode: data.mode,
+        discord_ok: discordOk,
+        discord_error: discordError,
+        email_ok: emailOk,
+        email_recipients: emailRecipients,
+        email_error: emailError,
+        by: callerEmail,
+      },
+    });
+
+    return {
+      ok: true,
+      mode: data.mode,
+      discord: { ok: discordOk, error: discordError },
+      email: { ok: emailOk, recipients: emailRecipients, error: emailError },
+      hasDiscordWebhook: !!process.env.DISCORD_WEBHOOK_URL,
+      hasResend: !!process.env.RESEND_API_KEY,
+    };
+  });
+
+

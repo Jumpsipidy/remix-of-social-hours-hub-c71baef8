@@ -38,7 +38,9 @@ import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
+import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
+
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
@@ -153,6 +155,16 @@ function AdminErrorsPage() {
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
   const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
+  const sendTestAlertFn = useServerFn(sendTestAlert);
+  const [alertResult, setAlertResult] = useState<null | {
+    mode: string;
+    discord?: { ok: boolean; error: string | null };
+    email?: { ok: boolean; recipients: number; error: string | null };
+    hasDiscordWebhook?: boolean;
+    hasResend?: boolean;
+    ts: number;
+  }>(null);
+
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
@@ -436,6 +448,36 @@ function AdminErrorsPage() {
       setTesting(false);
     }
   };
+
+  const runTestAlert = async (mode: "discord" | "email" | "both" | "lockdown-sim") => {
+    setTesting(true);
+    setAlertResult(null);
+    try {
+      const res = await sendTestAlertFn({ data: { mode } });
+      if (!res?.ok) {
+        toast.error(`Testas atmestas: ${(res as { error?: string })?.error ?? "unknown"}`);
+        return;
+      }
+      setAlertResult({
+        mode,
+        discord: res.discord,
+        email: res.email,
+        hasDiscordWebhook: res.hasDiscordWebhook,
+        hasResend: res.hasResend,
+        ts: Date.now(),
+      });
+      const parts: string[] = [];
+      if (res.discord) parts.push(`Discord: ${res.discord.ok ? "✅" : "❌ " + (res.discord.error ?? "")}`);
+      if (res.email) parts.push(`Email → ${res.email.recipients}: ${res.email.ok ? "✅" : "❌ " + (res.email.error ?? "")}`);
+      if (parts.every((p) => p.includes("✅"))) toast.success(parts.join("  ·  "));
+      else toast.warning(parts.join("  ·  "));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    } finally {
+      setTesting(false);
+    }
+  };
+
 
   const clear = async () => {
     if (!confirm("Ištrinti visas klaidas iš žurnalo?")) return;
@@ -1141,12 +1183,84 @@ function AdminErrorsPage() {
                         </div>
                       </div>
                       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
-                        <p className="text-sm font-semibold text-emerald-200">Testinė klaida</p>
-                        <p className="text-xs text-emerald-200/70">Patikrina, ar log pipeline'as veikia (client → Supabase → live streamas).</p>
+                        <p className="text-sm font-semibold text-emerald-200">Testinė klaida (pipeline)</p>
+                        <p className="text-xs text-emerald-200/70">Sukuria įrašą Supabase → Live sraute (be email/Discord, nes [TEST] filtruojamas).</p>
                         <Button variant="outline" size="sm" className="mt-2 border-emerald-500/40" onClick={triggerTestError} disabled={testing}>
-                          <Zap className="mr-1 h-4 w-4" /> {testing ? "Siunčiu…" : "Sukurti testinę klaidą"}
+                          <Zap className="mr-1 h-4 w-4" /> {testing ? "Siunčiu…" : "Testinė klaida"}
                         </Button>
                       </div>
+                    </div>
+
+                    {/* -------- Alert channel tests (bypasses filters) -------- */}
+                    <div className="mt-4 rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/10 p-4">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Signalizacijos kanalų testas</div>
+                          <p className="mt-1 text-xs text-amber-200/80 max-w-md">
+                            Aplenkia visus filtrus, rate limit ir dedupe. Tikrina, ar Discord webhook ir Resend email realiai išsiunčia.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-semibold">
+                          <span className={`rounded-full px-2 py-1 ${alertResult?.hasDiscordWebhook === false ? "bg-rose-500/20 text-rose-200" : "bg-emerald-500/20 text-emerald-200"}`}>
+                            Discord {alertResult?.hasDiscordWebhook === false ? "❌" : "✓"}
+                          </span>
+                          <span className={`rounded-full px-2 py-1 ${alertResult?.hasResend === false ? "bg-rose-500/20 text-rose-200" : "bg-emerald-500/20 text-emerald-200"}`}>
+                            Resend {alertResult?.hasResend === false ? "❌" : "✓"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <Button size="sm" variant="outline" className="border-indigo-400/40 bg-indigo-500/10 hover:bg-indigo-500/20"
+                          onClick={() => runTestAlert("discord")} disabled={testing}>
+                          <Radio className="mr-1 h-4 w-4" /> Discord ping
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-sky-400/40 bg-sky-500/10 hover:bg-sky-500/20"
+                          onClick={() => runTestAlert("email")} disabled={testing}>
+                          <Mail className="mr-1 h-4 w-4" /> Email test
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-emerald-400/40 bg-emerald-500/10 hover:bg-emerald-500/20"
+                          onClick={() => runTestAlert("both")} disabled={testing}>
+                          <Zap className="mr-1 h-4 w-4" /> Abu kanalai
+                        </Button>
+                        <Button size="sm" variant="outline" className="border-rose-400/40 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
+                          onClick={() => runTestAlert("lockdown-sim")} disabled={testing}>
+                          <ShieldAlert className="mr-1 h-4 w-4" /> Lockdown simuliacija
+                        </Button>
+                      </div>
+
+                      <AnimatePresence>
+                        {alertResult && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                            className="mt-3 rounded-lg border border-border/50 bg-background/60 p-3 font-mono text-xs"
+                          >
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Rezultatas · {alertResult.mode}</span>
+                              <span className="text-[10px] text-muted-foreground">{new Date(alertResult.ts).toLocaleTimeString("lt-LT")}</span>
+                            </div>
+                            {alertResult.discord && (
+                              <div className="flex items-center gap-2">
+                                <Radio className="h-3.5 w-3.5" />
+                                Discord: {alertResult.discord.ok
+                                  ? <span className="text-emerald-300 font-bold">✅ išsiųsta</span>
+                                  : <span className="text-rose-300 font-bold">❌ {alertResult.discord.error}</span>}
+                              </div>
+                            )}
+                            {alertResult.email && (
+                              <div className="mt-1 flex items-center gap-2">
+                                <Mail className="h-3.5 w-3.5" />
+                                Email: {alertResult.email.ok
+                                  ? <span className="text-emerald-300 font-bold">✅ išsiųsta {alertResult.email.recipients} adm.</span>
+                                  : <span className="text-rose-300 font-bold">❌ {alertResult.email.error}</span>}
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-border/50 bg-background/40 p-3">
                         <p className="text-sm font-semibold">Eksportuoti JSON</p>
                         <p className="text-xs text-muted-foreground">Iki 500 įrašų (aktuali atmintis).</p>
@@ -1160,6 +1274,7 @@ function AdminErrorsPage() {
                         </Button>
                       </div>
                     </div>
+
                   </SaaSPanel>
 
                   <SaaSPanel>
