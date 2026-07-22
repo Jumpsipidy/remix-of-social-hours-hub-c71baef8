@@ -237,6 +237,21 @@ function alertEmailHtml(opts: {
 
   <!-- Body -->
   <div style="padding:28px 32px">
+    ${(() => {
+      const p = opts.path ?? "";
+      const impact = p.includes("/checkin") ? "Mokinys negali įsiregistruoti QR kodu — valandos neįskaitomos"
+        : p.includes("/reservation") || p.includes("/organization/scan") ? "Sulūžta rezervacijų / darbo patvirtinimo srautas"
+        : p.includes("/pdf") || p.includes("/verify") ? "PDF sertifikatas gali nepasirašyti arba nepatikrinamas"
+        : p.includes("/auth") || p.includes("/login") || p.includes("/register") ? "Vartotojas negali prisijungti arba užsiregistruoti"
+        : "Puslapis gali užstrigti arba parodyti tuščią ekraną";
+      const barColor = isLock ? "#ef4444" : isCrit ? "#f97316" : "#eab308";
+      const barW = isLock ? 100 : isCrit ? 70 : 30;
+      return `<div style="margin:0 0 22px;padding:16px 18px;background:linear-gradient(135deg,#0b1220,#020617);border:1px solid ${barColor}44;border-radius:14px">
+        <div style="font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:${barColor};margin-bottom:8px">▸ Ką matys mokinys?</div>
+        <div style="font-size:14px;color:#fff;line-height:1.5;margin-bottom:10px">${escapeHtml(impact)}</div>
+        <div style="height:8px;background:#1e293b;border-radius:999px;overflow:hidden"><div style="height:100%;width:${barW}%;background:linear-gradient(90deg,${accent},${accent2})"></div></div>
+      </div>`;
+    })()}
     ${isLock ? `<div style="margin:0 0 22px;padding:16px 18px;background:linear-gradient(135deg,${accent}18,${accent2}10);border:1px solid ${accent}66;border-radius:14px;color:#fee2e2;font-size:13px;line-height:1.6">
       <div style="font-size:10px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:${accent};margin-bottom:6px">Reikalingas veiksmas</div>
       <div><b style="color:#fff">Prisijunk kaip super admin ir eik į <a href="https://socialinesvalandos.dev/admin/lockdown" style="color:#fca5a5">/admin/lockdown</a>, kad išjungtum apsaugą.</b> Kol lockdown įjungtas, lankytojai mato blokavimo puslapį (kodas <b style="color:#fff">E-5001</b>).</div>
