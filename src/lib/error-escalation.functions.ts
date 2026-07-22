@@ -155,7 +155,20 @@ function alertEmailHtml(opts: {
       ${opts.userEmail ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Vartotojas</td><td style="padding:8px 0;font-size:13px"><code style="color:#67e8f9">${escapeHtml(opts.userEmail)}</code></td></tr>` : ""}
       ${opts.userAgent ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase;vertical-align:top">Įrenginys</td><td style="padding:8px 0;font-size:11.5px;color:#cbd5e1;line-height:1.5">${escapeHtml(opts.userAgent.slice(0, 220))}</td></tr>` : ""}
       ${typeof opts.criticalCount === "number" && opts.criticalCount > 0 ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Kritinių ${CRITICAL_WINDOW_MIN} min</td><td style="padding:8px 0"><span style="display:inline-block;padding:4px 12px;background:${accent}22;color:${accent};border-radius:999px;font-weight:800;font-size:12px">${opts.criticalCount} / ${CRITICAL_THRESHOLD}</span></td></tr>` : ""}
+      ${typeof opts.burstUsers === "number" && opts.burstUsers > 0 ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Burst (90s)</td><td style="padding:8px 0"><span style="display:inline-block;padding:4px 12px;background:${accent}22;color:${accent};border-radius:999px;font-weight:800;font-size:12px">${opts.burstUsers} vartotojai</span></td></tr>` : ""}
+      ${opts.lockdownReason ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Priežastis</td><td style="padding:8px 0;font-size:12px;color:#e2e8f0"><code style="background:#020617;padding:3px 8px;border-radius:6px;border:1px solid #1e293b">${escapeHtml(opts.lockdownReason)}</code></td></tr>` : ""}
     </table>
+
+    ${opts.digest && opts.digest.length > 0 ? `
+    <div style="margin-top:22px;padding:14px 16px;background:#020617;border:1px solid #1e293b;border-radius:12px">
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px">▸ Paskutinės 15 min · Top ${opts.digest.length} klaidų</div>
+      ${opts.digest.map((d) => `
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed #1e293b;font-size:12px;color:#cbd5e1">
+          <span style="font-family:'JetBrains Mono',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(d.msg)}</span>
+          <span style="flex-shrink:0;padding:2px 8px;background:${accent}22;color:${accent};border-radius:999px;font-weight:800;font-size:11px">×${d.count}</span>
+        </div>`).join("")}
+    </div>` : ""}
+
 
     ${opts.stack ? `<details style="margin-top:18px;padding:12px 14px;background:#020617;border:1px solid #1e293b;border-radius:12px"><summary style="cursor:pointer;font-size:10px;color:#94a3b8;font-weight:800;letter-spacing:.16em;text-transform:uppercase">▸ Stack trace</summary><pre style="margin:12px 0 0;font-size:11px;color:#cbd5e1;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;font-family:'JetBrains Mono',ui-monospace,monospace;line-height:1.55">${escapeHtml(opts.stack)}</pre></details>` : ""}
 
