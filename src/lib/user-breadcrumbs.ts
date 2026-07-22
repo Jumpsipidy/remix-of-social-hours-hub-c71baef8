@@ -199,4 +199,63 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     setTimeout(check, 0);
     return r;
   };
+
+  // ---- Silent bug detection ---------------------------------------------
+  // A "silent bug" = user clicks a submit/action button, but nothing observable
+  // happens: no URL change, no successful POST/PUT/PATCH within 3s. Common
+  // symptoms: disabled handler, stale closure, invalid form silently rejected.
+  // We log these as custom breadcrumbs so admins can spot broken CTAs even
+  // when nothing throws.
+  let netActivityAt = 0;
+  const origFetch2 = window.fetch;
+  window.fetch = async (...args: Parameters<typeof fetch>) => {
+    const method = (args[1]?.method ?? (args[0] instanceof Request ? args[0].method : "GET")).toUpperCase();
+    if (method !== "GET" && method !== "HEAD") netActivityAt = Date.now();
+    return origFetch2(...args);
+  };
+
+  const isActionEl = (el: Element | null): boolean => {
+    if (!el) return false;
+    const tag = el.tagName?.toLowerCase();
+    if (tag === "button") return true;
+    const role = el.getAttribute("role");
+    if (role === "button") return true;
+    if (tag === "input" && (el as HTMLInputElement).type === "submit") return true;
+    return false;
+  };
+
+  window.addEventListener(
+    "click",
+    (e) => {
+      const el = e.target as Element | null;
+      if (!isActionEl(el) && !isActionEl(el?.closest("button, [role=button]") ?? null)) return;
+      const label = targetLabel(el);
+      // Skip likely-nav buttons (hamburger, tab, back). Only track things
+      // that look like actions.
+      if (/close|menu|open|back|toggle|tab/i.test(label)) return;
+      const startedAt = Date.now();
+      const startPath = location.pathname;
+      const startHash = location.hash;
+      window.setTimeout(() => {
+        const pathChanged = location.pathname !== startPath || location.hash !== startHash;
+        const netSince = netActivityAt >= startedAt;
+        // Look at recent breadcrumbs for toast/dialog/error signals
+        const recentNoise = buf.slice(-8).some(
+          (b) =>
+            b.t >= startedAt &&
+            (b.kind === "fetch-fail" ||
+              /toast|dialog|modal|error|success/i.test(b.label ?? "")),
+        );
+        if (!pathChanged && !netSince && !recentNoise) {
+          pushBreadcrumb({
+            kind: "custom",
+            label: `⚠️ silent-click: "${label}" (no nav, no POST, no toast)`,
+            path: location.pathname,
+            extra: { silent: true, waitedMs: 3000 },
+          });
+        }
+      }, 3000);
+    },
+    { capture: true, passive: true },
+  );
 }

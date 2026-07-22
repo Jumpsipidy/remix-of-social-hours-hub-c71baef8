@@ -64,6 +64,23 @@ export function fingerprint(message: string | undefined | null, stack?: string |
   return { id, norm, frame };
 }
 
+/**
+ * Route impact weight — errors on flows where a real user is physically waiting
+ * (check-in, reserve, student dashboard) are more urgent than errors on legal
+ * or marketing pages. Multiplier applied on top of raw count.
+ */
+export function routeWeight(path: string | undefined | null): number {
+  if (!path) return 1;
+  const p = path.toLowerCase();
+  if (p.startsWith("/checkin") || p.startsWith("/organization/scan")) return 3.0; // student in front of org
+  if (p.startsWith("/verify")) return 2.5; // certificate verification
+  if (p.startsWith("/student") || p.startsWith("/tasks") || p.startsWith("/school")) return 2.0;
+  if (p.startsWith("/organization") || p.startsWith("/admin")) return 1.6;
+  if (p.startsWith("/login") || p.startsWith("/register") || p.startsWith("/auth")) return 1.8;
+  if (p.startsWith("/privacy") || p.startsWith("/terms") || p.startsWith("/blog")) return 0.6;
+  return 1;
+}
+
 /** Severity heuristic 0-100 for a group; higher = worse. */
 export function severityScore(input: {
   count: number;
@@ -71,9 +88,15 @@ export function severityScore(input: {
   paths: number;
   criticalCount: number;
   lastSeenMs: number;
+  /** Max route weight across affected paths (see routeWeight). */
+  maxRouteWeight?: number;
+  /** True if fingerprint first seen after last deploy (regression). */
+  isRegression?: boolean;
 }): number {
   const recency = Math.max(0, 1 - Math.min(1, (Date.now() - input.lastSeenMs) / (24 * 3_600_000)));
-  const impact = Math.log10(1 + input.count) * 12 + input.users * 8 + input.paths * 3;
+  const weight = input.maxRouteWeight ?? 1;
+  const impact = (Math.log10(1 + input.count) * 12 + input.users * 8 + input.paths * 3) * weight;
   const critical = input.criticalCount * 15;
-  return Math.min(100, Math.round(impact + critical + recency * 20));
+  const regression = input.isRegression ? 18 : 0;
+  return Math.min(100, Math.round(impact + critical + regression + recency * 20));
 }

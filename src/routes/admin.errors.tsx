@@ -38,7 +38,7 @@ import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
-import { fingerprint as fpOf, severityScore } from "@/lib/error-fingerprint";
+import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
@@ -361,6 +361,8 @@ function AdminErrorsPage() {
         paths: g.paths.size,
         criticalCount: g.critCount,
         lastSeenMs: g.lastMs,
+        maxRouteWeight: Math.max(1, ...Array.from(g.paths).map((p) => routeWeight(String(p)))),
+        isRegression: g.firstMs > now - 6 * 3_600_000 && g.count >= 3,
       }),
       isNewToday: g.firstMs > now - 24 * 3_600_000,
     }));
