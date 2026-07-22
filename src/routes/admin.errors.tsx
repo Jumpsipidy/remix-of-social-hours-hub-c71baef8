@@ -145,6 +145,10 @@ function AdminErrorsPage() {
   const [showIgnored, setShowIgnored] = useState(false);
   const [autoMs, setAutoMs] = useState<number>(0);
   const [testing, setTesting] = useState(false);
+  const [muted, setMuted] = useState<string[]>([]);
+  const [groupSort, setGroupSort] = useState<"severity" | "count" | "recent" | "users">("severity");
+  const [groupNewOnly, setGroupNewOnly] = useState(false);
+  const [newSinceLoad, setNewSinceLoad] = useState(0);
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
