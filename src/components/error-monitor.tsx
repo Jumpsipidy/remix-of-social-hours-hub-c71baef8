@@ -4,6 +4,8 @@ import { reportCriticalIncident } from "@/lib/incident.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { installGlobalErrorLogging, logClientError } from "@/lib/error-log";
 import { installBreadcrumbs, pushBreadcrumb } from "@/lib/user-breadcrumbs";
+import { installStaleDeployGuard } from "@/lib/stale-deploy-guard";
+
 
 /**
  * Client-side automatic error monitor.
@@ -38,7 +40,9 @@ export function ErrorMonitor() {
   // Install global error logging on every mount (works even without auth —
   // anon-safe inserts are dropped by RLS but console output still fires).
   useEffect(() => {
+    installStaleDeployGuard();
     installGlobalErrorLogging();
+
     installBreadcrumbs(({ label, count }) => {
       // Rage-click: user hammered same element — likely a broken button.
       pushBreadcrumb({ kind: "custom", label: `auto-report rage-click x${count}` });
