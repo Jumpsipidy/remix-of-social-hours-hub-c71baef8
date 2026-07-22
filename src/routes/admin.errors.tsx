@@ -180,6 +180,7 @@ function AdminErrorsPage() {
     ]);
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
+    setNewSinceLoad(0);
     // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
     setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
