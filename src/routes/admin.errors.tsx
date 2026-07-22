@@ -298,22 +298,90 @@ function AdminErrorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
-  const topMessages = useMemo(() => {
-    const map = new Map<string, { count: number; last: string; action: string }>();
-    for (const r of rows.slice(0, 300)) {
-      const key = (r.meta?.message ?? "(no message)").slice(0, 140);
-      const prev = map.get(key);
-      if (prev) {
-        prev.count += 1;
-        if (r.created_at > prev.last) prev.last = r.created_at;
-      } else {
-        map.set(key, { count: 1, last: r.created_at, action: r.action });
+  type Group = {
+    fp: string;
+    sample: ErrRow;
+    message: string;
+    action: string;
+    count: number;
+    critCount: number;
+    users: Set<string>;
+    paths: Set<string>;
+    browsers: Set<string>;
+    firstMs: number;
+    lastMs: number;
+    trend: number[]; // 24 buckets = 1h each
+    frame?: string;
+  };
+
+  const groups = useMemo(() => {
+    const map = new Map<string, Group>();
+    const now = Date.now();
+    const trendStart = now - 24 * 3_600_000;
+    for (const r of rows) {
+      const id = fpOfRow(r);
+      const ts = new Date(r.created_at).getTime();
+      const isCrit = CRITICAL_KINDS.has(r.action);
+      let g = map.get(id);
+      if (!g) {
+        g = {
+          fp: id,
+          sample: r,
+          message: (r.meta?.message ?? "(no message)").slice(0, 200),
+          action: r.action,
+          count: 0,
+          critCount: 0,
+          users: new Set(),
+          paths: new Set(),
+          browsers: new Set(),
+          firstMs: ts,
+          lastMs: ts,
+          trend: new Array(24).fill(0),
+          frame: (r.meta as any)?.fingerprint_frame,
+        };
+        map.set(id, g);
+      }
+      g.count += 1;
+      if (isCrit) g.critCount += 1;
+      if (r.user_id) g.users.add(r.user_id);
+      if (r.meta?.path) g.paths.add(String(r.meta.path).split("?")[0]);
+      if (r.meta?.browser) g.browsers.add(String(r.meta.browser));
+      if (ts < g.firstMs) g.firstMs = ts;
+      if (ts > g.lastMs) { g.lastMs = ts; g.sample = r; }
+      if (ts >= trendStart) {
+        const idx = Math.min(23, Math.floor((ts - trendStart) / 3_600_000));
+        g.trend[idx] += 1;
       }
     }
-    return Array.from(map.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 10);
+    return Array.from(map.values()).map((g) => ({
+      ...g,
+      severity: severityScore({
+        count: g.count,
+        users: g.users.size,
+        paths: g.paths.size,
+        criticalCount: g.critCount,
+        lastSeenMs: g.lastMs,
+      }),
+      isNewToday: g.firstMs > now - 24 * 3_600_000,
+    }));
   }, [rows]);
+
+  const topGroups = useMemo(() => {
+    const list = groups.filter((g) => (groupNewOnly ? g.isNewToday : true))
+      .filter((g) => !muted.includes(g.fp));
+    return [...list].sort((a, b) => {
+      if (groupSort === "count") return b.count - a.count;
+      if (groupSort === "users") return b.users.size - a.users.size;
+      if (groupSort === "recent") return b.lastMs - a.lastMs;
+      return b.severity - a.severity;
+    });
+  }, [groups, groupSort, groupNewOnly, muted]);
+
+  const toggleMute = (fp: string) => {
+    const next = muted.includes(fp) ? muted.filter((x) => x !== fp) : [...muted, fp];
+    setMuted(next); saveMuted(next);
+    toast.success(muted.includes(fp) ? "Grupė vėl matoma" : "Grupė nutildyta");
+  };
 
   const topSources = useMemo(() => {
     const paths = new Map<string, number>();
