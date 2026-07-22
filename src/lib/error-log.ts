@@ -113,6 +113,7 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
         source: payload.source ?? "runtime",
         path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
         extra: payload.extra ?? {},
+        breadcrumbs: getBreadcrumbs().slice(-15),
         ...dev,
       },
     });
