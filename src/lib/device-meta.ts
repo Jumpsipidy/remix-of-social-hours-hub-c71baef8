@@ -76,7 +76,6 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
     session_id: sessionId(),
     visitor_id: visitorId(),
     ua: ua.slice(0, 220),
-
     device,
     browser,
     os,
@@ -86,6 +85,10 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
     dpr: window.devicePixelRatio || 1,
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
     ref_host,
+    // Deploy tag — set at build time from vite.config.ts. Lets Error Center
+    // tie a bug to the exact commit / build that introduced it.
+    commit_sha: (import.meta as { env?: { VITE_COMMIT_SHA?: string } }).env?.VITE_COMMIT_SHA || "unknown",
+    build_time: (import.meta as { env?: { VITE_BUILD_TIME?: string } }).env?.VITE_BUILD_TIME || "",
     ...extra,
   };
 }
