@@ -1260,6 +1260,7 @@ function AdminErrorsPage() {
                       </AnimatePresence>
                     </div>
 
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-border/50 bg-background/40 p-3">
                         <p className="text-sm font-semibold">Eksportuoti JSON</p>
                         <p className="text-xs text-muted-foreground">Iki 500 įrašų (aktuali atmintis).</p>
@@ -1273,6 +1274,7 @@ function AdminErrorsPage() {
                         </Button>
                       </div>
                     </div>
+
                   </SaaSPanel>
 
                   <SaaSPanel>
