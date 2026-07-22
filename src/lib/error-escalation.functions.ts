@@ -14,6 +14,13 @@ import { clientFingerprint } from "@/lib/security-crypto.server";
 const CRITICAL_THRESHOLD = 2;
 const CRITICAL_WINDOW_MIN = 5;
 const EMAIL_DEDUPE_MIN = 15;
+// Burst detection: if ≥ BURST_MIN_USERS distinct users hit any error in the last
+// BURST_WINDOW_S seconds, we treat the whole site as unstable and lockdown
+// immediately, regardless of severity classification. This catches broken
+// deploys where thousands of users would otherwise get errors before we react.
+const BURST_WINDOW_S = 90;
+const BURST_MIN_USERS = 3;
+
 
 // Per-IP rate limit (in-memory, per-worker). Prevents an anonymous flood from
 // tripping the auto-lockdown threshold with three trivial requests.
