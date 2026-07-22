@@ -40,7 +40,9 @@ export function ErrorMonitor() {
   // Install global error logging on every mount (works even without auth —
   // anon-safe inserts are dropped by RLS but console output still fires).
   useEffect(() => {
+    installStaleDeployGuard();
     installGlobalErrorLogging();
+
     installBreadcrumbs(({ label, count }) => {
       // Rage-click: user hammered same element — likely a broken button.
       pushBreadcrumb({ kind: "custom", label: `auto-report rage-click x${count}` });
