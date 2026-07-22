@@ -156,6 +156,7 @@ function AdminErrorsPage() {
 
   useEffect(() => {
     setIgnoreRules(loadIgnore());
+    setMuted(loadMuted());
     try {
       const v = Number(localStorage.getItem(AUTO_KEY));
       if (Number.isFinite(v) && v > 0) setAutoMs(v);
