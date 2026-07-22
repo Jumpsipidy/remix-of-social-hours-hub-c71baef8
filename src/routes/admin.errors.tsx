@@ -361,6 +361,8 @@ function AdminErrorsPage() {
         paths: g.paths.size,
         criticalCount: g.critCount,
         lastSeenMs: g.lastMs,
+        maxRouteWeight: Math.max(1, ...Array.from(g.paths).map((p) => routeWeight(String(p)))),
+        isRegression: g.firstMs > now - 6 * 3_600_000 && g.count >= 3,
       }),
       isNewToday: g.firstMs > now - 24 * 3_600_000,
     }));
