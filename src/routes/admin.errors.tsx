@@ -500,7 +500,7 @@ function AdminErrorsPage() {
     return header + list.map((r) => {
       const m = r.meta ?? {};
       return [
-        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")}`,
+        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fpOfRow(r)}`,
         `msg:    ${m.message ?? "(no message)"}`,
         m.path ? `path:   ${m.path}` : null,
         m.source ? `source: ${m.source}` : null,
