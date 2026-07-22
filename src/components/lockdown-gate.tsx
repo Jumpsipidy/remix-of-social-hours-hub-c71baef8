@@ -83,6 +83,7 @@ export function LockdownGate() {
   const verifyToken = useServerFn(verifyBypassToken);
   const readBypassStatus = useServerFn(bypassStatus);
   const readPublicSettings = useServerFn(getPublicSiteSettings);
+  const attemptRecovery = useServerFn(tryLockdownAutoRecovery);
 
   const submitCodeFn = useServerFn(verifyBypassCode);
 
@@ -121,6 +122,10 @@ export function LockdownGate() {
           if (mounted) setLockdown(false);
         }
       }
+      // Fire-and-forget auto-recovery attempt. Server throttles to once/min
+      // and only ever *disables* lockdown (never enables), so it's safe to
+      // call from anonymous polling.
+      try { void attemptRecovery({ data: {} }); } catch { /* ignore */ }
     };
     load();
     const poll = setInterval(load, 60_000);
