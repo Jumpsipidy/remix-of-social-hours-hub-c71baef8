@@ -224,13 +224,17 @@ export function Footer() {
             {!isAuthenticated && <li><Link to="/login" className="hover:text-foreground">Prisijungti</Link></li>}
             {!isAuthenticated && <li><Link to="/register" className="hover:text-foreground">Registruotis</Link></li>}
             <li><Link to="/terms" className="hover:text-foreground font-semibold text-foreground">📜 Naudojimosi taisyklės</Link></li>
+            <li><Link to="/privacy" className="hover:text-foreground font-semibold text-foreground">🔐 Privatumas ir sauga</Link></li>
           </ul>
         </div>
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <span>© 2026 Socialinės Valandos. Visos teisės saugomos.</span>
-          <Link to="/terms" className="hover:text-foreground font-semibold underline underline-offset-4">Teisės ir taisyklės →</Link>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="hover:text-foreground">🔐 Privatumas</Link>
+            <Link to="/terms" className="hover:text-foreground font-semibold underline underline-offset-4">Teisės ir taisyklės →</Link>
+          </div>
         </div>
       </div>
     </footer>
