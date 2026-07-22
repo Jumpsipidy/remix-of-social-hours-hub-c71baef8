@@ -5,6 +5,7 @@ import { RefreshCw, X, Copy, Check, ShieldCheck, BookOpen, ChevronDown, Lock } f
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
+import { tryLockdownAutoRecovery } from "@/lib/lockdown-recovery.functions";
 import { Captcha } from "@/components/captcha";
 
 
@@ -82,6 +83,7 @@ export function LockdownGate() {
   const verifyToken = useServerFn(verifyBypassToken);
   const readBypassStatus = useServerFn(bypassStatus);
   const readPublicSettings = useServerFn(getPublicSiteSettings);
+  const attemptRecovery = useServerFn(tryLockdownAutoRecovery);
 
   const submitCodeFn = useServerFn(verifyBypassCode);
 
@@ -120,6 +122,10 @@ export function LockdownGate() {
           if (mounted) setLockdown(false);
         }
       }
+      // Fire-and-forget auto-recovery attempt. Server throttles to once/min
+      // and only ever *disables* lockdown (never enables), so it's safe to
+      // call from anonymous polling.
+      try { void attemptRecovery(); } catch { /* ignore */ }
     };
     load();
     const poll = setInterval(load, 60_000);

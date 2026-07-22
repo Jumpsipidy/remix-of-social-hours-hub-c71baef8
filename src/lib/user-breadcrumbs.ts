@@ -1,17 +1,20 @@
-// Lightweight user-action breadcrumb trail.
+// Lightweight user-action breadcrumb trail + session replay.
 // Rolling buffer of the last N interactions; attached to every error report so
 // we can reproduce the click-path that led to a crash even when the student
 // never opens the bug widget.
+//
+// Session replay: adds scroll/visibility/network-fail/viewport events with
+// relative timestamps so the admin can watch the user's last ~60s before crash.
 
 export type Breadcrumb = {
   t: number; // epoch ms
-  kind: "click" | "nav" | "input" | "key" | "net" | "rage" | "custom";
+  kind: "click" | "nav" | "input" | "key" | "net" | "rage" | "custom" | "scroll" | "visibility" | "resize" | "fetch-fail";
   label: string;
   path?: string;
   extra?: Record<string, unknown>;
 };
 
-const MAX = 25;
+const MAX = 60;
 const buf: Breadcrumb[] = [];
 
 export function pushBreadcrumb(b: Omit<Breadcrumb, "t">) {
@@ -21,6 +24,18 @@ export function pushBreadcrumb(b: Omit<Breadcrumb, "t">) {
 
 export function getBreadcrumbs(): Breadcrumb[] {
   return buf.slice();
+}
+
+/**
+ * Session replay: returns breadcrumbs from the last `windowMs` ms with
+ * relative timestamps (delta from oldest). Suitable for admin timeline UI.
+ */
+export function getSessionReplay(windowMs = 60_000): Array<Breadcrumb & { dt: number }> {
+  const cutoff = Date.now() - windowMs;
+  const recent = buf.filter((b) => b.t >= cutoff);
+  if (recent.length === 0) return [];
+  const t0 = recent[0].t;
+  return recent.map((b) => ({ ...b, dt: b.t - t0 }));
 }
 
 export function clearBreadcrumbs() {
@@ -63,7 +78,12 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
       const el = e.target as Element | null;
       const key = targetKey(el);
       const label = targetLabel(el);
-      pushBreadcrumb({ kind: "click", label, extra: { key }, path: location.pathname });
+      pushBreadcrumb({
+        kind: "click",
+        label,
+        extra: { key, x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY },
+        path: location.pathname,
+      });
 
       const now = Date.now();
       if (rage && rage.key === key && now - rage.firstAt < RAGE_WINDOW_MS) {
@@ -95,6 +115,69 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     },
     { capture: true, passive: true },
   );
+
+  // Scroll — throttled to once per 400ms; capture y%
+  let scrollTimer: number | null = null;
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (scrollTimer !== null) return;
+      scrollTimer = window.setTimeout(() => {
+        scrollTimer = null;
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = h > 0 ? Math.round((window.scrollY / h) * 100) : 0;
+        pushBreadcrumb({ kind: "scroll", label: `scroll ${pct}%`, extra: { y: window.scrollY, pct } });
+      }, 400);
+    },
+    { passive: true },
+  );
+
+  // Viewport resize
+  let resizeTimer: number | null = null;
+  window.addEventListener("resize", () => {
+    if (resizeTimer !== null) window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      pushBreadcrumb({
+        kind: "resize",
+        label: `${window.innerWidth}×${window.innerHeight}`,
+        extra: { w: window.innerWidth, h: window.innerHeight },
+      });
+    }, 300);
+  });
+
+  // Visibility change (tab away / back)
+  document.addEventListener("visibilitychange", () => {
+    pushBreadcrumb({
+      kind: "visibility",
+      label: document.hidden ? "hidden" : "visible",
+    });
+  });
+
+  // Network failure interception (fetch)
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async (...args: Parameters<typeof fetch>) => {
+    const started = performance.now();
+    try {
+      const res = await origFetch(...args);
+      if (!res.ok && res.status >= 500) {
+        const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
+        pushBreadcrumb({
+          kind: "fetch-fail",
+          label: `${res.status} ${new URL(url, location.href).pathname}`,
+          extra: { status: res.status, ms: Math.round(performance.now() - started) },
+        });
+      }
+      return res;
+    } catch (err) {
+      const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
+      pushBreadcrumb({
+        kind: "fetch-fail",
+        label: `network err ${new URL(url, location.href).pathname}`,
+        extra: { error: (err as Error).message?.slice(0, 100) },
+      });
+      throw err;
+    }
+  };
 
   let lastPath = location.pathname;
   const check = () => {
