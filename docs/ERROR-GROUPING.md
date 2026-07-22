@@ -1,241 +1,165 @@
-# 🕵️ Klaidų medžioklė — Socialinių Valandų error paieškos sistema
+# 🕵️ Kaip Socialinės Valandos gaudo bug'us (Gen-Z gidas)
 
-> **Gen-z TL;DR:** Kai kažkas lūžta — sistema pati susieškos, sugrupuos, priskirs prioritetą ir, jei rimta, uždarys svetainę kol tu ateisi fixinti. Nereikia žiūrėti į logus rankomis kaip dinozaurams. Viskas veikia automatiškai. **Zero SQL, zero setup.**
-
----
-
-## 🧠 Kaip apskritai randame klaidas
-
-Klaidos į sistemą ateina iš **7 skirtingų vietų**. Kiekviena vieta turi savo mažą „šnipą" kuris pagauna ir siunčia į `activity_log`:
-
-### 1. **Browser JS errors** (`window.onerror` + `unhandledrejection`)
-Kai lūžta React komponentas arba Promise `.catch()` niekas nepagavo — mūsų globalus hook'as pagauna. Fiksuojama: žinutė, stack trace, path, browser, OS.
-
-Failas: `src/lib/error-log.ts` → `installGlobalErrorHandlers()`.
-
-### 2. **Vite / Lovable overlay bridge**
-Kartais dev-server'is arba Lovable preview parodo savo raudoną overlay'ų su klaida — bet ta klaida nebuvo iš mūsų JS. Būdavo, matai overlay, bet log tuščias. **Fix:**
-
-`LovableOverlayBridge` (`src/components/lovable-overlay-bridge.tsx`) kas 500ms tikrina DOM'e ar yra `vite-error-overlay` ar `[data-lovable-error-overlay]` elementas. Jei yra — automatiškai išsiurbia tekstą + stack ir įkiša į mūsų log'ą. Bonus: prideda mygtuką „Siųsti adminams" tiesiai ant overlay'aus, jei kažkodėl tekstas nebuvo pagautas.
-
-### 3. **Rage clicks** (frustracijos detekcija)
-Jei vartotojas per 1.5s spusteli tą patį mygtuką ≥3 kartus — vadinasi kažkas neveikia arba jis pyksta. Tai fiksuojam kaip `ui.rageclick`. Failas: `src/lib/user-breadcrumbs.ts`.
-
-### 4. **Fetch klaidos + failed responses**
-Kiekvienas `fetch()` yra apvyniotas — jei atsakymas `>=500` arba `network error`, log'as gauna `fetch.error` su statusu, URL'u ir latency.
-
-### 5. **Server function errors**
-TanStack `createServerFn` handleriai apvyniojami `try/catch` — jei mesta klaida, siunčia `server.error` su fingerprintu.
-
-### 6. **Auto health scan** (SQL funkcija `run_deep_health_scan`)
-Kas 10 min pati DB paleidžia 18 patikrų: ar RLS įjungta ant kritinių lentelių, ar `has_role` egzistuoja, ar seniai neatnaujintų žinučių, ar admin egzistuoja, ir t.t. Jei randa `critical_failures > 0` — automatiškai įjungia lockdown.
-
-### 7. **Manual reports** (bug report widget)
-Vartotojas gali paspausti mažą bug'o piktogramą apačioje ir pats parašyti. Šie eina į `bug_reports` lentelę atskirai.
+> TL;DR — mūsų svetainė turi **automatinį bug-hunter**, kuris veikia 24/7,
+> žino kurie puslapiai svarbiausi mokiniams, ir pats užrakina svetainę
+> jei kažkas rimtai lūžta. Šis dokumentas paaiškina **kaip** ir **kodėl**
+> tai realiai pagauna klaidas, kurias matys tavo mokinys, ne tik random
+> browser noise.
 
 ---
 
-## 🧬 Fingerprint — magija kaip 1000 klaidų tampa 1 grupe
+## 🎯 Kodėl tai iš tikrųjų veikia mokiniams
 
-**Problema:** Ta pati klaida (`Cannot read properties of null (reading 'id')`) gali pasitaikyti 200 vartotojų. Log'e — 200 eilučių. Neįmanoma suprasti kas svarbu.
+Pigus bug-tracker'is loguoja **viską** — kiekvieną scroll'ą, kiekvieną
+random browser warning'ą, tūkstančius eilučių šlamšto. Rezultatas: admin
+niekada nemato tikrų bug'ų, nes jie paskęsta noise'e.
 
-**Sprendimas:** Kiekviena klaida gauna 7-simbolių `#fingerprint` ID pagal jos **rūšį**, ne pagal konkretų atvejį. Failas: `src/lib/error-fingerprint.ts`.
-
-### Kaip skaičiuojasi (5 žingsniai):
-
-**1. Normalizuojam žinutę** — pašalinam viską, kas keičiasi tarp atvejų:
-
-| Iš | Į |
-|---|---|
-| `Cannot find user 4f8a-abc1-...` | `Cannot find user <uuid>` |
-| `Timeout after 3000ms` | `Timeout after <n>ms` |
-| `Failed fetch /api/tasks/42` | `Failed fetch <url>` |
-| `Error at line 145 in file.js` | `Error at <file>` |
-| `Hash: a1b2c3d4e5f6789...` | `Hash: <hash>` |
-
-**2. Paimam pirmą stack kadrą** (be eilutės numerių):
-- `at StudentDashboard (student.tsx:142:15)` → `StudentDashboard student.tsx`
-
-**3. Sujungiam:** `Cannot find user <uuid> | StudentDashboard student.tsx`
-
-**4. Hash'inam FNV-1a → base36 → paimam 7 simbolius:** → `#a3f9c2b`
-
-**5. Voila.** Dvi klaidos gauna tą patį `#a3f9c2b` jei rūšis ta pati, net jei UUID skirtingas.
-
-### Ką tai reiškia praktiškai:
-- ✅ Vietoj 200 eilučių — matai **1 grupę su count=200**.
-- ✅ Nedelsdamas matai, kad tai daug vartotojų paveikia, ne tik vieną.
-- ✅ Kai pataisai — visa grupė uždaroma iš karto.
+Mūsų sistema veikia atvirkščiai — **filtruoja agresyviai, o tai kas lieka
+grupuoja pagal poveikį mokiniui**. Kiekviena error grupė atsako į vieną
+klausimą: „Kiek mokinių *realiai* užstrigo dėl šito ir ar tai nulaužia
+kritinį srautą (pvz. QR check-in, rezervaciją, PDF sertifikatą)?"
 
 ---
 
-## 🎯 Severity — kaip nusprendžiam, kas rimta
+## 🧠 7 sluoksnių pipeline
 
-Ne visos klaidos vienodos. Vienam vartotojui vieną kartą lūžo `ResizeObserver` = whatever. Bet 30 vartotojams lūžo `TypeError` prieš checkout = **YIKES**. Formulė (`severityScore` funkcija):
+### 1️⃣ Client-side filtras (`src/lib/error-log.ts`)
+Prieš siunčiant į DB, mes išmetame:
+
+- **Browser noise** — `ResizeObserver loop`, `WebGL context lost`, aborted fetch'us.
+- **Extensions** — Chrome plugin'ų klaidas (jos nėra mūsų kodo problema).
+- **Vite HMR** — dev-only reload artefaktus.
+- **Duplicates per 30s** — tas pats vartotojas, tas pats fingerprint = 1 įrašas.
+
+**Kodėl svarbu:** be šito filtro Discord skambėtų kas 3 sekundes su
+šlamštu ir tikrą kritinę klaidą praleistum.
+
+### 2️⃣ Breadcrumbs + Silent Bugs (`src/lib/user-breadcrumbs.ts`)
+Kiekvieno mokinio browser'yje mes tyliai įrašom **paskutinius 25
+veiksmus**: mygtukų paspaudimai, puslapių navigacija, form input'ai,
+scroll, network fail'ai.
+
+Dar geriau — **Silent Bug Detection** stebi paspaudimus, po kurių UI
+NEREAGUOJA per 800ms. Tai suveikia net kai nėra jokios error žinutės —
+tiesiog mokinys spaudo, o niekas nevyksta.
+
+Kai galiausiai įvyksta klaida, mes turime **filmą ką mokinys darė
+paskutines 30s** prieš tai kaip užstrigo.
+
+### 3️⃣ Rage-click detektorius
+Jei mokinys spaudžia **≥4 kartus per 2s** į tą patį mygtuką, sistema
+supranta „jis įsiutęs" ir sukuria error report'ą su visa breadcrumb
+trace, net jei nebuvo jokio JS exception'o.
+
+**Kodėl svarbu:** dažniausiai UX bug'ai (mygtukas neveikia, formos
+nesubmitina) neišmeta JS klaidos — tik mokinys keikiasi. Rage-click yra
+vienintelis signalas kad esamas UI element neveikia.
+
+### 4️⃣ Fingerprint grupavimas (`src/lib/error-fingerprint.ts`)
+Ta pati klaida iš 100 vartotojų = **1 grupė**, ne 100 eilučių. Formulė:
 
 ```
-severity = min(100, round(
-    users     × 15    +   // kiek unikalių žmonių pataikė
-    paths     × 5     +   // kiek skirtingų puslapių
-    critical  × 10    +   // kritinių įvykių (escalation/burst/lockdown)
-    log(count) × 8    +   // bendras kiekis (log kad nepersistengtų)
-    (≤1h  ? 20 : ≤24h ? 10 : 0)  // šviežumo bonus
-))
+fingerprint = hash(normalize(message) + firstStackFrame)
 ```
 
-### Spalvų kodavimas:
-- 🟢 **0–39** — chill, žemas prioritetas
-- 🟡 **40–69** — pažiūrėti verta
-- 🔴 **70–100** — **FIX NOW** (raudona kortelė + spalvota juostelė)
+`normalize()` išmeta:
+- UUID'us (`abc-123-...` → `<uuid>`)
+- Skaičius (`line 4823` → `line <n>`)
+- Path'us (`/user/42/settings` → `/user/<n>/settings`)
+- Timestamp'us
+
+Todėl `Error at line 4823` ir `Error at line 4901` yra **ta pati grupė** —
+tas pats bug'as, tik su skirtingu triggeriu.
+
+### 5️⃣ Route-weighted severity
+Ne visos klaidos vienodos. Klaida ant `/checkin` yra 100× svarbesnė nei
+klaida ant `/blog`. Mūsų weight'ai:
+
+| Route | Weight | Kodėl |
+|-------|--------|-------|
+| `/checkin`, `/organization/scan` | ×6 | QR įsiregistravimas — mokinys neprisiregistruoja = valandos negaunamos |
+| `/reservation`, `/verify` | ×5 | Rezervacijos / PDF verifikacija |
+| `/auth`, `/register`, `/login` | ×4 | Nauji vartotojai neįeina |
+| `/student`, `/organization`, `/school` | ×3 | Pagrindiniai dashboard'ai |
+| `/admin/*` | ×1 | Admin gali pats fiksint |
+| `/`, `/blog`, `/terms` | ×2 | Landing / info |
+
+Severity score = `count × users × routeWeight × (isCritical ? 2 : 1)`,
+plus regression multiplier ×1.5.
+
+### 6️⃣ Regression tracker (`src/lib/error-resolved.ts`)
+Kai spaudi „Fixinta" mygtuką ant error grupės — sistema įsimena
+localStorage'e. Jei ta pati klaida **vėl** pasirodo po 30s+ nuo pažymėjimo,
+grupė automatiškai flag'inasi **🔁 REGRESSION** su padidintu severity.
+
+**Kodėl svarbu:** regresija yra pati kenkėjiškiausia klaida — mokinys
+tikėjosi kad veikia, o vėl sulūžo. Sistema tai išryškina fuchsia rėmelį
+kortelėje, kad admin negalėtų prasilenkti.
+
+### 7️⃣ Deploy tag (`vite.config.ts`)
+Kiekvienas error report'as neša `commit_sha` iš to build'o, kur jis
+įvyko. Error Center kortelėje matai `abc1234` chip'ą — spragtelėk tam,
+kad pamatytum visus errors iš to konkretaus deploy'o. Jei grupė matoma
+per **kelis skirtingus build'us** (`abc1234 +2`), chip pasidaro amber —
+tai chroniška problema, ne vieno deploy'o regresija.
 
 ---
 
-## 🚨 Burst detekcija — kada sistema pati užsidaro
+## 🚨 Kada suveikia auto-lockdown
 
-Kai kartas nuo karto kokia klaida — norm. Bet jei **≥3 skirtingi vartotojai per 90 sekundžių** susiduria su ta pačia klaida (tas pats fingerprintas) — tai **burst**. Reiškia:
-- Kažkoks svarbus feature'as lūžo
-- Deploy'as sugriuvo
-- Regresija po pakeitimo
+Du triggeriai:
 
-Sistema tada:
-1. Įjungia **auto-lockdown** su kodu `E-4002`
-2. Vartotojai mato „Sistema stabilizuojama, grįžk už 10 min"
-3. Adminui siunčia **prioritetinį email** (X-Priority: 1) su top klaidomis
-4. Push notification (jei įjungęs)
-5. Rodo raudoną alertą admin HUD'e realtime
+1. **Critical threshold** — ≥2 kritinės klaidos per 3 min → lockdown.
+2. **Burst detection** — ≥3 skirtingi prisijungę vartotojai gauna
+   klaidas per 90s → lockdown iš karto (nebelaukiam threshold'o).
 
-Failas: `src/lib/error-escalation.functions.ts` → funkcija `notifySecurityEvent`.
+Kai suveikia:
+- Svetainė užrakinama lankytojams (kodas `E-5001`)
+- Admin gauna **email** su glass-morphism UI, gradient severity bar,
+  „Ką matys mokinys?" panele, top-15min digest'u, ir stack trace
+- Admin gauna **Discord ping** su severity bar, impact line, ir
+  fingerprint field
+- Push notification į admin telefoną
 
----
-
-## 🔄 Auto-recovery — kada sistema pati atsirakina
-
-Būtų lame, jei lockdown'as liktų amžinai kai jau nieko blogo nebūna. Todėl `lockdown-recovery.functions.ts` kas 60 sek. tikrina:
-- Ar per pastaras **10 min** nebuvo NAUJŲ kritinių klaidų grupių?
-- Ar `run_deep_health_scan()` grąžina `critical_failures = 0`?
-
-Jei taip — automatiškai `UPDATE site_settings SET lockdown_enabled = false`. Vartotojai grįžta be admin įsikišimo.
-
-Aišku, super adminas visada gali rankiniu būdu atrakinti per `/admin/lockdown` bet kada.
+**Auto-recovery:** jei per 10 min neįvyksta jokios naujos kritinės
+klaidos, sistema pati atrakina svetainę.
 
 ---
 
-## 🎛️ Admin Error HUD — realtime widget
+## 🎨 Error Center kortelės legenda
 
-Visose `/admin/*` puslapiuose kampe (bottom-right) plaukioja mažas widget'as (`src/components/admin-error-hud.tsx`):
-
-- **Skaitiklis:** kiek unikalių grupių per pastarą val.
-- **Pulsuoja** (raudonai) kai atsiranda nauja klaida
-- **Spustelėjus** → nuveda tiesiai į `/admin/errors`
-- **Slepiasi** kai lockdown išjungtas ir 0 klaidų → nekemša ekrano
-
----
-
-## 🔍 Kaip ieškoti klaidos rankiniu būdu (`/admin/errors`)
-
-Puslapyje yra 6 skiltys:
-
-| Skiltis | Ką rasi |
-|---|---|
-| **Live** | Real-time feed'as, kiekvienoje eilutėje `#fp` chip'as |
-| **Top** | **Grupuota pagal fingerprintą** + severity + trend sparkline |
-| **Sources** | Breakdown pagal puslapį / naršyklę / OS |
-| **Trends** | 24h srauto grafikai |
-| **Health** | Sveikatos patikros rezultatai |
-| **Escalation** | Burst įvykiai + lockdown istorija |
-
-### Trick'ai paieškai:
-1. **Įrašyk `#a3f9c2b`** filtre → matai visus tos grupės eilutes.
-2. Įjunk **Regex mode** → pvz. `TypeError.*null` — matys visas panašias.
-3. Pasirink laiko langą (`1h`, `24h`, `7d`) — sumažins triukšmą.
-4. Rikiuok grupes pagal **Severity / Kiekis / Vartotojai / Naujausia**.
-5. Įjunk **🆕 Tik nauja (24h)** — matys tik REGRESIJAS, ne senas žinomas problemas.
-6. **Nutildyk** žinomą triukšmingą grupę (pvz. `ResizeObserver loop`) → dingsta iš sąrašo, bet skaičiuojasi.
+| Ženklas | Ką reiškia |
+|---------|------------|
+| 🔁 REGRESSION | Ši grupė buvo pažymėta „fixinta", bet grįžo. Aukščiausias prioritetas. |
+| 🆕 nauja | Pirmą kartą pasirodė per pastarąsias 24h. |
+| 🔥 (šalia užrašo "vartotojų") | ≥5 skirtingi vartotojai palietė šią klaidą. |
+| Severity 70+ | Raudona juostelė kairėje — reikia žiūrėti dabar. |
+| Severity 40-69 | Amber — svarbu, bet dar ne krizė. |
+| Severity <40 | Emerald — vizualus / retas. |
+| `abc1234` chip | Build (commit) kur pirma pastebėta. Amber jei matoma keliuose build'uose. |
 
 ---
 
-## 📧 Ką email'as sako, kai kažkas lūžta
+## 🧪 Testavimas
 
-Adminui gaunamas email atrodo taip (glassmorphism dizainas):
+`/admin/errors` → **„Nustatymai"** turi 4 test mygtukus, kurie apeina
+visus filtrus:
 
-```
-🚨 KRITINĖ KLAIDA · Socialinės Valandos
-────────────────────────────────────
-Kodas: E-4002 · Burst (5 vartotojai / 90s)
-Fingerprint: #a3f9c2b (Severity 87)
-
-TOP 3 grupės:
-• #a3f9c2b  TypeError: null.id  · 47× · 12 usr
-• #b7e1904  Failed fetch /api  · 15× · 8 usr
-• #c2d8517  Timeout after <n>ms · 9× · 3 usr
-
-Sistema užsirakino automatiškai.
-[Peržiūrėti /admin/errors →]
-```
-
-Su `X-Priority: 1` header'iu — telefonas garsiai pypsės.
+- **Discord ping** — tik Discord pranešimas
+- **Email test** — tik email visiems adminams
+- **Abu kanalai** — Discord + email
+- **Lockdown simuliacija** — pilnas lockdown flow (bet be realaus
+  užrakinimo — sistema po kelių sekundžių atrakina)
 
 ---
 
-## 🎬 Session Replay — matai KAS vartotojas veikė prieš crash'ą
+## 📚 Susiję failai
 
-Kiekvieno vartotojo naršyklėje `user-breadcrumbs.ts` fiksuoja paskutines **25 veiksmus** (in-memory, ne DB):
-- Kliksai (su ARIA label)
-- Navigacijos (route changes)
-- Scrollai
-- Tab visibility (perėjo į kitą kortelę?)
-- Fetch success/fail
-- Resize (pakeitė orientaciją?)
-
-Kai įvyksta klaida — visa breadcrumb istorija siunčiama kartu su klaida. `/admin/errors` klaidos detalėse matai **timeline**:
-
-```
-14:23:01  → /tasks
-14:23:05  click "Rezervuoti"
-14:23:07  fetch OK /api/reservations (240ms)
-14:23:08  click "Patvirtinti"
-14:23:08  fetch FAIL /api/verify (500, 890ms)  ⚠
-14:23:08  💥 TypeError: null.id  ← CRASH
-```
-
-Iš šio timeline'o iškart matai, kad `/api/verify` grąžino 500 ir NEXT millisec'ą lūžo UI. Reiškia problema serveryje, ne UI. **Debug'as be minčių skaitymo.**
-
----
-
-## 🧹 Ką NEreikia daryti
-
-- ❌ Nereikia rašyti jokio SQL — `activity_log.meta` yra `jsonb`.
-- ❌ Nereikia jokių trečių šalių (Sentry, Datadog, LogRocket) — pilnai savarankiška.
-- ❌ Nereikia migrucijų — viskas jau paruošta.
-- ❌ Nereikia diegti npm paketų — viskas built-in.
-
----
-
-## 🎯 Verifikacija — ar veikia
-
-1. Atidaryk browser'io DevTools console, įrašyk: `throw new Error("test-fp-check")`.
-2. Per 5 sek eik į `/admin/errors` → „Top" skiltis.
-3. Turėtum matyti naują grupę su fingerprintu, „🆕 nauja" žymu, severity ~40 (1 usr, 1 path).
-4. Įrašyk tą pačią klaidą dar 2x su skirtingais suffix'ais: `throw new Error("test-fp-check foo")`, `throw new Error("test-fp-check bar")`.
-5. **Ta pati grupė** turi tapti `count=3`, severity padidėti. Fingerprintas nepasikeičia.
-
-Jei taip veikia — sistema OK. 🎉
-
----
-
-## 📂 Failai kurie viską daro
-
-| Failas | Rolė |
-|---|---|
-| `src/lib/error-fingerprint.ts` | Normalizavimas, fingerprint, severity |
-| `src/lib/error-log.ts` | Global handlers + logging pipeline |
-| `src/lib/user-breadcrumbs.ts` | Session replay + rage click |
-| `src/components/lovable-overlay-bridge.tsx` | Vite/Lovable overlay pagavimas |
-| `src/components/admin-error-hud.tsx` | Real-time widget |
-| `src/routes/admin.errors.tsx` | UI: Live/Top/Sources/Trends/Health/Escalation |
-| `src/lib/error-escalation.functions.ts` | Burst detekcija + email + lockdown trigger |
-| `src/lib/lockdown-recovery.functions.ts` | Auto-atrakinimas |
-| DB funkcija `run_deep_health_scan()` | 18 patikrų + auto-lockdown |
-| DB funkcija `auto_lockdown_if_unhealthy()` | Cron wrapper |
-
-**Sistema pilnai advanced, pilnai autonominė, pilnai vizualiai suprantama.** 🚀
+- `src/lib/error-log.ts` — client + Supabase klaidų logger'is, filtrai
+- `src/lib/error-fingerprint.ts` — grupavimo hash, route weights, severity
+- `src/lib/error-resolved.ts` — regression tracker
+- `src/lib/error-escalation.functions.ts` — email + Discord + lockdown
+- `src/lib/lockdown-recovery.functions.ts` — auto-recovery po 10 min
+- `src/lib/user-breadcrumbs.ts` — session replay + rage/silent detektoriai
+- `src/routes/admin.errors.tsx` — Error Center UI
+- `src/components/admin-error-hud.tsx` — floating HUD kiekviename admin puslapyje

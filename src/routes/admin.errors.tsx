@@ -1529,12 +1529,39 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
               {row.meta?.message ?? "(no message)"}
             </pre>
           </div>
+
+          {/* Student-impact panel — what will an actual user see because of this? */}
+          {(() => {
+            const path = String(row.meta?.path ?? "");
+            const w = routeWeight(path);
+            const severity = w >= 5 ? "🔴 Kritinis mokinių srautui" : w >= 3 ? "🟠 Blokuoja veiksmą" : "🟡 Vizualus / nekritinis";
+            const impact = path.includes("/checkin") ? "Mokinys negali įsiregistruoti QR kodu — valandos neįskaitomos."
+              : path.includes("/reservation") || path.includes("/organization/scan") ? "Rezervacijos / darbo patvirtinimo srautas gali sulūžti."
+              : path.includes("/pdf") || path.includes("/verify") ? "PDF sertifikatas gali nepasirašyti arba nepatikrinamas."
+              : path.includes("/auth") || path.includes("/login") || path.includes("/register") ? "Naujas vartotojas gali neprisijungti / neužsiregistruoti."
+              : "Puslapis gali užstrigti arba parodyti tuščią ekraną.";
+            return (
+              <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent p-3">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Ką matys mokinys?</div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-200">{severity}</span>
+                  <span className="rounded-full border border-border/60 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">route weight ×{w}</span>
+                </div>
+                <div className="mt-2 text-[13px] leading-snug text-foreground">{impact}</div>
+              </div>
+            );
+          })()}
+
           <div className="grid grid-cols-2 gap-3 text-xs">
-            {row.meta?.path && <Kv k="Puslapis" v={row.meta.path} />}
-            {row.meta?.source && <Kv k="Šaltinis" v={row.meta.source} />}
-            {row.meta?.browser && <Kv k="Naršyklė" v={row.meta.browser} />}
-            {row.meta?.os && <Kv k="OS" v={row.meta.os} />}
-            {row.meta?.device && <Kv k="Įrenginys" v={row.meta.device} />}
+            {row.meta?.path && <Kv k="Puslapis" v={String(row.meta.path)} />}
+            {row.meta?.source && <Kv k="Šaltinis" v={String(row.meta.source)} />}
+            {row.meta?.browser && <Kv k="Naršyklė" v={String(row.meta.browser)} />}
+            {row.meta?.os && <Kv k="OS" v={String(row.meta.os)} />}
+            {row.meta?.device && <Kv k="Įrenginys" v={String(row.meta.device)} />}
+            {(row.meta as any)?.commit_sha && (row.meta as any).commit_sha !== "unknown" && (
+              <Kv k="Build (commit)" v={String((row.meta as any).commit_sha).slice(0, 12)} />
+            )}
+            {(row.meta as any)?.fingerprint && <Kv k="Fingerprint" v={String((row.meta as any).fingerprint)} />}
             {row.user_id && <Kv k="Vartotojas" v={row.user_id.slice(0, 8)} />}
           </div>
           <ReplayTimeline meta={row.meta} />
