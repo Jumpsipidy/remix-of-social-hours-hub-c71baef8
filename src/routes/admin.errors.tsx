@@ -329,6 +329,7 @@ function AdminErrorsPage() {
     users: Set<string>;
     paths: Set<string>;
     browsers: Set<string>;
+    builds: Set<string>;
     firstMs: number;
     lastMs: number;
     trend: number[]; // 24 buckets = 1h each
@@ -355,6 +356,7 @@ function AdminErrorsPage() {
           users: new Set(),
           paths: new Set(),
           browsers: new Set(),
+          builds: new Set(),
           firstMs: ts,
           lastMs: ts,
           trend: new Array(24).fill(0),
@@ -367,6 +369,8 @@ function AdminErrorsPage() {
       if (r.user_id) g.users.add(r.user_id);
       if (r.meta?.path) g.paths.add(String(r.meta.path).split("?")[0]);
       if (r.meta?.browser) g.browsers.add(String(r.meta.browser));
+      const bsha = (r.meta as any)?.commit_sha;
+      if (bsha && bsha !== "unknown") g.builds.add(String(bsha));
       if (ts < g.firstMs) g.firstMs = ts;
       if (ts > g.lastMs) { g.lastMs = ts; g.sample = r; }
       if (ts >= trendStart) {
@@ -374,24 +378,31 @@ function AdminErrorsPage() {
         g.trend[idx] += 1;
       }
     }
-    return Array.from(map.values()).map((g) => ({
-      ...g,
-      severity: severityScore({
-        count: g.count,
-        users: g.users.size,
-        paths: g.paths.size,
-        criticalCount: g.critCount,
-        lastSeenMs: g.lastMs,
-        maxRouteWeight: Math.max(1, ...Array.from(g.paths).map((p) => routeWeight(String(p)))),
-        isRegression: g.firstMs > now - 6 * 3_600_000 && g.count >= 3,
-      }),
-      isNewToday: g.firstMs > now - 24 * 3_600_000,
-    }));
-  }, [rows]);
+    return Array.from(map.values()).map((g) => {
+      const regressed = isRegression(g.fp, g.lastMs);
+      return {
+        ...g,
+        severity: severityScore({
+          count: g.count,
+          users: g.users.size,
+          paths: g.paths.size,
+          criticalCount: g.critCount,
+          lastSeenMs: g.lastMs,
+          maxRouteWeight: Math.max(1, ...Array.from(g.paths).map((p) => routeWeight(String(p)))),
+          isRegression: regressed || (g.firstMs > now - 6 * 3_600_000 && g.count >= 3),
+        }),
+        isNewToday: g.firstMs > now - 24 * 3_600_000,
+        isRegression: regressed,
+        isResolved: !!resolvedMap[g.fp] && !regressed,
+        resolvedEntry: resolvedMap[g.fp],
+      };
+    });
+  }, [rows, resolvedMap]);
 
   const topGroups = useMemo(() => {
     const list = groups.filter((g) => (groupNewOnly ? g.isNewToday : true))
-      .filter((g) => !muted.includes(g.fp));
+      .filter((g) => !muted.includes(g.fp))
+      .filter((g) => !g.isResolved);
     return [...list].sort((a, b) => {
       if (groupSort === "count") return b.count - a.count;
       if (groupSort === "users") return b.users.size - a.users.size;
@@ -399,6 +410,19 @@ function AdminErrorsPage() {
       return b.severity - a.severity;
     });
   }, [groups, groupSort, groupNewOnly, muted]);
+
+  const resolveGroup = (fp: string) => {
+    markResolved(fp, CURRENT_BUILD);
+    setResolvedMap(loadResolved());
+    toast.success(`Grupė #${fp.slice(0, 7)} pažymėta kaip išspręsta. Jei vėl pasirodys — bus REGRESSION 🔁`);
+  };
+  const unresolveGroup = (fp: string) => {
+    unmarkResolved(fp);
+    setResolvedMap(loadResolved());
+    toast.success("Atkurta į aktyvių sąrašą");
+  };
+
+
 
   const toggleMute = (fp: string) => {
     const next = muted.includes(fp) ? muted.filter((x) => x !== fp) : [...muted, fp];
