@@ -1499,3 +1499,139 @@ function IgnoreRuleEditor({ onAdd }: { onAdd: (p: string) => void }) {
     </form>
   );
 }
+
+type GroupCardProps = {
+  g: {
+    fp: string;
+    message: string;
+    action: string;
+    count: number;
+    critCount: number;
+    users: Set<string>;
+    paths: Set<string>;
+    browsers: Set<string>;
+    firstMs: number;
+    lastMs: number;
+    trend: number[];
+    severity: number;
+    isNewToday: boolean;
+    frame?: string;
+    sample: ErrRow;
+  };
+  onOpen: () => void;
+  onFilterLive: () => void;
+  onMute: () => void;
+};
+
+function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
+  const sevColor =
+    g.severity >= 70 ? "from-rose-500 to-fuchsia-500 text-rose-200 border-rose-500/50"
+    : g.severity >= 40 ? "from-amber-500 to-orange-500 text-amber-100 border-amber-500/40"
+    : "from-emerald-500 to-sky-500 text-emerald-100 border-emerald-500/40";
+  const sevBadge =
+    g.severity >= 70 ? "bg-rose-500/20 text-rose-200 border-rose-500/50"
+    : g.severity >= 40 ? "bg-amber-500/20 text-amber-200 border-amber-500/40"
+    : "bg-emerald-500/15 text-emerald-200 border-emerald-500/40";
+  const maxTrend = Math.max(1, ...g.trend);
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 240, damping: 24 }}
+    >
+      <SaaSPanel className="group relative overflow-hidden">
+        <div
+          className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${sevColor}`}
+        />
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[g.action] ?? ""}`}>
+                {KIND_LABEL[g.action] ?? g.action}
+              </span>
+              <code className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] tracking-wider">
+                #{g.fp}
+              </code>
+              {g.isNewToday && (
+                <span className="rounded-full border border-emerald-500/50 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-300">
+                  🆕 nauja
+                </span>
+              )}
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${sevBadge}`}>
+                Severity {g.severity}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                pirmas: {relTimeShort(g.firstMs)} · paskutinis: {relTimeShort(g.lastMs)}
+              </span>
+            </div>
+            <div className="mt-1.5 line-clamp-2 break-words font-mono text-[13px] text-rose-200/90">
+              {g.message}
+            </div>
+            {g.frame && (
+              <div className="mt-1 truncate font-mono text-[10px] text-muted-foreground">↳ {g.frame}</div>
+            )}
+            <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+              <span className="tabular-nums"><b className="text-foreground">{g.count}×</b> įvykių</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.users.size}</b> vartotojų</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.paths.size}</b> puslapių</span>
+              <span className="tabular-nums"><b className="text-foreground">{g.browsers.size}</b> naršyklių</span>
+              {g.critCount > 0 && (
+                <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">
+                  {g.critCount} kritinės
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Trend sparkline (24h · 1h buckets) */}
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex h-10 w-32 items-end gap-[2px]">
+              {g.trend.map((n, i) => (
+                <span
+                  key={i}
+                  className={`flex-1 rounded-sm ${
+                    n > 0
+                      ? g.severity >= 70 ? "bg-gradient-to-t from-rose-500 to-fuchsia-400"
+                        : g.severity >= 40 ? "bg-gradient-to-t from-amber-500 to-orange-400"
+                        : "bg-gradient-to-t from-emerald-500 to-sky-400"
+                      : "bg-muted/30"
+                  }`}
+                  style={{ height: `${(n / maxTrend) * 100}%`, minHeight: n > 0 ? 3 : 2 }}
+                  title={`${n} įvykių prieš ${23 - i}h`}
+                />
+              ))}
+            </div>
+            <span className="text-[9px] text-muted-foreground">24h srautas</span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Button variant="outline" size="sm" onClick={onOpen}>
+            <Search className="mr-1 h-3.5 w-3.5" /> Detalės
+          </Button>
+          <Button variant="outline" size="sm" onClick={onFilterLive}>
+            <Radio className="mr-1 h-3.5 w-3.5" /> Live filtras
+          </Button>
+          <Button variant="outline" size="sm" onClick={onMute}>
+            <EyeOff className="mr-1 h-3.5 w-3.5" /> Nutildyti
+          </Button>
+          <button
+            onClick={() => { try { navigator.clipboard.writeText(`#${g.fp} · ${g.message}`); toast.success("Nukopijuota"); } catch {} }}
+            className="ml-auto rounded-lg border border-border/50 px-2 py-1 text-[11px] text-muted-foreground hover:border-primary/40 hover:text-foreground"
+          >
+            <Copy className="mr-1 inline h-3 w-3" /> #{g.fp}
+          </button>
+        </div>
+      </SaaSPanel>
+    </motion.div>
+  );
+}
+
+function relTimeShort(ms: number): string {
+  const diff = (Date.now() - ms) / 1000;
+  if (diff < 60) return `${Math.floor(diff)}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
