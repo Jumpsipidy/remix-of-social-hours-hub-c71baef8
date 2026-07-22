@@ -125,19 +125,39 @@ async function sendDiscordAlert(opts: {
     fields.push({ name: `Burst (${BURST_WINDOW_S}s)`, value: `**${opts.burstUsers}** vartotojai`, inline: true });
   }
   const description = opts.message.length > 1800 ? opts.message.slice(0, 1800) + "…" : opts.message;
+  // Severity bar: full width block glyphs so mobile Discord shows an instant
+  // visual "how bad is this" without expanding the embed.
+  const barSize = isLock ? 10 : opts.level === "critical" ? 7 : 3;
+  const bar = "█".repeat(barSize) + "░".repeat(10 - barSize);
+  const impactLine = (() => {
+    const p = opts.path ?? "";
+    if (p.includes("/checkin")) return "🎯 Mokinys negali įsiregistruoti QR kodu";
+    if (p.includes("/reservation") || p.includes("/organization/scan")) return "🎯 Sulūžta rezervacijos / patvirtinimo srautas";
+    if (p.includes("/pdf") || p.includes("/verify")) return "🎯 PDF sertifikatas gali nepasirašyti";
+    if (p.includes("/auth") || p.includes("/login") || p.includes("/register")) return "🎯 Vartotojas negali prisijungti / registruotis";
+    return "🎯 Puslapis gali sulūžti mokiniams";
+  })();
   const body = {
     username: "Socialinės Valandos · Monitor",
+    avatar_url: "https://socialinesvalandos.dev/apple-touch-icon.png",
     embeds: [
       {
+        author: {
+          name: isLock ? "🔒 LOCKDOWN AKTYVUS" : "Auto-monitor · realtime",
+          url: "https://socialinesvalandos.dev/admin/errors",
+        },
         title,
-        description: "```" + description.replace(/```/g, "ʼʼʼ") + "```",
+        description:
+          `\`${bar}\` **${isLock ? "P0" : opts.level === "critical" ? "P1" : "P3"}**\n` +
+          `${impactLine}\n` +
+          "```" + description.replace(/```/g, "ʼʼʼ") + "```",
         color,
         fields,
         timestamp: new Date().toISOString(),
         footer: {
           text: isLock
             ? "Automatinis lockdown · Reikalingas rankinis įsikišimas"
-            : "Auto-monitor · Fingerprint-grouped",
+            : "Auto-monitor · Fingerprint-grouped · Route-weighted",
         },
         url: isLock
           ? "https://socialinesvalandos.dev/admin/lockdown"
