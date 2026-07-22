@@ -14,6 +14,7 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
+import { PushToggle } from "@/components/push-toggle";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { LeafletMap } from "@/components/leaflet-map";
