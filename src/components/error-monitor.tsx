@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { reportCriticalIncident } from "@/lib/incident.functions";
 import { useAuth } from "@/hooks/use-auth";
-import { installGlobalErrorLogging } from "@/lib/error-log";
+import { installGlobalErrorLogging, logClientError } from "@/lib/error-log";
+import { installBreadcrumbs, pushBreadcrumb } from "@/lib/user-breadcrumbs";
 
 /**
  * Client-side automatic error monitor.
