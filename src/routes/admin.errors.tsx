@@ -38,7 +38,9 @@ import { toast } from "sonner";
 import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
+import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
+
 
 export const Route = createFileRoute("/admin/errors")({
   head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
