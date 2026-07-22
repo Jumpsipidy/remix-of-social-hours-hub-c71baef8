@@ -101,7 +101,11 @@ function alertEmailHtml(opts: {
   userEmail?: string;
   lockdown?: boolean;
   criticalCount?: number;
+  burstUsers?: number;
+  lockdownReason?: "critical-threshold" | "burst" | null;
+  digest?: { msg: string; count: number }[];
 }) {
+
   const isLock = !!opts.lockdown;
   const isCrit = opts.level === "critical";
   const accent = isLock ? "#ef4444" : isCrit ? "#f97316" : "#eab308";
