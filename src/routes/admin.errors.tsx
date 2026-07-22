@@ -449,6 +449,36 @@ function AdminErrorsPage() {
     }
   };
 
+  const runTestAlert = async (mode: "discord" | "email" | "both" | "lockdown-sim") => {
+    setTesting(true);
+    setAlertResult(null);
+    try {
+      const res = await sendTestAlertFn({ data: { mode } });
+      if (!res?.ok) {
+        toast.error(`Testas atmestas: ${(res as { error?: string })?.error ?? "unknown"}`);
+        return;
+      }
+      setAlertResult({
+        mode,
+        discord: res.discord,
+        email: res.email,
+        hasDiscordWebhook: res.hasDiscordWebhook,
+        hasResend: res.hasResend,
+        ts: Date.now(),
+      });
+      const parts: string[] = [];
+      if (res.discord) parts.push(`Discord: ${res.discord.ok ? "✅" : "❌ " + (res.discord.error ?? "")}`);
+      if (res.email) parts.push(`Email → ${res.email.recipients}: ${res.email.ok ? "✅" : "❌ " + (res.email.error ?? "")}`);
+      if (parts.every((p) => p.includes("✅"))) toast.success(parts.join("  ·  "));
+      else toast.warning(parts.join("  ·  "));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko");
+    } finally {
+      setTesting(false);
+    }
+  };
+
+
   const clear = async () => {
     if (!confirm("Ištrinti visas klaidas iš žurnalo?")) return;
     setBusy(true);
