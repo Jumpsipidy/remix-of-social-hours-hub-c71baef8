@@ -69,13 +69,13 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         icon: ClipboardList,
         tone: "from-amber-500 to-orange-500",
         title: "Pasiūlyk savo valandas",
-        body: "Jei jau kalbėjai su organizacija ne per platformą — mygtukas „Pasiūlyk rezervaciją" leidžia įrašyti retrospektyviai (iki 8 val. per kartą).",
+        body: "Jei jau kalbėjai su organizacija ne per platformą — mygtukas „Pasiūlyk rezervaciją” leidžia įrašyti retrospektyviai (iki 8 val. per kartą).",
       },
       {
         icon: Users,
         tone: "from-pink-500 to-rose-500",
         title: "Draugai ir grupės",
-        body: "Susirask klasiokų per „Draugai". Rezervuodamas gali juos pakviesti — jei organizacija patvirtins, valandos bus paskirtos VISIEMS.",
+        body: "Susirask klasiokų per „Draugai”. Rezervuodamas gali juos pakviesti — jei organizacija patvirtins, valandos bus paskirtos VISIEMS.",
       },
       {
         icon: Trophy,
@@ -87,7 +87,7 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         icon: FileCheck,
         tone: "from-emerald-500 to-lime-500",
         title: "Sertifikatas",
-        body: "Pasiekus 100% — mygtukas „Sertifikatas" sugeneruoja pasirašytą PDF su QR kodu. Verifikuoti galima /verify puslapyje.",
+        body: "Pasiekus 100% — mygtukas „Sertifikatas” sugeneruoja pasirašytą PDF su QR kodu. Verifikuoti galima /verify puslapyje.",
       },
     ];
   }
@@ -112,13 +112,13 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         icon: Rocket,
         tone: "from-fuchsia-500 to-pink-500",
         title: "Kurk užduotis",
-        body: "„Nauja užduotis" forma: pavadinimas, aprašymas, data, laikas, valandos, adresas su žemėlapiu, žymės, pasikartojimo grafikas.",
+        body: "„Nauja užduotis” forma: pavadinimas, aprašymas, data, laikas, valandos, adresas su žemėlapiu, žymės, pasikartojimo grafikas.",
       },
       {
         icon: CheckCircle2,
         tone: "from-amber-500 to-orange-500",
         title: "Patvirtinimo eiga",
-        body: "Rezervacija → „Priimta" (mokinys pradeda) → „Užbaigk ir patvirtink" (privalomas teisinis pažymėjimas). Tik po to valandos įskaitomos.",
+        body: "Rezervacija → „Priimta” (mokinys pradeda) → „Užbaigk ir patvirtink” (privalomas teisinis pažymėjimas). Tik po to valandos įskaitomos.",
       },
       {
         icon: MessageSquare,
@@ -155,7 +155,7 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         icon: ListChecks,
         tone: "from-amber-500 to-yellow-500",
         title: "Masinis patvirtinimas",
-        body: "„Rezervacijos" skiltyje pažymėk daug ir patvirtink/atmesk vienu paspaudimu.",
+        body: "„Rezervacijos” skiltyje pažymėk daug ir patvirtink/atmesk vienu paspaudimu.",
       },
       {
         icon: Search,
@@ -186,7 +186,7 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         icon: Activity,
         tone: "from-emerald-500 to-teal-500",
         title: "Veiklos žurnalas",
-        body: "„Auditas" fiksuoja kiekvieną svarbų veiksmą. Eksportuoti — CSV.",
+        body: "„Auditas” fiksuoja kiekvieną svarbų veiksmą. Eksportuoti — CSV.",
       },
       {
         icon: Lock,
