@@ -442,6 +442,22 @@ export const escalateAppError = createServerFn({ method: "POST" })
           },
         });
       }
+
+      // Discord webhook — fires alongside email, never blocks it. Own dedupe
+      // is implicit via `shouldEmail` gating above.
+      const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
+      const fpGroup = computeFp(data.message, data.stack ?? null);
+      await sendDiscordAlert({
+        level: data.level,
+        lockdown: lockdownTriggered,
+        lockdownReason,
+        message: data.message,
+        path: data.path,
+        userEmail: data.userEmail,
+        criticalCount,
+        burstUsers,
+        fingerprint: fpGroup.id,
+      });
     }
 
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
