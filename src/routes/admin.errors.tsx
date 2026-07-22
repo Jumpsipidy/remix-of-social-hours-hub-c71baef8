@@ -1747,22 +1747,29 @@ type GroupCardProps = {
     users: Set<string>;
     paths: Set<string>;
     browsers: Set<string>;
+    builds: Set<string>;
     firstMs: number;
     lastMs: number;
     trend: number[];
     severity: number;
     isNewToday: boolean;
+    isRegression?: boolean;
+    isResolved?: boolean;
+    resolvedEntry?: ResolvedEntry;
     frame?: string;
     sample: ErrRow;
   };
   onOpen: () => void;
   onFilterLive: () => void;
   onMute: () => void;
+  onResolve: () => void;
+  onUnresolve: () => void;
 };
 
-function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
+function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolve }: GroupCardProps) {
   const sevColor =
-    g.severity >= 70 ? "from-rose-500 to-fuchsia-500 text-rose-200 border-rose-500/50"
+    g.isRegression ? "from-fuchsia-500 to-rose-500 text-fuchsia-100 border-fuchsia-500/60"
+    : g.severity >= 70 ? "from-rose-500 to-fuchsia-500 text-rose-200 border-rose-500/50"
     : g.severity >= 40 ? "from-amber-500 to-orange-500 text-amber-100 border-amber-500/40"
     : "from-emerald-500 to-sky-500 text-emerald-100 border-emerald-500/40";
   const sevBadge =
@@ -1770,6 +1777,8 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
     : g.severity >= 40 ? "bg-amber-500/20 text-amber-200 border-amber-500/40"
     : "bg-emerald-500/15 text-emerald-200 border-emerald-500/40";
   const maxTrend = Math.max(1, ...g.trend);
+  const sampleBuild = (g.sample.meta as any)?.commit_sha as string | undefined;
+  const buildCount = g.builds.size;
   return (
     <motion.div
       layout
@@ -1777,10 +1786,8 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 240, damping: 24 }}
     >
-      <SaaSPanel className="group relative overflow-hidden">
-        <div
-          className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${sevColor}`}
-        />
+      <SaaSPanel className={`group relative overflow-hidden ${g.isRegression ? "ring-1 ring-fuchsia-500/40" : ""}`}>
+        <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${sevColor}`} />
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -1790,7 +1797,12 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
               <code className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] tracking-wider">
                 #{g.fp}
               </code>
-              {g.isNewToday && (
+              {g.isRegression && (
+                <span className="animate-pulse rounded-full border border-fuchsia-500/60 bg-fuchsia-500/20 px-2 py-0.5 text-[9px] font-bold uppercase text-fuchsia-200">
+                  🔁 REGRESSION
+                </span>
+              )}
+              {g.isNewToday && !g.isRegression && (
                 <span className="rounded-full border border-emerald-500/50 bg-emerald-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-emerald-300">
                   🆕 nauja
                 </span>
@@ -1798,6 +1810,19 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${sevBadge}`}>
                 Severity {g.severity}
               </span>
+              {sampleBuild && sampleBuild !== "unknown" && (
+                <span
+                  title={buildCount > 1 ? `Matoma ${buildCount} skirtinguose build'uose` : "Build, kuriame įvyko"}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] ${
+                    buildCount > 1
+                      ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
+                      : "border-border/60 bg-background/40 text-muted-foreground"
+                  }`}
+                >
+                  <GitCommit className="h-3 w-3" />
+                  {sampleBuild.slice(0, 7)}{buildCount > 1 ? ` +${buildCount - 1}` : ""}
+                </span>
+              )}
               <span className="text-[10px] text-muted-foreground">
                 pirmas: {relTimeShort(g.firstMs)} · paskutinis: {relTimeShort(g.lastMs)}
               </span>
@@ -1810,12 +1835,23 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
             )}
             <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
               <span className="tabular-nums"><b className="text-foreground">{g.count}×</b> įvykių</span>
-              <span className="tabular-nums"><b className="text-foreground">{g.users.size}</b> vartotojų</span>
+              <span
+                title="Kiek unikalių vartotojų palietė ši klaida"
+                className={`tabular-nums ${g.users.size >= 5 ? "text-rose-300" : ""}`}
+              >
+                <b className="text-foreground">{g.users.size}</b> vartotojų
+                {g.users.size >= 5 && <span className="ml-1">🔥</span>}
+              </span>
               <span className="tabular-nums"><b className="text-foreground">{g.paths.size}</b> puslapių</span>
               <span className="tabular-nums"><b className="text-foreground">{g.browsers.size}</b> naršyklių</span>
               {g.critCount > 0 && (
                 <span className="rounded bg-rose-500/15 px-1.5 py-0.5 text-rose-300">
                   {g.critCount} kritinės
+                </span>
+              )}
+              {g.isRegression && g.resolvedEntry && (
+                <span className="rounded bg-fuchsia-500/15 px-1.5 py-0.5 text-fuchsia-200">
+                  Buvo fixinta {relTimeShort(g.resolvedEntry.resolvedAt)} atgal ({g.resolvedEntry.resolvedInBuild.slice(0, 7)})
                 </span>
               )}
             </div>
@@ -1829,7 +1865,8 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
                   key={i}
                   className={`flex-1 rounded-sm ${
                     n > 0
-                      ? g.severity >= 70 ? "bg-gradient-to-t from-rose-500 to-fuchsia-400"
+                      ? g.isRegression ? "bg-gradient-to-t from-fuchsia-500 to-rose-400"
+                        : g.severity >= 70 ? "bg-gradient-to-t from-rose-500 to-fuchsia-400"
                         : g.severity >= 40 ? "bg-gradient-to-t from-amber-500 to-orange-400"
                         : "bg-gradient-to-t from-emerald-500 to-sky-400"
                       : "bg-muted/30"
@@ -1850,6 +1887,16 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
           <Button variant="outline" size="sm" onClick={onFilterLive}>
             <Radio className="mr-1 h-3.5 w-3.5" /> Live filtras
           </Button>
+          {g.isResolved ? (
+            <Button variant="outline" size="sm" onClick={onUnresolve}>
+              <RotateCw className="mr-1 h-3.5 w-3.5" /> Atkurti
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={onResolve}
+              className="border-emerald-500/50 text-emerald-200 hover:bg-emerald-500/10">
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> Fixinta
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onMute}>
             <EyeOff className="mr-1 h-3.5 w-3.5" /> Nutildyti
           </Button>
@@ -1864,6 +1911,7 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute }: GroupCardProps) {
     </motion.div>
   );
 }
+
 
 function relTimeShort(ms: number): string {
   const diff = (Date.now() - ms) / 1000;
