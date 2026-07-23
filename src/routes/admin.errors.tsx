@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
