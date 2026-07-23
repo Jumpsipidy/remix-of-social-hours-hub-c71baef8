@@ -24,6 +24,7 @@ import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
 
 import { PageViewTracker } from "@/components/page-view-tracker";
 import { FriendlyErrorScreen } from "@/components/friendly-error";
+import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 
 function NotFoundComponent() {
   return (
