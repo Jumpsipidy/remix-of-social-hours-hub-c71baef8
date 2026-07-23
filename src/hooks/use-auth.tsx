@@ -230,13 +230,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 const FALLBACK_AUTH: AuthState = {
   user: null,
   profile: null,
-  loading: false,
-  isAuthenticated: false,
   role: null,
+  isAuthenticated: false,
+  isImpersonating: false,
+  loading: false,
   signOut: async () => {},
-  refresh: async () => {},
-  setMock: () => {},
-  clearMock: () => {},
+  impersonate: () => {},
+  impersonateReal: async () => {},
+  clearImpersonation: () => {},
 };
 
 export function useAuth(): AuthState {
