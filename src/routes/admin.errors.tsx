@@ -1275,6 +1275,36 @@ function AdminErrorsPage() {
                       </div>
                     </SaaSPanel>
                   )}
+
+                  {Object.keys(resolvedMap).length > 0 && (
+                    <SaaSPanel>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-300">
+                            Fixintos grupės ({Object.keys(resolvedMap).length})
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Saugoma DB — išlieka po refresh ir veikia visiems super adminams.
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={refreshResolved}>
+                          <RefreshCw className="mr-1 h-3.5 w-3.5" /> Atnaujinti
+                        </Button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {Object.values(resolvedMap).slice(0, 24).map((entry) => (
+                          <button
+                            key={entry.fp}
+                            onClick={() => unresolveGroup(entry.fp)}
+                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 font-mono text-[10px] text-emerald-200 hover:border-amber-400/60 hover:text-amber-200"
+                            title="Atkurti į aktyvias klaidas"
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> #{entry.fp} · {relTimeShort(entry.resolvedAt)} <RotateCw className="h-3 w-3" />
+                          </button>
+                        ))}
+                      </div>
+                    </SaaSPanel>
+                  )}
                 </div>
               )}
 
