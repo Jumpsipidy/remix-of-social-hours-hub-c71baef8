@@ -439,6 +439,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
       shouldEmail = (emailedCount ?? 0) === 0;
     }
 
+    // Always compute fingerprint so both email/discord/AI paths share it
+    const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
+    const fpGroup = computeFp(data.message, data.stack ?? null);
+
     if (shouldEmail) {
       const { data: admins } = await supabaseAdmin
         .from("profiles")
@@ -478,10 +482,6 @@ export const escalateAppError = createServerFn({ method: "POST" })
         });
       }
 
-      // Discord webhook — fires alongside email, never blocks it. Own dedupe
-      // is implicit via `shouldEmail` gating above.
-      const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
-      const fpGroup = computeFp(data.message, data.stack ?? null);
       await sendDiscordAlert({
         level: data.level,
         lockdown: lockdownTriggered,
@@ -493,23 +493,24 @@ export const escalateAppError = createServerFn({ method: "POST" })
         burstUsers,
         fingerprint: fpGroup.id,
       });
+    }
 
-      // Instant AI analysis + Discord follow-up embed (fire-and-forget).
-      // Cached per fingerprint (6h TTL) and globally capped (80/24h) so a
-      // burst of errors won't spam OpenAI.
-      try {
-        const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
-        await autoAnalyzeAndAlert({
-          fingerprint: fpGroup.id,
-          message: data.message,
-          stack: data.stack ?? null,
-          path: data.path ?? null,
-          userEmail: data.userEmail ?? null,
-          level: data.level,
-        });
-      } catch (err) {
-        console.error("[escalate] auto-ai failed", err);
-      }
+    // Instant AI analysis — runs for EVERY escalated error, not just emailed ones.
+    // Internally cached per fingerprint (6h TTL) + globally capped (80/24h) so
+    // repeats or bursts won't hit OpenAI. Discord follow-up embed is sent only
+    // if a fresh analysis was produced or cache exists.
+    try {
+      const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
+      await autoAnalyzeAndAlert({
+        fingerprint: fpGroup.id,
+        message: data.message,
+        stack: data.stack ?? null,
+        path: data.path ?? null,
+        userEmail: data.userEmail ?? null,
+        level: data.level,
+      });
+    } catch (err) {
+      console.error("[escalate] auto-ai failed", err);
     }
 
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
