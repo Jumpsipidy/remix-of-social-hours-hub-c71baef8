@@ -10,15 +10,16 @@ const AnalyzeInput = z.object({
 });
 
 const SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui.
-Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib.
-Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų.
+Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib, sonner.
+Failų struktūra: src/routes/*.tsx (file-based routes), src/lib/*.functions.ts (server fns), src/components/**, src/hooks/**.
+Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų. Jei nesi tikras — sakyk "unknown" arba "hipotezė".
 
 Analizuok pateiktą klaidos grupę ir grąžink TIKTAI validų JSON (be markdown, be code fence):
 {
-  "suspected_cause": "1-2 trumpi sakiniai — kas tiksliai kaltas",
-  "suggested_file": "src/... failo kelias arba 'unknown'",
-  "suggested_fix": "3-5 konkretūs numeruoti žingsniai kaip ištaisyti — nurodyk funkcijas/eilutes jei matai iš stack",
-  "prompt_for_agent": "READY-TO-PASTE instrukcija Lovable agentui (lietuviškai, 1 paragrafas) kad jis pilnai išspręstų šitą bug'ą — įtraukk failą, priežastį ir laukiamą elgesį",
+  "suspected_cause": "1-2 trumpi sakiniai — kas tiksliai kaltas (funkcija, race condition, null access, RLS, etc.)",
+  "suggested_file": "src/... failo kelias (arba 'unknown')",
+  "suggested_fix": "3-5 konkretūs numeruoti žingsniai — nurodyk funkcijas/eilutes iš stack, ką pakeisti į ką",
+  "prompt_for_agent": "PILNAS super-promptas Lovable agentui (LT, 4-8 sakiniai). Struktūra: [1] Kontekstas: kas nutinka (klaida + kur + kada + kiek vartotojų). [2] Failas ir eilutė (iš stack). [3] Tikėtina priežastis. [4] Konkretus fix'as — kokį kodą pakeisti ir į ką. [5] Testavimo žingsniai — kaip patikrinti kad pataisyta. [6] Regresijos prevencija. Rašyk taip lyg duotum užduotį junior devui — jokių abstrakcijų.",
   "severity_estimate": "critical|high|medium|low",
   "confidence": 0.0-1.0
 }`;
