@@ -1746,10 +1746,22 @@ function AiAnalysisCard({ fingerprint }: { fingerprint: string }) {
     if (!fingerprint) return;
     let alive = true;
     getCached({ data: { fingerprint } })
-      .then((r) => { if (alive && r) setData(r as never); })
+      .then((r) => {
+        if (!alive) return;
+        if (r) {
+          setData(r as never);
+        } else {
+          // Auto-run analysis instantly — no click required
+          setLoading(true);
+          analyze({ data: { fingerprint, force: false } })
+            .then((res) => { if (alive) setData(res.analysis as never); })
+            .catch((e) => { if (alive) setError(e instanceof Error ? e.message : String(e)); })
+            .finally(() => { if (alive) setLoading(false); });
+        }
+      })
       .catch(() => {});
     return () => { alive = false; };
-  }, [fingerprint, getCached]);
+  }, [fingerprint, getCached, analyze]);
 
   async function run(force: boolean) {
     if (!fingerprint) { setError("Nėra fingerprint"); return; }
