@@ -202,8 +202,27 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       .single();
     if (error) throw new Error(error.message);
 
-    return { cached: false, analysis: saved };
+    // Audit + count against rate limit
+    await supabaseAdmin.from("activity_log").insert({
+      actor_id: context.userId,
+      action: "ai.analysis.run",
+      meta: { fingerprint: data.fingerprint, tokens, model, severity: row.severity_estimate },
+    } as never);
+
+    return {
+      cached: false,
+      analysis: saved,
+      limits: {
+        mine_today: usage.mineToday + 1,
+        mine_max: LIMIT_PER_ADMIN_PER_DAY,
+        global_today: usage.globalToday + 1,
+        global_max: LIMIT_GLOBAL_PER_DAY,
+        tokens_this_month: usage.tokensThisMonth + tokens,
+        tokens_max: LIMIT_TOKENS_PER_MONTH,
+      },
+    };
   });
+
 
 export const getAiAnalysis = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
