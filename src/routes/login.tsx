@@ -24,6 +24,7 @@ const DASH_BY_ROLE: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Prisijungti — Socialinės Valandos" },
