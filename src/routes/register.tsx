@@ -8,6 +8,7 @@ import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/register")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Registruotis — Socialinės Valandos" },
