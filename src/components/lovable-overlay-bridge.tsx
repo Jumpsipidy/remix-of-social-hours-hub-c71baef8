@@ -19,10 +19,28 @@ import { logClientError } from "@/lib/error-log";
 
 type OverlayInfo = { message: string; stack?: string; source: string };
 
+// Broadened list: Vite, Lovable, Next, Remix, Webpack, generic red dialogs.
 const OVERLAY_SELECTORS = [
-  "vite-error-overlay",           // Vite HMR overlay
-  "[data-lovable-error-overlay]", // Lovable overlay (if present)
-  "#webpack-dev-server-client-overlay", // fallback
+  "vite-error-overlay",
+  "vite-plugin-checker-error-overlay",
+  "[data-lovable-error-overlay]",
+  "[data-lovable-overlay]",
+  "iframe[title*='error' i]",
+  "#webpack-dev-server-client-overlay",
+  "nextjs-portal",
+  "[data-nextjs-dialog-overlay]",
+  "[data-remix-error-boundary]",
+];
+
+// Fuzzy match for random red dialogs from any tooling.
+const OVERLAY_TEXT_HINTS = [
+  "runtime error",
+  "unhandled runtime",
+  "compilation error",
+  "syntaxerror",
+  "referenceerror",
+  "typeerror:",
+  "failed to compile",
 ];
 
 function scanForOverlay(): OverlayInfo | null {
