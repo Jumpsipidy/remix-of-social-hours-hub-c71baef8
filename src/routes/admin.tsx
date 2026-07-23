@@ -27,6 +27,7 @@ import {
   ScanLine,
   Send,
   Gauge,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
