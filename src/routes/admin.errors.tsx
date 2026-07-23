@@ -1587,6 +1587,128 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
   );
 }
 
+function AiAnalysisCard({ fingerprint }: { fingerprint: string }) {
+  const analyze = useServerFn(analyzeErrorGroup);
+  const getCached = useServerFn(getAiAnalysis);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<{ suspected_cause?: string; suggested_file?: string; suggested_fix?: string; severity_estimate?: string; confidence?: number; model?: string; tokens_used?: number; updated_at?: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!fingerprint) return;
+    let alive = true;
+    getCached({ data: { fingerprint } })
+      .then((r) => { if (alive && r) setData(r as never); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [fingerprint, getCached]);
+
+  async function run(force: boolean) {
+    if (!fingerprint) { setError("Nėra fingerprint"); return; }
+    setLoading(true); setError(null);
+    try {
+      const r = await analyze({ data: { fingerprint, force } });
+      setData(r.analysis as never);
+      toast.success(r.cached ? "AI atsakymas iš kešo" : "AI analizė gauta");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      toast.error("AI klaida: " + msg.slice(0, 80));
+    } finally { setLoading(false); }
+  }
+
+  const sevColor: Record<string, string> = {
+    critical: "text-rose-300 border-rose-500/50 bg-rose-500/15",
+    high: "text-orange-300 border-orange-500/50 bg-orange-500/15",
+    medium: "text-amber-300 border-amber-500/40 bg-amber-500/10",
+    low: "text-emerald-300 border-emerald-500/40 bg-emerald-500/10",
+  };
+
+  return (
+    <div className="rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-violet-300" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300">AI analizė</span>
+          {data?.model && <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[9px] text-muted-foreground">{data.model}</span>}
+        </div>
+        <div className="flex gap-1">
+          {!data && (
+            <button
+              onClick={() => run(false)}
+              disabled={loading || !fingerprint}
+              className="rounded-md border border-violet-500/40 bg-violet-500/15 px-2 py-1 text-[11px] font-bold text-violet-200 hover:bg-violet-500/25 disabled:opacity-40"
+            >
+              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Analizuoti su AI"}
+            </button>
+          )}
+          {data && (
+            <button
+              onClick={() => run(true)}
+              disabled={loading}
+              className="rounded-md border border-border/40 bg-background/40 px-2 py-1 text-[10px] text-muted-foreground hover:bg-primary/10"
+            >
+              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Analizuoti iš naujo"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {error && <div className="mt-2 rounded-md border border-rose-500/40 bg-rose-500/10 p-2 text-[11px] text-rose-200">{error}</div>}
+
+      {!data && !loading && !error && (
+        <div className="mt-2 text-[11px] text-muted-foreground">
+          Spausk „Analizuoti su AI" — GPT-4o-mini paims šios klaidos grupės kontekstą (žinutė, stack, breadcrumbs, routes) ir pasiūlys priežastį + fix'ą. Rezultatas kešuojamas.
+        </div>
+      )}
+
+      {data && (
+        <div className="mt-3 space-y-2 text-[12px]">
+          <div className="flex flex-wrap items-center gap-2">
+            {data.severity_estimate && (
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${sevColor[data.severity_estimate] ?? sevColor.medium}`}>
+                {data.severity_estimate}
+              </span>
+            )}
+            {typeof data.confidence === "number" && (
+              <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                pasitikėjimas {Math.round(data.confidence * 100)}%
+              </span>
+            )}
+          </div>
+
+          {data.suspected_cause && (
+            <div>
+              <div className="text-[10px] font-bold uppercase text-muted-foreground">🎯 Tikėtina priežastis</div>
+              <div className="mt-0.5 text-foreground">{data.suspected_cause}</div>
+            </div>
+          )}
+
+          {data.suggested_file && data.suggested_file !== "unknown" && (
+            <div>
+              <div className="text-[10px] font-bold uppercase text-muted-foreground">📁 Failas kur ieškoti</div>
+              <div className="mt-0.5 font-mono text-cyan-300">{data.suggested_file}</div>
+            </div>
+          )}
+
+          {data.suggested_fix && (
+            <div>
+              <div className="text-[10px] font-bold uppercase text-muted-foreground">🔧 Siūlomas fix'as</div>
+              <pre className="mt-0.5 whitespace-pre-wrap font-mono text-[11px] text-emerald-200/90">{data.suggested_fix}</pre>
+            </div>
+          )}
+
+          <div className="text-[10px] text-muted-foreground">
+            {data.tokens_used ? `${data.tokens_used} tokens · ` : ""}{data.updated_at ? new Date(data.updated_at).toLocaleString("lt-LT") : ""}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 function Kv({ k, v }: { k: string; v: string }) {
   return (
     <div className="rounded-lg border border-border/50 bg-background/40 p-2">
