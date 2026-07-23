@@ -345,6 +345,22 @@ function AdminErrorsPage() {
     const map = new Map<string, Group>();
     const now = Date.now();
     const trendStart = now - 24 * 3_600_000;
+    // Compute when the CURRENT_BUILD first appeared in logs → treat as "deploy time".
+    // Any group whose lastMs is older than that AND didn't recur in this build = auto-resolved.
+    let currentBuildBootMs = 0;
+    if (CURRENT_BUILD && CURRENT_BUILD !== "unknown") {
+      for (const r of rows) {
+        const bsha = (r.meta as any)?.commit_sha;
+        if (bsha === CURRENT_BUILD) {
+          const ts = new Date(r.created_at).getTime();
+          if (!currentBuildBootMs || ts < currentBuildBootMs) currentBuildBootMs = ts;
+        }
+      }
+      if (!currentBuildBootMs && CURRENT_BUILD_TIME) {
+        const t = new Date(CURRENT_BUILD_TIME).getTime();
+        if (Number.isFinite(t)) currentBuildBootMs = t;
+      }
+    }
     for (const r of rows) {
       const id = fpOfRow(r);
       const ts = new Date(r.created_at).getTime();
@@ -385,6 +401,12 @@ function AdminErrorsPage() {
     }
     return Array.from(map.values()).map((g) => {
       const regressed = isRegression(g.fp, g.lastMs);
+      // Auto-resolve: last error is older than current build boot AND this build never saw a recurrence.
+      const autoResolvedByBuild =
+        currentBuildBootMs > 0 &&
+        g.lastMs < currentBuildBootMs - 30_000 &&
+        !g.builds.has(CURRENT_BUILD);
+      const manuallyResolved = !!resolvedMap[g.fp];
       return {
         ...g,
         severity: severityScore({
@@ -398,7 +420,8 @@ function AdminErrorsPage() {
         }),
         isNewToday: g.firstMs > now - 24 * 3_600_000,
         isRegression: regressed,
-        isResolved: !!resolvedMap[g.fp] && !regressed,
+        isResolved: (manuallyResolved || autoResolvedByBuild) && !regressed,
+        autoResolvedByBuild: autoResolvedByBuild && !manuallyResolved && !regressed,
         resolvedEntry: resolvedMap[g.fp],
       };
     });
@@ -1105,6 +1128,14 @@ function AdminErrorsPage() {
                     <div className="flex flex-wrap items-center gap-2 p-3">
                       <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
                         Grupuota pagal fingerprint · {topGroups.length} grupių
+                        {(() => {
+                          const auto = groups.filter((g) => g.autoResolvedByBuild).length;
+                          return auto > 0 ? (
+                            <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-300">
+                              ✓ {auto} auto-fix build'e
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                       <div className="ml-auto flex flex-wrap gap-1.5">
                         {(["severity", "count", "users", "recent"] as const).map((s) => (
