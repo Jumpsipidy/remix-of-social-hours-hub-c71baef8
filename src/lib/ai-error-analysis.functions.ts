@@ -96,7 +96,8 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
     }
 
     // Rate/cost limits — only enforced when we actually call the AI (cache miss or force)
-    const usage = await checkLimits(supabaseAdmin as never, context.userId);
+    const usage = await checkLimits(supabaseAdmin as unknown as SupabaseClient, context.userId);
+
 
 
     const { data: samples } = await supabaseAdmin
