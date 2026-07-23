@@ -217,7 +217,7 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
     // Audit + count against rate limit
     await supabaseAdmin.from("activity_log").insert({
-      actor_id: context.userId,
+      user_id: context.userId,
       action: "ai.analysis.run",
       meta: { fingerprint: data.fingerprint, tokens, model, severity: row.severity_estimate },
     } as never);
