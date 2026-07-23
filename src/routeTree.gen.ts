@@ -37,6 +37,7 @@ import { Route as AdminReservationsRouteImport } from './routes/admin.reservatio
 import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
+import { Route as AdminNotfoundRouteImport } from './routes/admin.notfound'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
 import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
@@ -194,6 +195,11 @@ const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
   path: '/organizations',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotfoundRoute = AdminNotfoundRouteImport.update({
+  id: '/notfound',
+  path: '/notfound',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -299,6 +305,7 @@ export interface FileRoutesByFullPath {
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
@@ -342,6 +349,7 @@ export interface FileRoutesByTo {
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
@@ -434,6 +443,7 @@ export interface FileRouteTypes {
     | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
+    | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
     | '/admin/push'
@@ -477,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
+    | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
     | '/admin/push'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/admin/lockdown'
     | '/admin/manage'
     | '/admin/messages'
+    | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
     | '/admin/push'
@@ -762,6 +774,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrganizationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notfound': {
+      id: '/admin/notfound'
+      path: '/notfound'
+      fullPath: '/admin/notfound'
+      preLoaderRoute: typeof AdminNotfoundRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/messages': {
       id: '/admin/messages'
       path: '/messages'
@@ -896,6 +915,7 @@ interface AdminRouteChildren {
   AdminLockdownRoute: typeof AdminLockdownRoute
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminNotfoundRoute: typeof AdminNotfoundRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPushRoute: typeof AdminPushRoute
@@ -918,6 +938,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLockdownRoute: AdminLockdownRoute,
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
+  AdminNotfoundRoute: AdminNotfoundRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPushRoute: AdminPushRoute,
