@@ -1195,8 +1195,11 @@ function AdminErrorsPage() {
                 </div>
               )}
 
+              {section === "ai" && <AiCenterPanel />}
+
               {section === "lockdown" && (
                 <LockdownBanner
+
                   lockdown={lockdown}
                   site={site}
                   criticalPressure={criticalPressure}
