@@ -224,8 +224,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// Safe fallback used if a consumer renders before/without the provider
+// (e.g. during HMR races or SSR of a route that mounts outside <AuthProvider>).
+// Returning inert defaults instead of throwing prevents a whole page crash.
+const FALLBACK_AUTH: AuthState = {
+  user: null,
+  profile: null,
+  role: null,
+  isAuthenticated: false,
+  isImpersonating: false,
+  loading: false,
+  signOut: async () => {},
+  impersonate: () => {},
+  impersonateReal: async () => {},
+  clearImpersonation: () => {},
+};
+
 export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) {
+    if (typeof window !== "undefined" && import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.warn("useAuth called without AuthProvider — using safe fallback.");
+    }
+    return FALLBACK_AUTH;
+  }
   return ctx;
 }
