@@ -1,5 +1,40 @@
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Detect Lovable preview / staging iframe so its traffic never pollutes
+ * production analytics. Matches the preview host pattern and any embedded
+ * iframe context (Lovable renders the app inside an iframe on lovable.dev).
+ */
+export function isPreviewEnvironment(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const host = window.location.hostname || "";
+    if (
+      host.includes("lovable.app") ||
+      host.includes("lovableproject.com") ||
+      host.includes("lovable.dev") ||
+      host.includes("sandbox") ||
+      host === "localhost" ||
+      host === "127.0.0.1"
+    ) {
+      return true;
+    }
+    if (window.self !== window.top) return true;
+  } catch {
+    // cross-origin frame access throws → we are inside an iframe
+    return true;
+  }
+  return false;
+}
+
+// Analytics-only actions we skip inside preview to keep prod stats clean.
+const PREVIEW_BLOCKED_ACTIONS = new Set([
+  "page.view",
+  "auth.signed_in",
+  "auth.signed_out",
+  "route.404",
+]);
+
 export type ActivityAction =
   | "reservation.created"
   | "reservation.proposed"
