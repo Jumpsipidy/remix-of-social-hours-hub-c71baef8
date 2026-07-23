@@ -1293,14 +1293,16 @@ function AdminErrorsPage() {
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {Object.values(resolvedMap).slice(0, 24).map((entry) => (
-                          <button
+                          <Button
                             key={entry.fp}
+                            variant="outline"
+                            size="sm"
                             onClick={() => unresolveGroup(entry.fp)}
-                            className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 font-mono text-[10px] text-emerald-200 hover:border-amber-400/60 hover:text-amber-200"
+                            className="h-7 rounded-full border-emerald-500/40 bg-emerald-500/10 px-2 font-mono text-[10px] text-emerald-200 hover:border-amber-400/60 hover:text-amber-200"
                             title="Atkurti į aktyvias klaidas"
                           >
                             <CheckCircle2 className="h-3 w-3" /> #{entry.fp} · {relTimeShort(entry.resolvedAt)} <RotateCw className="h-3 w-3" />
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </SaaSPanel>
