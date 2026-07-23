@@ -155,6 +155,11 @@ function Home() {
 
   return (
     <PageShell>
+      {/* SEO: crawlable brand H1 — visually hidden but present for Google to associate brand keywords with the domain */}
+      <h1 className="sr-only">
+        Socialinės Valandos — socialinių valandų centras mokiniams (socialinesvalandos.dev)
+      </h1>
+
       <div className="relative selection:bg-[#C8452A] selection:text-white">
         {/* HERO ─────────────────────────────────────────────────────────── */}
         <section ref={heroRef} className="relative overflow-hidden px-4 pt-14 pb-20 sm:px-6 sm:pt-24 sm:pb-32 md:pt-36 md:pb-44">
