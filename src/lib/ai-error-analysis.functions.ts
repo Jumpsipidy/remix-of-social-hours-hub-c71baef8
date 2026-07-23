@@ -121,13 +121,13 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       confidence: Number(parsed.confidence ?? 0.5),
       model,
       tokens_used: tokens,
-      raw_response: parsed,
+      raw_response: parsed as unknown as never,
       updated_at: new Date().toISOString(),
     };
 
     const { data: saved, error } = await supabaseAdmin
       .from("ai_error_analyses")
-      .upsert(row, { onConflict: "fingerprint" })
+      .upsert(row as never, { onConflict: "fingerprint" })
       .select()
       .single();
     if (error) throw new Error(error.message);
