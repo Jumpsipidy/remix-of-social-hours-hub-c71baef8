@@ -103,7 +103,7 @@ const KIND_STYLE: Record<string, string> = {
 
 const CRITICAL_KINDS = new Set(["client.error", "app.critical"]);
 
-type Section = "overview" | "live" | "analytics" | "top" | "sources" | "lockdown" | "settings";
+type Section = "overview" | "live" | "analytics" | "top" | "sources" | "ai" | "lockdown" | "settings";
 
 const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[] = [
   { id: "overview", label: "Apžvalga", icon: LayoutDashboard, hint: "Pulse · burst · replay" },
@@ -111,9 +111,11 @@ const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[]
   { id: "analytics", label: "Analitika", icon: BarChart3, hint: "24h trendai" },
   { id: "top", label: "Grupės (fingerprint)", icon: ListOrdered, hint: "Severity · unikalūs · nauji" },
   { id: "sources", label: "Šaltiniai", icon: Globe, hint: "Puslapiai · naršyklės · OS" },
+  { id: "ai", label: "AI centras", icon: Sparkles, hint: "Analizės · promptai · limitai" },
   { id: "lockdown", label: "Auto-lockdown", icon: ShieldAlert, hint: "Slenkstis ir valdymas" },
   { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Ignore · testas · eksportas" },
 ];
+
 
 const IGNORE_KEY = "admin-errors-ignore-rules";
 const AUTO_KEY = "admin-errors-auto-refresh";
