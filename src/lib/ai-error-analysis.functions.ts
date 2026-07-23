@@ -81,8 +81,8 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
     });
     if (!isAdmin) throw new Error("Not authorized");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error("OPENAI_API_KEY not configured — pridėk savo OpenAI raktą per Secrets.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -120,25 +120,35 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
     ).slice(0, 8);
     const breadcrumbs = ((meta.breadcrumbs as unknown[]) ?? []).slice(-8);
 
+    // Pull related samples across the fingerprint for richer context
+    const timestamps = matching.map((m) => new Date(m.created_at).getTime()).sort((a, b) => a - b);
+    const firstSeen = timestamps[0] ? new Date(timestamps[0]).toISOString() : "?";
+    const lastSeen = timestamps.at(-1) ? new Date(timestamps.at(-1)!).toISOString() : "?";
+    const uniqueMessages = Array.from(
+      new Set(matching.map((m) => String((m.meta as { message?: string })?.message ?? "")).filter(Boolean)),
+    ).slice(0, 3);
+
     const userPrompt = `Klaidos grupė (fingerprint: ${data.fingerprint})
-Pasitaikymai: ${matching.length}, paveikti vartotojai: ${affectedUsers}
+Pasitaikymai: ${matching.length} · paveikti vartotojai: ${affectedUsers}
+Pirmas įvykis: ${firstSeen} · paskutinis: ${lastSeen}
 Routes: ${routes.join(", ") || "(unknown)"}
 
 Žinutė:
 ${meta.message ?? "(no message)"}
 
-Stack (pirmi 2500 simb.):
-${String(meta.stack ?? "(no stack)").slice(0, 2500)}
+${uniqueMessages.length > 1 ? `Kitos variacijos:\n- ${uniqueMessages.slice(1).join("\n- ")}\n` : ""}
+Stack (pirmi 3000 simb.):
+${String(meta.stack ?? "(no stack)").slice(0, 3000)}
 
 Breadcrumbs (paskutiniai vartotojo veiksmai):
-${JSON.stringify(breadcrumbs).slice(0, 800)}
+${JSON.stringify(breadcrumbs).slice(0, 1000)}
 
 Naršyklė: ${meta.browser ?? "?"} · OS: ${meta.os ?? "?"} · Įrenginys: ${meta.device ?? "?"}
 Šaltinis: ${meta.source ?? "?"}
 ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
-    const model = "google/gemini-3.5-flash";
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const model = "gpt-4o-mini";
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,6 +156,7 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       },
       body: JSON.stringify({
         model,
+        temperature: 0.2,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
@@ -156,9 +167,10 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
     if (!resp.ok) {
       const body = await resp.text();
-      if (resp.status === 402) throw new Error("Lovable AI kreditai baigėsi — papildyk workspace.");
-      if (resp.status === 429) throw new Error("Per daug užklausų — bandyk po minutės.");
-      throw new Error(`AI gateway ${resp.status}: ${body.slice(0, 300)}`);
+      if (resp.status === 401) throw new Error("OpenAI raktas negalioja — patikrink OPENAI_API_KEY.");
+      if (resp.status === 429) throw new Error("OpenAI rate limit / quota — palauk arba topinkis balansą.");
+      if (resp.status === 402) throw new Error("OpenAI balansas išsekęs — papildyk billing.");
+      throw new Error(`OpenAI ${resp.status}: ${body.slice(0, 300)}`);
     }
 
     const json = await resp.json();
