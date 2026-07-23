@@ -117,6 +117,10 @@ function StudentDashboard() {
   const [unlockedKeys, setUnlockedKeys] = useState<Set<string>>(new Set());
   const [friendsCount, setFriendsCount] = useState(0);
   const [groupJoined, setGroupJoined] = useState(0);
+  const [loginStreak, setLoginStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
+  const [freezeUsedAt, setFreezeUsedAt] = useState<string | null>(null);
+  const [streakBoard, setStreakBoard] = useState<Array<{ id: string; full_name: string | null; class_year: string | null; login_streak: number; longest_login_streak: number }>>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -132,6 +136,22 @@ function StudentDashboard() {
     })();
   }, [user]);
 
+  // Bump the login streak once per session (RPC itself is idempotent per day).
+  useEffect(() => {
+    if (!user || profile?.role !== "student") return;
+    (async () => {
+      const { data } = await supabase.rpc("bump_login_streak" as never);
+      const row = Array.isArray(data) ? (data as Array<{ login_streak: number; longest_login_streak: number; freeze_used_at: string | null }>)[0] : null;
+      if (row) {
+        setLoginStreak(row.login_streak ?? 0);
+        setLongestStreak(row.longest_login_streak ?? 0);
+        setFreezeUsedAt(row.freeze_used_at ?? null);
+      }
+      const { data: board } = await supabase.rpc("get_school_streak_leaderboard" as never);
+      if (Array.isArray(board)) setStreakBoard(board as typeof streakBoard);
+    })();
+  }, [user, profile?.role]);
+
   useEffect(() => {
     if (!user || !profile) return;
     const ctx: AchievementCtx = {
@@ -142,9 +162,11 @@ function StudentDashboard() {
       streakWeeks: streak,
       friendsCount,
       groupJoined,
+      loginStreakDays: loginStreak,
     };
     syncAchievements(user.id, ctx).then(setUnlockedKeys);
-  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined]);
+  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined, loginStreak]);
+
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || !profile) {
