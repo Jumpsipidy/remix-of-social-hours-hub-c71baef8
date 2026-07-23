@@ -8,14 +8,15 @@ const AnalyzeInput = z.object({
 });
 
 const SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui.
-Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion.
-Kalbėk lietuviškai. Būk konkretus ir trumpas.
+Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib.
+Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų.
 
-Analizuok pateiktą klaidos grupę ir grąžink JSON su:
+Analizuok pateiktą klaidos grupę ir grąžink TIKTAI validų JSON (be markdown, be code fence):
 {
-  "suspected_cause": "1-2 sakiniai kas greičiausiai kaltas",
+  "suspected_cause": "1-2 trumpi sakiniai — kas tiksliai kaltas",
   "suggested_file": "src/... failo kelias arba 'unknown'",
-  "suggested_fix": "konkretūs 2-4 žingsniai kaip ištaisyti (numeruoti)",
+  "suggested_fix": "3-5 konkretūs numeruoti žingsniai kaip ištaisyti — nurodyk funkcijas/eilutes jei matai iš stack",
+  "prompt_for_agent": "READY-TO-PASTE instrukcija Lovable agentui (lietuviškai, 1 paragrafas) kad jis pilnai išspręstų šitą bug'ą — įtraukk failą, priežastį ir laukiamą elgesį",
   "severity_estimate": "critical|high|medium|low",
   "confidence": 0.0-1.0
 }`;
@@ -24,19 +25,17 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => AnalyzeInput.parse(data))
   .handler(async ({ data, context }) => {
-    // Verify admin
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "admin",
     });
     if (!isAdmin) throw new Error("Not authorized");
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Check cache unless force
     if (!data.force) {
       const { data: cached } = await supabaseAdmin
         .from("ai_error_analyses")
@@ -46,23 +45,25 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
       if (cached) return { cached: true, analysis: cached };
     }
 
-    // Fetch recent occurrences of this fingerprint
     const { data: samples } = await supabaseAdmin
       .from("activity_log")
       .select("created_at, meta, user_id")
-      .eq("action", "error")
+      .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(300);
 
     const matching = (samples ?? []).filter(
       (r) => (r.meta as { fingerprint?: string })?.fingerprint === data.fingerprint,
     );
-    if (matching.length === 0) throw new Error("No error samples found for this fingerprint");
+    if (matching.length === 0) throw new Error("Šio fingerprint klaidų nerasta (200 naujausių ribose)");
 
     const sample = matching[0];
     const meta = (sample.meta as Record<string, unknown>) ?? {};
     const affectedUsers = new Set(matching.map((m) => m.user_id).filter(Boolean)).size;
-    const routes = Array.from(new Set(matching.map((m) => (m.meta as { path?: string })?.path).filter(Boolean))).slice(0, 5);
+    const routes = Array.from(
+      new Set(matching.map((m) => (m.meta as { path?: string })?.path).filter(Boolean)),
+    ).slice(0, 8);
+    const breadcrumbs = ((meta.breadcrumbs as unknown[]) ?? []).slice(-8);
 
     const userPrompt = `Klaidos grupė (fingerprint: ${data.fingerprint})
 Pasitaikymai: ${matching.length}, paveikti vartotojai: ${affectedUsers}
@@ -71,15 +72,18 @@ Routes: ${routes.join(", ") || "(unknown)"}
 Žinutė:
 ${meta.message ?? "(no message)"}
 
-Stack (pirmi 3000 simbolių):
-${String(meta.stack ?? "(no stack)").slice(0, 3000)}
+Stack (pirmi 2500 simb.):
+${String(meta.stack ?? "(no stack)").slice(0, 2500)}
+
+Breadcrumbs (paskutiniai vartotojo veiksmai):
+${JSON.stringify(breadcrumbs).slice(0, 800)}
 
 Naršyklė: ${meta.browser ?? "?"} · OS: ${meta.os ?? "?"} · Įrenginys: ${meta.device ?? "?"}
 Šaltinis: ${meta.source ?? "?"}
 ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
-    const model = "gpt-4o-mini";
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    const model = "google/gemini-3.5-flash";
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -92,13 +96,14 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3,
       }),
     });
 
     if (!resp.ok) {
       const body = await resp.text();
-      throw new Error(`OpenAI ${resp.status}: ${body.slice(0, 300)}`);
+      if (resp.status === 402) throw new Error("Lovable AI kreditai baigėsi — papildyk workspace.");
+      if (resp.status === 429) throw new Error("Per daug užklausų — bandyk po minutės.");
+      throw new Error(`AI gateway ${resp.status}: ${body.slice(0, 300)}`);
     }
 
     const json = await resp.json();
@@ -108,20 +113,30 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
     try {
       parsed = JSON.parse(content);
     } catch {
-      parsed = { suggested_fix: content };
+      // Try to extract JSON from surrounding text
+      const m = content.match(/\{[\s\S]*\}/);
+      if (m) {
+        try {
+          parsed = JSON.parse(m[0]);
+        } catch {
+          parsed = { suggested_fix: content };
+        }
+      } else {
+        parsed = { suggested_fix: content };
+      }
     }
 
     const row = {
       fingerprint: data.fingerprint,
       error_message: String(meta.message ?? "").slice(0, 500),
-      suspected_cause: String(parsed.suspected_cause ?? "").slice(0, 1000),
+      suspected_cause: String(parsed.suspected_cause ?? "").slice(0, 1200),
       suggested_file: String(parsed.suggested_file ?? "").slice(0, 200),
-      suggested_fix: String(parsed.suggested_fix ?? "").slice(0, 2000),
+      suggested_fix: String(parsed.suggested_fix ?? "").slice(0, 2500),
       severity_estimate: String(parsed.severity_estimate ?? "medium").slice(0, 20),
       confidence: Number(parsed.confidence ?? 0.5),
       model,
       tokens_used: tokens,
-      raw_response: parsed as unknown as never,
+      raw_response: { ...parsed, prompt_for_agent: parsed.prompt_for_agent ?? null } as unknown as never,
       updated_at: new Date().toISOString(),
     };
 

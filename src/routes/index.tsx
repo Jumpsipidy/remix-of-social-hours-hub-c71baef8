@@ -9,11 +9,12 @@ import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lu
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės Valandos — moksleivių savanorystės platforma" },
-      { name: "description", content: "Kiekviena valanda — tai žingsnis pokyčio link. Vienintelė Lietuvoje platforma, sujungianti mokinius, mokyklas ir savanorystės organizacijas." },
-      { property: "og:title", content: "Socialinės Valandos — moksleivių savanorystės platforma" },
-      { property: "og:description", content: "Rezervuok savanorystės valandas, sekk savo pažangą ir gauk automatinę apskaitą — vienoje ramioje vietoje." },
+      { title: "Socialinės Valandos — socialinių valandų centras mokiniams | socialinesvalandos.dev" },
+      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — Lietuvos mokinių socialinių valandų centras. Rezervuok savanorystės valandas, sekk pažangą ir gauk automatinę apskaitą vienoje vietoje." },
+      { property: "og:title", content: "Socialinės Valandos — socialinių valandų centras | socialinesvalandos.dev" },
+      { property: "og:description", content: "Socialinesvalandos.dev — Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma. Rezervuok, sekk ir surink savo valandas." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
+
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
   }),
