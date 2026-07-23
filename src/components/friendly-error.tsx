@@ -1,0 +1,110 @@
+// Friendly, student-facing error screen.
+//
+// Shows a calm, reassuring message in Lithuanian instead of a raw stack trace.
+// The point: student should NOT rage — they should see „mes jau žinome, taisom".
+//
+// - Auto-reports the error to /admin/errors on mount (with a stable incident ID)
+// - Displays an animated „🛠 Taisoma" status pill so it feels alive
+// - Gives the student a short incident code they can quote to admin
+// - Shows the stack only in dev
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle, Home, RefreshCw, Wrench } from "lucide-react";
+import { logClientError } from "@/lib/error-log";
+import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
+
+type Props = {
+  error: unknown;
+  onRetry?: () => void;
+  source?: string;
+};
+
+export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" }: Props) {
+  const err = error instanceof Error ? error : new Error(String(error ?? "Nežinoma klaida"));
+  const fp = useMemo(() => computeFingerprint(err.message, err.stack ?? null), [err.message, err.stack]);
+  const reported = useRef(false);
+  const [dots, setDots] = useState(1);
+
+  useEffect(() => {
+    if (reported.current) return;
+    reported.current = true;
+    void logClientError(err, { source, extra: { boundary: true, incident_id: fp.id } });
+  }, [err, fp.id, source]);
+
+  useEffect(() => {
+    const t = window.setInterval(() => setDots((d) => (d % 3) + 1), 500);
+    return () => window.clearInterval(t);
+  }, []);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-10"
+      style={{
+        background:
+          "radial-gradient(1200px 600px at 50% -10%, rgba(244,63,94,0.18), transparent 60%), radial-gradient(900px 500px at 50% 110%, rgba(139,92,246,0.15), transparent 60%), #0a0819",
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 220, damping: 22 }}
+        className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-xl"
+        style={{ boxShadow: "0 30px 80px rgba(244,63,94,0.25)" }}
+      >
+        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-rose-500/30 to-fuchsia-500/30 ring-1 ring-white/15">
+          <motion.div
+            animate={{ rotate: [0, -8, 8, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Wrench className="h-8 w-8 text-rose-200" />
+          </motion.div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-white">Kažkas trumpai sulūžo</h1>
+        <p className="mt-2 text-sm text-white/70">
+          Nesijaudink — mūsų sistema jau <strong>automatiškai pranešė adminui</strong> ir taisymas prasidėjo.
+          Tavo duomenys yra saugūs.
+        </p>
+
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-200">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          <span>Taisoma{".".repeat(dots)}</span>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-3 text-left">
+          <div className="text-[10px] uppercase tracking-widest text-white/40">Incidento ID</div>
+          <div className="mt-1 font-mono text-sm text-white/90">#{fp.id}</div>
+          <div className="mt-2 text-[11px] text-white/50 line-clamp-2 break-words">{err.message || "—"}</div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => (onRetry ? onRetry() : window.location.reload())}
+            className="inline-flex items-center gap-2 rounded-full bg-white text-slate-900 px-5 py-2 text-sm font-semibold shadow hover:scale-[1.03] transition"
+          >
+            <RefreshCw className="h-4 w-4" /> Bandyti dar
+          </button>
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
+          >
+            <Home className="h-4 w-4" /> Į pradžią
+          </a>
+        </div>
+
+        <p className="mt-5 text-[11px] text-white/40">
+          <AlertTriangle className="mr-1 inline h-3 w-3" />
+          Jei matai šitą pranešimą daug kartų — nusiųsk #{fp.id} adminui per „Pranešti bug'ą" mygtuką.
+        </p>
+
+        {import.meta.env.DEV && err.stack && (
+          <pre className="mt-4 max-h-56 overflow-auto rounded-xl bg-black/50 p-3 text-left text-[10px] text-rose-200/80">
+            {err.stack}
+          </pre>
+        )}
+      </motion.div>
+    </div>
+  );
+}
