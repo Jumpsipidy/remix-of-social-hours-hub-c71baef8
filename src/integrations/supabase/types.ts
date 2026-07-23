@@ -524,7 +524,9 @@ export type Database = {
           id: string
           instagram_url: string | null
           latitude: number | null
+          login_streak: number
           logo_url: string | null
+          longest_login_streak: number
           longitude: number | null
           org_category: Database["public"]["Enums"]["org_category"] | null
           organization_name: string | null
@@ -533,6 +535,8 @@ export type Database = {
           public_email: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
+          streak_freeze_used_at: string | null
+          streak_last_date: string | null
           updated_at: string
           website_url: string | null
         }
@@ -555,7 +559,9 @@ export type Database = {
           id: string
           instagram_url?: string | null
           latitude?: number | null
+          login_streak?: number
           logo_url?: string | null
+          longest_login_streak?: number
           longitude?: number | null
           org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
@@ -564,6 +570,8 @@ export type Database = {
           public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
+          streak_freeze_used_at?: string | null
+          streak_last_date?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -586,7 +594,9 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           latitude?: number | null
+          login_streak?: number
           logo_url?: string | null
+          longest_login_streak?: number
           longitude?: number | null
           org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
@@ -595,6 +605,8 @@ export type Database = {
           public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
+          streak_freeze_used_at?: string | null
+          streak_last_date?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -1073,6 +1085,15 @@ export type Database = {
           student_id: string
         }[]
       }
+      bump_login_streak: {
+        Args: never
+        Returns: {
+          freeze_used_at: string
+          login_streak: number
+          longest_login_streak: number
+          streak_last_date: string
+        }[]
+      }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       check_in_by_code: { Args: { _code: string }; Returns: Json }
       generate_check_in_code: { Args: never; Returns: string }
@@ -1084,6 +1105,16 @@ export type Database = {
           lockdown_enabled: boolean
           lockdown_message: string
           updated_at: string
+        }[]
+      }
+      get_school_streak_leaderboard: {
+        Args: never
+        Returns: {
+          class_year: string
+          full_name: string
+          id: string
+          login_streak: number
+          longest_login_streak: number
         }[]
       }
       has_role: {

@@ -19,6 +19,7 @@ export type AchievementCtx = {
   streakWeeks: number;
   friendsCount: number;
   groupJoined: number;
+  loginStreakDays?: number;
 };
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -36,6 +37,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { key: "squad", label: "Klasės būrys", description: "5 draugai mokykloje.", icon: Users, check: (c) => c.friendsCount >= 5 },
   { key: "team_player", label: "Komandinis žaidėjas", description: "Prisijungė prie grupinės rezervacijos.", icon: Users, check: (c) => c.groupJoined >= 1 },
   { key: "ten_tasks", label: "10 užbaigtų vizitų", description: "Užbaigei 10 skirtingų užduočių.", icon: Calendar, check: (c) => c.completedCount >= 10 },
+  { key: "login_streak_3", label: "3 dienos iš eilės", description: "Prisijungei 3 dienas paeiliui. Ritmas!", icon: Flame, check: (c) => (c.loginStreakDays ?? 0) >= 3 },
+  { key: "login_streak_7", label: "Savaitė be pertraukų", description: "7 dienos iš eilės. Įprotis susiformavo.", icon: Flame, check: (c) => (c.loginStreakDays ?? 0) >= 7 },
+  { key: "login_streak_14", label: "2 savaitės iš eilės", description: "14 dienų streak — retas žvėris.", icon: Flame, check: (c) => (c.loginStreakDays ?? 0) >= 14 },
+  { key: "login_streak_30", label: "Mėnuo iš eilės", description: "30 dienų. Tu jau legenda.", icon: Trophy, check: (c) => (c.loginStreakDays ?? 0) >= 30 },
 ];
 
 /** Compares computed unlocks to DB, inserts new ones, toasts. */
