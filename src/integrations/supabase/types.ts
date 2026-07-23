@@ -47,6 +47,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_error_analyses: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          error_message: string | null
+          fingerprint: string
+          id: string
+          model: string
+          raw_response: Json | null
+          severity_estimate: string | null
+          suggested_file: string | null
+          suggested_fix: string | null
+          suspected_cause: string | null
+          tokens_used: number | null
+          updated_at: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          error_message?: string | null
+          fingerprint: string
+          id?: string
+          model: string
+          raw_response?: Json | null
+          severity_estimate?: string | null
+          suggested_file?: string | null
+          suggested_fix?: string | null
+          suspected_cause?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          error_message?: string | null
+          fingerprint?: string
+          id?: string
+          model?: string
+          raw_response?: Json | null
+          severity_estimate?: string | null
+          suggested_file?: string | null
+          suggested_fix?: string | null
+          suspected_cause?: string | null
+          tokens_used?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           admin_note: string | null
@@ -897,6 +945,36 @@ export type Database = {
           },
         ]
       }
+      uptime_checks: {
+        Row: {
+          checked_at: string
+          db_ok: boolean | null
+          error_message: string | null
+          id: number
+          latency_ms: number | null
+          ok: boolean
+          status_code: number | null
+        }
+        Insert: {
+          checked_at?: string
+          db_ok?: boolean | null
+          error_message?: string | null
+          id?: number
+          latency_ms?: number | null
+          ok?: boolean
+          status_code?: number | null
+        }
+        Update: {
+          checked_at?: string
+          db_ok?: boolean | null
+          error_message?: string | null
+          id?: number
+          latency_ms?: number | null
+          ok?: boolean
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           id: string
@@ -915,6 +993,48 @@ export type Database = {
           key?: string
           unlocked_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      web_vitals_log: {
+        Row: {
+          connection_type: string | null
+          created_at: string
+          id: number
+          metric: string
+          navigation_type: string | null
+          rating: string | null
+          route: string
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          connection_type?: string | null
+          created_at?: string
+          id?: number
+          metric: string
+          navigation_type?: string | null
+          rating?: string | null
+          route: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          connection_type?: string | null
+          created_at?: string
+          id?: number
+          metric?: string
+          navigation_type?: string | null
+          rating?: string | null
+          route?: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          value?: number
         }
         Relationships: []
       }
@@ -983,6 +1103,7 @@ export type Database = {
       }
       open_dm_room: { Args: { _other: string }; Returns: string }
       purge_dm_messages: { Args: never; Returns: undefined }
+      purge_monitoring_data: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
       revoke_certificate: {
         Args: { _code: string; _reason: string }
