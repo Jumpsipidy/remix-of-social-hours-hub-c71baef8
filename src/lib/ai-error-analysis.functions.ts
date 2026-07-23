@@ -30,11 +30,10 @@ const LIMIT_PER_ADMIN_PER_DAY = 30;
 const LIMIT_GLOBAL_PER_DAY = 150;
 const LIMIT_TOKENS_PER_MONTH = 2_000_000;
 
-async function checkLimits(supabaseAdmin: ReturnType<typeof getAdmin>, userId: string) {
+async function checkLimits(supabaseAdmin: SupabaseClient, userId: string) {
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-  // Per-admin day count (from audit trail)
   const { count: mineToday } = await supabaseAdmin
     .from("activity_log")
     .select("id", { count: "exact", head: true })
@@ -58,14 +57,17 @@ async function checkLimits(supabaseAdmin: ReturnType<typeof getAdmin>, userId: s
     .from("ai_error_analyses")
     .select("tokens_used")
     .gte("updated_at", monthStart);
-  const tokensThisMonth = (monthRows ?? []).reduce((s, r) => s + (Number(r.tokens_used) || 0), 0);
+  const tokensThisMonth = (monthRows ?? []).reduce(
+    (s: number, r: { tokens_used: number | null }) => s + (Number(r.tokens_used) || 0),
+    0,
+  );
   if (tokensThisMonth >= LIMIT_TOKENS_PER_MONTH) {
     throw new Error(`Mėnesio AI token limitas pasiektas (${LIMIT_TOKENS_PER_MONTH.toLocaleString()}). Resetas 1 mėnesio dieną.`);
   }
 
   return { mineToday: mineToday ?? 0, globalToday: globalToday ?? 0, tokensThisMonth };
 }
-function getAdmin() { return null as never; } // type helper only
+
 
 export const analyzeErrorGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
