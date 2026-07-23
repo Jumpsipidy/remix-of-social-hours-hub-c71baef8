@@ -19,18 +19,36 @@ import { logClientError } from "@/lib/error-log";
 
 type OverlayInfo = { message: string; stack?: string; source: string };
 
+// Broadened list: Vite, Lovable, Next, Remix, Webpack, generic red dialogs.
 const OVERLAY_SELECTORS = [
-  "vite-error-overlay",           // Vite HMR overlay
-  "[data-lovable-error-overlay]", // Lovable overlay (if present)
-  "#webpack-dev-server-client-overlay", // fallback
+  "vite-error-overlay",
+  "vite-plugin-checker-error-overlay",
+  "[data-lovable-error-overlay]",
+  "[data-lovable-overlay]",
+  "iframe[title*='error' i]",
+  "#webpack-dev-server-client-overlay",
+  "nextjs-portal",
+  "[data-nextjs-dialog-overlay]",
+  "[data-remix-error-boundary]",
+];
+
+// Fuzzy match for random red dialogs from any tooling.
+const OVERLAY_TEXT_HINTS = [
+  "runtime error",
+  "unhandled runtime",
+  "compilation error",
+  "syntaxerror",
+  "referenceerror",
+  "typeerror:",
+  "failed to compile",
 ];
 
 function scanForOverlay(): OverlayInfo | null {
   if (typeof document === "undefined") return null;
+  // 1) Known selectors (Vite, Lovable, Next, Remix…)
   for (const sel of OVERLAY_SELECTORS) {
     const el = document.querySelector(sel) as HTMLElement | null;
     if (!el) continue;
-    // Vite overlay uses shadow DOM
     const root = (el as any).shadowRoot ?? el;
     const text = (root.textContent ?? "").trim();
     if (!text) continue;
@@ -39,6 +57,18 @@ function scanForOverlay(): OverlayInfo | null {
     const message = (msgEl?.textContent ?? text).trim().slice(0, 500);
     const stack = (stackEl?.textContent ?? "").trim().slice(0, 4000);
     return { message: `[overlay] ${message}`, stack, source: sel };
+  }
+  // 2) Heuristic: any fixed dialog / modal whose text screams „error".
+  const candidates = document.querySelectorAll<HTMLElement>(
+    "[role=dialog], [role=alertdialog], [data-state=open], .error-overlay, .error-modal"
+  );
+  for (const el of Array.from(candidates)) {
+    const text = (el.textContent ?? "").toLowerCase();
+    if (!text) continue;
+    if (OVERLAY_TEXT_HINTS.some((h) => text.includes(h))) {
+      const message = (el.textContent ?? "").trim().slice(0, 500);
+      return { message: `[overlay:heuristic] ${message}`, stack: "", source: "heuristic-dialog" };
+    }
   }
   return null;
 }
@@ -80,14 +110,35 @@ export function LovableOverlayBridge() {
 
     // MutationObserver on <body> — cheap; overlays are inserted as siblings
     const mo = new MutationObserver(trigger);
-    mo.observe(document.body, { childList: true, subtree: false });
+    mo.observe(document.body, { childList: true, subtree: true });
     // Fallback poll every 4s in case overlay uses shadow DOM mutations
     const poll = window.setInterval(trigger, 4000);
+
+    // 3) Parent frame bridge — Lovable preview forwards runtime errors via postMessage.
+    const onMsg = (e: MessageEvent) => {
+      const d = e.data as any;
+      if (!d || typeof d !== "object") return;
+      const type = String(d.type ?? d.event ?? "").toLowerCase();
+      const looksLikeErr =
+        type.includes("error") ||
+        type.includes("exception") ||
+        type === "vite:error" ||
+        type === "lovable:error";
+      if (!looksLikeErr) return;
+      const message = String(d.message ?? d.error?.message ?? d.reason ?? "").slice(0, 500);
+      if (!message) return;
+      void logClientError(new Error(`[parent-frame] ${message}`), {
+        source: "overlay.postmessage",
+        extra: { rawType: type, stack: d.stack ?? d.error?.stack ?? "" },
+      });
+    };
+    window.addEventListener("message", onMsg);
     trigger();
 
     return () => {
       mo.disconnect();
       window.clearInterval(poll);
+      window.removeEventListener("message", onMsg);
       if (debounce) window.clearTimeout(debounce);
     };
   }, []);
