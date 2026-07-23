@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   Sparkles,
   Loader2,
+  ChevronDown,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -2447,6 +2448,7 @@ type GroupCardProps = {
 };
 
 function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolve }: GroupCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const sevColor =
     g.isRegression ? "from-fuchsia-500 to-rose-500 text-fuchsia-100 border-fuchsia-500/60"
     : g.severity >= 70 ? "from-rose-500 to-fuchsia-500 text-rose-200 border-rose-500/50"
@@ -2459,6 +2461,17 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolv
   const maxTrend = Math.max(1, ...g.trend);
   const sampleBuild = (g.sample.meta as any)?.commit_sha as string | undefined;
   const buildCount = g.builds.size;
+
+  const path = String(g.sample.meta?.path ?? "");
+  const routeW = routeWeight(path);
+  const impact =
+    path.includes("/checkin") ? "Mokinys negali įsiregistruoti QR kodu — valandos neįskaitomos."
+    : path.includes("/reservation") || path.includes("/organization/scan") ? "Rezervacijos / darbo patvirtinimo srautas gali sulūžti."
+    : path.includes("/pdf") || path.includes("/verify") ? "PDF sertifikatas gali nepasirašyti arba nepatikrinamas."
+    : path.includes("/auth") || path.includes("/login") || path.includes("/register") ? "Naujas vartotojas gali neprisijungti / neužsiregistruoti."
+    : "Puslapis gali užstrigti arba parodyti tuščią ekraną.";
+  const severityLabel = routeW >= 5 ? "🔴 Kritinis mokinių srautui" : routeW >= 3 ? "🟠 Blokuoja veiksmą" : "🟡 Vizualus / nekritinis";
+
   return (
     <motion.div
       layout
@@ -2468,7 +2481,11 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolv
     >
       <SaaSPanel className={`group relative overflow-hidden ${g.isRegression ? "ring-1 ring-fuchsia-500/40" : ""}`}>
         <div className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${sevColor}`} />
-        <div className="flex flex-wrap items-start gap-3">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex w-full flex-wrap items-start gap-3 text-left"
+        >
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase ${KIND_STYLE[g.action] ?? ""}`}>
@@ -2506,6 +2523,13 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolv
               <span className="text-[10px] text-muted-foreground">
                 pirmas: {relTimeShort(g.firstMs)} · paskutinis: {relTimeShort(g.lastMs)}
               </span>
+              <motion.span
+                animate={{ rotate: expanded ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="ml-auto text-muted-foreground"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </motion.span>
             </div>
             <div className="mt-1.5 line-clamp-2 break-words font-mono text-[13px] text-rose-200/90">
               {g.message}
@@ -2558,11 +2582,53 @@ function ErrorGroupCard({ g, onOpen, onFilterLive, onMute, onResolve, onUnresolv
             </div>
             <span className="text-[9px] text-muted-foreground">24h srautas</span>
           </div>
-        </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {expanded && (
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-3 space-y-3 border-t border-border/40 pt-3">
+                {/* Student-impact panel */}
+                <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-rose-500/5 to-transparent p-3">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">Ką matys mokinys?</div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-200">{severityLabel}</span>
+                    <span className="rounded-full border border-border/60 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">route weight ×{routeW}</span>
+                    {path && <span className="rounded-full border border-border/60 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">{path}</span>}
+                  </div>
+                  <div className="mt-2 text-[13px] leading-snug text-foreground">{impact}</div>
+                </div>
+
+                {/* AI analysis — auto-runs on expand */}
+                <AiAnalysisCard fingerprint={g.fp} />
+
+                {/* Stack (if any) */}
+                {g.sample.meta?.stack && (
+                  <div>
+                    <div className="text-[10px] font-bold uppercase text-muted-foreground">Stack</div>
+                    <pre className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg border border-border/50 bg-black/40 p-3 font-mono text-[11px] text-muted-foreground">
+                      {String(g.sample.meta.stack)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Button variant="outline" size="sm" onClick={onOpen}>
-            <Search className="mr-1 h-3.5 w-3.5" /> Detalės
+          <Button variant="outline" size="sm" onClick={() => setExpanded((v) => !v)}>
+            <Sparkles className="mr-1 h-3.5 w-3.5" /> {expanded ? "Suskleisti" : "AI + detalės"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={onOpen} title="Atverti pilną modalinį langą">
+            <Search className="mr-1 h-3.5 w-3.5" /> Modal
           </Button>
           <Button variant="outline" size="sm" onClick={onFilterLive}>
             <Radio className="mr-1 h-3.5 w-3.5" /> Live filtras
