@@ -493,6 +493,23 @@ export const escalateAppError = createServerFn({ method: "POST" })
         burstUsers,
         fingerprint: fpGroup.id,
       });
+
+      // Instant AI analysis + Discord follow-up embed (fire-and-forget).
+      // Cached per fingerprint (6h TTL) and globally capped (80/24h) so a
+      // burst of errors won't spam OpenAI.
+      try {
+        const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
+        await autoAnalyzeAndAlert({
+          fingerprint: fpGroup.id,
+          message: data.message,
+          stack: data.stack ?? null,
+          path: data.path ?? null,
+          userEmail: data.userEmail ?? null,
+          level: data.level,
+        });
+      } catch (err) {
+        console.error("[escalate] auto-ai failed", err);
+      }
     }
 
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
