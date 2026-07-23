@@ -1555,6 +1555,11 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
             );
           })()}
 
+          {/* AI analysis card */}
+          <AiAnalysisCard fingerprint={String((row.meta as { fingerprint?: string })?.fingerprint ?? "")} />
+
+
+
           <div className="grid grid-cols-2 gap-3 text-xs">
             {row.meta?.path && <Kv k="Puslapis" v={String(row.meta.path)} />}
             {row.meta?.source && <Kv k="Šaltinis" v={String(row.meta.source)} />}
