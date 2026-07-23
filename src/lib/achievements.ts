@@ -19,6 +19,7 @@ export type AchievementCtx = {
   streakWeeks: number;
   friendsCount: number;
   groupJoined: number;
+  loginStreakDays?: number;
 };
 
 export const ACHIEVEMENTS: Achievement[] = [
