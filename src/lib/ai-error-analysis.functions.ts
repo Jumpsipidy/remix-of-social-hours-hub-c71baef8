@@ -40,7 +40,7 @@ async function checkLimits(supabaseAdmin: SupabaseClient, userId: string) {
   const { count: mineToday } = await supabaseAdmin
     .from("activity_log")
     .select("id", { count: "exact", head: true })
-    .eq("actor_id", userId)
+    .eq("user_id", userId)
     .eq("action", "ai.analysis.run")
     .gte("created_at", dayAgo);
   if ((mineToday ?? 0) >= LIMIT_PER_ADMIN_PER_DAY) {
