@@ -390,7 +390,7 @@ export const getAiUsage = createServerFn({ method: "GET" })
     const { count: mineToday } = await supabaseAdmin
       .from("activity_log")
       .select("id", { count: "exact", head: true })
-      .eq("actor_id", context.userId)
+      .eq("user_id", context.userId)
       .eq("action", "ai.analysis.run")
       .gte("created_at", dayAgo);
 
