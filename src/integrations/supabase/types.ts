@@ -1105,6 +1105,15 @@ export type Database = {
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_monitoring_data: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      record_uptime_check: {
+        Args: {
+          _error?: string
+          _latency_ms: number
+          _ok: boolean
+          _status_code: number
+        }
+        Returns: undefined
+      }
       revoke_certificate: {
         Args: { _code: string; _reason: string }
         Returns: boolean
