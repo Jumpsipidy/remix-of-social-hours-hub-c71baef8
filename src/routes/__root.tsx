@@ -152,13 +152,30 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "Socialinės Valandos",
+          alternateName: ["Socialinesvalandos", "Soc. Valandos", "Socialinių valandų centras"],
           url: "https://socialinesvalandos.dev/",
           logo: "https://socialinesvalandos.dev/favicon.ico",
-          areaServed: "LT",
+          image: "https://socialinesvalandos.dev/og-preview.png",
+          foundingDate: "2025",
+          areaServed: { "@type": "Country", name: "Lithuania" },
+          knowsLanguage: "lt",
+          slogan: "Moksleivių savanorystės valandų platforma",
           description:
-            "Lietuvos moksleiviams skirta savanorystės valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas.",
+            "Lietuvos moksleiviams skirta oficiali socialinių (savanorystės) valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas. Naudojama Šeduvos gimnazijoje.",
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            email: "pagalba@socialinesvalandos.dev",
+            areaServed: "LT",
+            availableLanguage: ["Lithuanian"],
+          },
+          sameAs: [
+            "https://socialinesvalandos.dev/",
+            "https://socialinesvalandos.lovable.app/",
+          ],
         }),
       },
+
       {
         type: "application/ld+json",
         children: JSON.stringify({
