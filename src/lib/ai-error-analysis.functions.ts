@@ -21,6 +21,52 @@ Analizuok pateiktą klaidos grupę ir grąžink TIKTAI validų JSON (be markdown
   "confidence": 0.0-1.0
 }`;
 
+// ============ LIMITS (protection against runaway AI cost) ============
+// Per-admin daily cap: 30 forced analyses per admin per 24h
+// Global daily cap: 150 forced analyses across all admins per 24h
+// Global monthly token cap: 2,000,000 tokens per calendar month (~$1-2 on Gemini Flash)
+// Cached hits (non-forced re-reads) DO NOT count against limits.
+const LIMIT_PER_ADMIN_PER_DAY = 30;
+const LIMIT_GLOBAL_PER_DAY = 150;
+const LIMIT_TOKENS_PER_MONTH = 2_000_000;
+
+async function checkLimits(supabaseAdmin: ReturnType<typeof getAdmin>, userId: string) {
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+  // Per-admin day count (from audit trail)
+  const { count: mineToday } = await supabaseAdmin
+    .from("activity_log")
+    .select("id", { count: "exact", head: true })
+    .eq("actor_id", userId)
+    .eq("action", "ai.analysis.run")
+    .gte("created_at", dayAgo);
+  if ((mineToday ?? 0) >= LIMIT_PER_ADMIN_PER_DAY) {
+    throw new Error(`Pasiekei savo dienos limitą (${LIMIT_PER_ADMIN_PER_DAY} AI analizių/24h). Bandyk rytoj.`);
+  }
+
+  const { count: globalToday } = await supabaseAdmin
+    .from("activity_log")
+    .select("id", { count: "exact", head: true })
+    .eq("action", "ai.analysis.run")
+    .gte("created_at", dayAgo);
+  if ((globalToday ?? 0) >= LIMIT_GLOBAL_PER_DAY) {
+    throw new Error(`Global dienos limitas pasiektas (${LIMIT_GLOBAL_PER_DAY}/24h). Palauk kelias valandas.`);
+  }
+
+  const { data: monthRows } = await supabaseAdmin
+    .from("ai_error_analyses")
+    .select("tokens_used")
+    .gte("updated_at", monthStart);
+  const tokensThisMonth = (monthRows ?? []).reduce((s, r) => s + (Number(r.tokens_used) || 0), 0);
+  if (tokensThisMonth >= LIMIT_TOKENS_PER_MONTH) {
+    throw new Error(`Mėnesio AI token limitas pasiektas (${LIMIT_TOKENS_PER_MONTH.toLocaleString()}). Resetas 1 mėnesio dieną.`);
+  }
+
+  return { mineToday: mineToday ?? 0, globalToday: globalToday ?? 0, tokensThisMonth };
+}
+function getAdmin() { return null as never; } // type helper only
+
 export const analyzeErrorGroup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => AnalyzeInput.parse(data))
@@ -44,6 +90,10 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
         .maybeSingle();
       if (cached) return { cached: true, analysis: cached };
     }
+
+    // Rate/cost limits — only enforced when we actually call the AI (cache miss or force)
+    const usage = await checkLimits(supabaseAdmin as never, context.userId);
+
 
     const { data: samples } = await supabaseAdmin
       .from("activity_log")
