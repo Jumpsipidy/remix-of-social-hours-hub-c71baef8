@@ -27,6 +27,20 @@ import { FriendlyErrorScreen } from "@/components/friendly-error";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 
 function NotFoundComponent() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Log 404 to activity_log so admins can see broken links / missing routes.
+    void import("@/lib/activity-log").then(({ insertActivityLogRow }) => {
+      insertActivityLogRow({
+        action: "route.404",
+        meta: {
+          path: window.location.pathname + window.location.search,
+          referrer: document.referrer || null,
+          user_agent: navigator.userAgent,
+        },
+      }).catch(() => {});
+    });
+  }, []);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
