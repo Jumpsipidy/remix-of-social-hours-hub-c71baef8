@@ -40,12 +40,18 @@ import { AdminAurora, SaaSPanel, Sparkline } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
+import {
+  clearAllErrors,
+  deleteErrorRow,
+  listResolvedErrorGroups,
+  markErrorGroupResolved,
+  unresolveErrorGroup,
+} from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
 import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
-import { loadResolved, markResolved, unmarkResolved, isRegression, type ResolvedEntry } from "@/lib/error-resolved";
+import type { ResolvedEntry } from "@/lib/error-resolved";
 import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
@@ -141,6 +147,27 @@ function fpOfRow(r: { meta: any }): string {
   return fpOf(r.meta?.message ?? "", r.meta?.stack ?? null).id;
 }
 
+type ResolvedDbRow = {
+  fingerprint: string;
+  resolved_at: string;
+  resolved_in_build: string;
+  note: string | null;
+  last_seen_at: string | null;
+};
+
+function resolvedRowsToMap(rows: ResolvedDbRow[] | undefined): Record<string, ResolvedEntry> {
+  const map: Record<string, ResolvedEntry> = {};
+  for (const r of rows ?? []) {
+    map[r.fingerprint] = {
+      fp: r.fingerprint,
+      resolvedAt: new Date(r.resolved_at).getTime(),
+      resolvedInBuild: r.resolved_in_build || "unknown",
+      note: r.note ?? undefined,
+    };
+  }
+  return map;
+}
+
 function AdminErrorsPage() {
   const [rows, setRows] = useState<ErrRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +194,9 @@ function AdminErrorsPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+  const listResolvedFn = useServerFn(listResolvedErrorGroups);
+  const markResolvedFn = useServerFn(markErrorGroupResolved);
+  const unresolveFn = useServerFn(unresolveErrorGroup);
   const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
   const sendTestAlertFn = useServerFn(sendTestAlert);
   const [alertResult, setAlertResult] = useState<null | {
@@ -179,10 +209,19 @@ function AdminErrorsPage() {
   }>(null);
 
 
+  const refreshResolved = async () => {
+    try {
+      const res = await listResolvedFn({});
+      setResolvedMap(resolvedRowsToMap(res.rows as ResolvedDbRow[]));
+    } catch (e) {
+      toast.error("Fixintų klaidų būsena neįkelta: " + (e instanceof Error ? e.message : "nežinoma klaida"));
+    }
+  };
+
   useEffect(() => {
     setIgnoreRules(loadIgnore());
     setMuted(loadMuted());
-    setResolvedMap(loadResolved());
+    void refreshResolved();
     try {
       const v = Number(localStorage.getItem(AUTO_KEY));
       if (Number.isFinite(v) && v > 0) setAutoMs(v);
@@ -207,6 +246,7 @@ function AdminErrorsPage() {
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
     setNewSinceLoad(0);
+    await refreshResolved();
     // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
     setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
@@ -282,6 +322,18 @@ function AdminErrorsPage() {
     return ignoreRules.some((p) => p && hay.toLowerCase().includes(p.toLowerCase()));
   };
 
+  const isRowResolved = (r: ErrRow) => {
+    const entry = resolvedMap[fpOfRow(r)];
+    if (!entry) return false;
+    const rowMs = new Date(r.created_at).getTime();
+    return rowMs <= entry.resolvedAt + 30_000;
+  };
+
+  const activeRows = useMemo(
+    () => rows.filter((r) => !isRowResolved(r)),
+    [rows, resolvedMap],
+  );
+
   const filtered = useMemo(() => {
     const f = filter.trim();
     const windowMs =
@@ -294,7 +346,7 @@ function AdminErrorsPage() {
       try { rx = new RegExp(f, "i"); } catch { rx = null; }
     }
     const fl = f.toLowerCase();
-    return rows.filter((r) => {
+    return activeRows.filter((r) => {
       if (!showIgnored && matchesIgnore(r)) return false;
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
@@ -304,17 +356,17 @@ function AdminErrorsPage() {
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
+  }, [activeRows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
 
   const now = Date.now();
-  const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
-  const last5m = rows.filter((r) => now - new Date(r.created_at).getTime() < 300_000);
+  const lastHour = activeRows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
+  const last5m = activeRows.filter((r) => now - new Date(r.created_at).getTime() < 300_000);
   const criticalRecent = last5m.filter((r) => CRITICAL_KINDS.has(r.action));
 
   const spark = useMemo(() => {
     const buckets = new Array(48).fill(0);
     const cutoff = now - 24 * 3_600_000;
-    for (const r of rows) {
+    for (const r of activeRows) {
       const t = new Date(r.created_at).getTime();
       if (t < cutoff) continue;
       const idx = Math.min(47, Math.floor((t - cutoff) / (30 * 60_000)));
@@ -322,7 +374,7 @@ function AdminErrorsPage() {
     }
     return buckets;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  }, [activeRows]);
 
   type Group = {
     fp: string;
@@ -349,7 +401,7 @@ function AdminErrorsPage() {
     // Any group whose lastMs is older than that AND didn't recur in this build = auto-resolved.
     let currentBuildBootMs = 0;
     if (CURRENT_BUILD && CURRENT_BUILD !== "unknown") {
-      for (const r of rows) {
+      for (const r of activeRows) {
         const bsha = (r.meta as any)?.commit_sha;
         if (bsha === CURRENT_BUILD) {
           const ts = new Date(r.created_at).getTime();
@@ -361,7 +413,7 @@ function AdminErrorsPage() {
         if (Number.isFinite(t)) currentBuildBootMs = t;
       }
     }
-    for (const r of rows) {
+    for (const r of activeRows) {
       const id = fpOfRow(r);
       const ts = new Date(r.created_at).getTime();
       const isCrit = CRITICAL_KINDS.has(r.action);
@@ -400,7 +452,8 @@ function AdminErrorsPage() {
       }
     }
     return Array.from(map.values()).map((g) => {
-      const regressed = isRegression(g.fp, g.lastMs);
+      const resolvedEntry = resolvedMap[g.fp];
+      const regressed = resolvedEntry ? g.lastMs > resolvedEntry.resolvedAt + 30_000 : false;
       // Auto-resolve: last error is older than current build boot AND this build never saw a recurrence.
       const autoResolvedByBuild =
         currentBuildBootMs > 0 &&
@@ -422,10 +475,10 @@ function AdminErrorsPage() {
         isRegression: regressed,
         isResolved: (manuallyResolved || autoResolvedByBuild) && !regressed,
         autoResolvedByBuild: autoResolvedByBuild && !manuallyResolved && !regressed,
-        resolvedEntry: resolvedMap[g.fp],
+        resolvedEntry,
       };
     });
-  }, [rows, resolvedMap]);
+  }, [activeRows, resolvedMap]);
 
   const topGroups = useMemo(() => {
     const list = groups.filter((g) => (groupNewOnly ? g.isNewToday : true))
@@ -439,15 +492,30 @@ function AdminErrorsPage() {
     });
   }, [groups, groupSort, groupNewOnly, muted]);
 
-  const resolveGroup = (fp: string) => {
-    markResolved(fp, CURRENT_BUILD);
-    setResolvedMap(loadResolved());
-    toast.success(`Grupė #${fp.slice(0, 7)} pažymėta kaip išspręsta. Jei vėl pasirodys — bus REGRESSION 🔁`);
+  const resolveGroup = async (fp: string) => {
+    const group = groups.find((g) => g.fp === fp);
+    try {
+      await markResolvedFn({
+        data: {
+          fingerprint: fp,
+          resolvedInBuild: CURRENT_BUILD,
+          lastSeenAt: group ? new Date(group.lastMs).toISOString() : undefined,
+        },
+      });
+      await refreshResolved();
+      toast.success(`Grupė #${fp.slice(0, 7)} pažymėta kaip fixinta ir paslėpta visiems adminams.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko pažymėti kaip fixinta");
+    }
   };
-  const unresolveGroup = (fp: string) => {
-    unmarkResolved(fp);
-    setResolvedMap(loadResolved());
-    toast.success("Atkurta į aktyvių sąrašą");
+  const unresolveGroup = async (fp: string) => {
+    try {
+      await unresolveFn({ data: { fingerprint: fp } });
+      await refreshResolved();
+      toast.success("Atkurta į aktyvių sąrašą");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko atkurti");
+    }
   };
 
 
@@ -462,7 +530,7 @@ function AdminErrorsPage() {
     const paths = new Map<string, number>();
     const browsers = new Map<string, number>();
     const oses = new Map<string, number>();
-    for (const r of rows) {
+    for (const r of activeRows) {
       const p = (r.meta?.path ?? "").split("?")[0] || "(nežinomas)";
       paths.set(p, (paths.get(p) ?? 0) + 1);
       const b = r.meta?.browser ?? "(nežinoma)";
@@ -473,9 +541,9 @@ function AdminErrorsPage() {
     const top = (m: Map<string, number>, n = 8) =>
       Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n);
     return { paths: top(paths, 10), browsers: top(browsers), oses: top(oses) };
-  }, [rows]);
+  }, [activeRows]);
 
-  const ignoredCount = useMemo(() => rows.filter(matchesIgnore).length, [rows, ignoreRules]);
+  const ignoredCount = useMemo(() => activeRows.filter(matchesIgnore).length, [activeRows, ignoreRules]);
 
   const addIgnoreRule = (pattern: string) => {
     const p = pattern.trim();
@@ -1203,6 +1271,38 @@ function AdminErrorsPage() {
                             className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] hover:border-primary/40">
                             #{fp} <X className="h-3 w-3" />
                           </button>
+                        ))}
+                      </div>
+                    </SaaSPanel>
+                  )}
+
+                  {Object.keys(resolvedMap).length > 0 && (
+                    <SaaSPanel>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-300">
+                            Fixintos grupės ({Object.keys(resolvedMap).length})
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Saugoma DB — išlieka po refresh ir veikia visiems super adminams.
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={refreshResolved}>
+                          <RefreshCw className="mr-1 h-3.5 w-3.5" /> Atnaujinti
+                        </Button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {Object.values(resolvedMap).slice(0, 24).map((entry) => (
+                          <Button
+                            key={entry.fp}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => unresolveGroup(entry.fp)}
+                            className="h-7 rounded-full border-emerald-500/40 bg-emerald-500/10 px-2 font-mono text-[10px] text-emerald-200 hover:border-amber-400/60 hover:text-amber-200"
+                            title="Atkurti į aktyvias klaidas"
+                          >
+                            <CheckCircle2 className="h-3 w-3" /> #{entry.fp} · {relTimeShort(entry.resolvedAt)} <RotateCw className="h-3 w-3" />
+                          </Button>
                         ))}
                       </div>
                     </SaaSPanel>
