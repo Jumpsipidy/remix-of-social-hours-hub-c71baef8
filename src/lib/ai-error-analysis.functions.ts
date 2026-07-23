@@ -40,7 +40,7 @@ async function checkLimits(supabaseAdmin: SupabaseClient, userId: string) {
   const { count: mineToday } = await supabaseAdmin
     .from("activity_log")
     .select("id", { count: "exact", head: true })
-    .eq("actor_id", userId)
+    .eq("user_id", userId)
     .eq("action", "ai.analysis.run")
     .gte("created_at", dayAgo);
   if ((mineToday ?? 0) >= LIMIT_PER_ADMIN_PER_DAY) {
@@ -217,7 +217,7 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
     // Audit + count against rate limit
     await supabaseAdmin.from("activity_log").insert({
-      actor_id: context.userId,
+      user_id: context.userId,
       action: "ai.analysis.run",
       meta: { fingerprint: data.fingerprint, tokens, model, severity: row.severity_estimate },
     } as never);
