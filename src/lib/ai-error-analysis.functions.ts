@@ -10,15 +10,16 @@ const AnalyzeInput = z.object({
 });
 
 const SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui.
-Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib.
-Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų.
+Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib, sonner.
+Failų struktūra: src/routes/*.tsx (file-based routes), src/lib/*.functions.ts (server fns), src/components/**, src/hooks/**.
+Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų. Jei nesi tikras — sakyk "unknown" arba "hipotezė".
 
 Analizuok pateiktą klaidos grupę ir grąžink TIKTAI validų JSON (be markdown, be code fence):
 {
-  "suspected_cause": "1-2 trumpi sakiniai — kas tiksliai kaltas",
-  "suggested_file": "src/... failo kelias arba 'unknown'",
-  "suggested_fix": "3-5 konkretūs numeruoti žingsniai kaip ištaisyti — nurodyk funkcijas/eilutes jei matai iš stack",
-  "prompt_for_agent": "READY-TO-PASTE instrukcija Lovable agentui (lietuviškai, 1 paragrafas) kad jis pilnai išspręstų šitą bug'ą — įtraukk failą, priežastį ir laukiamą elgesį",
+  "suspected_cause": "1-2 trumpi sakiniai — kas tiksliai kaltas (funkcija, race condition, null access, RLS, etc.)",
+  "suggested_file": "src/... failo kelias (arba 'unknown')",
+  "suggested_fix": "3-5 konkretūs numeruoti žingsniai — nurodyk funkcijas/eilutes iš stack, ką pakeisti į ką",
+  "prompt_for_agent": "PILNAS super-promptas Lovable agentui (LT, 4-8 sakiniai). Struktūra: [1] Kontekstas: kas nutinka (klaida + kur + kada + kiek vartotojų). [2] Failas ir eilutė (iš stack). [3] Tikėtina priežastis. [4] Konkretus fix'as — kokį kodą pakeisti ir į ką. [5] Testavimo žingsniai — kaip patikrinti kad pataisyta. [6] Regresijos prevencija. Rašyk taip lyg duotum užduotį junior devui — jokių abstrakcijų.",
   "severity_estimate": "critical|high|medium|low",
   "confidence": 0.0-1.0
 }`;
@@ -254,3 +255,119 @@ export const getAiAnalysis = createServerFn({ method: "GET" })
       .maybeSingle();
     return row;
   });
+
+
+/**
+ * Grąžina fingerprint'us iš paskutinių error'ų, kurie DAR NETURI AI analizės.
+ * UI juos siunčia po vieną per analyzeErrorGroup (cache + limits automatiškai veikia).
+ */
+export const listPendingFingerprints = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ limit: z.number().min(1).max(10).optional() }).parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Not authorized");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: rows } = await supabaseAdmin
+      .from("activity_log")
+      .select("meta, created_at")
+      .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+      .gte("created_at", dayAgo)
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    // Suskaičiuok pasitaikymus per fingerprint
+    const counts = new Map<string, { count: number; last: string; message: string }>();
+    for (const r of rows ?? []) {
+      const meta = (r.meta as { fingerprint?: string; message?: string }) ?? {};
+      const fp = meta.fingerprint;
+      if (!fp) continue;
+      const cur = counts.get(fp);
+      if (cur) cur.count += 1;
+      else counts.set(fp, { count: 1, last: r.created_at, message: String(meta.message ?? "").slice(0, 200) });
+    }
+
+    // Išmesk tuos kurie jau turi analizę
+    const fps = Array.from(counts.keys());
+    if (fps.length === 0) return [];
+    const { data: existing } = await supabaseAdmin
+      .from("ai_error_analyses")
+      .select("fingerprint")
+      .in("fingerprint", fps);
+    const done = new Set((existing ?? []).map((e: { fingerprint: string }) => e.fingerprint));
+
+    const pending = fps
+      .filter((fp) => !done.has(fp))
+      .map((fp) => ({ fingerprint: fp, ...counts.get(fp)! }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, data.limit ?? 5);
+
+    return pending;
+  });
+
+/**
+ * Naujausios AI analizės su enrichmentu: pasitaikymai, paskutinis matymas, statusas.
+ * Naudojama Auto-Fix Feed panelėje.
+ */
+export const listRecentAnalyses = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ limit: z.number().min(1).max(50).optional() }).parse(data ?? {}),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Not authorized");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: analyses } = await supabaseAdmin
+      .from("ai_error_analyses")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(data.limit ?? 20);
+
+    if (!analyses || analyses.length === 0) return [];
+
+    const fps = analyses.map((a: { fingerprint: string }) => a.fingerprint);
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: rows } = await supabaseAdmin
+      .from("activity_log")
+      .select("meta, user_id, created_at")
+      .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+      .gte("created_at", dayAgo)
+      .limit(1000);
+
+    const stats = new Map<string, { count: number; users: Set<string>; last: string }>();
+    for (const fp of fps) stats.set(fp, { count: 0, users: new Set(), last: "" });
+    for (const r of rows ?? []) {
+      const fp = (r.meta as { fingerprint?: string })?.fingerprint;
+      if (!fp) continue;
+      const s = stats.get(fp);
+      if (!s) continue;
+      s.count += 1;
+      if (r.user_id) s.users.add(r.user_id);
+      if (!s.last || r.created_at > s.last) s.last = r.created_at;
+    }
+
+    return analyses.map((a: Record<string, unknown>) => {
+      const s = stats.get(a.fingerprint as string)!;
+      return {
+        ...a,
+        occurrences_24h: s.count,
+        users_24h: s.users.size,
+        last_seen: s.last || null,
+      };
+    });
+  });
+

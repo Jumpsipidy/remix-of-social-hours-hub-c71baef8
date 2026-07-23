@@ -27,6 +27,7 @@ import {
   ScanLine,
   Send,
   Gauge,
+  Sparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
@@ -49,6 +50,7 @@ const NAV: NavItem[] = [
   { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
   { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
   { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
+  { to: "/admin/autofix", label: "⚡ Auto-Fix Feed", icon: Sparkles },
   { to: "/admin/performance", label: "Performance", icon: Gauge },
   { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
   { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
