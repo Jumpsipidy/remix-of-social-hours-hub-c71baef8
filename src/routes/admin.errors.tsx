@@ -345,6 +345,22 @@ function AdminErrorsPage() {
     const map = new Map<string, Group>();
     const now = Date.now();
     const trendStart = now - 24 * 3_600_000;
+    // Compute when the CURRENT_BUILD first appeared in logs → treat as "deploy time".
+    // Any group whose lastMs is older than that AND didn't recur in this build = auto-resolved.
+    let currentBuildBootMs = 0;
+    if (CURRENT_BUILD && CURRENT_BUILD !== "unknown") {
+      for (const r of rows) {
+        const bsha = (r.meta as any)?.commit_sha;
+        if (bsha === CURRENT_BUILD) {
+          const ts = new Date(r.created_at).getTime();
+          if (!currentBuildBootMs || ts < currentBuildBootMs) currentBuildBootMs = ts;
+        }
+      }
+      if (!currentBuildBootMs && CURRENT_BUILD_TIME) {
+        const t = new Date(CURRENT_BUILD_TIME).getTime();
+        if (Number.isFinite(t)) currentBuildBootMs = t;
+      }
+    }
     for (const r of rows) {
       const id = fpOfRow(r);
       const ts = new Date(r.created_at).getTime();
@@ -385,6 +401,12 @@ function AdminErrorsPage() {
     }
     return Array.from(map.values()).map((g) => {
       const regressed = isRegression(g.fp, g.lastMs);
+      // Auto-resolve: last error is older than current build boot AND this build never saw a recurrence.
+      const autoResolvedByBuild =
+        currentBuildBootMs > 0 &&
+        g.lastMs < currentBuildBootMs - 30_000 &&
+        !g.builds.has(CURRENT_BUILD);
+      const manuallyResolved = !!resolvedMap[g.fp];
       return {
         ...g,
         severity: severityScore({
@@ -398,7 +420,8 @@ function AdminErrorsPage() {
         }),
         isNewToday: g.firstMs > now - 24 * 3_600_000,
         isRegression: regressed,
-        isResolved: !!resolvedMap[g.fp] && !regressed,
+        isResolved: (manuallyResolved || autoResolvedByBuild) && !regressed,
+        autoResolvedByBuild: autoResolvedByBuild && !manuallyResolved && !regressed,
         resolvedEntry: resolvedMap[g.fp],
       };
     });
