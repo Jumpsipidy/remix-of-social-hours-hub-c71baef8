@@ -35,6 +35,7 @@ import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
 import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
+import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
@@ -48,6 +49,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -181,6 +183,11 @@ const AdminPushRoute = AdminPushRouteImport.update({
   path: '/push',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
   id: '/organizations',
   path: '/organizations',
@@ -246,6 +253,11 @@ const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   path: '/checkin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedOrganizationScanRoute =
   AuthenticatedOrganizationScanRouteImport.update({
     id: '/organization/scan',
@@ -281,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -293,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -321,6 +335,7 @@ export interface FileRoutesByTo {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -333,6 +348,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -364,6 +380,7 @@ export interface FileRoutesById {
   '/admin/manage': typeof AdminManageRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
+  '/admin/performance': typeof AdminPerformanceRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -376,6 +393,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -407,6 +425,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/performance'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -419,6 +438,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/organization/scan'
+    | '/api/public/health'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -447,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/performance'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -459,6 +480,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/verify'
     | '/organization/scan'
+    | '/api/public/health'
   id:
     | '__root__'
     | '/'
@@ -489,6 +511,7 @@ export interface FileRouteTypes {
     | '/admin/manage'
     | '/admin/messages'
     | '/admin/organizations'
+    | '/admin/performance'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -501,6 +524,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/_authenticated/organization/scan'
+    | '/api/public/health'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -525,6 +549,7 @@ export interface RootRouteChildren {
   OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   VerifyIndexRoute: typeof VerifyIndexRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -711,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPushRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/performance': {
+      id: '/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AdminPerformanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/organizations': {
       id: '/admin/organizations'
       path: '/organizations'
@@ -802,6 +834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckinRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/organization/scan': {
       id: '/_authenticated/organization/scan'
       path: '/organization/scan'
@@ -838,6 +877,7 @@ interface AdminRouteChildren {
   AdminManageRoute: typeof AdminManageRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
+  AdminPerformanceRoute: typeof AdminPerformanceRoute
   AdminPushRoute: typeof AdminPushRoute
   AdminReservationsRoute: typeof AdminReservationsRoute
   AdminSchoolsRoute: typeof AdminSchoolsRoute
@@ -858,6 +898,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminManageRoute: AdminManageRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
+  AdminPerformanceRoute: AdminPerformanceRoute,
   AdminPushRoute: AdminPushRoute,
   AdminReservationsRoute: AdminReservationsRoute,
   AdminSchoolsRoute: AdminSchoolsRoute,
@@ -890,6 +931,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   VerifyIndexRoute: VerifyIndexRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
