@@ -40,12 +40,18 @@ import { AdminAurora, SaaSPanel, Sparkline } from "@/components/admin/admin-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { clearAllErrors, deleteErrorRow } from "@/lib/admin-errors.functions";
+import {
+  clearAllErrors,
+  deleteErrorRow,
+  listResolvedErrorGroups,
+  markErrorGroupResolved,
+  unresolveErrorGroup,
+} from "@/lib/admin-errors.functions";
 import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
 import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
-import { loadResolved, markResolved, unmarkResolved, isRegression, type ResolvedEntry } from "@/lib/error-resolved";
+import { isRegression, type ResolvedEntry } from "@/lib/error-resolved";
 import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
@@ -141,6 +147,27 @@ function fpOfRow(r: { meta: any }): string {
   return fpOf(r.meta?.message ?? "", r.meta?.stack ?? null).id;
 }
 
+type ResolvedDbRow = {
+  fingerprint: string;
+  resolved_at: string;
+  resolved_in_build: string;
+  note: string | null;
+  last_seen_at: string | null;
+};
+
+function resolvedRowsToMap(rows: ResolvedDbRow[] | undefined): Record<string, ResolvedEntry> {
+  const map: Record<string, ResolvedEntry> = {};
+  for (const r of rows ?? []) {
+    map[r.fingerprint] = {
+      fp: r.fingerprint,
+      resolvedAt: new Date(r.resolved_at).getTime(),
+      resolvedInBuild: r.resolved_in_build || "unknown",
+      note: r.note ?? undefined,
+    };
+  }
+  return map;
+}
+
 function AdminErrorsPage() {
   const [rows, setRows] = useState<ErrRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +194,9 @@ function AdminErrorsPage() {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const clearFn = useServerFn(clearAllErrors);
   const deleteFn = useServerFn(deleteErrorRow);
+  const listResolvedFn = useServerFn(listResolvedErrorGroups);
+  const markResolvedFn = useServerFn(markErrorGroupResolved);
+  const unresolveFn = useServerFn(unresolveErrorGroup);
   const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
   const sendTestAlertFn = useServerFn(sendTestAlert);
   const [alertResult, setAlertResult] = useState<null | {
@@ -179,10 +209,19 @@ function AdminErrorsPage() {
   }>(null);
 
 
+  const refreshResolved = async () => {
+    try {
+      const res = await listResolvedFn({});
+      setResolvedMap(resolvedRowsToMap(res.rows as ResolvedDbRow[]));
+    } catch (e) {
+      toast.error("Fixintų klaidų būsena neįkelta: " + (e instanceof Error ? e.message : "nežinoma klaida"));
+    }
+  };
+
   useEffect(() => {
     setIgnoreRules(loadIgnore());
     setMuted(loadMuted());
-    setResolvedMap(loadResolved());
+    void refreshResolved();
     try {
       const v = Number(localStorage.getItem(AUTO_KEY));
       if (Number.isFinite(v) && v > 0) setAutoMs(v);
@@ -207,6 +246,7 @@ function AdminErrorsPage() {
     if (error) toast.error("Nepavyko įkelti: " + error.message);
     setRows((data as ErrRow[]) ?? []);
     setNewSinceLoad(0);
+    await refreshResolved();
     // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
     setSite(ss.data ? ({ ...(ss.data as SiteSettings), lockdown_code: null } as SiteSettings) : null);
     setLoading(false);
@@ -439,15 +479,30 @@ function AdminErrorsPage() {
     });
   }, [groups, groupSort, groupNewOnly, muted]);
 
-  const resolveGroup = (fp: string) => {
-    markResolved(fp, CURRENT_BUILD);
-    setResolvedMap(loadResolved());
-    toast.success(`Grupė #${fp.slice(0, 7)} pažymėta kaip išspręsta. Jei vėl pasirodys — bus REGRESSION 🔁`);
+  const resolveGroup = async (fp: string) => {
+    const group = groups.find((g) => g.fp === fp);
+    try {
+      await markResolvedFn({
+        data: {
+          fingerprint: fp,
+          resolvedInBuild: CURRENT_BUILD,
+          lastSeenAt: group ? new Date(group.lastMs).toISOString() : undefined,
+        },
+      });
+      await refreshResolved();
+      toast.success(`Grupė #${fp.slice(0, 7)} pažymėta kaip fixinta ir paslėpta visiems adminams.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko pažymėti kaip fixinta");
+    }
   };
-  const unresolveGroup = (fp: string) => {
-    unmarkResolved(fp);
-    setResolvedMap(loadResolved());
-    toast.success("Atkurta į aktyvių sąrašą");
+  const unresolveGroup = async (fp: string) => {
+    try {
+      await unresolveFn({ data: { fingerprint: fp } });
+      await refreshResolved();
+      toast.success("Atkurta į aktyvių sąrašą");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko atkurti");
+    }
   };
 
 
