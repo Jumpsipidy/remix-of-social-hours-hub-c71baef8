@@ -1128,6 +1128,14 @@ function AdminErrorsPage() {
                     <div className="flex flex-wrap items-center gap-2 p-3">
                       <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
                         Grupuota pagal fingerprint · {topGroups.length} grupių
+                        {(() => {
+                          const auto = groups.filter((g) => g.autoResolvedByBuild).length;
+                          return auto > 0 ? (
+                            <span className="ml-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-emerald-300">
+                              ✓ {auto} auto-fix build'e
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
                       <div className="ml-auto flex flex-wrap gap-1.5">
                         {(["severity", "count", "users", "recent"] as const).map((s) => (
