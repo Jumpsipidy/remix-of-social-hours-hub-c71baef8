@@ -46,7 +46,7 @@ import { logClientError } from "@/lib/error-log";
 import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
 import { loadResolved, markResolved, unmarkResolved, isRegression, type ResolvedEntry } from "@/lib/error-resolved";
-import { analyzeErrorGroup, getAiAnalysis } from "@/lib/ai-error-analysis.functions";
+import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
 const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_BUILD_TIME || "";
@@ -103,7 +103,7 @@ const KIND_STYLE: Record<string, string> = {
 
 const CRITICAL_KINDS = new Set(["client.error", "app.critical"]);
 
-type Section = "overview" | "live" | "analytics" | "top" | "sources" | "lockdown" | "settings";
+type Section = "overview" | "live" | "analytics" | "top" | "sources" | "ai" | "lockdown" | "settings";
 
 const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[] = [
   { id: "overview", label: "Apžvalga", icon: LayoutDashboard, hint: "Pulse · burst · replay" },
@@ -111,9 +111,11 @@ const SECTIONS: { id: Section; label: string; icon: typeof Bug; hint: string }[]
   { id: "analytics", label: "Analitika", icon: BarChart3, hint: "24h trendai" },
   { id: "top", label: "Grupės (fingerprint)", icon: ListOrdered, hint: "Severity · unikalūs · nauji" },
   { id: "sources", label: "Šaltiniai", icon: Globe, hint: "Puslapiai · naršyklės · OS" },
+  { id: "ai", label: "AI centras", icon: Sparkles, hint: "Analizės · promptai · limitai" },
   { id: "lockdown", label: "Auto-lockdown", icon: ShieldAlert, hint: "Slenkstis ir valdymas" },
   { id: "settings", label: "Nustatymai", icon: Settings2, hint: "Ignore · testas · eksportas" },
 ];
+
 
 const IGNORE_KEY = "admin-errors-ignore-rules";
 const AUTO_KEY = "admin-errors-auto-refresh";
@@ -1193,8 +1195,11 @@ function AdminErrorsPage() {
                 </div>
               )}
 
+              {section === "ai" && <AiCenterPanel />}
+
               {section === "lockdown" && (
                 <LockdownBanner
+
                   lockdown={lockdown}
                   site={site}
                   criticalPressure={criticalPressure}
@@ -1778,6 +1783,303 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+
+
+type UsageT = {
+  mine_today: number; mine_max: number;
+  global_today: number; global_max: number;
+  tokens_this_month: number; tokens_max: number;
+  est_cost_usd: number; total_analyses: number; model: string;
+};
+type AnalysisRow = {
+  fingerprint: string;
+  error_message: string | null;
+  suspected_cause: string | null;
+  suggested_file: string | null;
+  suggested_fix: string | null;
+  severity_estimate: string | null;
+  confidence: number | null;
+  model: string;
+  tokens_used: number | null;
+  updated_at: string;
+  raw_response: { prompt_for_agent?: string } | null;
+  occurrences_24h?: number;
+  users_24h?: number;
+  last_seen?: string | null;
+};
+type PendingRow = { fingerprint: string; count: number; last: string; message: string };
+
+function AiCenterPanel() {
+  const getUsage = useServerFn(getAiUsage);
+  const getRecent = useServerFn(listRecentAnalyses);
+  const getPending = useServerFn(listPendingFingerprints);
+  const analyze = useServerFn(analyzeErrorGroup);
+  const [usage, setUsage] = useState<UsageT | null>(null);
+  const [recent, setRecent] = useState<AnalysisRow[]>([]);
+  const [pending, setPending] = useState<PendingRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      const [u, r, p] = await Promise.all([
+        getUsage().catch(() => null),
+        getRecent({ data: { limit: 20 } }).catch(() => []),
+        getPending({ data: { limit: 8 } }).catch(() => []),
+      ]);
+      if (u) setUsage(u as UsageT);
+      setRecent((r ?? []) as AnalysisRow[]);
+      setPending((p ?? []) as PendingRow[]);
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  async function runOne(fp: string) {
+    setRunning(fp);
+    try {
+      await analyze({ data: { fingerprint: fp, force: false } });
+      toast.success("AI analizė gauta");
+      await refresh();
+    } catch (e) {
+      toast.error("AI klaida: " + (e instanceof Error ? e.message : String(e)).slice(0, 100));
+    } finally { setRunning(null); }
+  }
+
+  async function runAllPending() {
+    if (pending.length === 0) return;
+    toast.info(`Paleidžiu ${pending.length} analizes serijoje…`);
+    for (const p of pending) {
+      setRunning(p.fingerprint);
+      try { await analyze({ data: { fingerprint: p.fingerprint, force: false } }); }
+      catch (e) {
+        toast.error("Sustabdyta: " + (e instanceof Error ? e.message : String(e)).slice(0, 80));
+        break;
+      }
+    }
+    setRunning(null);
+    await refresh();
+    toast.success("Batch baigtas");
+  }
+
+  function copyText(text: string, key: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key);
+      toast.success("Nukopijuota");
+      setTimeout(() => setCopied(null), 1500);
+    }).catch(() => toast.error("Nepavyko"));
+  }
+
+  const pctMine = usage ? Math.min(100, (usage.mine_today / usage.mine_max) * 100) : 0;
+  const pctGlobal = usage ? Math.min(100, (usage.global_today / usage.global_max) * 100) : 0;
+  const pctTokens = usage ? Math.min(100, (usage.tokens_this_month / usage.tokens_max) * 100) : 0;
+
+  const sevColor: Record<string, string> = {
+    critical: "border-rose-500/50 bg-rose-500/15 text-rose-200",
+    high: "border-orange-500/50 bg-orange-500/15 text-orange-200",
+    medium: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+    low: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <SaaSPanel>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping rounded-full bg-violet-500/30" />
+              <div className="relative rounded-full border border-violet-500/50 bg-violet-500/20 p-2">
+                <Sparkles className="h-5 w-5 text-violet-300" />
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300">AI klaidų centras</div>
+              <div className="text-lg font-black">OpenAI · {usage?.model ?? "gpt-4o-mini"}</div>
+              <div className="text-[11px] text-muted-foreground">
+                Analizuoja fingerprint grupes → priežastis, failas, fix'as, ready-to-paste promptas Lovable agentui.
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={refresh} disabled={loading}>
+              {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
+              Atnaujinti
+            </Button>
+            <Button size="sm" onClick={runAllPending} disabled={pending.length === 0 || !!running}
+              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400">
+              <Zap className="mr-1 h-4 w-4" /> Analizuoti visus ({pending.length})
+            </Button>
+          </div>
+        </div>
+      </SaaSPanel>
+
+      {/* Usage / limits */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <UsageBar label="Mano limitas šiandien" value={usage?.mine_today ?? 0} max={usage?.mine_max ?? 30} pct={pctMine} color="from-cyan-500 to-blue-500" />
+        <UsageBar label="Global limitas 24h" value={usage?.global_today ?? 0} max={usage?.global_max ?? 150} pct={pctGlobal} color="from-fuchsia-500 to-violet-500" />
+        <UsageBar
+          label="Tokens šį mėnesį"
+          value={usage?.tokens_this_month ?? 0}
+          max={usage?.tokens_max ?? 2_000_000}
+          pct={pctTokens}
+          color="from-emerald-500 to-teal-500"
+          extra={usage ? `~$${usage.est_cost_usd.toFixed(3)}` : ""}
+        />
+      </div>
+
+      {/* Pending queue */}
+      <SaaSPanel>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Neišanalizuotos grupės (24h)</div>
+            <div className="text-xs text-muted-foreground">Fingerprint'ai be AI analizės — spausk „🤖" kad iškarto paleistų.</div>
+          </div>
+          <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-200 tabular-nums">
+            {pending.length}
+          </span>
+        </div>
+        <div className="mt-3 space-y-2">
+          {pending.length === 0 && (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 text-center text-sm text-emerald-200">
+              ✨ Visos aktyvios grupės jau turi AI analizę.
+            </div>
+          )}
+          {pending.map((p) => (
+            <div key={p.fingerprint} className="flex items-center gap-3 rounded-lg border border-border/40 bg-background/40 p-3">
+              <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-200 tabular-nums">{p.count}×</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm text-foreground">{p.message || "(be žinutės)"}</div>
+                <div className="mt-0.5 flex gap-2 font-mono text-[10px] text-muted-foreground">
+                  <span>{p.fingerprint.slice(0, 12)}</span>
+                  <span>·</span>
+                  <span>{relTime(p.last)}</span>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => runOne(p.fingerprint)} disabled={!!running}
+                className="border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20">
+                {running === p.fingerprint ? <Loader2 className="h-3 w-3 animate-spin" /> : "🤖 Analizuoti"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      </SaaSPanel>
+
+      {/* Recent analyses */}
+      <SaaSPanel>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300">▸ Paskutinės AI analizės</div>
+            <div className="text-xs text-muted-foreground">Kopijuok promptą → įklijuok į Lovable chat → agentas taiso.</div>
+          </div>
+          <span className="rounded-full border border-violet-500/40 bg-violet-500/15 px-3 py-1 text-xs font-black text-violet-200 tabular-nums">
+            {usage?.total_analyses ?? recent.length}
+          </span>
+        </div>
+        <div className="mt-3 space-y-3">
+          {recent.length === 0 && !loading && (
+            <div className="rounded-lg border border-border/40 bg-background/30 p-6 text-center text-sm text-muted-foreground">
+              Dar nėra AI analizių. Paleisk pirmąją iš „Neišanalizuotos grupės" arba grupių sąrašo.
+            </div>
+          )}
+          {recent.map((a) => {
+            const sev = String(a.severity_estimate ?? "medium");
+            const prompt = a.raw_response?.prompt_for_agent
+              || `Ištaisyk klaidą projekte "Socialinės Valandos".\n\nFingerprint: ${a.fingerprint}\nFailas: ${a.suggested_file || "unknown"}\nŽinutė: ${a.error_message || ""}\nPriežastis: ${a.suspected_cause || ""}\n\nŽingsniai:\n${a.suggested_fix || ""}`;
+            return (
+              <motion.div key={a.fingerprint} layout
+                className="rounded-xl border border-border/50 bg-gradient-to-br from-background/70 to-background/30 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${sevColor[sev] ?? sevColor.medium}`}>{sev}</span>
+                  {typeof a.confidence === "number" && (
+                    <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+                      {Math.round((a.confidence ?? 0) * 100)}% pasitikėjimo
+                    </span>
+                  )}
+                  {typeof a.occurrences_24h === "number" && a.occurrences_24h > 0 && (
+                    <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-200 tabular-nums">
+                      {a.occurrences_24h}× · {a.users_24h ?? 0} vart.
+                    </span>
+                  )}
+                  {typeof a.occurrences_24h === "number" && a.occurrences_24h === 0 && (
+                    <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-200">
+                      💤 nebekartoja (24h)
+                    </span>
+                  )}
+                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+                    {a.fingerprint.slice(0, 10)} · {relTime(a.updated_at)}
+                  </span>
+                </div>
+
+                <div className="mt-2 text-sm text-foreground">{a.suspected_cause || a.error_message || "(no cause)"}</div>
+
+                {a.suggested_file && a.suggested_file !== "unknown" && (
+                  <div className="mt-1 font-mono text-[11px] text-cyan-300">📁 {a.suggested_file}</div>
+                )}
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => copyText(prompt, `p-${a.fingerprint}`)}
+                    className="rounded-md border border-violet-500/50 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 px-3 py-1.5 text-xs font-bold text-violet-100 hover:from-violet-500/30 hover:to-fuchsia-500/30"
+                  >
+                    {copied === `p-${a.fingerprint}` ? <><Check className="mr-1 inline h-3 w-3" /> Nukopijuota</> : <><Copy className="mr-1 inline h-3 w-3" /> Kopijuoti promptą Lovable</>}
+                  </button>
+                  {a.suggested_fix && (
+                    <button
+                      onClick={() => copyText(a.suggested_fix!, `f-${a.fingerprint}`)}
+                      className="rounded-md border border-border/40 bg-background/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-primary/10"
+                    >
+                      {copied === `f-${a.fingerprint}` ? <><Check className="mr-1 inline h-3 w-3" /> Fix nukopijuotas</> : <><Copy className="mr-1 inline h-3 w-3" /> Fix žingsniai</>}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => copyText(a.fingerprint, `fp-${a.fingerprint}`)}
+                    className="rounded-md border border-border/40 bg-background/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-primary/10"
+                  >
+                    {copied === `fp-${a.fingerprint}` ? <Check className="h-3 w-3" /> : "🔖 FP"}
+                  </button>
+                  <span className="ml-auto self-center font-mono text-[10px] text-muted-foreground">
+                    {a.tokens_used ?? 0} tok · {a.model}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </SaaSPanel>
+    </div>
+  );
+}
+
+function UsageBar({ label, value, max, pct, color, extra }: {
+  label: string; value: number; max: number; pct: number; color: string; extra?: string;
+}) {
+  const critical = pct >= 90;
+  return (
+    <div className="rounded-xl border border-border/50 bg-gradient-to-br from-background/70 to-background/30 p-3">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+        {critical && <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[9px] font-black text-rose-200">RIBA</span>}
+      </div>
+      <div className="mt-2 flex items-baseline gap-1 tabular-nums">
+        <span className="text-2xl font-black text-foreground">{value.toLocaleString("lt-LT")}</span>
+        <span className="text-xs text-muted-foreground">/ {max.toLocaleString("lt-LT")}</span>
+        {extra && <span className="ml-auto text-[11px] font-mono text-emerald-300">{extra}</span>}
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background/60">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className={`h-full rounded-full bg-gradient-to-r ${color}`}
+        />
+      </div>
     </div>
   );
 }
