@@ -72,6 +72,11 @@ export type ActivityLogRow = {
  * Keep the wire payload to the long-lived columns only; entity details live in meta.
  */
 export async function insertActivityLogRow(row: ActivityLogRow) {
+  // Never log preview / iframe / localhost traffic — it distorts analytics
+  // (fake „30 unique devices", USA/Linux fingerprints from Lovable sandbox).
+  if (isPreviewEnvironment() && PREVIEW_BLOCKED_ACTIONS.has(row.action)) {
+    return;
+  }
   const meta = {
     ...(row.meta ?? {}),
     ...(row.entity_type ? { entity_type: row.entity_type } : {}),
