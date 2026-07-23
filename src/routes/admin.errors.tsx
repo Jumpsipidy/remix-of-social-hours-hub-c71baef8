@@ -30,6 +30,8 @@ import {
   RotateCw,
   GitCommit,
   CheckCircle2,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -44,6 +46,7 @@ import { logClientError } from "@/lib/error-log";
 import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
 import { loadResolved, markResolved, unmarkResolved, isRegression, type ResolvedEntry } from "@/lib/error-resolved";
+import { analyzeErrorGroup, getAiAnalysis } from "@/lib/ai-error-analysis.functions";
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
 const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_BUILD_TIME || "";
