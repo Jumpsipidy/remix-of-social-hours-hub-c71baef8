@@ -51,7 +51,7 @@ import { adminUpdateLockdownSettings } from "@/lib/lockdown.functions";
 import { logClientError } from "@/lib/error-log";
 import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
-import { isRegression, type ResolvedEntry } from "@/lib/error-resolved";
+import type { ResolvedEntry } from "@/lib/error-resolved";
 import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
@@ -322,6 +322,18 @@ function AdminErrorsPage() {
     return ignoreRules.some((p) => p && hay.toLowerCase().includes(p.toLowerCase()));
   };
 
+  const isRowResolved = (r: ErrRow) => {
+    const entry = resolvedMap[fpOfRow(r)];
+    if (!entry) return false;
+    const rowMs = new Date(r.created_at).getTime();
+    return rowMs <= entry.resolvedAt + 30_000;
+  };
+
+  const activeRows = useMemo(
+    () => rows.filter((r) => !isRowResolved(r)),
+    [rows, resolvedMap],
+  );
+
   const filtered = useMemo(() => {
     const f = filter.trim();
     const windowMs =
@@ -334,7 +346,7 @@ function AdminErrorsPage() {
       try { rx = new RegExp(f, "i"); } catch { rx = null; }
     }
     const fl = f.toLowerCase();
-    return rows.filter((r) => {
+    return activeRows.filter((r) => {
       if (!showIgnored && matchesIgnore(r)) return false;
       if (kind !== "all" && r.action !== kind) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
@@ -344,17 +356,17 @@ function AdminErrorsPage() {
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
     });
-  }, [rows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
+  }, [activeRows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
 
   const now = Date.now();
-  const lastHour = rows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
-  const last5m = rows.filter((r) => now - new Date(r.created_at).getTime() < 300_000);
+  const lastHour = activeRows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
+  const last5m = activeRows.filter((r) => now - new Date(r.created_at).getTime() < 300_000);
   const criticalRecent = last5m.filter((r) => CRITICAL_KINDS.has(r.action));
 
   const spark = useMemo(() => {
     const buckets = new Array(48).fill(0);
     const cutoff = now - 24 * 3_600_000;
-    for (const r of rows) {
+    for (const r of activeRows) {
       const t = new Date(r.created_at).getTime();
       if (t < cutoff) continue;
       const idx = Math.min(47, Math.floor((t - cutoff) / (30 * 60_000)));
@@ -362,7 +374,7 @@ function AdminErrorsPage() {
     }
     return buckets;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]);
+  }, [activeRows]);
 
   type Group = {
     fp: string;
@@ -389,7 +401,7 @@ function AdminErrorsPage() {
     // Any group whose lastMs is older than that AND didn't recur in this build = auto-resolved.
     let currentBuildBootMs = 0;
     if (CURRENT_BUILD && CURRENT_BUILD !== "unknown") {
-      for (const r of rows) {
+      for (const r of activeRows) {
         const bsha = (r.meta as any)?.commit_sha;
         if (bsha === CURRENT_BUILD) {
           const ts = new Date(r.created_at).getTime();
@@ -401,7 +413,7 @@ function AdminErrorsPage() {
         if (Number.isFinite(t)) currentBuildBootMs = t;
       }
     }
-    for (const r of rows) {
+    for (const r of activeRows) {
       const id = fpOfRow(r);
       const ts = new Date(r.created_at).getTime();
       const isCrit = CRITICAL_KINDS.has(r.action);
@@ -440,7 +452,8 @@ function AdminErrorsPage() {
       }
     }
     return Array.from(map.values()).map((g) => {
-      const regressed = isRegression(g.fp, g.lastMs);
+      const resolvedEntry = resolvedMap[g.fp];
+      const regressed = resolvedEntry ? g.lastMs > resolvedEntry.resolvedAt + 30_000 : false;
       // Auto-resolve: last error is older than current build boot AND this build never saw a recurrence.
       const autoResolvedByBuild =
         currentBuildBootMs > 0 &&
@@ -462,10 +475,10 @@ function AdminErrorsPage() {
         isRegression: regressed,
         isResolved: (manuallyResolved || autoResolvedByBuild) && !regressed,
         autoResolvedByBuild: autoResolvedByBuild && !manuallyResolved && !regressed,
-        resolvedEntry: resolvedMap[g.fp],
+        resolvedEntry,
       };
     });
-  }, [rows, resolvedMap]);
+  }, [activeRows, resolvedMap]);
 
   const topGroups = useMemo(() => {
     const list = groups.filter((g) => (groupNewOnly ? g.isNewToday : true))
@@ -517,7 +530,7 @@ function AdminErrorsPage() {
     const paths = new Map<string, number>();
     const browsers = new Map<string, number>();
     const oses = new Map<string, number>();
-    for (const r of rows) {
+    for (const r of activeRows) {
       const p = (r.meta?.path ?? "").split("?")[0] || "(nežinomas)";
       paths.set(p, (paths.get(p) ?? 0) + 1);
       const b = r.meta?.browser ?? "(nežinoma)";
@@ -528,9 +541,9 @@ function AdminErrorsPage() {
     const top = (m: Map<string, number>, n = 8) =>
       Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n);
     return { paths: top(paths, 10), browsers: top(browsers), oses: top(oses) };
-  }, [rows]);
+  }, [activeRows]);
 
-  const ignoredCount = useMemo(() => rows.filter(matchesIgnore).length, [rows, ignoreRules]);
+  const ignoredCount = useMemo(() => activeRows.filter(matchesIgnore).length, [activeRows, ignoreRules]);
 
   const addIgnoreRule = (pattern: string) => {
     const p = pattern.trim();
