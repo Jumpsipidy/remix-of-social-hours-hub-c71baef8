@@ -804,6 +804,42 @@ export type Database = {
           },
         ]
       }
+      resolved_error_groups: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          id: string
+          last_seen_at: string | null
+          note: string | null
+          resolved_at: string
+          resolved_by: string | null
+          resolved_in_build: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          id?: string
+          last_seen_at?: string | null
+          note?: string | null
+          resolved_at?: string
+          resolved_by?: string | null
+          resolved_in_build?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          id?: string
+          last_seen_at?: string | null
+          note?: string | null
+          resolved_at?: string
+          resolved_by?: string | null
+          resolved_in_build?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       schools: {
         Row: {
           city: string | null
