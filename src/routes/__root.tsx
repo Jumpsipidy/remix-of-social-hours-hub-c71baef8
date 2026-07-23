@@ -245,6 +245,9 @@ function RootComponent() {
         <LovableOverlayBridge />
 
         <PageViewTracker />
+        <WebVitalsReporter />
+
+
 
       </AuthProvider>
     </QueryClientProvider>
