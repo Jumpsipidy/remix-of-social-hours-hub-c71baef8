@@ -371,3 +371,61 @@ export const listRecentAnalyses = createServerFn({ method: "GET" })
     });
   });
 
+/**
+ * Dabartinis AI naudojimas + limitai (be AI iškvietimo). Rodoma AI panelėje.
+ */
+export const getAiUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("Not authorized");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+
+    const { count: mineToday } = await supabaseAdmin
+      .from("activity_log")
+      .select("id", { count: "exact", head: true })
+      .eq("actor_id", context.userId)
+      .eq("action", "ai.analysis.run")
+      .gte("created_at", dayAgo);
+
+    const { count: globalToday } = await supabaseAdmin
+      .from("activity_log")
+      .select("id", { count: "exact", head: true })
+      .eq("action", "ai.analysis.run")
+      .gte("created_at", dayAgo);
+
+    const { data: monthRows } = await supabaseAdmin
+      .from("ai_error_analyses")
+      .select("tokens_used")
+      .gte("updated_at", monthStart);
+    const tokensThisMonth = (monthRows ?? []).reduce(
+      (s: number, r: { tokens_used: number | null }) => s + (Number(r.tokens_used) || 0),
+      0,
+    );
+
+    const { count: totalAnalyses } = await supabaseAdmin
+      .from("ai_error_analyses")
+      .select("fingerprint", { count: "exact", head: true });
+
+    // Rough cost: gpt-4o-mini ~ $0.15/1M input + $0.60/1M output. Blended ~$0.40/1M.
+    const estCostUsd = (tokensThisMonth / 1_000_000) * 0.4;
+
+    return {
+      mine_today: mineToday ?? 0,
+      mine_max: LIMIT_PER_ADMIN_PER_DAY,
+      global_today: globalToday ?? 0,
+      global_max: LIMIT_GLOBAL_PER_DAY,
+      tokens_this_month: tokensThisMonth,
+      tokens_max: LIMIT_TOKENS_PER_MONTH,
+      est_cost_usd: estCostUsd,
+      total_analyses: totalAnalyses ?? 0,
+      model: "gpt-4o-mini",
+    };
+  });
+
