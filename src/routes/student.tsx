@@ -309,7 +309,85 @@ function StudentDashboard() {
         </div>
       </section>
 
+      {/* Login streak + school leaderboard */}
+      {profile.role === "student" && (
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+          <div className="relative overflow-hidden rounded-3xl border border-warning/30 bg-gradient-to-br from-warning/10 via-background to-primary/5 p-6 shadow-md">
+            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-warning/20 blur-3xl" />
+            <div className="relative flex items-center gap-4">
+              <motion.div
+                animate={{ scale: [1, 1.08, 1], rotate: [0, -4, 4, 0] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg"
+              >
+                <Flame className="h-8 w-8" fill="currentColor" />
+              </motion.div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-warning">Prisijungimo serija</p>
+                <p className="mt-0.5 font-display text-4xl font-bold">
+                  {loginStreak} <span className="text-lg font-medium text-muted-foreground">d. iš eilės</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Rekordas: <span className="font-semibold text-foreground">{longestStreak} d.</span>
+                  {freezeUsedAt && <> · <span title="1 praleista diena atleista">🧊 „šaldiklis" panaudotas</span></>}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-4 gap-1.5">
+              {[3, 7, 14, 30].map((milestone) => {
+                const reached = loginStreak >= milestone;
+                return (
+                  <div key={milestone} className={`rounded-xl border p-2 text-center transition ${reached ? "border-warning/50 bg-warning/10" : "border-dashed border-border bg-background/40 opacity-60"}`}>
+                    <p className={`font-display text-lg font-bold ${reached ? "text-warning" : "text-muted-foreground"}`}>{milestone}</p>
+                    <p className="text-[10px] text-muted-foreground">d.</p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Švelnios taisyklės: 1 praleista diena per savaitę atleidžiama automatiškai. Užsuk kiekvieną dieną!
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold flex items-center gap-2"><Trophy className="h-5 w-5 text-warning" /> Karščiausi streak'ai mokykloje</h2>
+                <p className="text-xs text-muted-foreground">Top 20 mokinių pagal dienų iš eilės.</p>
+              </div>
+            </div>
+            <div className="mt-4 space-y-1.5 max-h-72 overflow-y-auto pr-1">
+              {streakBoard.length === 0 && (
+                <p className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                  Kol kas tuščia. Būk pirmas, kuris pradeda streak'ą!
+                </p>
+              )}
+              {streakBoard.map((row, idx) => {
+                const isMe = row.id === user.id;
+                const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}.`;
+                return (
+                  <div key={row.id} className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition ${isMe ? "border-primary/50 bg-primary/10" : "border-border/50 bg-background/40"}`}>
+                    <span className="w-8 text-center font-bold">{medal}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{row.full_name ?? "Anonimas"} {isMe && <span className="text-xs font-normal text-primary">(tu)</span>}</p>
+                      {row.class_year && <p className="text-[11px] text-muted-foreground">{row.class_year} kl.</p>}
+                    </div>
+                    <div className="flex items-center gap-1 text-warning">
+                      <Flame className="h-4 w-4" fill="currentColor" />
+                      <span className="font-display font-bold">{row.login_streak}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+      )}
+
       {/* Weekly chart + Achievements */}
+
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
