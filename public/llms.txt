@@ -1,6 +1,7 @@
-# Socialinės Valandos
+# Socialinės Valandos (socialinesvalandos.dev)
 
-> Moksleivių socialinių (savanorystės) valandų valdymo platforma Lietuvos mokykloms — mokiniai randa organizacijas, rezervuoja valandas, o klasės auklėtojai ir mokyklos direktoriai jas patvirtina realiu laiku.
+> Socialinės Valandos — Lietuvos moksleivių socialinių (savanorystės) valandų centras. Taip pat žinoma kaip: socialinesvalandos, socialinesvalandos.dev, socialinių valandų centras. Vieta, kurioje mokiniai randa organizacijas, rezervuoja valandas, o klasės auklėtojai ir mokyklos direktoriai jas patvirtina realiu laiku.
+
 
 Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puses: moksleivius, savanorystės organizacijas / bendruomenes ir mokyklas. Platforma automatizuoja visą socialinių valandų procesą — nuo užduoties radimo iki oficialaus PDF sertifikato su parašu.
 
