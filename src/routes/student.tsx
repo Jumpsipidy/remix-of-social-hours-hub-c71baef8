@@ -240,7 +240,7 @@ function StudentDashboard() {
                 <p className="mt-1 font-display text-3xl font-bold">{completed} / {required} val.</p>
                 <p className="mt-1 text-sm text-muted-foreground">{remaining > 0 ? `Liko ${remaining} val. iki tikslo.` : "Tikslas pasiektas 🎉"}</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  <Pill icon={Flame} tone="warn">{streak} sav. iš eilės</Pill>
+                  <Pill icon={Flame} tone="warn">{loginStreak} d. iš eilės 🔥</Pill>
                   <Pill icon={Timer} tone="info">Vid. {avgHoursPerVisit.toFixed(1)} val./vizitui</Pill>
                   <Pill icon={CalendarDays} tone="ok">{done.length} užbaigti vizitai</Pill>
                 </div>
