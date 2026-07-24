@@ -52,6 +52,7 @@ import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -270,6 +271,11 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicErrorBeaconRoute = ApiPublicErrorBeaconRouteImport.update({
+  id: '/api/public/error-beacon',
+  path: '/api/public/error-beacon',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedOrganizationScanRoute =
   AuthenticatedOrganizationScanRouteImport.update({
     id: '/organization/scan',
@@ -320,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesByTo {
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRoutesById {
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
+  '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
 }
 export interface FileRouteTypes {
@@ -458,6 +467,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/organization/scan'
+    | '/api/public/error-beacon'
     | '/api/public/health'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/verify'
     | '/organization/scan'
+    | '/api/public/error-beacon'
     | '/api/public/health'
   id:
     | '__root__'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/_authenticated/organization/scan'
+    | '/api/public/error-beacon'
     | '/api/public/health'
   fileRoutesById: FileRoutesById
 }
@@ -573,6 +585,7 @@ export interface RootRouteChildren {
   OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   VerifyIndexRoute: typeof VerifyIndexRoute
+  ApiPublicErrorBeaconRoute: typeof ApiPublicErrorBeaconRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
 }
 
@@ -879,6 +892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/error-beacon': {
+      id: '/api/public/error-beacon'
+      path: '/api/public/error-beacon'
+      fullPath: '/api/public/error-beacon'
+      preLoaderRoute: typeof ApiPublicErrorBeaconRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/organization/scan': {
       id: '/_authenticated/organization/scan'
       path: '/organization/scan'
@@ -973,6 +993,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   VerifyIndexRoute: VerifyIndexRoute,
+  ApiPublicErrorBeaconRoute: ApiPublicErrorBeaconRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
 }
 export const routeTree = rootRouteImport
