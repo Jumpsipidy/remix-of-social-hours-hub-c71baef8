@@ -21,6 +21,40 @@ import {
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
 
+function PreviewCountToggle() {
+  const [on, setOn] = useState(false);
+  const [inPreview, setInPreview] = useState(false);
+  useEffect(() => {
+    try {
+      setOn(localStorage.getItem(PREVIEW_COUNT_STORAGE_KEY) === "1");
+    } catch { /* ignore */ }
+    setInPreview(isPreviewEnvironment());
+  }, []);
+  const toggle = () => {
+    const next = !on;
+    setOn(next);
+    try {
+      if (next) localStorage.setItem(PREVIEW_COUNT_STORAGE_KEY, "1");
+      else localStorage.removeItem(PREVIEW_COUNT_STORAGE_KEY);
+    } catch { /* ignore */ }
+    toast.success(
+      next
+        ? "Preview / iframe srautas dabar SKAIČIUOJAMAS analitikoje"
+        : "Preview / iframe srautas ignoruojamas (numatytoji būsena)",
+    );
+  };
+  return (
+    <button
+      onClick={toggle}
+      title={inPreview ? "Šiuo metu esi preview aplinkoje" : "Įjungti tik jei nori matyti sandbox / iframe srautą"}
+      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${on ? "border-amber-400/40 bg-amber-500/10 text-amber-200" : "border-white/10 bg-white/[0.03] text-white/60 hover:text-white"}`}
+    >
+      <Eye className="h-3.5 w-3.5" />
+      {on ? "Preview: ĮTRAUKTA" : "Preview: ignoruojama"}
+    </button>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TOKENS
 // ─────────────────────────────────────────────────────────────────────────────
