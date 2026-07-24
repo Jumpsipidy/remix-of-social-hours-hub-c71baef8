@@ -738,16 +738,27 @@ function AdminErrorsPage() {
     const header = `# Socialinės Valandos — klaidų eksportas\n# ${new Date().toLocaleString("lt-LT")} · ${list.length} įrašų\n\n`;
     return header + list.map((r) => {
       const m = r.meta ?? {};
+      const fp = fpOfRow(r);
+      const ai = analyses[fp];
+      const aiBlock = ai ? [
+        `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
+        ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
+        ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
+        ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
+        ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
+      ].filter(Boolean).join("\n") : `ai:            (dar analizuojama…)`;
       return [
-        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fpOfRow(r)}`,
+        `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fp}`,
         `msg:    ${m.message ?? "(no message)"}`,
         m.path ? `path:   ${m.path}` : null,
         m.source ? `source: ${m.source}` : null,
         [m.browser, m.os, m.device].filter(Boolean).length ? `device: ${[m.browser, m.os, m.device].filter(Boolean).join(" · ")}` : null,
         m.stack ? `stack:\n${String(m.stack).split("\n").slice(0, 10).map((l) => "  " + l).join("\n")}` : null,
+        aiBlock,
       ].filter(Boolean).join("\n");
     }).join("\n\n");
   };
+
 
   const copyAll = async (list: ErrRow[] = filtered) => {
     try {
