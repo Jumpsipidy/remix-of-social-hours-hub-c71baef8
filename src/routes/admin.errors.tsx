@@ -741,14 +741,23 @@ function AdminErrorsPage() {
     return header + list.map((r) => {
       const m = r.meta ?? {};
       const fp = fpOfRow(r);
+      const analyzed = fp in analyses;
       const ai = analyses[fp];
-      const aiBlock = ai ? [
-        `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
-        ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
-        ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
-        ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
-        ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
-      ].filter(Boolean).join("\n") : `ai:            (dar analizuojama…)`;
+      let aiBlock: string;
+      if (ai) {
+        aiBlock = [
+          `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
+          ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
+          ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
+          ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
+          ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
+        ].filter(Boolean).join("\n");
+      } else if (analyzed) {
+        // analyses[fp] === null → analyze returned no result (rate limit, missing key, or model returned empty)
+        aiBlock = `ai:            (analizė nepavyko — pabandyk iš naujo)`;
+      } else {
+        aiBlock = `ai:            (analizuojama fone…)`;
+      }
       return [
         `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fp}`,
         `msg:    ${m.message ?? "(no message)"}`,
