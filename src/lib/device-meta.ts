@@ -74,14 +74,15 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
   } catch { /* noop */ }
 
   // Mobile-specific enrichment: PWA standalone, orientation, connection, touch
+  type NetInfo = { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean };
   const nav = navigator as Navigator & {
-    connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean };
-    mozConnection?: { effectiveType?: string };
-    webkitConnection?: { effectiveType?: string };
+    connection?: NetInfo;
+    mozConnection?: NetInfo;
+    webkitConnection?: NetInfo;
     deviceMemory?: number;
     maxTouchPoints?: number;
   };
-  const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+  const conn: NetInfo | undefined = nav.connection || nav.mozConnection || nav.webkitConnection;
   const isStandalone =
     (typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) ||
     (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
