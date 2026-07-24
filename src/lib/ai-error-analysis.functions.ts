@@ -138,34 +138,46 @@ Routes: ${routes.join(", ") || "(unknown)"}
 ${meta.message ?? "(no message)"}
 
 ${uniqueMessages.length > 1 ? `Kitos variacijos:\n- ${uniqueMessages.slice(1).join("\n- ")}\n` : ""}
-Stack (pirmi 1200 simb.):
-${String(meta.stack ?? "(no stack)").slice(0, 1200)}
+Stack (pirmi 2500 simb.):
+${String(meta.stack ?? "(no stack)").slice(0, 2500)}
 
 Breadcrumbs (paskutiniai vartotojo veiksmai):
-${JSON.stringify(breadcrumbs).slice(0, 500)}
+${JSON.stringify(breadcrumbs).slice(0, 900)}
 
 Naršyklė: ${meta.browser ?? "?"} · OS: ${meta.os ?? "?"} · Įrenginys: ${meta.device ?? "?"}
 Šaltinis: ${meta.source ?? "?"}
 ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
 
     const model = "gpt-4o-mini";
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.1,
-        max_tokens: 500,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+    // Hard 10s cap — better a partial "unknown" than a 60s hang.
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 10_000);
+    let resp: Response;
+    try {
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.15,
+          max_tokens: 900,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+    } catch (e) {
+      if ((e as Error).name === "AbortError") throw new Error("OpenAI užklausa viršijo 10s limitą — bandyk dar kartą.");
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!resp.ok) {
       const body = await resp.text();
