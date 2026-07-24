@@ -89,7 +89,7 @@ export type ActivityLogRow = {
 export async function insertActivityLogRow(row: ActivityLogRow) {
   // Never log preview / iframe / localhost traffic — it distorts analytics
   // (fake „30 unique devices", USA/Linux fingerprints from Lovable sandbox).
-  if (isPreviewEnvironment() && PREVIEW_BLOCKED_ACTIONS.has(row.action)) {
+  if (isPreviewEnvironment() && !shouldCountPreview() && PREVIEW_BLOCKED_ACTIONS.has(row.action)) {
     return;
   }
   const meta = {
