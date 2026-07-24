@@ -17,6 +17,7 @@ import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PrivatumasRouteImport } from './routes/privatumas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as LoginRouteImport } from './routes/login'
@@ -93,6 +94,11 @@ const SchoolRoute = SchoolRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivatumasRoute = PrivatumasRouteImport.update({
+  id: '/privatumas',
+  path: '/privatumas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/privacy': typeof PrivacyRoute
+  '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/privacy': typeof PrivacyRoute
+  '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/organization': typeof OrganizationRoute
   '/privacy': typeof PrivacyRoute
+  '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
   '/status': typeof StatusRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/privacy'
+    | '/privatumas'
     | '/register'
     | '/school'
     | '/status'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/privacy'
+    | '/privatumas'
     | '/register'
     | '/school'
     | '/status'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/organization'
     | '/privacy'
+    | '/privatumas'
     | '/register'
     | '/school'
     | '/status'
@@ -571,6 +583,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OrganizationRoute: typeof OrganizationRoute
   PrivacyRoute: typeof PrivacyRoute
+  PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
   SchoolRoute: typeof SchoolRoute
   StatusRoute: typeof StatusRoute
@@ -645,6 +658,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privatumas': {
+      id: '/privatumas'
+      path: '/privatumas'
+      fullPath: '/privatumas'
+      preLoaderRoute: typeof PrivatumasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -978,6 +998,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OrganizationRoute: OrganizationRoute,
   PrivacyRoute: PrivacyRoute,
+  PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
   SchoolRoute: SchoolRoute,
   StatusRoute: StatusRoute,
