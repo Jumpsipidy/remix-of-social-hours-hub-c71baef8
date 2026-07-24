@@ -352,6 +352,54 @@ function AdminErrorsPage() {
     [rows, resolvedMap],
   );
 
+  // Auto-analyze: for every visible error's fingerprint, fetch cached AI
+  // analysis in the background; if none exists, kick off analyzeErrorGroup.
+  // Runs whenever new errors arrive. Throttled to 3 concurrent analyses and
+  // ignores fps already in state or in-flight. Fully silent — no toasts.
+  useEffect(() => {
+    const fps = Array.from(new Set(activeRows.slice(0, 40).map(fpOfRow))).filter(Boolean);
+    const unknown = fps.filter((fp) => !(fp in analyses) && !analysisInflight.current.has(fp));
+    if (unknown.length === 0) return;
+    let cancelled = false;
+    const runOne = async (fp: string) => {
+      analysisInflight.current.add(fp);
+      try {
+        const cached = await getAnalysisFn({ data: { fingerprint: fp } });
+        if (cancelled) return;
+        if (cached) {
+          setAnalyses((prev) => ({ ...prev, [fp]: cached as AnalysisRow }));
+          return;
+        }
+        // No cached analysis — trigger a fresh one. Cheap models; server caps
+        // daily usage so a runaway page can't blow the budget.
+        const res = await analyzeFn({ data: { fingerprint: fp, force: false } }).catch(() => null);
+        if (cancelled) return;
+        if (res?.analysis) {
+          setAnalyses((prev) => ({ ...prev, [fp]: res.analysis as AnalysisRow }));
+        } else {
+          setAnalyses((prev) => ({ ...prev, [fp]: null }));
+        }
+      } finally {
+        analysisInflight.current.delete(fp);
+      }
+    };
+    // Concurrency: 3 at a time
+    (async () => {
+      const queue = [...unknown];
+      const workers = Array.from({ length: 3 }, async () => {
+        while (queue.length && !cancelled) {
+          const fp = queue.shift()!;
+          await runOne(fp);
+        }
+      });
+      await Promise.all(workers);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRows]);
+
+
+
   const filtered = useMemo(() => {
     const f = filter.trim();
     const windowMs =
