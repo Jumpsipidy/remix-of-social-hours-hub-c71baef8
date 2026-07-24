@@ -1925,23 +1925,20 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300">AI analizė + auto-fix</span>
           {data?.model && <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[9px] text-muted-foreground">{data.model}</span>}
         </div>
-        <div className="flex gap-1">
-          {!data && (
-            <button
-              onClick={() => run(false)}
-              disabled={loading || !fingerprint}
-              className="rounded-md border border-violet-500/40 bg-violet-500/15 px-2 py-1 text-[11px] font-bold text-violet-200 hover:bg-violet-500/25 disabled:opacity-40"
-            >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "🤖 Analizuoti"}
-            </button>
+        <div className="flex items-center gap-1">
+          {loading && !data && (
+            <span className="flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[10px] text-violet-200">
+              <Loader2 className="h-3 w-3 animate-spin" /> Analizuojama fone…
+            </span>
           )}
           {data && (
             <button
               onClick={() => run(true)}
               disabled={loading}
               className="rounded-md border border-border/40 bg-background/40 px-2 py-1 text-[10px] text-muted-foreground hover:bg-primary/10"
+              title="Paleisti analizę iš naujo (force refresh)"
             >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Iš naujo"}
+              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "↻ Iš naujo"}
             </button>
           )}
         </div>
