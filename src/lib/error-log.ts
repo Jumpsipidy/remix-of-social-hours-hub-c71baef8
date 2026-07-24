@@ -40,6 +40,9 @@ const IGNORE_SUBSTRINGS = [
   "Loading chunk",
   "Loading CSS chunk",
   "ChunkLoadError",
+  // Third-party CMP (cookie-script) — non-critical, may be blocked by adblock/DNS.
+  "cookie-script.com",
+  "cookie-consent",
 
 ];
 
