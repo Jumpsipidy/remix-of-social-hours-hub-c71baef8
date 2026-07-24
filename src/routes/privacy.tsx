@@ -21,136 +21,127 @@ type Section = { icon: React.ComponentType<{ className?: string }>; h: string; b
 const SECTIONS: Section[] = [
   {
     icon: Shield,
-    h: "1. Ką reiškia ši politika",
+    h: "1. Duomenų valdytojas (Data Controller)",
     body: [
-      "Šis puslapis paaiškina, kaip platforma „Socialinės Valandos” (toliau — Platforma) renka, saugo ir tvarko tavo asmens duomenis. Politika parašyta aiškiai, be teisinės miglos — jei kažkas neaišku, parašyk mums per pagalbos formą.",
-      "Ši politika galioja kartu su Naudojimosi taisyklėmis (/terms). Kai kur sąlygos persidengia — visada taikoma griežtesnė nuostata.",
-      "Platforma nėra sertifikuota pagal SOC 2, ISO 27001 ar panašius auditus, tačiau taikome pramonės standartines apsaugos priemones ir esame atviri dėl to, kaip veikia sistema.",
+      "Pagal BDAR (Reglamentas 2016/679) 4 str. 7 d., duomenų valdytojas yra fizinis asmuo — platformos „Socialinės Valandos“ kūrėjas ir administratorius, veikiantis Lietuvos Respublikoje.",
+      "Kontaktai visais privatumo klausimais (prieigos užklausos, ištrynimas, skundai, incidentai): pagalba@socialinesvalandos.dev. Į užklausas atsakome per 30 kalendorinių dienų, kaip reikalauja BDAR 12 str. 3 d.",
+      "Priežiūros institucija: Valstybinė duomenų apsaugos inspekcija (VDAI), L. Sapiegos g. 17, Vilnius, ada@ada.lt, +370 5 271 2804. Turi teisę pateikti skundą tiesiogiai VDAI, jei manai, kad tavo teisės pažeistos (BDAR 77 str.).",
     ],
   },
   {
     icon: Database,
-    h: "2. Kokie duomenys renkami",
+    h: "2. Kokie duomenys renkami ir teisinis pagrindas",
     body: [
-      "Renkame tik tuos duomenis, kurie būtini paslaugos veikimui. Nesekame tavo naršymo išorėje, neparduodame duomenų reklamos tinklams.",
+      "Renkame tik tuos duomenis, kurie būtini paslaugos veikimui. Nesekame naršymo išorėje, neparduodame duomenų, nenaudojame reklamos profiliavimo.",
     ],
     bullets: [
-      "Paskyros duomenys: el. paštas, vardas ir pavardė, vaidmuo (mokinys / organizacija / mokyklos administratorius), mokykla, klasė.",
-      "Rezervacijų duomenys: pasirinktos užduotys, laikai, valandų skaičius, statusai, susijusios organizacijos.",
-      "Bendravimas: pokalbių žinutės (auto-ištrinamos po 12 d.), asmeniniai pokalbiai (auto-ištrinami po 2 d.), draugystės ryšiai.",
-      "Techniniai metaduomenys: naršyklė, OS, kalba, laiko juosta, ekrano skiriamoji geba, IP adreso hash'as (ne pats IP), anoniminis įrenginio ID (visitor_id).",
-      "Naudotojo veiksmų žurnalas (audit log): peržiūrėti puslapiai, prisijungimai, atsijungimai, sistemos klaidos.",
+      "Paskyros duomenys (vardas, pavardė, el. paštas, vaidmuo, mokykla, klasė) — teisinis pagrindas: BDAR 6 str. 1 d. b) p. (sutarties vykdymas — negalime suteikti paslaugos be jų).",
+      "Rezervacijos, valandų istorija, QR įsiregistravimai — teisinis pagrindas: sutartis + teisėtas interesas (mokyklos ugdymo procesui pagrįsti).",
+      "Pokalbių žinutės (auto-ištrinamos: grupinės — 12 d., asmeninės — 2 d.) — sutarties vykdymas.",
+      "Techniniai metaduomenys ir klaidų žurnalai (naršyklė, IP hash, ne pats IP, anoniminis visitor_id) — teisėtas interesas (saugumas, klaidų diagnostika, sukčiavimo prevencija; BDAR 6 str. 1 d. f p.).",
+      "Slapukų analitika — tik su tavo aiškiu sutikimu (BDAR 6 str. 1 d. a p. + ePrivacy 5(3) str.). Gali bet kada atšaukti /privatumas puslapyje.",
     ],
   },
   {
-    icon: Lock,
-    h: "3. Saugumo priemonės",
+    icon: Shield,
+    h: "3. Nepilnamečių apsauga (BDAR 8 str.)",
     body: [
-      "Duomenų saugumas užtikrinamas keliais sluoksniais:",
-    ],
-    bullets: [
-      "🔐 Transportas: visas srautas šifruojamas per HTTPS/TLS 1.3.",
-      "🗄️ Duomenų bazė: PostgreSQL su Row-Level Security (RLS) — kiekviena lentelė turi taisykles, ribojančias, ką konkretus naudotojas gali matyti ar keisti.",
-      "🔑 Slaptažodžiai: saugomi kaip Bcrypt hash'ai, niekada plain-text. Papildomai — HIBP (Have I Been Pwned) patikra registracijos metu.",
-      "🎫 Sesijos: JWT tokenai su rotuojančiais refresh tokenais, saugomi httpOnly slapukuose kai įmanoma.",
-      "🚨 Auto-lockdown: sistema pati užsidaro naudotojams, jei aptinka ≥2 kritines klaidas arba ≥3 vartotojų susiduria su ta pačia klaida per 90s.",
-      "📊 Sveikatos patikra: kas 10 min. automatiškai vykdomas gilus scan (18 patikrų), rezultatai matomi tik super administratoriui.",
-    ],
-  },
-  {
-    icon: Eye,
-    h: "4. Kas gali matyti tavo duomenis",
-    body: [
-      "Prieiga prie duomenų yra griežtai apribota pagal vaidmenį (RLS taisyklės vykdomos duomenų bazės lygyje — net jei kliento kodas būtų pakeistas, serveris atsisakys grąžinti neleistus duomenis):",
-    ],
-    bullets: [
-      "Mokinys mato: TIK savo profilį, savo rezervacijas, viešas užduotis, savo pokalbius, savo draugus ir draugų viešus duomenis.",
-      "Organizacija mato: TIK jai priklausančias rezervacijas, savo užduotis, mokinius su kuriais bendrauja (be el. pašto — tik vardas).",
-      "Mokyklos administratorius mato: TIK savo mokyklos ir savo priskirtų klasių mokinius. Kitos mokyklos yra nematomos.",
-      "Super administratorius: turi pilną prieigą tik prie tų duomenų, kurie būtini administravimui. Visi jo veiksmai fiksuojami audit log'e.",
-    ],
-  },
-  {
-    icon: KeyRound,
-    h: "5. Kaip prisijungiama",
-    body: [
-      "Palaikome kelis autentifikacijos būdus:",
-    ],
-    bullets: [
-      "Email + slaptažodis (min. 8 simboliai, tikrinamas prieš HIBP duomenų bazę).",
-      "Google OAuth 2.0 — nesaugome tavo Google slaptažodžio.",
-      "Discord OAuth — jei prijungei.",
-      "Mokyklos kodas — moksleiviai registruodamiesi turi įvesti mokyklos kodą, kurį duoda mokyklos administratorius. Be kodo — paskyra nebus sukurta.",
-    ],
-  },
-  {
-    icon: Bell,
-    h: "6. Pranešimai ir el. paštas",
-    body: [
-      "Siunčiame TIK funkcinius pranešimus, susijusius su tavo veikla (rezervacijos, valandų patvirtinimas, žinutės). Jokių rinkodaros el. laiškų.",
-      "Push pranešimai (browser notifications) — pilnai neprivalomi, įjungiami tik su tavo aiškiu sutikimu per naršyklę.",
-      "Email siunčiame per Resend.com. Serveryje saugomas siuntimo žurnalas 30 dienų klaidų diagnostikai, po to automatiškai išvalomas.",
+      "Platforma naudojama mokykliniame kontekste, todėl dauguma naudotojų yra nepilnamečiai (< 16 m.). Lietuvoje BDAR informacinės visuomenės paslaugoms taikoma 14 m. amžiaus riba tėvų sutikimui.",
+      "SPRENDIMAS: moksleiviai NEregistruojasi patys. Paskyras kuria mokyklos administratorius, kuris savo veiksmais patvirtina, kad turi teisinį pagrindą tvarkyti mokinio duomenis (mokymo sutartis su tėvais + LR Švietimo įstatymas). Tai reiškia, kad tėvų sutikimo klausimas išspręstas mokyklos lygyje, o platforma veikia kaip mokyklos vidinis įrankis.",
+      "Nesirenkame ir nesaugome jautrių duomenų (sveikatos, religijos, politikos, seksualinės orientacijos — BDAR 9 str.). Jei toks duomuo netyčia patenka į pokalbio žinutę — ji ištrinama per 12 d. auto-purge.",
+      "Nerodome viešai el. pašto adresų — kiti mokiniai mato tik vardą ir pavardę.",
     ],
   },
   {
     icon: Trash2,
-    h: "7. Duomenų saugojimas ir teisė būti pamirštam",
+    h: "4. Duomenų saugojimo terminai ir teisė būti pamirštam",
     body: [
-      "Duomenų retencija yra ribota ir automatizuota:",
+      "Duomenų retencija automatizuota ir minimali:",
     ],
     bullets: [
-      "Pokalbių žinutės grupiniuose kambariuose — 12 d. (auto-purge).",
-      "Asmeninių žinučių (DM) žinutės — 2 d. (auto-purge).",
-      "Aktyvumo žurnalas (activity_log) — iki 180 d., paskui automatiškai išvalomas.",
-      "Klaidų žurnalas — iki 30 d.",
-      "Paskyra ir rezervacijos — saugomi kol paskyra aktyvi. Ištrynus paskyrą (per profilio nustatymus) — visi susiję duomenys šalinami per 24 val., audit log liudijantis apie kritinius veiksmus (pvz. sukčiavimo signalai) — anonimizuojamas.",
-      "Jei nori eksportuoti savo duomenis prieš ištrindamas — parašyk mums, per 30 d. atsiųsime JSON archyvą.",
+      "Grupinių pokalbių žinutės — 12 d. (auto-purge cron).",
+      "Asmeninių žinučių (DM) — 2 d. (auto-purge cron).",
+      "Aktyvumo žurnalas (activity_log) — iki 180 d.",
+      "Klaidų žurnalas — 30 d.",
+      "Paskyra ir rezervacijos — saugomi kol paskyra aktyvi.",
+      "IŠTRYNUS PASKYRĄ (per Nustatymai → Ištrinti paskyrą): asmens duomenys pašalinami nedelsiant (per 24 val.). Valandų istorija ANONIMIZUOJAMA — mokyklai lieka tik skaitmuo (kiek klasės mokinių atliko X val.) be vardo, pavardės, el. pašto. Šis anoniminis įrašas neatpažįsta asmens ir todėl nebėra „asmens duomuo“ pagal BDAR 4 str.",
+      "Duomenų portabilumas: gali paprašyti JSON archyvo (BDAR 20 str.) rašydamas pagalba@socialinesvalandos.dev. Atsiųsim per 30 d.",
     ],
   },
   {
-    icon: Shield,
-    h: "8. Slapukai ir stebėjimas",
+    icon: Lock,
+    h: "5. Saugumo priemonės (BDAR 32 str.)",
     body: [
-      "Naudojame minimalų slapukų rinkinį:",
+      "Techninės ir organizacinės priemonės atitinka BDAR 32 str. reikalavimą „tinkamą saugumo lygį“:",
     ],
     bullets: [
-      "Funkciniai slapukai (sesija, tema, kalba) — būtini, be jų platforma neveiks.",
-      "Anoniminis visitor_id (localStorage) — leidžia mums skaičiuoti unikalius įrenginius statistikai, bet neidentifikuoja tavęs asmeniškai.",
-      "Google Analytics 4 (G-4HRBLS0E3G) — anonimizuoti agreguoti duomenys apie svetainės naudojimą. IP anonimizavimas įjungtas.",
-      "NENAUDOJAME: reklamos slapukų, third-party trackers'ų, Facebook Pixel, TikTok Pixel ar panašių.",
+      "🔐 TLS 1.3 visam srautui, HSTS aktyvus.",
+      "🗄️ PostgreSQL Row-Level Security (RLS) — kiekviena lentelė turi taisykles duomenų bazės lygiu; net jei kliento kodas būtų pakeistas, serveris atsisakys grąžinti neleistus duomenis.",
+      "🔑 Slaptažodžiai — Bcrypt hash, HIBP (Have I Been Pwned) patikra registracijoj.",
+      "🎫 JWT sesijos su rotuojančiais refresh tokenais.",
+      "🚨 Auto-lockdown, jei aptinkama incidentų serija.",
+      "📊 Kas 10 min. deep health scan; incidentai matomi tik super-adminui.",
+      "🇪🇺 Visi duomenys laikomi ES regione (Supabase eu-central).",
+    ],
+  },
+  {
+    icon: Eye,
+    h: "6. Kas gali matyti tavo duomenis",
+    body: [
+      "Prieiga griežtai apribota RLS taisyklėmis duomenų bazės lygyje:",
+    ],
+    bullets: [
+      "Mokinys: TIK savo profilis, savo rezervacijos, viešos užduotys, savo pokalbiai, savo draugai.",
+      "Organizacija: TIK jai priklausančios rezervacijos, savo užduotys, mokinių vardai (be el. pašto).",
+      "Mokyklos administratorius: TIK savo mokyklos ir savo priskirtų klasių mokiniai. Kitos mokyklos nematomos.",
+      "Super administratorius: prieiga tik prie duomenų, būtinų administravimui; visi veiksmai fiksuojami audit log.",
     ],
   },
   {
     icon: Mail,
-    h: "9. Trečiosios šalys (subprocessors)",
+    h: "7. Trečiosios šalys (Subprocessors)",
     body: [
-      "Kad platforma veiktų, naudojamės šiais paslaugų teikėjais. Su kiekvienu turime standartinius duomenų tvarkymo susitarimus:",
+      "Kad platforma veiktų, naudojamės šiais duomenų tvarkytojais. Su kiekvienu galioja standartinis Data Processing Agreement:",
     ],
     bullets: [
-      "Supabase (duomenų bazė, autentifikacija, saugykla) — ES regionas.",
-      "Vercel (hostingas ir CDN).",
-      "Resend (el. laiškų siuntimas).",
-      "Google (OAuth, Analytics 4, reCAPTCHA).",
-      "Discord (OAuth, jei įjungta).",
+      "Supabase Inc. — duomenų bazė, autentifikacija, saugykla; ES (Frankfurt) regionas.",
+      "Vercel Inc. — hostingas ir CDN; ES edge.",
+      "Resend — el. laiškų siuntimas.",
+      "Google LLC — OAuth prisijungimas (jei pasirinktas naudotojo).",
+      "Discord Inc. — OAuth (jei pasirinktas).",
+      "NENAUDOJAME: Facebook Pixel, TikTok Pixel, Google Ads, jokių reklamos tinklų. NEPARDUODAME duomenų.",
     ],
   },
   {
     icon: Shield,
-    h: "10. Nepilnamečių apsauga",
+    h: "8. Slapukai ir sutikimas",
     body: [
-      "Platforma yra skirta mokykliniam amžiui — todėl daug naudotojų yra nepilnamečiai. Papildomos priemonės:",
-      "Registracija be mokyklos kodo yra neįmanoma — tai reiškia, kad mokykla žino, kas registruojasi.",
-      "Nerodome viešai el. pašto adresų (mokinys mokinį mato tik pagal vardą).",
-      "Nesirenkame ir nesaugome jokių jautrių duomenų (sveikata, religija, politiniai įsitikinimai ir pan.).",
+      "Prieš įkeliant bet kokį ne-būtiną skriptą, prašome tavo aiškaus sutikimo (ePrivacy 5(3) + BDAR 7 str.). Trys kategorijos: Būtini (visada), Analitika (opt-in), Rinkodara (opt-in).",
+      "Mygtukai „Sutinku“ ir „Atmesti“ pateikti tame pačiame lygyje, ta pačia spalva — atitinka CNIL/EDPB rekomendaciją. Sutikimą galima bet kada atšaukti /privatumas puslapyje.",
+      "Sutikimo įrašas saugomas su versijos numeriu ir laiko žyma — po 12 mėn. arba pakeitus politikos versiją, prašysime iš naujo.",
     ],
   },
   {
-    icon: Mail,
-    h: "11. Kontaktai ir teisės",
+    icon: Bell,
+    h: "9. Tavo teisės (BDAR 15–22 str.)",
+    body: ["Kaip duomenų subjektas turi šias teises, kurias gali realizuoti rašydamas pagalba@socialinesvalandos.dev:"],
+    bullets: [
+      "Prieigos teisė (15 str.) — gauti kopiją, kokie duomenys tvarkomi.",
+      "Ištaisymo teisė (16 str.) — pataisyti netikslius duomenis.",
+      "Ištrynimo teisė / „teisė būti pamirštam“ (17 str.) — Nustatymai → Ištrinti paskyrą.",
+      "Tvarkymo apribojimas (18 str.).",
+      "Duomenų perkeliamumas (20 str.) — JSON eksportas.",
+      "Nesutikimas dėl teisėto intereso pagrindu tvarkomų duomenų (21 str.).",
+      "Sutikimo atšaukimas bet kuriuo metu (7 str. 3 d.).",
+      "Skundas VDAI (77 str.) — ada@ada.lt.",
+    ],
+  },
+  {
+    icon: KeyRound,
+    h: "10. Duomenų saugumo pažeidimo pranešimai",
     body: [
-      "Turi teisę: gauti prieigą prie savo duomenų, juos taisyti, ištrinti (teisė būti pamirštam), riboti tvarkymą, gauti duomenų kopiją perkeliamu formatu.",
-      "Kontaktams naudok pagalbos formą platformoje arba parašyk į kontaktus, kuriuos rasi /terms puslapyje. Į užklausas atsakome per 30 d.",
-      "Jei manai, kad tavo teisės pažeistos — turi teisę kreiptis į Valstybinę duomenų apsaugos inspekciją (vdai.lrv.lt).",
+      "Įvykus asmens duomenų saugumo pažeidimui, kuris gali kelti riziką tavo teisėms ir laisvėms, pranešime VDAI per 72 val. (BDAR 33 str.) ir tau tiesiogiai el. paštu, jei rizika didelė (BDAR 34 str.).",
+      "Įtari incidentą? Rašyk pagalba@socialinesvalandos.dev su tema „SECURITY“.",
     ],
   },
 ];
@@ -181,7 +172,8 @@ function PrivacyPage() {
               <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-rose-300">🚫 Jokios reklamos</span>
             </div>
             <p className="mt-4 text-[11px] uppercase tracking-[0.24em] text-white/40">
-              Paskutinį kartą atnaujinta · 2026-07-22
+              Paskutinį kartą atnaujinta · 2026-07-24 · Versija 2.0
+
             </p>
           </div>
         </div>
