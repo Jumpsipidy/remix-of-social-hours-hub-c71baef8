@@ -5,6 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
  * production analytics. Matches the preview host pattern and any embedded
  * iframe context (Lovable renders the app inside an iframe on lovable.dev).
  */
+export const PREVIEW_COUNT_STORAGE_KEY = "analytics_count_preview";
+
+/**
+ * When true, preview/iframe traffic is counted in analytics (admin opt-in).
+ * Default false — Lovable sandbox + localhost never pollute production stats.
+ */
+function shouldCountPreview(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(PREVIEW_COUNT_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function isPreviewEnvironment(): boolean {
   if (typeof window === "undefined") return false;
   try {
