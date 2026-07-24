@@ -322,7 +322,7 @@ export function OnboardingTour() {
                 transition={{ duration: 0.24, ease: "easeOut" }}
               >
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] ring-1 ring-inset ring-white/10">
-                  <Icon className="h-6 w-6 text-white" strokeWidth={1.8} />
+                  <Icon className="h-6 w-6 text-white" />
                 </div>
 
                 <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
@@ -351,7 +351,7 @@ export function OnboardingTour() {
                           className="flex items-center gap-3 text-sm text-white/80"
                         >
                           <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-inset ring-emerald-400/30">
-                            <PIcon className="h-3.5 w-3.5 text-emerald-300" strokeWidth={2.5} />
+                            <PIcon className="h-3.5 w-3.5 text-emerald-300" />
                           </span>
                           <span className="min-w-0">{p.text}</span>
                         </motion.li>
@@ -391,7 +391,7 @@ export function OnboardingTour() {
             >
               {isLast ? "Pradėti" : "Toliau"}
               {!isLast && <ArrowRight className="h-4 w-4" />}
-              {isLast && <Check className="h-4 w-4" strokeWidth={2.5} />}
+              {isLast && <Check className="h-4 w-4" />}
             </button>
           </div>
         </motion.div>
