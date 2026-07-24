@@ -10,6 +10,7 @@ import {
 import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin-super.functions";
 import { adminResetAnalytics } from "@/lib/admin-delete.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { PREVIEW_COUNT_STORAGE_KEY, isPreviewEnvironment } from "@/lib/activity-log";
 import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 import { toast } from "sonner";
 import {
@@ -19,6 +20,40 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({ component: Page });
+
+function PreviewCountToggle() {
+  const [on, setOn] = useState(false);
+  const [inPreview, setInPreview] = useState(false);
+  useEffect(() => {
+    try {
+      setOn(localStorage.getItem(PREVIEW_COUNT_STORAGE_KEY) === "1");
+    } catch { /* ignore */ }
+    setInPreview(isPreviewEnvironment());
+  }, []);
+  const toggle = () => {
+    const next = !on;
+    setOn(next);
+    try {
+      if (next) localStorage.setItem(PREVIEW_COUNT_STORAGE_KEY, "1");
+      else localStorage.removeItem(PREVIEW_COUNT_STORAGE_KEY);
+    } catch { /* ignore */ }
+    toast.success(
+      next
+        ? "Preview / iframe srautas dabar SKAIČIUOJAMAS analitikoje"
+        : "Preview / iframe srautas ignoruojamas (numatytoji būsena)",
+    );
+  };
+  return (
+    <button
+      onClick={toggle}
+      title={inPreview ? "Šiuo metu esi preview aplinkoje" : "Įjungti tik jei nori matyti sandbox / iframe srautą"}
+      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${on ? "border-amber-400/40 bg-amber-500/10 text-amber-200" : "border-white/10 bg-white/[0.03] text-white/60 hover:text-white"}`}
+    >
+      <Eye className="h-3.5 w-3.5" />
+      {on ? "Preview: ĮTRAUKTA" : "Preview: ignoruojama"}
+    </button>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TOKENS
@@ -515,6 +550,7 @@ function Page() {
             <button onClick={resetAnalytics} title="Ištrinti visą activity_log istoriją" className="flex items-center gap-1.5 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
               <Trash2 className="h-3.5 w-3.5" /> Reset
             </button>
+            <PreviewCountToggle />
           </div>
         </div>
       </div>
