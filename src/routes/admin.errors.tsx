@@ -398,10 +398,11 @@ function AdminErrorsPage() {
         analysisInflight.current.delete(fp);
       }
     };
-    // Concurrency: 3 at a time
+    // Concurrency: 6 at a time (up from 3) — analysis is capped at 500 tokens
+    // so latency is ~1-2s per request; 6 parallel workers finishes 40 fps in seconds.
     (async () => {
       const queue = [...unknown];
-      const workers = Array.from({ length: 3 }, async () => {
+      const workers = Array.from({ length: 6 }, async () => {
         while (queue.length && !cancelled) {
           const fp = queue.shift()!;
           await runOne(fp);
