@@ -72,6 +72,24 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
       if (u.host !== window.location.host) ref_host = u.host;
     }
   } catch { /* noop */ }
+
+  // Mobile-specific enrichment: PWA standalone, orientation, connection, touch
+  const nav = navigator as Navigator & {
+    connection?: { effectiveType?: string; downlink?: number; rtt?: number; saveData?: boolean };
+    mozConnection?: { effectiveType?: string };
+    webkitConnection?: { effectiveType?: string };
+    deviceMemory?: number;
+    maxTouchPoints?: number;
+  };
+  const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+  const isStandalone =
+    (typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches) ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  let orientation = "";
+  try {
+    orientation = (screen.orientation?.type) || (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+  } catch { /* noop */ }
+
   return {
     session_id: sessionId(),
     visitor_id: visitorId(),
@@ -85,6 +103,16 @@ export function deviceMeta(extra?: Record<string, unknown>): Record<string, unkn
     dpr: window.devicePixelRatio || 1,
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
     ref_host,
+    // Mobile context
+    orientation,
+    touch_points: nav.maxTouchPoints ?? 0,
+    standalone: isStandalone,
+    online: navigator.onLine,
+    net_type: conn?.effectiveType || "",
+    net_downlink: conn?.downlink ?? null,
+    net_rtt: conn?.rtt ?? null,
+    save_data: conn?.saveData ?? false,
+    device_memory: nav.deviceMemory ?? null,
     // Deploy tag — set at build time from vite.config.ts. Lets Error Center
     // tie a bug to the exact commit / build that introduced it.
     commit_sha: (import.meta as { env?: { VITE_COMMIT_SHA?: string } }).env?.VITE_COMMIT_SHA || "unknown",
