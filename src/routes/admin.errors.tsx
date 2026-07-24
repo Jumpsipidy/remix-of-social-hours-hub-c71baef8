@@ -2158,14 +2158,17 @@ function AiCenterPanel() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-200">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
+              </span>
+              Auto ON
+            </span>
             <Button size="sm" variant="outline" onClick={refresh} disabled={loading}>
               {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
               Atnaujinti
-            </Button>
-            <Button size="sm" onClick={runAllPending} disabled={pending.length === 0 || !!running}
-              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400">
-              <Zap className="mr-1 h-4 w-4" /> Analizuoti visus ({pending.length})
             </Button>
           </div>
         </div>
