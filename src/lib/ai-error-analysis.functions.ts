@@ -138,11 +138,11 @@ Routes: ${routes.join(", ") || "(unknown)"}
 ${meta.message ?? "(no message)"}
 
 ${uniqueMessages.length > 1 ? `Kitos variacijos:\n- ${uniqueMessages.slice(1).join("\n- ")}\n` : ""}
-Stack (pirmi 3000 simb.):
-${String(meta.stack ?? "(no stack)").slice(0, 3000)}
+Stack (pirmi 1200 simb.):
+${String(meta.stack ?? "(no stack)").slice(0, 1200)}
 
 Breadcrumbs (paskutiniai vartotojo veiksmai):
-${JSON.stringify(breadcrumbs).slice(0, 1000)}
+${JSON.stringify(breadcrumbs).slice(0, 500)}
 
 Naršyklė: ${meta.browser ?? "?"} · OS: ${meta.os ?? "?"} · Įrenginys: ${meta.device ?? "?"}
 Šaltinis: ${meta.source ?? "?"}
@@ -157,7 +157,8 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       },
       body: JSON.stringify({
         model,
-        temperature: 0.2,
+        temperature: 0.1,
+        max_tokens: 500,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
