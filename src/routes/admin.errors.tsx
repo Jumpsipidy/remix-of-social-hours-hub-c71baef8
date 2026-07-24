@@ -357,9 +357,22 @@ function AdminErrorsPage() {
   // analysis in the background; if none exists, kick off analyzeErrorGroup.
   // Runs whenever new errors arrive. Throttled to 3 concurrent analyses and
   // ignores fps already in state or in-flight. Fully silent — no toasts.
+  // Failed analyses (null) get retried once every ~5min so a transient rate
+  // limit / cold-start doesn't leave a fingerprint stuck forever.
+  const failedRetryAt = useRef<Record<string, number>>({});
   useEffect(() => {
     const fps = Array.from(new Set(activeRows.slice(0, 40).map(fpOfRow))).filter(Boolean);
-    const unknown = fps.filter((fp) => !(fp in analyses) && !analysisInflight.current.has(fp));
+    const now = Date.now();
+    const unknown = fps.filter((fp) => {
+      if (analysisInflight.current.has(fp)) return false;
+      if (!(fp in analyses)) return true;
+      // null = failed — retry every 5 min
+      if (analyses[fp] === null) {
+        const nextAt = failedRetryAt.current[fp] ?? 0;
+        return now >= nextAt;
+      }
+      return false;
+    });
     if (unknown.length === 0) return;
     let cancelled = false;
     const runOne = async (fp: string) => {
@@ -379,6 +392,7 @@ function AdminErrorsPage() {
           setAnalyses((prev) => ({ ...prev, [fp]: res.analysis as AnalysisRow }));
         } else {
           setAnalyses((prev) => ({ ...prev, [fp]: null }));
+          failedRetryAt.current[fp] = Date.now() + 5 * 60_000;
         }
       } finally {
         analysisInflight.current.delete(fp);
