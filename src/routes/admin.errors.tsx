@@ -176,6 +176,7 @@ function AdminErrorsPage() {
   const [kind, setKind] = useState<"all" | ErrAction>("all");
   const [regexMode, setRegexMode] = useState(false);
   const [timeWindow, setTimeWindow] = useState<"5m" | "1h" | "24h" | "all">("all");
+  const [deviceFilter, setDeviceFilter] = useState<"all" | "mobile" | "tablet" | "desktop">("all");
   const [selected, setSelected] = useState<ErrRow | null>(null);
   const [site, setSite] = useState<SiteSettings | null>(null);
   const [busy, setBusy] = useState(false);
@@ -415,6 +416,7 @@ function AdminErrorsPage() {
     return activeRows.filter((r) => {
       if (!showIgnored && matchesIgnore(r)) return false;
       if (kind !== "all" && r.action !== kind) return false;
+      if (deviceFilter !== "all" && (r.meta?.device ?? "desktop") !== deviceFilter) return false;
       if (windowMs !== Infinity && new Date(r.created_at).getTime() < cutoff) return false;
       if (!f) return true;
       const haystack = [r.meta?.message, r.meta?.source, r.meta?.path, r.meta?.browser, r.meta?.os, r.meta?.device, r.meta?.stack, fpOfRow(r)]
@@ -422,7 +424,7 @@ function AdminErrorsPage() {
       if (rx) return rx.test(haystack);
       return haystack.toLowerCase().includes(fl);
     });
-  }, [activeRows, filter, kind, regexMode, timeWindow, ignoreRules, showIgnored]);
+  }, [activeRows, filter, kind, regexMode, timeWindow, deviceFilter, ignoreRules, showIgnored]);
 
   const now = Date.now();
   const lastHour = activeRows.filter((r) => now - new Date(r.created_at).getTime() < 3_600_000);
@@ -1151,6 +1153,29 @@ function AdminErrorsPage() {
                               }`}
                             >
                               {k === "all" ? "Visos" : KIND_LABEL[k]} <span className="ml-1 tabular-nums opacity-70">{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {(["all", "mobile", "tablet", "desktop"] as const).map((d) => {
+                          const active = deviceFilter === d;
+                          const count = d === "all"
+                            ? rows.length
+                            : rows.filter((r) => (r.meta?.device ?? "desktop") === d).length;
+                          const emoji = d === "mobile" ? "📱" : d === "tablet" ? "📲" : d === "desktop" ? "💻" : "🌐";
+                          const label = d === "all" ? "Visi įrenginiai" : d === "mobile" ? "Telefonas" : d === "tablet" ? "Planšetė" : "Kompiuteris";
+                          return (
+                            <button
+                              key={d}
+                              onClick={() => setDeviceFilter(d)}
+                              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                                active
+                                  ? "border-primary/60 bg-primary/15 text-primary"
+                                  : "border-border/50 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                              }`}
+                            >
+                              {emoji} {label} <span className="ml-1 tabular-nums opacity-70">{count}</span>
                             </button>
                           );
                         })}
