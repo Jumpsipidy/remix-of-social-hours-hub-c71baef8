@@ -85,6 +85,15 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
         path: location.pathname,
       });
 
+      // Ignore rage-click detection inside dialogs / cookie banner / non-interactive text —
+      // users often click through descriptive text and that's not a broken button.
+      const insideDialog = !!el?.closest?.('[role="dialog"], [aria-modal="true"]');
+      const isInteractive = !!el?.closest?.('button, a, [role="button"], input, select, textarea, label');
+      if (insideDialog || !isInteractive) {
+        rage = null;
+        return;
+      }
+
       const now = Date.now();
       if (rage && rage.key === key && now - rage.firstAt < RAGE_WINDOW_MS) {
         rage.count += 1;
@@ -102,6 +111,7 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     },
     { capture: true, passive: true },
   );
+
 
   window.addEventListener(
     "focusin",
