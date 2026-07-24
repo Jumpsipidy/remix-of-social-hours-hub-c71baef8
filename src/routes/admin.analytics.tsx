@@ -10,6 +10,7 @@ import {
 import { adminAnalytics, type AdminAnalyticsV2, type FeedRow } from "@/lib/admin-super.functions";
 import { adminResetAnalytics } from "@/lib/admin-delete.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { PREVIEW_COUNT_STORAGE_KEY, isPreviewEnvironment } from "@/lib/activity-log";
 import { KpiDetailModal, type KpiKind } from "@/components/analytics-kpi-detail";
 import { toast } from "sonner";
 import {
