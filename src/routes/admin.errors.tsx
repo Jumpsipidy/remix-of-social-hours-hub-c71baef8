@@ -2188,12 +2188,12 @@ function AiCenterPanel() {
         />
       </div>
 
-      {/* Pending queue */}
+      {/* Pending queue — auto-analyze runs in the background */}
       <SaaSPanel>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Neišanalizuotos grupės (24h)</div>
-            <div className="text-xs text-muted-foreground">Fingerprint'ai be AI analizės — spausk „🤖" kad iškarto paleistų.</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Eilėje analizei</div>
+            <div className="text-xs text-muted-foreground">Auto-analizė automatiškai paleidžia kiekvieną naują fingerprint fone (3 lygiagrečiai). Šis sąrašas ištuštėja pats.</div>
           </div>
           <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-200 tabular-nums">
             {pending.length}
@@ -2216,10 +2216,9 @@ function AiCenterPanel() {
                   <span>{relTime(p.last)}</span>
                 </div>
               </div>
-              <Button size="sm" variant="outline" onClick={() => runOne(p.fingerprint)} disabled={!!running}
-                className="border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20">
-                {running === p.fingerprint ? <Loader2 className="h-3 w-3 animate-spin" /> : "🤖 Analizuoti"}
-              </Button>
+              <span className="flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[10px] font-bold text-violet-200">
+                <Loader2 className="h-3 w-3 animate-spin" /> queued
+              </span>
             </div>
           ))}
         </div>
