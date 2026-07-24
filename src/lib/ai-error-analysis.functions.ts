@@ -106,7 +106,7 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
       .select("created_at, meta, user_id")
       .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
       .order("created_at", { ascending: false })
-      .limit(300);
+      .limit(200);
 
     const matching = (samples ?? []).filter(
       (r) => (r.meta as { fingerprint?: string })?.fingerprint === data.fingerprint,
