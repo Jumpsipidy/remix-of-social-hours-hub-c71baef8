@@ -36,7 +36,7 @@ export function BugReportWidget() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-[100] font-sans">
+    <div className="fixed bottom-20 left-4 z-[100] font-sans md:bottom-4" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
       {!open ? (
         <button onClick={() => setOpen(true)}
           title="Pranešti apie klaidą"
