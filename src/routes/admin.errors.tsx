@@ -200,6 +200,23 @@ function AdminErrorsPage() {
   const unresolveFn = useServerFn(unresolveErrorGroup);
   const updateLockdownFn = useServerFn(adminUpdateLockdownSettings);
   const sendTestAlertFn = useServerFn(sendTestAlert);
+  const analyzeFn = useServerFn(analyzeErrorGroup);
+  const getAnalysisFn = useServerFn(getAiAnalysis);
+
+  // Shared AI-analysis cache: fp -> analysis row (or null if not yet analyzed).
+  // Populated automatically in background so `copyAll` includes AI output
+  // and AiAnalysisCard has instant data when the row is opened.
+  type AnalysisRow = {
+    suspected_cause?: string;
+    suggested_file?: string;
+    suggested_fix?: string;
+    severity_estimate?: string;
+    confidence?: number;
+    raw_response?: { prompt_for_agent?: string } | null;
+  };
+  const [analyses, setAnalyses] = useState<Record<string, AnalysisRow | null>>({});
+  const analysisInflight = useRef<Set<string>>(new Set());
+
   const [alertResult, setAlertResult] = useState<null | {
     mode: string;
     discord?: { ok: boolean; error: string | null };
