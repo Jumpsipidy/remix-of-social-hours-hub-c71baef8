@@ -105,43 +105,51 @@ function shouldIgnore(msg: string) {
 }
 
 async function insert(action: "client.error" | "supabase.error", payload: ErrPayload) {
+  const dev = deviceMeta();
+  const key = `${action}:${payload.message.slice(0, 120)}`;
+  const now = Date.now();
+  const last = seen.get(key);
+  if (last && now - last < DEDUPE_MS) return;
+  seen.set(key, now);
+
+  let uid: string | null = null;
   try {
-    const dev = deviceMeta();
-    const key = `${action}:${payload.message.slice(0, 120)}`;
-    const now = Date.now();
-    const last = seen.get(key);
-    if (last && now - last < DEDUPE_MS) return;
-    seen.set(key, now);
-
     const { data } = await supabase.auth.getUser();
-    const uid = data.user?.id ?? null;
+    uid = data.user?.id ?? null;
+  } catch { /* offline / no session */ }
 
-    const fp = computeFingerprint(payload.message, payload.stack ?? null);
-    await insertActivityLogRow({
-      user_id: uid,
-      action,
-      entity_type: payload.source ?? null,
-      meta: {
-        message: payload.message.slice(0, 500),
-        stack: (payload.stack ?? "").slice(0, 2000),
-        source: payload.source ?? "runtime",
-        path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
-        extra: payload.extra ?? {},
-        breadcrumbs: getBreadcrumbs().slice(-15),
-        replay: getSessionReplay(60_000).slice(-40),
-        fingerprint: fp.id,
-        fingerprint_norm: fp.norm,
-        fingerprint_frame: fp.frame,
-        ...dev,
-      },
-    });
-    // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
-    const level: "critical" | "warning" = isCriticalMessage(payload.message) ? "critical" : "warning";
-    void maybeEscalate(level, payload.message, payload.stack ?? null);
+  const fp = computeFingerprint(payload.message, payload.stack ?? null);
+  const row = {
+    user_id: uid,
+    action,
+    meta: {
+      message: payload.message.slice(0, 500),
+      stack: (payload.stack ?? "").slice(0, 2000),
+      source: payload.source ?? "runtime",
+      path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
+      extra: payload.extra ?? {},
+      breadcrumbs: getBreadcrumbs().slice(-15),
+      replay: getSessionReplay(60_000).slice(-40),
+      fingerprint: fp.id,
+      fingerprint_norm: fp.norm,
+      fingerprint_frame: fp.frame,
+      ...dev,
+    },
+  };
+
+  try {
+    const { error } = await supabase.from("activity_log").insert(row as any);
+    if (error) throw error;
   } catch {
-    // swallow — never crash reporting the report
+    // Primary insert failed (offline / RLS / auth). Queue for retry
+    // + beacon on tab close so the report ALWAYS reaches admin.
+    try { enqueueOutbox(row); } catch { /* ignore */ }
   }
+  // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
+  const level: "critical" | "warning" = isCriticalMessage(payload.message) ? "critical" : "warning";
+  void maybeEscalate(level, payload.message, payload.stack ?? null);
 }
+
 
 /** Public helper: wrap a Supabase call, log its `error` field if any. */
 export async function logSupabaseError(
