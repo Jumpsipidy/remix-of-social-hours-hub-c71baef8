@@ -516,6 +516,7 @@ function Page() {
             <button onClick={resetAnalytics} title="Ištrinti visą activity_log istoriją" className="flex items-center gap-1.5 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
               <Trash2 className="h-3.5 w-3.5" /> Reset
             </button>
+            <PreviewCountToggle />
           </div>
         </div>
       </div>
