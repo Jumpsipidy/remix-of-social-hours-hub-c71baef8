@@ -30,13 +30,18 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // SUPABASE_* is Lovable-reserved for its managed Cloud; on Lovable preview we can only
+  // read the fallback names. Vercel/prod keeps the canonical SUPABASE_* vars.
+  const SUPABASE_URL = process.env.SUPABASE_URL || process.env.SB_URL || process.env.VITE_SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SB_SERVICE_ROLE_KEY ||
+    process.env.SERVICE_ROLE_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
+      ...(!SUPABASE_URL ? ['SUPABASE_URL (or SB_URL)'] : []),
+      ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY (or SB_SERVICE_ROLE_KEY)'] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Add them in your hosting environment.`;
     console.error(`[Supabase] ${message}`);
