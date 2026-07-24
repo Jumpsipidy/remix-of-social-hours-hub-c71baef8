@@ -7,6 +7,8 @@ import { createHmac, timingSafeEqual, randomBytes } from "node:crypto";
 export function hmacKey(): string {
   return (
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SB_SERVICE_ROLE_KEY ||
+    process.env.SERVICE_ROLE_KEY ||
     process.env.SESSION_SECRET ||
     "sv-security-fallback-secret-do-not-use"
   );
