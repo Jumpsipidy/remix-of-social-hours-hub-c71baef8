@@ -115,7 +115,11 @@ function PrivacyPage() {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold text-white">6. Kontaktai</h2>
           <p>
-            Klausimai dėl privatumo: <a className="underline" href="mailto:privatumas@socialinesvalandos.dev">privatumas@socialinesvalandos.dev</a>
+            Duomenų valdytojas — platformos administratorius (fizinis asmuo, LR). Klausimai dėl privatumo, prieigos, ištrynimo ar duomenų kopijos:{" "}
+            <a className="underline" href="mailto:pagalba@socialinesvalandos.dev">pagalba@socialinesvalandos.dev</a>
+          </p>
+          <p className="text-sm text-neutral-400">
+            Pilna politika (BDAR 13–14 str.): <a className="underline" href="/privacy">/privacy</a> · Naudojimosi taisyklės: <a className="underline" href="/terms">/terms</a>
           </p>
         </section>
       </article>
