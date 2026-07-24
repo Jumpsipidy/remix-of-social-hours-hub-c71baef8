@@ -43,8 +43,13 @@ const IGNORE_SUBSTRINGS = [
   // Third-party CMP (cookie-script) — non-critical, may be blocked by adblock/DNS.
   "cookie-script.com",
   "cookie-consent",
+  // React dev-only HMR warning fired when Fast Refresh reruns a component
+  // whose useEffect deps array size changed between edits. Not a production bug.
+  "changed size between renders",
+  "The final argument passed to",
 
 ];
+
 
 // Patterns that indicate a serious runtime failure worth auto-lockdown.
 const CRITICAL_PATTERNS = [
