@@ -357,9 +357,22 @@ function AdminErrorsPage() {
   // analysis in the background; if none exists, kick off analyzeErrorGroup.
   // Runs whenever new errors arrive. Throttled to 3 concurrent analyses and
   // ignores fps already in state or in-flight. Fully silent — no toasts.
+  // Failed analyses (null) get retried once every ~5min so a transient rate
+  // limit / cold-start doesn't leave a fingerprint stuck forever.
+  const failedRetryAt = useRef<Record<string, number>>({});
   useEffect(() => {
     const fps = Array.from(new Set(activeRows.slice(0, 40).map(fpOfRow))).filter(Boolean);
-    const unknown = fps.filter((fp) => !(fp in analyses) && !analysisInflight.current.has(fp));
+    const now = Date.now();
+    const unknown = fps.filter((fp) => {
+      if (analysisInflight.current.has(fp)) return false;
+      if (!(fp in analyses)) return true;
+      // null = failed — retry every 5 min
+      if (analyses[fp] === null) {
+        const nextAt = failedRetryAt.current[fp] ?? 0;
+        return now >= nextAt;
+      }
+      return false;
+    });
     if (unknown.length === 0) return;
     let cancelled = false;
     const runOne = async (fp: string) => {
@@ -379,6 +392,7 @@ function AdminErrorsPage() {
           setAnalyses((prev) => ({ ...prev, [fp]: res.analysis as AnalysisRow }));
         } else {
           setAnalyses((prev) => ({ ...prev, [fp]: null }));
+          failedRetryAt.current[fp] = Date.now() + 5 * 60_000;
         }
       } finally {
         analysisInflight.current.delete(fp);
@@ -741,14 +755,23 @@ function AdminErrorsPage() {
     return header + list.map((r) => {
       const m = r.meta ?? {};
       const fp = fpOfRow(r);
+      const analyzed = fp in analyses;
       const ai = analyses[fp];
-      const aiBlock = ai ? [
-        `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
-        ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
-        ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
-        ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
-        ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
-      ].filter(Boolean).join("\n") : `ai:            (dar analizuojama…)`;
+      let aiBlock: string;
+      if (ai) {
+        aiBlock = [
+          `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
+          ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
+          ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
+          ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
+          ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
+        ].filter(Boolean).join("\n");
+      } else if (analyzed) {
+        // analyses[fp] === null → analyze returned no result (rate limit, missing key, or model returned empty)
+        aiBlock = `ai:            (analizė nepavyko — pabandyk iš naujo)`;
+      } else {
+        aiBlock = `ai:            (analizuojama fone…)`;
+      }
       return [
         `── [${KIND_LABEL[r.action] ?? r.action}] ${new Date(r.created_at).toLocaleString("lt-LT")} · #${fp}`,
         `msg:    ${m.message ?? "(no message)"}`,
@@ -1916,23 +1939,20 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300">AI analizė + auto-fix</span>
           {data?.model && <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[9px] text-muted-foreground">{data.model}</span>}
         </div>
-        <div className="flex gap-1">
-          {!data && (
-            <button
-              onClick={() => run(false)}
-              disabled={loading || !fingerprint}
-              className="rounded-md border border-violet-500/40 bg-violet-500/15 px-2 py-1 text-[11px] font-bold text-violet-200 hover:bg-violet-500/25 disabled:opacity-40"
-            >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "🤖 Analizuoti"}
-            </button>
+        <div className="flex items-center gap-1">
+          {loading && !data && (
+            <span className="flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[10px] text-violet-200">
+              <Loader2 className="h-3 w-3 animate-spin" /> Analizuojama fone…
+            </span>
           )}
           {data && (
             <button
               onClick={() => run(true)}
               disabled={loading}
               className="rounded-md border border-border/40 bg-background/40 px-2 py-1 text-[10px] text-muted-foreground hover:bg-primary/10"
+              title="Paleisti analizę iš naujo (force refresh)"
             >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "Iš naujo"}
+              {loading ? <Loader2 className="h-3 w-3 animate-spin inline" /> : "↻ Iš naujo"}
             </button>
           )}
         </div>
@@ -2152,14 +2172,17 @@ function AiCenterPanel() {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full border border-violet-500/40 bg-violet-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-violet-200">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
+              </span>
+              Auto ON
+            </span>
             <Button size="sm" variant="outline" onClick={refresh} disabled={loading}>
               {loading ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1 h-4 w-4" />}
               Atnaujinti
-            </Button>
-            <Button size="sm" onClick={runAllPending} disabled={pending.length === 0 || !!running}
-              className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-400 hover:to-fuchsia-400">
-              <Zap className="mr-1 h-4 w-4" /> Analizuoti visus ({pending.length})
             </Button>
           </div>
         </div>
@@ -2179,12 +2202,12 @@ function AiCenterPanel() {
         />
       </div>
 
-      {/* Pending queue */}
+      {/* Pending queue — auto-analyze runs in the background */}
       <SaaSPanel>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Neišanalizuotos grupės (24h)</div>
-            <div className="text-xs text-muted-foreground">Fingerprint'ai be AI analizės — spausk „🤖" kad iškarto paleistų.</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-amber-300">▸ Eilėje analizei</div>
+            <div className="text-xs text-muted-foreground">Auto-analizė automatiškai paleidžia kiekvieną naują fingerprint fone (3 lygiagrečiai). Šis sąrašas ištuštėja pats.</div>
           </div>
           <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-200 tabular-nums">
             {pending.length}
@@ -2207,10 +2230,9 @@ function AiCenterPanel() {
                   <span>{relTime(p.last)}</span>
                 </div>
               </div>
-              <Button size="sm" variant="outline" onClick={() => runOne(p.fingerprint)} disabled={!!running}
-                className="border-violet-500/40 bg-violet-500/10 hover:bg-violet-500/20">
-                {running === p.fingerprint ? <Loader2 className="h-3 w-3 animate-spin" /> : "🤖 Analizuoti"}
-              </Button>
+              <span className="flex items-center gap-1 rounded-md border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[10px] font-bold text-violet-200">
+                <Loader2 className="h-3 w-3 animate-spin" /> queued
+              </span>
             </div>
           ))}
         </div>

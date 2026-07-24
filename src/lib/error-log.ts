@@ -246,6 +246,10 @@ export function installGlobalErrorLogging() {
     if (!tag || !["img", "script", "link", "video", "audio", "source"].includes(tag)) return;
     const url = target.src || target.href || "";
     if (!url || url.startsWith("data:") || url.includes("vite/client")) return;
+    // Stale-deploy: an old client is asking for a hashed JS/CSS chunk that no
+    // longer exists after redeploy (e.g. `/assets/admin.reservations-Cx-qr5XY.js`).
+    // stale-deploy-guard force-reloads to fix it — no need to escalate as a bug.
+    if (/\/assets\/[^/]+-[A-Za-z0-9_-]{6,}\.(js|css|mjs)(\?|$)/.test(url)) return;
     void insert("client.error", {
       message: `[resource] ${tag} failed: ${url.slice(0, 200)}`,
       source: "resource.error",
