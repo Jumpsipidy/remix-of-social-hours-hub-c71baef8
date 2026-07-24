@@ -8,6 +8,7 @@ import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
 import { getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
 import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
+import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
