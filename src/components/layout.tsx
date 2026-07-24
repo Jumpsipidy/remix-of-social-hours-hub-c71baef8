@@ -5,6 +5,7 @@ import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
+import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { AnimatePresence, motion } from "framer-motion";
 
 
@@ -243,7 +244,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-hidden pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
       <BackgroundFX />
       <Navbar />
       <motion.main
@@ -255,6 +256,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       </motion.main>
       <Footer />
       <OnboardingTour />
+      <MobileTabBar />
     </div>
   );
 

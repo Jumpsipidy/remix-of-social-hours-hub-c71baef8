@@ -163,6 +163,94 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     });
   });
 
+  // ---- Mobile-specific signals ------------------------------------------
+  // Orientation change (portrait <-> landscape)
+  try {
+    const onOrient = () => {
+      const o = (screen.orientation?.type) || (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+      pushBreadcrumb({ kind: "custom", label: `orientation: ${o}`, extra: { orientation: o } });
+    };
+    if (screen.orientation && typeof screen.orientation.addEventListener === "function") {
+      screen.orientation.addEventListener("change", onOrient);
+    } else {
+      window.addEventListener("orientationchange", onOrient);
+    }
+  } catch { /* noop */ }
+
+  // Network online/offline
+  window.addEventListener("online", () => {
+    pushBreadcrumb({ kind: "custom", label: "network: online", extra: { online: true } });
+  });
+  window.addEventListener("offline", () => {
+    pushBreadcrumb({ kind: "custom", label: "network: offline", extra: { online: false } });
+  });
+
+  // Touch events: capture the last significant tap coordinate + target for mobile debugging.
+  // Sampled — one per ~250ms to avoid buffer noise on scroll gestures.
+  let lastTouchAt = 0;
+  window.addEventListener(
+    "touchstart",
+    (e: TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTouchAt < 250) return;
+      lastTouchAt = now;
+      const t = e.touches?.[0];
+      if (!t) return;
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      pushBreadcrumb({
+        kind: "custom",
+        label: `tap: ${targetLabel(el).slice(0, 40)}`,
+        extra: {
+          x: Math.round(t.clientX),
+          y: Math.round(t.clientY),
+          touches: e.touches.length,
+          target: targetKey(el),
+        },
+        path: location.pathname,
+      });
+    },
+    { capture: true, passive: true },
+  );
+
+  // Low battery — logs once when battery drops below 15% (helps explain sudden crashes / throttling)
+  try {
+    const navBat = navigator as Navigator & { getBattery?: () => Promise<{ level: number; charging: boolean; addEventListener: (t: string, fn: () => void) => void }> };
+    if (typeof navBat.getBattery === "function") {
+      navBat.getBattery().then((bat) => {
+        let warned = false;
+        const check = () => {
+          if (!warned && !bat.charging && bat.level < 0.15) {
+            warned = true;
+            pushBreadcrumb({ kind: "custom", label: `battery low: ${Math.round(bat.level * 100)}%`, extra: { level: bat.level, charging: bat.charging } });
+          }
+        };
+        check();
+        bat.addEventListener("levelchange", check);
+        bat.addEventListener("chargingchange", check);
+      }).catch(() => { /* noop */ });
+    }
+  } catch { /* noop */ }
+
+  // Memory pressure (Chrome only) — periodically sample; log if JS heap usage > 85%
+  try {
+    const perf = performance as Performance & { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
+    if (perf.memory) {
+      let warned = false;
+      setInterval(() => {
+        if (warned || !perf.memory) return;
+        const ratio = perf.memory.usedJSHeapSize / perf.memory.jsHeapSizeLimit;
+        if (ratio > 0.85) {
+          warned = true;
+          pushBreadcrumb({
+            kind: "custom",
+            label: `memory pressure: ${Math.round(ratio * 100)}%`,
+            extra: { used_mb: Math.round(perf.memory.usedJSHeapSize / 1_048_576), limit_mb: Math.round(perf.memory.jsHeapSizeLimit / 1_048_576) },
+          });
+        }
+      }, 30_000);
+    }
+  } catch { /* noop */ }
+
   // Network failure interception (fetch)
   const origFetch = window.fetch.bind(window);
   window.fetch = async (...args: Parameters<typeof fetch>) => {
