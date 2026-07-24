@@ -3,7 +3,7 @@
 // - Persists to public.activity_log with action='client.error' or 'supabase.error'
 // - CRITICAL patterns are escalated via server fn → auto-lockdown + admin email
 import { supabase } from "@/integrations/supabase/client";
-import { insertActivityLogRow } from "@/lib/activity-log";
+
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
 import { getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
@@ -228,4 +228,57 @@ export function installGlobalErrorLogging() {
       /* ignore */
     }
   };
+
+  // Resource load failures (script/img/css 404 or CORS block) — capture phase,
+  // because these events don't bubble. Filters preview-only noise (HMR ping).
+  window.addEventListener("error", (e) => {
+    const target = e.target as (HTMLElement & { src?: string; href?: string }) | null;
+    if (!target || target === window as unknown as HTMLElement) return;
+    const tag = target.tagName?.toLowerCase?.();
+    if (!tag || !["img", "script", "link", "video", "audio", "source"].includes(tag)) return;
+    const url = target.src || target.href || "";
+    if (!url || url.startsWith("data:") || url.includes("vite/client")) return;
+    void insert("client.error", {
+      message: `[resource] ${tag} failed: ${url.slice(0, 200)}`,
+      source: "resource.error",
+      extra: { tag, url: url.slice(0, 500) },
+    });
+  }, true);
+
+  // Fetch interception — logs network failures + 5xx responses so backend
+  // outages surface even when the calling code silently ignores errors.
+  if (typeof window.fetch === "function") {
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
+      const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url ?? "";
+      try {
+        const res = await origFetch(...args);
+        if (res.status >= 500 && !url.includes("/api/public/error-beacon")) {
+          void insert("client.error", {
+            message: `[fetch ${res.status}] ${url.slice(0, 200)}`,
+            source: "fetch.5xx",
+            extra: { status: res.status, url: url.slice(0, 500) },
+          });
+        }
+        return res;
+      } catch (err) {
+        // Network failure (offline, DNS, CORS preflight). Skip beacon endpoint
+        // to avoid recursion, and abort signals which are usually user-driven.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!url.includes("/api/public/error-beacon") && !/abort/i.test(msg)) {
+          void insert("client.error", {
+            message: `[fetch:network] ${msg} → ${url.slice(0, 200)}`,
+            stack: err instanceof Error ? err.stack : null,
+            source: "fetch.network",
+            extra: { url: url.slice(0, 500) },
+          });
+        }
+        throw err;
+      }
+    };
+  }
+
+  // Start the retry loop + beacon-on-unload flush
+  startOutbox();
 }
+
