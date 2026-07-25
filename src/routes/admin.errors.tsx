@@ -33,6 +33,14 @@ import {
   Sparkles,
   Loader2,
   ChevronDown,
+  User as UserIcon,
+  School as SchoolIcon,
+  Clock,
+  MousePointerClick,
+  Wifi,
+  BatteryLow,
+  Fingerprint as FingerprintIcon,
+  ExternalLink,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
