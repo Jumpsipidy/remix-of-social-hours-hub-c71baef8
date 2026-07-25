@@ -51,6 +51,13 @@ const IGNORE_RX = [
   /ResizeObserver loop/i,
 ];
 
+const breadcrumbSchema = z.object({
+  t: z.number().optional(),
+  kind: z.string().max(30).optional(),
+  label: z.string().max(200).optional(),
+  path: z.string().max(200).optional(),
+});
+
 const payloadSchema = z.object({
   level: z.enum(["critical", "warning"]),
   message: z.string().min(1).max(500),
@@ -58,6 +65,11 @@ const payloadSchema = z.object({
   stack: z.string().max(2000).optional(),
   userAgent: z.string().max(300).optional(),
   userEmail: z.string().max(200).optional(),
+  source: z.string().max(60).optional(),
+  browser: z.string().max(60).optional(),
+  os: z.string().max(60).optional(),
+  device: z.string().max(30).optional(),
+  breadcrumbs: z.array(breadcrumbSchema).max(15).optional(),
 });
 
 async function sendResendEmail(to: string, subject: string, html: string, opts: { urgent?: boolean } = {}) {
