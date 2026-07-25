@@ -751,13 +751,14 @@ function AdminErrorsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const formatRowsForCopy = (list: ErrRow[]) => {
+  const formatRowsForCopy = (list: ErrRow[], analysesOverride?: Record<string, AnalysisRow | null>) => {
+    const src = analysesOverride ?? analyses;
     const header = `# Socialinės Valandos — klaidų eksportas\n# ${new Date().toLocaleString("lt-LT")} · ${list.length} įrašų\n\n`;
     return header + list.map((r) => {
       const m = r.meta ?? {};
       const fp = fpOfRow(r);
-      const analyzed = fp in analyses;
-      const ai = analyses[fp];
+      const analyzed = fp in src;
+      const ai = src[fp];
       let aiBlock: string;
       if (ai) {
         aiBlock = [
@@ -768,7 +769,6 @@ function AdminErrorsPage() {
           ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
         ].filter(Boolean).join("\n");
       } else if (analyzed) {
-        // analyses[fp] === null → analyze returned no result (rate limit, missing key, or model returned empty)
         aiBlock = `ai:            (analizė nepavyko — pabandyk iš naujo)`;
       } else {
         aiBlock = `ai:            (analizuojama fone…)`;
