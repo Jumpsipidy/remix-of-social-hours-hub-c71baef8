@@ -2430,6 +2430,256 @@ const KIND_COLOR: Record<string, string> = {
   custom: "text-white/70 border-white/20 bg-white/5",
 };
 
+type UserProfile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
+  school_id: string | null;
+  school_name?: string | null;
+  hours_earned?: number | null;
+  hours_needed?: number | null;
+  created_at?: string | null;
+};
+
+type UserRecentError = { id: string; created_at: string; action: string; message: string; path: string | null };
+
+function UserContextCard({
+  userId, meta, createdAt, currentRowId,
+}: {
+  userId: string | null;
+  meta: ErrRow["meta"];
+  createdAt: string;
+  currentRowId: string;
+}) {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [recent, setRecent] = useState<UserRecentError[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    let alive = true;
+    setLoading(true);
+    (async () => {
+      try {
+        const [{ data: p }, { data: r }] = await Promise.all([
+          supabase.from("profiles")
+            .select("id, full_name, email, role, school_id, hours_earned, hours_needed, created_at")
+            .eq("id", userId).maybeSingle(),
+          supabase.from("activity_log")
+            .select("id, created_at, action, meta")
+            .eq("user_id", userId)
+            .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+            .neq("id", currentRowId)
+            .order("created_at", { ascending: false })
+            .limit(6),
+        ]);
+        if (!alive) return;
+        let schoolName: string | null = null;
+        if (p?.school_id) {
+          const { data: sc } = await supabase.from("schools").select("name").eq("id", p.school_id).maybeSingle();
+          schoolName = (sc as { name?: string } | null)?.name ?? null;
+        }
+        setProfile(p ? { ...(p as UserProfile), school_name: schoolName } : null);
+        setRecent(((r as Array<{ id: string; created_at: string; action: string; meta: { message?: string; path?: string } | null }>) ?? []).map((x) => ({
+          id: x.id, created_at: x.created_at, action: x.action,
+          message: x.meta?.message ?? "(no message)",
+          path: x.meta?.path ?? null,
+        })));
+      } catch { /* silent */ }
+      finally { if (alive) setLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [userId, currentRowId]);
+
+  const m = (meta ?? {}) as Record<string, unknown>;
+  const orientation = m.orientation as string | undefined;
+  const network = m.network as string | undefined;
+  const battery = m.battery as number | undefined;
+  const viewport = m.viewport as string | undefined;
+  const language = m.language as string | undefined;
+  const referrer = m.referrer as string | undefined;
+  const sessionAge = m.session_age_ms as number | undefined;
+  const crumbs = (m.breadcrumbs ?? m.replay) as ReplayEvent[] | undefined;
+  const clickCount = crumbs?.filter((e) => e.kind === "click").length ?? 0;
+  const navCount = crumbs?.filter((e) => e.kind === "nav").length ?? 0;
+  const inputCount = crumbs?.filter((e) => e.kind === "input").length ?? 0;
+  const rageCount = crumbs?.filter((e) => e.kind === "rage").length ?? 0;
+  const lastClick = [...(crumbs ?? [])].reverse().find((e) => e.kind === "click");
+
+  const roleLabel: Record<string, string> = {
+    student: "Mokinys",
+    school_admin: "Mokyklos adminas",
+    organization: "Organizacija",
+    admin: "Super adminas",
+  };
+  const roleColor: Record<string, string> = {
+    student: "border-sky-500/40 bg-sky-500/10 text-sky-200",
+    school_admin: "border-violet-500/40 bg-violet-500/10 text-violet-200",
+    organization: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+    admin: "border-rose-500/40 bg-rose-500/10 text-rose-200",
+  };
+
+  return (
+    <div className="rounded-xl border border-sky-500/30 bg-gradient-to-br from-sky-500/10 via-cyan-500/5 to-transparent p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <UserIcon className="h-4 w-4 text-sky-300" />
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-300">Kas patyrė klaidą?</div>
+        {loading && <Loader2 className="h-3 w-3 animate-spin text-sky-300" />}
+      </div>
+
+      {!userId ? (
+        <div className="rounded-md border border-border/40 bg-background/40 px-2.5 py-2 text-[12px] text-muted-foreground">
+          Anonimas — vartotojas neprisijungęs.
+          {referrer && <div className="mt-1 truncate">Atėjo iš: <span className="font-mono text-white/70">{referrer}</span></div>}
+        </div>
+      ) : profile ? (
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-white">{profile.full_name || "(be vardo)"}</span>
+            {profile.role && (
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${roleColor[profile.role] ?? "border-white/20 bg-white/5 text-white/70"}`}>
+                {roleLabel[profile.role] ?? profile.role}
+              </span>
+            )}
+            {profile.school_name && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-background/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                <SchoolIcon className="h-3 w-3" /> {profile.school_name}
+              </span>
+            )}
+          </div>
+          {profile.email && (
+            <div className="flex items-center gap-2 text-[11px]">
+              <Mail className="h-3 w-3 text-muted-foreground" />
+              <a href={`mailto:${profile.email}?subject=D%C4%97l%20klaidos%20%23${(m.fingerprint as string ?? "").slice(0,8)}&body=Sveiki%2C%20pastebejome%20klaida%20jusu%20paskyroje...`}
+                 className="font-mono text-sky-300 hover:underline">{profile.email}</a>
+              <button
+                onClick={() => { navigator.clipboard.writeText(profile.email!); toast.success("Email nukopijuotas"); }}
+                className="rounded p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary" aria-label="Kopijuoti email"
+              ><Copy className="h-3 w-3" /></button>
+            </div>
+          )}
+          {profile.role === "student" && (profile.hours_earned != null || profile.hours_needed != null) && (
+            <div className="text-[11px] text-muted-foreground">
+              Progresas: <span className="font-mono text-white/85">{profile.hours_earned ?? 0}h / {profile.hours_needed ?? "?"}h</span>
+            </div>
+          )}
+          <div className="text-[10px] font-mono text-muted-foreground">ID: {userId}</div>
+        </div>
+      ) : (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-200">
+          Vartotojo profilis nerastas (ištrintas?) — ID: <span className="font-mono">{userId.slice(0, 12)}</span>
+        </div>
+      )}
+
+      {/* Session context grid */}
+      <div className="mt-3 grid grid-cols-2 gap-1.5 text-[11px] sm:grid-cols-3">
+        {viewport && <MiniStat icon={LayoutDashboard} label="Ekranas" value={viewport} />}
+        {orientation && <MiniStat icon={RotateCw} label="Orientacija" value={orientation === "portrait" ? "Vertikali" : "Horizontali"} />}
+        {network && <MiniStat icon={Wifi} label="Tinklas" value={network} tone={network === "4g" || network === "wifi" ? "ok" : "warn"} />}
+        {battery != null && <MiniStat icon={BatteryLow} label="Baterija" value={`${Math.round(battery)}%`} tone={battery < 20 ? "warn" : "ok"} />}
+        {language && <MiniStat icon={Globe} label="Kalba" value={language} />}
+        {sessionAge != null && <MiniStat icon={Clock} label="Sesijos amžius" value={formatDuration(sessionAge)} />}
+      </div>
+
+      {/* Behavior summary */}
+      {crumbs && crumbs.length > 0 && (
+        <div className="mt-3 rounded-md border border-border/40 bg-background/40 p-2">
+          <div className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <MousePointerClick className="h-3 w-3" /> Ką darė prieš klaidą
+          </div>
+          <div className="flex flex-wrap gap-1.5 text-[10px]">
+            <BehaviorPill label={`${clickCount} paspaudimų`} tone="sky" />
+            <BehaviorPill label={`${navCount} navigacijų`} tone="violet" />
+            {inputCount > 0 && <BehaviorPill label={`${inputCount} įvedimų`} tone="emerald" />}
+            {rageCount > 0 && <BehaviorPill label={`⚠ ${rageCount} rage-click${rageCount > 1 ? "s" : ""}`} tone="rose" />}
+          </div>
+          {lastClick && (
+            <div className="mt-2 truncate text-[11px] text-white/80">
+              Paskutinis paspaudimas: <span className="font-mono text-sky-300">{lastClick.label}</span>
+            </div>
+          )}
+          {referrer && (
+            <div className="mt-1 truncate text-[11px] text-muted-foreground">
+              Atėjo iš: <span className="font-mono text-white/70">{referrer}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Recent errors from same user */}
+      {userId && (
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <FingerprintIcon className="h-3 w-3" /> Kitos šio vartotojo klaidos {recent.length > 0 && <span className="text-white/50">({recent.length})</span>}
+          </div>
+          {recent.length === 0 ? (
+            <div className="rounded-md border border-emerald-500/20 bg-emerald-500/5 px-2 py-1.5 text-[11px] text-emerald-300">
+              ✓ Jokių kitų klaidų — pirmoji šio vartotojo problema.
+            </div>
+          ) : (
+            <ol className="space-y-1">
+              {recent.map((e) => (
+                <li key={e.id} className="flex items-start gap-2 rounded-md border border-border/40 bg-background/40 px-2 py-1 text-[11px]">
+                  <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">{relTime(e.created_at)}</span>
+                  <span className={`shrink-0 rounded border px-1.5 py-0 text-[9px] font-bold uppercase ${KIND_STYLE[e.action] ?? "border-white/20 bg-white/5 text-white/70"}`}>
+                    {KIND_LABEL[e.action] ?? e.action}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-white/85">{e.message}</span>
+                  {e.path && <span className="hidden shrink-0 truncate font-mono text-[10px] text-muted-foreground sm:inline">{e.path}</span>}
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+        <span className="text-muted-foreground">Klaidos laikas: <span className="font-mono text-white/80">{new Date(createdAt).toLocaleString("lt-LT")}</span></span>
+      </div>
+    </div>
+  );
+}
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}min ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}min`;
+}
+
+function MiniStat({
+  icon: Icon, label, value, tone,
+}: {
+  icon: typeof UserIcon; label: string; value: string; tone?: "ok" | "warn";
+}) {
+  const toneCls = tone === "warn" ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
+    : tone === "ok" ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-200"
+    : "border-border/40 bg-background/40 text-white/85";
+  return (
+    <div className={`flex items-center gap-1.5 rounded-md border px-2 py-1 ${toneCls}`}>
+      <Icon className="h-3 w-3 shrink-0 opacity-70" />
+      <div className="min-w-0">
+        <div className="truncate text-[9px] uppercase tracking-wider opacity-60">{label}</div>
+        <div className="truncate font-mono text-[11px]">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function BehaviorPill({ label, tone }: { label: string; tone: "sky" | "violet" | "emerald" | "rose" }) {
+  const map: Record<string, string> = {
+    sky: "border-sky-500/40 bg-sky-500/10 text-sky-200",
+    violet: "border-violet-500/40 bg-violet-500/10 text-violet-200",
+    emerald: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+    rose: "border-rose-500/50 bg-rose-500/15 text-rose-200",
+  };
+  return <span className={`rounded-full border px-2 py-0.5 font-mono ${map[tone]}`}>{label}</span>;
+}
+
 function ReplayTimeline({ meta }: { meta: ErrRow["meta"] }) {
   const replay = (meta as any)?.replay as ReplayEvent[] | undefined;
   const crumbs = (meta as any)?.breadcrumbs as ReplayEvent[] | undefined;
