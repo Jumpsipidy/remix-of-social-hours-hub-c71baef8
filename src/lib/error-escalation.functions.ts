@@ -537,6 +537,12 @@ export const escalateAppError = createServerFn({ method: "POST" })
         criticalCount,
         burstUsers,
         fingerprint: fpGroup.id,
+        source: data.source,
+        browser: data.browser,
+        os: data.os,
+        device: data.device,
+        stack: data.stack,
+        breadcrumbs: data.breadcrumbs,
       });
     }
 
