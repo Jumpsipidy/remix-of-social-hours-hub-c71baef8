@@ -788,10 +788,51 @@ function AdminErrorsPage() {
 
   const copyAll = async (list: ErrRow[] = filtered) => {
     try {
-      const text = formatRowsForCopy(list);
-      await navigator.clipboard.writeText(text);
+      // Force-fetch AI analyses for any missing/failed fingerprints BEFORE
+      // building the clipboard text — otherwise old rows copy as
+      // "analizuojama fone…" even though a cached row exists in DB.
+      const fps = Array.from(new Set(list.map(fpOfRow))).filter(Boolean);
+      const missing = fps.filter((fp) => !analyses[fp]); // undefined OR null
+      if (missing.length > 0) {
+        const tid = toast.loading(`Kraunam AI analizes… 0/${missing.length}`);
+        let done = 0;
+        const fresh: Record<string, AnalysisRow | null> = {};
+        const queue = [...missing];
+        const workers = Array.from({ length: 6 }, async () => {
+          while (queue.length) {
+            const fp = queue.shift()!;
+            try {
+              let a = await getAnalysisFn({ data: { fingerprint: fp } });
+              if (!a) {
+                const res = await analyzeFn({ data: { fingerprint: fp, force: false } }).catch(() => null);
+                a = res?.analysis ?? null;
+              }
+              fresh[fp] = (a as AnalysisRow) ?? null;
+            } catch {
+              fresh[fp] = null;
+            }
+            done++;
+            toast.loading(`Kraunam AI analizes… ${done}/${missing.length}`, { id: tid });
+          }
+        });
+        await Promise.all(workers);
+        toast.dismiss(tid);
+        setAnalyses((prev) => ({ ...prev, ...fresh }));
+        // Build clipboard from the merged snapshot (state update is async).
+        const merged = { ...analyses, ...fresh };
+        const textWith = (() => {
+          const backup = analyses;
+          (analyses as unknown as Record<string, AnalysisRow | null>) = merged as never;
+          const t = formatRowsForCopy(list);
+          (analyses as unknown as Record<string, AnalysisRow | null>) = backup as never;
+          return t;
+        })();
+        await navigator.clipboard.writeText(textWith);
+      } else {
+        await navigator.clipboard.writeText(formatRowsForCopy(list));
+      }
       setCopied(true);
-      toast.success(`Nukopijuota ${list.length} įrašų — įklijuok į pokalbį`);
+      toast.success(`Nukopijuota ${list.length} įrašų su AI analize`);
       setTimeout(() => setCopied(false), 2200);
     } catch {
       toast.error("Naršyklė neleido kopijuoti");
