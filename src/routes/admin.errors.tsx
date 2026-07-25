@@ -1875,6 +1875,7 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
             {(row.meta as any)?.fingerprint && <Kv k="Fingerprint" v={String((row.meta as any).fingerprint)} />}
             {row.user_id && <Kv k="Vartotojas" v={row.user_id.slice(0, 8)} />}
           </div>
+          <UserContextCard userId={row.user_id} meta={row.meta} createdAt={row.created_at} currentRowId={row.id} />
           <ReplayTimeline meta={row.meta} />
           {row.meta?.stack && (
             <div>
