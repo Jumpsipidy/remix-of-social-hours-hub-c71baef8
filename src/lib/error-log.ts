@@ -69,7 +69,12 @@ function isCriticalMessage(msg: string): boolean {
 // Escalate rate-limit (client-side, best-effort — server also dedupes)
 const escalated = new Map<string, number>();
 const ESCALATE_MS = 60_000;
-async function maybeEscalate(level: "critical" | "warning", message: string, stack?: string | null) {
+async function maybeEscalate(
+  level: "critical" | "warning",
+  message: string,
+  stack?: string | null,
+  ctx?: { source?: string; extra?: Record<string, unknown> },
+) {
   try {
     const key = `${level}:${message.slice(0, 120)}`;
     const now = Date.now();
@@ -81,6 +86,13 @@ async function maybeEscalate(level: "critical" | "warning", message: string, sta
       const { data } = await supabase.auth.getUser();
       userEmail = data.user?.email ?? undefined;
     } catch { /* ignore */ }
+    const dev = deviceMeta();
+    const crumbs = getBreadcrumbs().slice(-10).map((b) => ({
+      t: b.t,
+      kind: b.kind,
+      label: b.label?.slice(0, 200),
+      path: b.path,
+    }));
     await escalateAppError({
       data: {
         level,
@@ -89,6 +101,11 @@ async function maybeEscalate(level: "critical" | "warning", message: string, sta
         path: typeof window !== "undefined" ? window.location.pathname : undefined,
         userAgent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
         userEmail,
+        source: ctx?.source,
+        browser: dev.browser,
+        os: dev.os,
+        device: dev.device,
+        breadcrumbs: crumbs,
       },
     });
   } catch {
@@ -155,7 +172,7 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
   }
   // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
   const level: "critical" | "warning" = isCriticalMessage(payload.message) ? "critical" : "warning";
-  void maybeEscalate(level, payload.message, payload.stack ?? null);
+  void maybeEscalate(level, payload.message, payload.stack ?? null, { source: payload.source, extra: payload.extra });
 }
 
 

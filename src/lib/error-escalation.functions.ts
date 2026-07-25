@@ -51,6 +51,13 @@ const IGNORE_RX = [
   /ResizeObserver loop/i,
 ];
 
+const breadcrumbSchema = z.object({
+  t: z.number().optional(),
+  kind: z.string().max(30).optional(),
+  label: z.string().max(200).optional(),
+  path: z.string().max(200).optional(),
+});
+
 const payloadSchema = z.object({
   level: z.enum(["critical", "warning"]),
   message: z.string().min(1).max(500),
@@ -58,6 +65,11 @@ const payloadSchema = z.object({
   stack: z.string().max(2000).optional(),
   userAgent: z.string().max(300).optional(),
   userEmail: z.string().max(200).optional(),
+  source: z.string().max(60).optional(),
+  browser: z.string().max(60).optional(),
+  os: z.string().max(60).optional(),
+  device: z.string().max(30).optional(),
+  breadcrumbs: z.array(breadcrumbSchema).max(15).optional(),
 });
 
 async function sendResendEmail(to: string, subject: string, html: string, opts: { urgent?: boolean } = {}) {
@@ -102,21 +114,30 @@ async function sendDiscordAlert(opts: {
   criticalCount?: number;
   burstUsers?: number;
   fingerprint?: string;
+  source?: string;
+  browser?: string;
+  os?: string;
+  device?: string;
+  stack?: string;
+  breadcrumbs?: { t?: number; kind?: string; label?: string; path?: string }[];
 }) {
   const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) return;
   const isLock = opts.lockdown;
   const isBurst = opts.lockdownReason === "burst";
   const color = isLock
-    ? (isBurst ? 0xf43f5e : 0xef4444) // rose / red
-    : opts.level === "critical" ? 0xf97316 // orange
-    : 0xeab308; // yellow
+    ? (isBurst ? 0xf43f5e : 0xef4444)
+    : opts.level === "critical" ? 0xf97316
+    : 0xeab308;
   const title = isLock
     ? (isBurst ? "🔥 LOCKDOWN — BURST" : "🔒 LOCKDOWN — Kritinis slenkstis")
     : opts.level === "critical" ? "🚨 Kritinė klaida" : "⚠️ Įspėjimas";
   const fields: { name: string; value: string; inline?: boolean }[] = [];
   if (opts.path) fields.push({ name: "Kelias", value: `\`${opts.path}\``, inline: true });
+  if (opts.source) fields.push({ name: "Šaltinis", value: `\`${opts.source}\``, inline: true });
   if (opts.userEmail) fields.push({ name: "Vartotojas", value: `\`${opts.userEmail}\``, inline: true });
+  const dev = [opts.browser, opts.os, opts.device].filter(Boolean).join(" · ");
+  if (dev) fields.push({ name: "Įrenginys", value: dev, inline: true });
   if (opts.fingerprint) fields.push({ name: "Fingerprint", value: `\`${opts.fingerprint}\``, inline: true });
   if (typeof opts.criticalCount === "number" && opts.criticalCount > 0) {
     fields.push({ name: `Kritinių (${CRITICAL_WINDOW_MIN}min)`, value: `**${opts.criticalCount}** / ${CRITICAL_THRESHOLD}`, inline: true });
@@ -124,9 +145,33 @@ async function sendDiscordAlert(opts: {
   if (typeof opts.burstUsers === "number" && opts.burstUsers > 0) {
     fields.push({ name: `Burst (${BURST_WINDOW_S}s)`, value: `**${opts.burstUsers}** vartotojai`, inline: true });
   }
+
+  // "Kodėl klaida atėjo iki čia" — plain-Lithuanian reason
+  const whyLine = (() => {
+    if (isBurst) return `Burst: ${opts.burstUsers ?? "?"} vartotojai gavo klaidų per ${BURST_WINDOW_S}s → auto-lockdown.`;
+    if (isLock) return `Pasiekta ${opts.criticalCount ?? "?"} kritinių per ${CRITICAL_WINDOW_MIN}min → auto-lockdown.`;
+    if (opts.level === "critical") return `Klaida atitinka kritinį šabloną (chunk/undefined/is not a function/OOM).`;
+    return `Įspėjimas: nekritinė runtime klaida iš \`${opts.source ?? "?"}\`.`;
+  })();
+  fields.push({ name: "Kodėl pranešu", value: whyLine });
+
+  // Breadcrumbs — last few actions before crash
+  if (opts.breadcrumbs && opts.breadcrumbs.length) {
+    const lines = opts.breadcrumbs.slice(-8).map((b) => {
+      const rel = b.t ? `${Math.round((Date.now() - b.t) / 1000)}s` : "?";
+      const where = b.path ? ` @ ${b.path}` : "";
+      return `• -${rel} [${b.kind ?? "?"}] ${(b.label ?? "").slice(0, 90)}${where}`;
+    }).join("\n");
+    fields.push({ name: "Vartotojo veiksmai prieš klaidą", value: "```" + lines.slice(0, 1000) + "```" });
+  }
+
+  // Top stack frame — where in code
+  if (opts.stack) {
+    const firstFrames = opts.stack.split("\n").slice(0, 4).join("\n");
+    fields.push({ name: "Stack (viršus)", value: "```" + firstFrames.slice(0, 900) + "```" });
+  }
+
   const description = opts.message.length > 1800 ? opts.message.slice(0, 1800) + "…" : opts.message;
-  // Severity bar: full width block glyphs so mobile Discord shows an instant
-  // visual "how bad is this" without expanding the embed.
   const barSize = isLock ? 10 : opts.level === "critical" ? 7 : 3;
   const bar = "█".repeat(barSize) + "░".repeat(10 - barSize);
   const impactLine = (() => {
@@ -492,6 +537,12 @@ export const escalateAppError = createServerFn({ method: "POST" })
         criticalCount,
         burstUsers,
         fingerprint: fpGroup.id,
+        source: data.source,
+        browser: data.browser,
+        os: data.os,
+        device: data.device,
+        stack: data.stack,
+        breadcrumbs: data.breadcrumbs,
       });
     }
 

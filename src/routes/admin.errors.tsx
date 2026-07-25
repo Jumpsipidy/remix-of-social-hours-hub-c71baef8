@@ -751,13 +751,14 @@ function AdminErrorsPage() {
     URL.revokeObjectURL(url);
   };
 
-  const formatRowsForCopy = (list: ErrRow[]) => {
+  const formatRowsForCopy = (list: ErrRow[], analysesOverride?: Record<string, AnalysisRow | null>) => {
+    const src = analysesOverride ?? analyses;
     const header = `# Socialinės Valandos — klaidų eksportas\n# ${new Date().toLocaleString("lt-LT")} · ${list.length} įrašų\n\n`;
     return header + list.map((r) => {
       const m = r.meta ?? {};
       const fp = fpOfRow(r);
-      const analyzed = fp in analyses;
-      const ai = analyses[fp];
+      const analyzed = fp in src;
+      const ai = src[fp];
       let aiBlock: string;
       if (ai) {
         aiBlock = [
@@ -768,7 +769,6 @@ function AdminErrorsPage() {
           ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
         ].filter(Boolean).join("\n");
       } else if (analyzed) {
-        // analyses[fp] === null → analyze returned no result (rate limit, missing key, or model returned empty)
         aiBlock = `ai:            (analizė nepavyko — pabandyk iš naujo)`;
       } else {
         aiBlock = `ai:            (analizuojama fone…)`;
@@ -788,10 +788,43 @@ function AdminErrorsPage() {
 
   const copyAll = async (list: ErrRow[] = filtered) => {
     try {
-      const text = formatRowsForCopy(list);
-      await navigator.clipboard.writeText(text);
+      // Force-fetch AI analyses for any missing/failed fingerprints BEFORE
+      // building the clipboard text — otherwise old rows copy as
+      // "analizuojama fone…" even though a cached row exists in DB.
+      const fps = Array.from(new Set(list.map(fpOfRow))).filter(Boolean);
+      const missing = fps.filter((fp) => !analyses[fp]); // undefined OR null
+      if (missing.length > 0) {
+        const tid = toast.loading(`Kraunam AI analizes… 0/${missing.length}`);
+        let done = 0;
+        const fresh: Record<string, AnalysisRow | null> = {};
+        const queue = [...missing];
+        const workers = Array.from({ length: 6 }, async () => {
+          while (queue.length) {
+            const fp = queue.shift()!;
+            try {
+              let a = await getAnalysisFn({ data: { fingerprint: fp } });
+              if (!a) {
+                const res = await analyzeFn({ data: { fingerprint: fp, force: false } }).catch(() => null);
+                a = res?.analysis ?? null;
+              }
+              fresh[fp] = (a as AnalysisRow) ?? null;
+            } catch {
+              fresh[fp] = null;
+            }
+            done++;
+            toast.loading(`Kraunam AI analizes… ${done}/${missing.length}`, { id: tid });
+          }
+        });
+        await Promise.all(workers);
+        toast.dismiss(tid);
+        setAnalyses((prev) => ({ ...prev, ...fresh }));
+        const merged = { ...analyses, ...fresh };
+        await navigator.clipboard.writeText(formatRowsForCopy(list, merged));
+      } else {
+        await navigator.clipboard.writeText(formatRowsForCopy(list));
+      }
       setCopied(true);
-      toast.success(`Nukopijuota ${list.length} įrašų — įklijuok į pokalbį`);
+      toast.success(`Nukopijuota ${list.length} įrašų su AI analize`);
       setTimeout(() => setCopied(false), 2200);
     } catch {
       toast.error("Naršyklė neleido kopijuoti");
