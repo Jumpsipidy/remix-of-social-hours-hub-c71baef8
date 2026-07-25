@@ -17,6 +17,17 @@ export type Breadcrumb = {
 const MAX = 60;
 const buf: Breadcrumb[] = [];
 
+const IGNORED_FETCH_URLS = [
+  "https://www.google-analytics.com/g/collect",
+  "https://www.googletagmanager.com/gtag/js",
+  "bW9uaXRvcmluZy5mdW5jdGlvbnMudHM",
+  "bG9nV2ViVml0YW",
+];
+
+function isIgnoredFetchUrl(url: string) {
+  return IGNORED_FETCH_URLS.some((needle) => url.includes(needle));
+}
+
 export function pushBreadcrumb(b: Omit<Breadcrumb, "t">) {
   buf.push({ t: Date.now(), ...b });
   if (buf.length > MAX) buf.splice(0, buf.length - MAX);
@@ -257,8 +268,9 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     const started = performance.now();
     try {
       const res = await origFetch(...args);
+      const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
       if (!res.ok && res.status >= 500) {
-        const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
+        if (isIgnoredFetchUrl(url)) return res;
         pushBreadcrumb({
           kind: "fetch-fail",
           label: `${res.status} ${new URL(url, location.href).pathname}`,
@@ -268,6 +280,7 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
       return res;
     } catch (err) {
       const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
+      if (isIgnoredFetchUrl(url)) throw err;
       pushBreadcrumb({
         kind: "fetch-fail",
         label: `network err ${new URL(url, location.href).pathname}`,

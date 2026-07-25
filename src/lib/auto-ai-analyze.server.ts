@@ -143,11 +143,25 @@ ${(input.stack ?? "(no stack)").slice(0, 2500)}`;
         raw_response: { ...parsed, prompt_for_agent: parsed.prompt_for_agent ?? null } as unknown as never,
         updated_at: new Date().toISOString(),
       };
-      const { data: saved } = await supabaseAdmin
+      let { data: saved, error: saveError } = await supabaseAdmin
         .from("ai_error_analyses")
         .upsert(row as never, { onConflict: "fingerprint" })
         .select()
         .single();
+      if (saveError && saveError.message.includes("error_message")) {
+        const { error_message: _ignored, ...compatibleRow } = row;
+        const retry = await supabaseAdmin
+          .from("ai_error_analyses")
+          .upsert(compatibleRow as never, { onConflict: "fingerprint" })
+          .select()
+          .single();
+        saved = retry.data;
+        saveError = retry.error;
+      }
+      if (saveError) {
+        console.error("[auto-ai] save failed", saveError.message);
+        return;
+      }
       analysis = (saved as typeof analysis) ?? { ...row, updated_at: row.updated_at } as typeof analysis;
 
       await supabaseAdmin.from("activity_log").insert({

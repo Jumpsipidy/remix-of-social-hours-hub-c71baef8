@@ -18,6 +18,9 @@ const IGNORE_SUBSTRINGS = [
   "cancelled",
   "ERR_BLOCKED_BY_CLIENT",
   // React hydration mismatch warnings are noisy; they're not user-facing outages.
+  "Hydration failed because the server rendered HTML didn't match the client",
+  "server rendered HTML didn't match the client",
+  "Invalid HTML tag nesting",
   "Minified React error #418",
   "hydrated but some attributes",
   // WebGL context creation/loss — decorative background only, we already fall back
@@ -48,6 +51,13 @@ const IGNORE_SUBSTRINGS = [
   "changed size between renders",
   "The final argument passed to",
 
+];
+
+const IGNORED_NETWORK_URLS = [
+  "https://www.google-analytics.com/g/collect",
+  "https://www.googletagmanager.com/gtag/js",
+  "bW9uaXRvcmluZy5mdW5jdGlvbnMudHM",
+  "bG9nV2ViVml0YW",
 ];
 
 
@@ -127,6 +137,10 @@ type ErrPayload = {
 
 function shouldIgnore(msg: string) {
   return IGNORE_SUBSTRINGS.some((s) => msg.includes(s));
+}
+
+function shouldIgnoreNetworkUrl(url: string) {
+  return IGNORED_NETWORK_URLS.some((s) => url.includes(s));
 }
 
 async function insert(action: "client.error" | "supabase.error", payload: ErrPayload) {
@@ -282,7 +296,7 @@ export function installGlobalErrorLogging() {
       const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url ?? "";
       try {
         const res = await origFetch(...args);
-        if (res.status >= 500 && !url.includes("/api/public/error-beacon")) {
+        if (res.status >= 500 && !url.includes("/api/public/error-beacon") && !shouldIgnoreNetworkUrl(url)) {
           void insert("client.error", {
             message: `[fetch ${res.status}] ${url.slice(0, 200)}`,
             source: "fetch.5xx",
@@ -294,7 +308,7 @@ export function installGlobalErrorLogging() {
         // Network failure (offline, DNS, CORS preflight). Skip beacon endpoint
         // to avoid recursion, and abort signals which are usually user-driven.
         const msg = err instanceof Error ? err.message : String(err);
-        if (!url.includes("/api/public/error-beacon") && !/abort/i.test(msg)) {
+        if (!url.includes("/api/public/error-beacon") && !/abort/i.test(msg) && !shouldIgnoreNetworkUrl(url)) {
           void insert("client.error", {
             message: `[fetch:network] ${msg} → ${url.slice(0, 200)}`,
             stack: err instanceof Error ? err.stack : null,
