@@ -818,16 +818,8 @@ function AdminErrorsPage() {
         await Promise.all(workers);
         toast.dismiss(tid);
         setAnalyses((prev) => ({ ...prev, ...fresh }));
-        // Build clipboard from the merged snapshot (state update is async).
         const merged = { ...analyses, ...fresh };
-        const textWith = (() => {
-          const backup = analyses;
-          (analyses as unknown as Record<string, AnalysisRow | null>) = merged as never;
-          const t = formatRowsForCopy(list);
-          (analyses as unknown as Record<string, AnalysisRow | null>) = backup as never;
-          return t;
-        })();
-        await navigator.clipboard.writeText(textWith);
+        await navigator.clipboard.writeText(formatRowsForCopy(list, merged));
       } else {
         await navigator.clipboard.writeText(formatRowsForCopy(list));
       }
