@@ -20,6 +20,7 @@ import { ErrorMonitor } from "@/components/error-monitor";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
 import { AdminErrorHud } from "@/components/admin-error-hud";
 import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
+import { AnalyticsLoader } from "@/components/analytics-loader";
 
 
 import { PageViewTracker } from "@/components/page-view-tracker";
@@ -111,10 +112,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.dev/" },
     ],
     scripts: [
-      { src: "https://www.googletagmanager.com/gtag/js?id=G-4HRBLS0E3G", async: true },
-      {
-        children: "window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-4HRBLS0E3G');",
-      },
       {
         type: "application/ld+json",
         children: JSON.stringify({
@@ -278,6 +275,7 @@ function RootComponent() {
 
         <PageViewTracker />
         <WebVitalsReporter />
+        <AnalyticsLoader />
 
 
 

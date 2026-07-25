@@ -26,7 +26,7 @@ export interface ConsentRecord {
   categories: Record<ConsentCategory, boolean>;
 }
 
-const CONSENT_CHANGED_EVENT = "sv:consent-changed";
+export const CONSENT_CHANGED_EVENT = "sv:consent-changed";
 const OPEN_SETTINGS_EVENT = "sv:open-cookie-settings";
 
 function readConsent(): ConsentRecord | null {

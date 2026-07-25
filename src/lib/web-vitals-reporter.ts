@@ -1,5 +1,7 @@
 import { onLCP, onINP, onCLS, onFCP, onTTFB, type Metric } from "web-vitals";
 import { logWebVital } from "@/lib/monitoring.functions";
+import { isPreviewEnvironment } from "@/lib/activity-log";
+import { hasConsent } from "@/components/cookie-consent";
 
 const SESSION_KEY = "sv:webvitals:session";
 
@@ -54,6 +56,7 @@ let initialized = false;
 
 export function initWebVitals() {
   if (initialized || typeof window === "undefined") return;
+  if (isPreviewEnvironment() || !hasConsent("analytics")) return;
   initialized = true;
   try {
     onLCP(report);

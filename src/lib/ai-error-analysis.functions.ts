@@ -221,11 +221,21 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       updated_at: new Date().toISOString(),
     };
 
-    const { data: saved, error } = await supabaseAdmin
+    let { data: saved, error } = await supabaseAdmin
       .from("ai_error_analyses")
       .upsert(row as never, { onConflict: "fingerprint" })
       .select()
       .single();
+    if (error && error.message.includes("error_message")) {
+      const { error_message: _ignored, ...compatibleRow } = row;
+      const retry = await supabaseAdmin
+        .from("ai_error_analyses")
+        .upsert(compatibleRow as never, { onConflict: "fingerprint" })
+        .select()
+        .single();
+      saved = retry.data;
+      error = retry.error;
+    }
     if (error) throw new Error(error.message);
 
     // Audit + count against rate limit
