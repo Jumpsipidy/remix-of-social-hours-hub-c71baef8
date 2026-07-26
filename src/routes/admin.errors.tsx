@@ -62,6 +62,8 @@ import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
 import type { ResolvedEntry } from "@/lib/error-resolved";
 import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
+import { BugRadar } from "@/components/admin/bug-radar";
+
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
 const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_BUILD_TIME || "";
