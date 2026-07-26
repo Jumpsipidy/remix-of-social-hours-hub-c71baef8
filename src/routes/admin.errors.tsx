@@ -1043,8 +1043,14 @@ function AdminErrorsPage() {
                 const uniqueFps = groups.length;
                 return (
                   <>
+                    <BugRadar
+                      rows={activeRows as any}
+                      onFocusRoute={(p) => { setFilter(p); setSection("live"); }}
+                    />
+
                     {/* Feature status strip */}
                     <SaaSPanel padded={false}>
+
                       <div className="flex flex-wrap items-center gap-2 p-3 text-[11px]">
                         <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 font-bold uppercase tracking-widest text-emerald-300">
                           v3 · fingerprint aktyvus
