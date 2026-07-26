@@ -62,6 +62,8 @@ import { sendTestAlert } from "@/lib/error-escalation.functions";
 import { fingerprint as fpOf, severityScore, routeWeight } from "@/lib/error-fingerprint";
 import type { ResolvedEntry } from "@/lib/error-resolved";
 import { analyzeErrorGroup, getAiAnalysis, listRecentAnalyses, listPendingFingerprints, getAiUsage } from "@/lib/ai-error-analysis.functions";
+import { BugRadar } from "@/components/admin/bug-radar";
+
 
 const CURRENT_BUILD = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_COMMIT_SHA || "unknown";
 const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; VITE_BUILD_TIME?: string } }).env?.VITE_BUILD_TIME || "";
@@ -1043,8 +1045,14 @@ function AdminErrorsPage() {
                 const uniqueFps = groups.length;
                 return (
                   <>
+                    <BugRadar
+                      rows={activeRows as any}
+                      onFocusRoute={(p: string) => { setFilter(p); setSection("live"); }}
+                    />
+
                     {/* Feature status strip */}
                     <SaaSPanel padded={false}>
+
                       <div className="flex flex-wrap items-center gap-2 p-3 text-[11px]">
                         <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2.5 py-1 font-bold uppercase tracking-widest text-emerald-300">
                           v3 · fingerprint aktyvus
