@@ -1047,7 +1047,7 @@ function AdminErrorsPage() {
                   <>
                     <BugRadar
                       rows={activeRows as any}
-                      onFocusRoute={(p) => { setFilter(p); setSection("live"); }}
+                      onFocusRoute={(p: string) => { setFilter(p); setSection("live"); }}
                     />
 
                     {/* Feature status strip */}
