@@ -288,19 +288,40 @@ export function installGlobalErrorLogging() {
     });
   }, true);
 
-  // Fetch interception — logs network failures + 5xx responses so backend
-  // outages surface even when the calling code silently ignores errors.
+  // Fetch interception — logs network failures, slow calls and API errors so
+  // backend problems surface even when the calling code silently ignores them.
   if (typeof window.fetch === "function") {
     const origFetch = window.fetch.bind(window);
     window.fetch = async (...args: Parameters<typeof fetch>) => {
       const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url ?? "";
+      const method =
+        (typeof args[0] === "string" ? (args[1] as RequestInit | undefined)?.method : (args[0] as Request).method) ??
+        "GET";
+      const started = Date.now();
       try {
         const res = await origFetch(...args);
-        if (res.status >= 500 && !url.includes("/api/public/error-beacon") && !shouldIgnoreNetworkUrl(url)) {
+        const took = Date.now() - started;
+        const skip = url.includes("/api/public/error-beacon") || shouldIgnoreNetworkUrl(url);
+
+        if (!skip && res.status >= 500) {
           void insert("client.error", {
             message: `[fetch ${res.status}] ${url.slice(0, 200)}`,
             source: "fetch.5xx",
-            extra: { status: res.status, url: url.slice(0, 500) },
+            extra: { status: res.status, url: url.slice(0, 500), method, ms: took, body: await peekBody(res) },
+          });
+        } else if (!skip && isAppApi(url) && CAPTURED_4XX.has(res.status)) {
+          // App API rejected the request (validation, RLS, conflict). This is
+          // exactly the class of bug a student hits mid-reservation.
+          void insert("client.error", {
+            message: `[api ${res.status}] ${method} ${shortUrl(url)}`,
+            source: "fetch.4xx",
+            extra: { status: res.status, url: url.slice(0, 500), method, ms: took, body: await peekBody(res) },
+          });
+        } else if (!skip && isAppApi(url) && took >= SLOW_MS) {
+          void insert("client.error", {
+            message: `[lėtas API ${Math.round(took / 100) / 10}s] ${method} ${shortUrl(url)}`,
+            source: "fetch.slow",
+            extra: { url: url.slice(0, 500), method, ms: took, status: res.status },
           });
         }
         return res;
@@ -313,7 +334,7 @@ export function installGlobalErrorLogging() {
             message: `[fetch:network] ${msg} → ${url.slice(0, 200)}`,
             stack: err instanceof Error ? err.stack : null,
             source: "fetch.network",
-            extra: { url: url.slice(0, 500) },
+            extra: { url: url.slice(0, 500), method, ms: Date.now() - started, offline: !navigator.onLine },
           });
         }
         throw err;
@@ -321,7 +342,95 @@ export function installGlobalErrorLogging() {
     };
   }
 
+  installFreezeDetector();
+  installConnectivityWatch();
+
   // Start the retry loop + beacon-on-unload flush
   startOutbox();
 }
+
+// ---------------------------------------------------------------------------
+// Deep capture helpers
+// ---------------------------------------------------------------------------
+
+const SLOW_MS = 9_000;
+const CAPTURED_4XX = new Set([400, 403, 409, 422, 429]);
+
+/** Only our own backend calls — third-party 4xx is not our bug. */
+function isAppApi(url: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes("/_serverFn/") ||
+    url.includes("/api/") ||
+    url.includes("/rest/v1/") ||
+    url.includes("/rpc/") ||
+    url.includes("/functions/v1/")
+  );
+}
+
+function shortUrl(url: string): string {
+  try {
+    const u = new URL(url, window.location.origin);
+    return `${u.pathname}${u.search ? "?" + u.search.slice(0, 60) : ""}`.slice(0, 160);
+  } catch {
+    return url.slice(0, 160);
+  }
+}
+
+/** Read a short snippet of the response body without consuming the caller's stream. */
+async function peekBody(res: Response): Promise<string | undefined> {
+  try {
+    const type = res.headers.get("content-type") ?? "";
+    if (!/json|text/.test(type)) return undefined;
+    const text = await res.clone().text();
+    return text.slice(0, 400) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Frozen-UI detector: if the main thread is blocked long enough that the user
+ * sees a dead page, that's a bug even without an exception.
+ */
+function installFreezeDetector() {
+  const TICK = 1_000;
+  const FREEZE_MS = 4_000;
+  let last = Date.now();
+  let reported = 0;
+  setInterval(() => {
+    const now = Date.now();
+    const drift = now - last - TICK;
+    last = now;
+    if (document.hidden) return; // background tabs are throttled on purpose
+    if (drift >= FREEZE_MS && now - reported > 120_000) {
+      reported = now;
+      void insert("client.error", {
+        message: `[UI užšalo ${Math.round(drift / 100) / 10}s] pagrindinė gija užblokuota`,
+        source: "ui.freeze",
+        extra: { driftMs: drift },
+      });
+    }
+  }, TICK);
+}
+
+/** Offline drops are the #1 silent cause of "nieko nevyksta" reports. */
+function installConnectivityWatch() {
+  let offlineSince = 0;
+  window.addEventListener("offline", () => {
+    offlineSince = Date.now();
+  });
+  window.addEventListener("online", () => {
+    if (!offlineSince) return;
+    const ms = Date.now() - offlineSince;
+    offlineSince = 0;
+    if (ms < 5_000) return;
+    void insert("client.error", {
+      message: `[ryšys dingo ${Math.round(ms / 1000)}s] vartotojas buvo offline`,
+      source: "net.offline",
+      extra: { offlineMs: ms },
+    });
+  });
+}
+
 
