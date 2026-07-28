@@ -50,7 +50,14 @@ async function sendResend(payload: SendPayload) {
     console.error("[email] Resend error", res.status, text);
     throw new Error(`Resend ${res.status}: ${text}`);
   }
-  return { ok: true as const };
+  let id: string | null = null;
+  try {
+    const json = (await res.json()) as { id?: string };
+    id = json?.id ?? null;
+  } catch {
+    id = null;
+  }
+  return { ok: true as const, id, to: payload.to, from: FROM, sentAt: new Date().toISOString() };
 }
 
 // -------------------- 1. Hours confirmed --------------------
