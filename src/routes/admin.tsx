@@ -28,6 +28,7 @@ import {
   Send,
   Gauge,
   Sparkles,
+  Mail,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
