@@ -333,3 +333,75 @@ DELETE FROM auth.users WHERE email LIKE 'demo.%@socialinesvalandos.dev';
 | Kamera nepasileidžia | Ne HTTPS | Naudok tikrą domeną |
 | Rolė neteisinga po SQL | Sesija sena | Atsijunk ir prisijunk iš naujo |
 | „Could not find the function..." | PostgREST kešas | `NOTIFY pgrst, 'reload schema';` |
+
+---
+
+## 10. El. laiškų demonstravimas vaizdo įraše
+
+Sistema siunčia **4 automatinius laiškus** per Resend iš
+`noreply@jumpsipidy.online`. Visus juos galima parodyti gyvai per naują
+super admin puslapį **`/admin/emails`**.
+
+| Laiškas | Kada išsiunčiamas |
+|---|---|
+| Sveikas atvykęs | iš karto po sėkmingos registracijos `/register` |
+| Rezervacija patvirtinta | organizacija paspaudžia „Patvirtinti" |
+| Rezervacija atmesta | organizacija paspaudžia „Atmesti" |
+| Valandos patvirtintos | organizacija uždaro rezervaciją ir patvirtina valandas |
+
+### `/admin/emails` — ką matai kadre
+
+- **Būsenos juosta:** ar Resend prijungtas, domeno verifikacija, siuntėjo
+  adresas, reply-to. Žalios varnelės = veikia.
+- **Šablonų sąrašas** su paaiškinimu, kada kiekvienas siunčiamas.
+- **Gyva HTML peržiūra** iframe'e + perjungimas **Kompiuteris / Telefonas**
+  (mobili peržiūra atrodo labai gerai vaizdo įraše).
+- **Testinis siuntimas:** įvedi savo el. paštą → „Siųsti" → gauni žalią
+  patvirtinimą su **Resend žinutės ID** ir laiku. Tai ir yra „įrodymas,
+  kad veikia" kadras.
+
+### Filmavimo scenarijus (~60 s)
+
+1. `/admin/emails` — parodai žalią būsenos juostą (Resend + domenas).
+2. Paspaudi „Sveikas atvykęs" → peržiūra užsikrauna.
+3. Perjungi į telefono vaizdą — parodai, kad laiškas responsive.
+4. Įvedi savo el. paštą → „Siųsti" → pasirodo **Resend ID** ir žalias toast'as.
+5. Perjungi į savo pašto dėžutę (Gmail) → laiškas jau ten. **Šis kirpimas —
+   stipriausias momentas.**
+6. Grįžti ir tą patį pakartoji su „Valandos patvirtintos".
+
+> Patarimas: prieš įrašą išsiųsk vieną testinį laišką, kad Gmail suspėtų
+> jį suindeksuoti, tada ištrink. Filmuojant antras siuntimas ateis per 2–5 s.
+
+### Tikras (ne testinis) registracijos laiškas
+
+Jei nori parodyti **realų** srautą, o ne testinį mygtuką:
+
+1. Filmuoji `/register` su nauju el. paštu (naudok Gmail alias:
+   `tavo.vardas+demo1@gmail.com` — veikia be naujos paskyros).
+2. Užbaigus registraciją klientas iškart kviečia `sendWelcomeEmail`.
+3. Perjungi į pašto dėžutę → „Sveikas atvykęs į Socialinės Valandos ✦".
+
+Kitą kartą filmuodamas naudok `+demo2`, `+demo3` ir t.t. — nereikia trinti
+paskyrų tarp dublių.
+
+### Jei laiškas neatkeliauja
+
+| Simptomas | Priežastis | Sprendimas |
+|---|---|---|
+| „RESEND_API_KEY nenustatytas" | Trūksta env kintamojo | Vercel → Settings → Environment Variables → `RESEND_API_KEY` |
+| Domeno būsena geltona / `not_started` | DNS neverifikuotas | Resend → Domains → pridėk SPF/DKIM įrašus |
+| Laiškas šlamšte | Naujas domenas be reputacijos | Pažymėk „Not spam" prieš įrašą; SPF+DKIM+DMARC padeda |
+| `403` iš Resend | Siunti į adresą, kurio domenas neverifikuotas | Verifikuok siuntimo domeną Resend |
+| Puslapis rodo „Tik super admin" | Tavo paskyra ne `admin` | 2 skyriaus `user_roles` INSERT |
+
+### Prieš įrašą — greitas patikrinimas
+
+```sql
+-- ar demo mokinys turi el. paštą profilyje (be jo laiškai praleidžiami)
+SELECT email, full_name, role FROM public.profiles
+WHERE email LIKE 'demo.%@socialinesvalandos.dev' AND email IS NOT NULL;
+```
+
+Atidaryk `/admin/emails` ir įsitikink, kad viršuje visos keturios kortelės
+žalios. Jei taip — laiškai veikia ir gali filmuoti.

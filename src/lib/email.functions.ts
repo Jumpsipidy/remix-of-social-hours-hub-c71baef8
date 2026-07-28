@@ -50,7 +50,14 @@ async function sendResend(payload: SendPayload) {
     console.error("[email] Resend error", res.status, text);
     throw new Error(`Resend ${res.status}: ${text}`);
   }
-  return { ok: true as const };
+  let id: string | null = null;
+  try {
+    const json = (await res.json()) as { id?: string };
+    id = json?.id ?? null;
+  } catch {
+    id = null;
+  }
+  return { ok: true as const, id, to: payload.to, from: FROM, sentAt: new Date().toISOString() };
 }
 
 // -------------------- 1. Hours confirmed --------------------
@@ -254,4 +261,54 @@ export const sendTestHoursConfirmedEmail = createServerFn({ method: "POST" })
       text: `Test — 4 val. patvirtinta.\n${APP_URL}/student`,
       tag: "test",
     });
+  });
+
+// -------------------- Email health (showcase / diagnostics) --------------------
+
+export const getEmailHealth = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context as any);
+    const key = process.env.RESEND_API_KEY;
+    const configured = !!key;
+    let domainStatus: "unknown" | "ok" | "error" = "unknown";
+    let domainDetail = "Nepatikrinta";
+    let domains: { name: string; status: string; region?: string }[] = [];
+
+    if (configured) {
+      try {
+        const res = await fetch("https://api.resend.com/domains", {
+          headers: { Authorization: `Bearer ${key}` },
+        });
+        if (res.ok) {
+          const json = (await res.json()) as { data?: { name: string; status: string; region?: string }[] };
+          domains = json?.data ?? [];
+          domainStatus = "ok";
+          domainDetail = domains.length ? `${domains.length} domenas (-ai) rasta` : "Domenų nėra";
+        } else {
+          domainStatus = "error";
+          domainDetail = `Resend ${res.status}`;
+        }
+      } catch (e: any) {
+        domainStatus = "error";
+        domainDetail = e?.message ?? "Tinklo klaida";
+      }
+    }
+
+    return {
+      configured,
+      from: FROM,
+      replyTo: REPLY_TO,
+      appUrl: APP_URL,
+      domainStatus,
+      domainDetail,
+      domains,
+      templates: [
+        { key: "welcome", label: "Sveikas atvykęs (registracija)", trigger: "Iš karto po sėkmingos registracijos /register" },
+        { key: "reservationApproved", label: "Rezervacija patvirtinta", trigger: "Organizacija paspaudžia „Patvirtinti“" },
+        { key: "reservationDeclined", label: "Rezervacija atmesta", trigger: "Organizacija paspaudžia „Atmesti“" },
+        { key: "hoursConfirmed", label: "Valandos patvirtintos", trigger: "Organizacija uždaro rezervaciją ir patvirtina valandas" },
+      ],
+      checkedAt: new Date().toISOString(),
+    };
   });
