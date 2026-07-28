@@ -55,6 +55,7 @@ const NAV: NavItem[] = [
   { to: "/admin/performance", label: "Performance", icon: Gauge },
   { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
   { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
+  { to: "/admin/emails", label: "El. laiškai", icon: Mail },
   { to: "/admin/push", label: "Push pranešimai", icon: Send },
   { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
 ];
