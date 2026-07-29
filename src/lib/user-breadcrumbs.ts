@@ -129,12 +129,27 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     "click",
     (e) => {
       const el = e.target as Element | null;
-      const key = targetKey(el);
-      const label = targetLabel(el);
+      // Prefer the nearest interactive ancestor so the crumb reads
+      // „click: Pateikti rezervaciją (button)" instead of „click: span".
+      const interactive = (el?.closest?.(
+        'button, a, [role="button"], [role="tab"], [role="menuitem"], input, select, textarea, label, summary',
+      ) ?? null) as HTMLElement | null;
+      const subject = interactive ?? el;
+      const key = targetKey(subject);
+      const label = targetLabel(subject);
+      const tag = subject?.tagName?.toLowerCase() ?? "?";
+      const href = (subject as HTMLAnchorElement | null)?.href;
       pushBreadcrumb({
         kind: "click",
-        label,
-        extra: { key, x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY },
+        label: `${label || tag} (${tag}${interactive ? "" : ", ne-mygtukas"})`,
+        extra: {
+          key,
+          tag,
+          href: href || undefined,
+          testid: subject?.getAttribute?.("data-testid") ?? undefined,
+          x: (e as MouseEvent).clientX,
+          y: (e as MouseEvent).clientY,
+        },
         path: location.pathname,
       });
 

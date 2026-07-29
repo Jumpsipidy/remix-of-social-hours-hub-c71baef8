@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
-import { getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
+import { getActionBreadcrumbs, getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
 import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
 import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
 
@@ -99,7 +99,7 @@ async function maybeEscalate(
       userEmail = data.user?.email ?? undefined;
     } catch { /* ignore */ }
     const dev = deviceMeta();
-    const crumbs = getBreadcrumbs().slice(-10).map((b) => ({
+    const crumbs = getActionBreadcrumbs(10).map((b) => ({
       t: b.t,
       kind: b.kind,
       label: b.label?.slice(0, 200),
@@ -171,7 +171,8 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
       source: payload.source ?? "runtime",
       path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
       extra: payload.extra ?? {},
-      breadcrumbs: getBreadcrumbs().slice(-15),
+      breadcrumbs: getActionBreadcrumbs(15),
+      breadcrumbs_all: getBreadcrumbs().slice(-25),
       replay: getSessionReplay(60_000).slice(-40),
       fingerprint: fp.id,
       fingerprint_norm: fp.norm,
