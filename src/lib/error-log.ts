@@ -83,13 +83,15 @@ async function maybeEscalate(
   level: "critical" | "warning",
   message: string,
   stack?: string | null,
-  ctx?: { source?: string; extra?: Record<string, unknown> },
+  ctx?: { source?: string; extra?: Record<string, unknown>; test?: boolean },
 ) {
   try {
     const key = `${level}:${message.slice(0, 120)}`;
     const now = Date.now();
-    const last = escalated.get(key);
-    if (last && now - last < ESCALATE_MS) return;
+    if (!ctx?.test) {
+      const last = escalated.get(key);
+      if (last && now - last < ESCALATE_MS) return;
+    }
     escalated.set(key, now);
     let userEmail: string | undefined;
     try {
