@@ -16,6 +16,19 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bug, Send, Check } from "lucide-react";
 import { logClientError } from "@/lib/error-log";
+import { FriendlyErrorScreen } from "@/components/friendly-error";
+
+// Hide the tooling overlay (Vite / Lovable / Next red modal) so the student
+// only ever sees OUR friendly screen instead of a raw stack trace badge.
+function suppressNativeOverlays() {
+  if (typeof document === "undefined") return;
+  for (const sel of OVERLAY_SELECTORS) {
+    document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+      el.style.setProperty("display", "none", "important");
+      el.setAttribute("data-sv-suppressed", "1");
+    });
+  }
+}
 
 type OverlayInfo = { message: string; stack?: string; source: string };
 
@@ -96,6 +109,7 @@ export function LovableOverlayBridge() {
       lastSignature = sig;
       setInfo(found);
       setSent(false);
+      suppressNativeOverlays();
       // Auto-forward once per unique overlay session
       void logClientError(new Error(found.message), {
         source: "lovable.overlay.auto",
@@ -157,38 +171,34 @@ export function LovableOverlayBridge() {
     }
   };
 
-  return (
-    <AnimatePresence>
-      {info && (
-        <motion.div
-          initial={{ opacity: 0, y: -12, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -12, scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 260, damping: 22 }}
-          className="fixed left-1/2 top-3 z-[200] -translate-x-1/2"
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
+  if (info) {
+    // Full-screen calm error takeover — replaces the transient tooling badge.
+    return (
+      <div className="fixed inset-0 z-[300] overflow-auto">
+        <FriendlyErrorScreen
+          error={new Error(info.message)}
+          source="lovable.overlay.screen"
+          onRetry={() => window.location.reload()}
+        />
+        <div className="pointer-events-none fixed bottom-3 left-1/2 z-[301] -translate-x-1/2">
           <button
             onClick={send}
             disabled={busy}
-            className="group flex items-center gap-2 rounded-full border border-rose-500/60 bg-gradient-to-r from-rose-600/90 to-fuchsia-600/90 px-3.5 py-1.5 text-xs font-semibold text-white shadow-2xl backdrop-blur-xl transition hover:scale-[1.03] disabled:opacity-60"
-            style={{ boxShadow: "0 12px 40px rgba(244,63,94,0.4)" }}
+            className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/15 bg-black/60 px-3.5 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-xl transition hover:bg-black/80 disabled:opacity-60"
             title={info.message}
           >
-            <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20">
+            <span className="grid h-5 w-5 place-items-center rounded-full bg-white/10">
               {sent ? <Check className="h-3 w-3" /> : <Bug className="h-3 w-3" />}
             </span>
-            <span className="max-w-[240px] truncate">
-              {sent
-                ? "Nusiųsta į klaidų centrą"
-                : busy
-                  ? "Siunčiu…"
-                  : "Overlay klaida — siųsti į /admin/errors"}
+            <span className="max-w-[260px] truncate">
+              {sent ? "Nusiųsta į klaidų centrą" : busy ? "Siunčiu…" : "Siųsti dar kartą į /admin/errors"}
             </span>
             {!sent && !busy && <Send className="h-3 w-3 opacity-70" />}
           </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
