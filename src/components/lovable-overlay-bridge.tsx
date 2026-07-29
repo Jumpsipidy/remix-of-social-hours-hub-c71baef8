@@ -13,7 +13,6 @@
 // Renders nothing when no overlay is present. Safe on every route.
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Bug, Send, Check } from "lucide-react";
 import { logClientError } from "@/lib/error-log";
 import { FriendlyErrorScreen } from "@/components/friendly-error";
@@ -73,7 +72,7 @@ function scanForOverlay(): OverlayInfo | null {
   }
   // 2) Heuristic: any fixed dialog / modal whose text screams „error".
   const candidates = document.querySelectorAll<HTMLElement>(
-    "[role=dialog], [role=alertdialog], [data-state=open], .error-overlay, .error-modal"
+    "[role=dialog], [role=alertdialog], [data-state=open], .error-overlay, .error-modal",
   );
   for (const el of Array.from(candidates)) {
     const text = (el.textContent ?? "").toLowerCase();
@@ -191,7 +190,11 @@ export function LovableOverlayBridge() {
               {sent ? <Check className="h-3 w-3" /> : <Bug className="h-3 w-3" />}
             </span>
             <span className="max-w-[260px] truncate">
-              {sent ? "Nusiųsta į klaidų centrą" : busy ? "Siunčiu…" : "Siųsti dar kartą į /admin/errors"}
+              {sent
+                ? "Nusiųsta į klaidų centrą"
+                : busy
+                  ? "Siunčiu…"
+                  : "Siųsti dar kartą į /admin/errors"}
             </span>
             {!sent && !busy && <Send className="h-3 w-3 opacity-70" />}
           </button>
