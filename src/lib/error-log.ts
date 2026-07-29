@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
-import { getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
+import { getActionBreadcrumbs, getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
 import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
 import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
 
@@ -50,7 +50,6 @@ const IGNORE_SUBSTRINGS = [
   // whose useEffect deps array size changed between edits. Not a production bug.
   "changed size between renders",
   "The final argument passed to",
-
 ];
 
 const IGNORED_NETWORK_URLS = [
@@ -59,7 +58,6 @@ const IGNORED_NETWORK_URLS = [
   "bW9uaXRvcmluZy5mdW5jdGlvbnMudHM",
   "bG9nV2ViVml0YW",
 ];
-
 
 // Patterns that indicate a serious runtime failure worth auto-lockdown.
 const CRITICAL_PATTERNS = [
@@ -83,21 +81,25 @@ async function maybeEscalate(
   level: "critical" | "warning",
   message: string,
   stack?: string | null,
-  ctx?: { source?: string; extra?: Record<string, unknown> },
+  ctx?: { source?: string; extra?: Record<string, unknown>; test?: boolean },
 ) {
   try {
     const key = `${level}:${message.slice(0, 120)}`;
     const now = Date.now();
-    const last = escalated.get(key);
-    if (last && now - last < ESCALATE_MS) return;
+    if (!ctx?.test) {
+      const last = escalated.get(key);
+      if (last && now - last < ESCALATE_MS) return;
+    }
     escalated.set(key, now);
     let userEmail: string | undefined;
     try {
       const { data } = await supabase.auth.getUser();
       userEmail = data.user?.email ?? undefined;
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     const dev = deviceMeta();
-    const crumbs = getBreadcrumbs().slice(-10).map((b) => ({
+    const crumbs = getActionBreadcrumbs(10).map((b) => ({
       t: b.t,
       kind: b.kind,
       label: b.label?.slice(0, 200),
@@ -116,6 +118,7 @@ async function maybeEscalate(
         os: dev.os,
         device: dev.device,
         breadcrumbs: crumbs,
+        test: ctx?.test === true,
       },
     });
   } catch {
@@ -147,15 +150,18 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
   const dev = deviceMeta();
   const key = `${action}:${payload.message.slice(0, 120)}`;
   const now = Date.now();
+  const forcedReport = payload.extra?.forceEscalate === true;
   const last = seen.get(key);
-  if (last && now - last < DEDUPE_MS) return;
+  if (!forcedReport && last && now - last < DEDUPE_MS) return;
   seen.set(key, now);
 
   let uid: string | null = null;
   try {
     const { data } = await supabase.auth.getUser();
     uid = data.user?.id ?? null;
-  } catch { /* offline / no session */ }
+  } catch {
+    /* offline / no session */
+  }
 
   const fp = computeFingerprint(payload.message, payload.stack ?? null);
   const row = {
@@ -167,7 +173,8 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
       source: payload.source ?? "runtime",
       path: payload.path ?? (typeof window !== "undefined" ? window.location.pathname : ""),
       extra: payload.extra ?? {},
-      breadcrumbs: getBreadcrumbs().slice(-15),
+      breadcrumbs: getActionBreadcrumbs(15),
+      breadcrumbs_all: getBreadcrumbs().slice(-25),
       replay: getSessionReplay(60_000).slice(-40),
       fingerprint: fp.id,
       fingerprint_norm: fp.norm,
@@ -182,13 +189,23 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
   } catch {
     // Primary insert failed (offline / RLS / auth). Queue for retry
     // + beacon on tab close so the report ALWAYS reaches admin.
-    try { enqueueOutbox(row); } catch { /* ignore */ }
+    try {
+      enqueueOutbox(row);
+    } catch {
+      /* ignore */
+    }
   }
   // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
-  const level: "critical" | "warning" = isCriticalMessage(payload.message) ? "critical" : "warning";
-  void maybeEscalate(level, payload.message, payload.stack ?? null, { source: payload.source, extra: payload.extra });
+  // `forceEscalate` (admin test button) always escalates and bypasses every filter.
+  const forced = payload.extra?.forceEscalate === true;
+  const level: "critical" | "warning" =
+    forced || isCriticalMessage(payload.message) ? "critical" : "warning";
+  void maybeEscalate(level, payload.message, payload.stack ?? null, {
+    source: payload.source,
+    extra: payload.extra,
+    test: forced,
+  });
 }
-
 
 /** Public helper: wrap a Supabase call, log its `error` field if any. */
 export async function logSupabaseError(
@@ -198,7 +215,7 @@ export async function logSupabaseError(
   if (!result?.error) return;
   const err = result.error;
   const msg = `[supabase:${op}] ${err.message}${err.code ? " (" + err.code + ")" : ""}`;
-  // eslint-disable-next-line no-console
+
   console.error("%c[Supabase error]", "color:#f43f5e;font-weight:bold", op, err);
   if (shouldIgnore(msg)) return;
   await insert("supabase.error", {
@@ -215,9 +232,9 @@ export async function logClientError(
 ) {
   const message = err instanceof Error ? err.message : String(err ?? "unknown");
   const stack = err instanceof Error ? err.stack : null;
-  // eslint-disable-next-line no-console
+
   console.error("%c[Client error]", "color:#f43f5e;font-weight:bold", opts.source ?? "manual", err);
-  if (shouldIgnore(message)) return;
+  if (opts.extra?.forceEscalate !== true && shouldIgnore(message)) return;
   await insert("client.error", { message, stack, source: opts.source, extra: opts.extra });
 }
 
@@ -254,7 +271,12 @@ export function installGlobalErrorLogging() {
     origErr(...args);
     try {
       const first = args.find((a) => a instanceof Error) as Error | undefined;
-      const msg = first ? first.message : args.map((a) => (typeof a === "string" ? a : "")).join(" ").trim();
+      const msg = first
+        ? first.message
+        : args
+            .map((a) => (typeof a === "string" ? a : ""))
+            .join(" ")
+            .trim();
       if (!msg || shouldIgnore(msg)) return;
       // Skip our own tag to avoid recursion
       if (typeof args[0] === "string" && args[0].startsWith("%c[")) return;
@@ -270,33 +292,38 @@ export function installGlobalErrorLogging() {
 
   // Resource load failures (script/img/css 404 or CORS block) — capture phase,
   // because these events don't bubble. Filters preview-only noise (HMR ping).
-  window.addEventListener("error", (e) => {
-    const target = e.target as (HTMLElement & { src?: string; href?: string }) | null;
-    if (!target || target === window as unknown as HTMLElement) return;
-    const tag = target.tagName?.toLowerCase?.();
-    if (!tag || !["img", "script", "link", "video", "audio", "source"].includes(tag)) return;
-    const url = target.src || target.href || "";
-    if (!url || url.startsWith("data:") || url.includes("vite/client")) return;
-    // Stale-deploy: an old client is asking for a hashed JS/CSS chunk that no
-    // longer exists after redeploy (e.g. `/assets/admin.reservations-Cx-qr5XY.js`).
-    // stale-deploy-guard force-reloads to fix it — no need to escalate as a bug.
-    if (/\/assets\/[^/]+-[A-Za-z0-9_-]{6,}\.(js|css|mjs)(\?|$)/.test(url)) return;
-    void insert("client.error", {
-      message: `[resource] ${tag} failed: ${url.slice(0, 200)}`,
-      source: "resource.error",
-      extra: { tag, url: url.slice(0, 500) },
-    });
-  }, true);
+  window.addEventListener(
+    "error",
+    (e) => {
+      const target = e.target as (HTMLElement & { src?: string; href?: string }) | null;
+      if (!target || target === (window as unknown as HTMLElement)) return;
+      const tag = target.tagName?.toLowerCase?.();
+      if (!tag || !["img", "script", "link", "video", "audio", "source"].includes(tag)) return;
+      const url = target.src || target.href || "";
+      if (!url || url.startsWith("data:") || url.includes("vite/client")) return;
+      // Stale-deploy: an old client is asking for a hashed JS/CSS chunk that no
+      // longer exists after redeploy (e.g. `/assets/admin.reservations-Cx-qr5XY.js`).
+      // stale-deploy-guard force-reloads to fix it — no need to escalate as a bug.
+      if (/\/assets\/[^/]+-[A-Za-z0-9_-]{6,}\.(js|css|mjs)(\?|$)/.test(url)) return;
+      void insert("client.error", {
+        message: `[resource] ${tag} failed: ${url.slice(0, 200)}`,
+        source: "resource.error",
+        extra: { tag, url: url.slice(0, 500) },
+      });
+    },
+    true,
+  );
 
   // Fetch interception — logs network failures, slow calls and API errors so
   // backend problems surface even when the calling code silently ignores them.
   if (typeof window.fetch === "function") {
     const origFetch = window.fetch.bind(window);
     window.fetch = async (...args: Parameters<typeof fetch>) => {
-      const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url ?? "";
+      const url = typeof args[0] === "string" ? args[0] : ((args[0] as Request).url ?? "");
       const method =
-        (typeof args[0] === "string" ? (args[1] as RequestInit | undefined)?.method : (args[0] as Request).method) ??
-        "GET";
+        (typeof args[0] === "string"
+          ? (args[1] as RequestInit | undefined)?.method
+          : (args[0] as Request).method) ?? "GET";
       const started = Date.now();
       try {
         const res = await origFetch(...args);
@@ -307,7 +334,13 @@ export function installGlobalErrorLogging() {
           void insert("client.error", {
             message: `[fetch ${res.status}] ${url.slice(0, 200)}`,
             source: "fetch.5xx",
-            extra: { status: res.status, url: url.slice(0, 500), method, ms: took, body: await peekBody(res) },
+            extra: {
+              status: res.status,
+              url: url.slice(0, 500),
+              method,
+              ms: took,
+              body: await peekBody(res),
+            },
           });
         } else if (!skip && isAppApi(url) && CAPTURED_4XX.has(res.status)) {
           // App API rejected the request (validation, RLS, conflict). This is
@@ -315,7 +348,13 @@ export function installGlobalErrorLogging() {
           void insert("client.error", {
             message: `[api ${res.status}] ${method} ${shortUrl(url)}`,
             source: "fetch.4xx",
-            extra: { status: res.status, url: url.slice(0, 500), method, ms: took, body: await peekBody(res) },
+            extra: {
+              status: res.status,
+              url: url.slice(0, 500),
+              method,
+              ms: took,
+              body: await peekBody(res),
+            },
           });
         } else if (!skip && isAppApi(url) && took >= SLOW_MS) {
           void insert("client.error", {
@@ -329,12 +368,21 @@ export function installGlobalErrorLogging() {
         // Network failure (offline, DNS, CORS preflight). Skip beacon endpoint
         // to avoid recursion, and abort signals which are usually user-driven.
         const msg = err instanceof Error ? err.message : String(err);
-        if (!url.includes("/api/public/error-beacon") && !/abort/i.test(msg) && !shouldIgnoreNetworkUrl(url)) {
+        if (
+          !url.includes("/api/public/error-beacon") &&
+          !/abort/i.test(msg) &&
+          !shouldIgnoreNetworkUrl(url)
+        ) {
           void insert("client.error", {
             message: `[fetch:network] ${msg} → ${url.slice(0, 200)}`,
             stack: err instanceof Error ? err.stack : null,
             source: "fetch.network",
-            extra: { url: url.slice(0, 500), method, ms: Date.now() - started, offline: !navigator.onLine },
+            extra: {
+              url: url.slice(0, 500),
+              method,
+              ms: Date.now() - started,
+              offline: !navigator.onLine,
+            },
           });
         }
         throw err;
@@ -432,5 +480,3 @@ function installConnectivityWatch() {
     });
   });
 }
-
-

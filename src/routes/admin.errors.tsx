@@ -661,9 +661,12 @@ function AdminErrorsPage() {
     try {
       await logClientError(new Error(`[TEST] Testinė klaida ${new Date().toLocaleTimeString("lt-LT")}`), {
         source: "admin.errors.test",
-        extra: { path: "/admin/errors" },
+        // forceEscalate → apeina visus filtrus, dedupe ir rate limit, todėl
+        // testas realiai pasiekia super adminą (email + Discord), bet nesukelia
+        // lockdown'o.
+        extra: { path: "/admin/errors", forceEscalate: true },
       });
-      toast.success("Testinė klaida sukurta — turėtų atsirasti Live sraute");
+      toast.success("Testinė klaida išsiųsta — Live srautas + email/Discord adminui");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nepavyko");
     } finally {
@@ -1533,7 +1536,7 @@ function AdminErrorsPage() {
                       </div>
                       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
                         <p className="text-sm font-semibold text-emerald-200">Testinė klaida (pipeline)</p>
-                        <p className="text-xs text-emerald-200/70">Sukuria įrašą Supabase → Live sraute (be email/Discord, nes [TEST] filtruojamas).</p>
+                        <p className="text-xs text-emerald-200/70">Sukuria įrašą Supabase → Live sraute IR išsiunčia email + Discord super adminui (be lockdown).</p>
                         <Button variant="outline" size="sm" className="mt-2 border-emerald-500/40" onClick={triggerTestError} disabled={testing}>
                           <Zap className="mr-1 h-4 w-4" /> {testing ? "Siunčiu…" : "Testinė klaida"}
                         </Button>

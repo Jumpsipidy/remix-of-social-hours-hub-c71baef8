@@ -70,6 +70,7 @@ const payloadSchema = z.object({
   os: z.string().max(60).optional(),
   device: z.string().max(30).optional(),
   breadcrumbs: z.array(breadcrumbSchema).max(15).optional(),
+  test: z.boolean().optional(),
 });
 
 async function sendResendEmail(to: string, subject: string, html: string, opts: { urgent?: boolean } = {}) {
@@ -344,8 +345,12 @@ function alertEmailHtml(opts: {
 export const escalateAppError = createServerFn({ method: "POST" })
   .validator((v: unknown) => payloadSchema.parse(v))
   .handler(async ({ data }) => {
+    // Explicit admin tests bypass every filter, rate limit and dedupe so the
+    // super admin can prove the alert channels actually work end-to-end.
+    const isTest = data.test === true;
+
     // Filter noise server-side too
-    if (IGNORE_RX.some((rx) => rx.test(data.message))) {
+    if (!isTest && IGNORE_RX.some((rx) => rx.test(data.message))) {
       return { ok: true, ignored: true };
     }
 
@@ -356,7 +361,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
       const req = getRequest();
       if (req) fp = clientFingerprint(req);
     } catch { /* ignore — SSR / missing request */ }
-    if (!checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
+    if (!isTest && !checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -409,21 +414,25 @@ export const escalateAppError = createServerFn({ method: "POST" })
         (recent ?? []).map((r: { user_id: string | null }) => r.user_id).filter(Boolean) as string[],
       );
       burstUsers = distinct.size;
-      if (burstUsers >= BURST_MIN_USERS) {
+      if (!isTest && burstUsers >= BURST_MIN_USERS) {
         lockdownReason = "burst";
       }
     }
 
-    if (data.level === "critical" && authedUserId !== null && !lockdownReason) {
+    // Critical threshold — count EVERY critical logged in the window, including
+    // anonymous visitors. Previously only signed-in reports counted, so the UI
+    // could show 7 criticals while the lockdown counter saw far fewer.
+    if (data.level === "critical") {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
       const { count } = await supabaseAdmin
         .from("activity_log")
         .select("*", { count: "exact", head: true })
         .eq("action", "app.critical")
-        .not("user_id", "is", null)
         .gte("created_at", since);
       criticalCount = count ?? 0;
-      if (criticalCount >= CRITICAL_THRESHOLD) lockdownReason = "critical-threshold";
+      if (!lockdownReason && !isTest && criticalCount >= CRITICAL_THRESHOLD) {
+        lockdownReason = "critical-threshold";
+      }
     }
 
     if (lockdownReason) {
@@ -472,7 +481,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
     }
 
     // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
-    let shouldEmail = lockdownTriggered;
+    let shouldEmail = lockdownTriggered || isTest;
     if (!shouldEmail) {
       const dedupeSince = new Date(Date.now() - EMAIL_DEDUPE_MIN * 60_000).toISOString();
       const { count: emailedCount } = await supabaseAdmin

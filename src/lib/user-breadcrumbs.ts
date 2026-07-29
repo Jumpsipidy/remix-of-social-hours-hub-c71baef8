@@ -8,14 +8,30 @@
 
 export type Breadcrumb = {
   t: number; // epoch ms
-  kind: "click" | "nav" | "input" | "key" | "net" | "rage" | "custom" | "scroll" | "visibility" | "resize" | "fetch-fail";
+  kind:
+    | "click"
+    | "nav"
+    | "input"
+    | "key"
+    | "net"
+    | "rage"
+    | "custom"
+    | "scroll"
+    | "visibility"
+    | "resize"
+    | "fetch-fail";
   label: string;
   path?: string;
   extra?: Record<string, unknown>;
 };
 
-const MAX = 60;
+const MAX = 90;
 const buf: Breadcrumb[] = [];
+
+// Low-signal kinds: they explain context but must never push out real actions
+// (clicks / navigation / inputs). Consecutive duplicates collapse into one
+// entry with an ×N counter, and they're dropped first when the buffer is full.
+const NOISE_KINDS = new Set<Breadcrumb["kind"]>(["scroll", "visibility", "resize"]);
 
 const IGNORED_FETCH_URLS = [
   "https://www.google-analytics.com/g/collect",
@@ -29,8 +45,45 @@ function isIgnoredFetchUrl(url: string) {
 }
 
 export function pushBreadcrumb(b: Omit<Breadcrumb, "t">) {
+  const isNoise = NOISE_KINDS.has(b.kind);
+  const last = buf[buf.length - 1];
+
+  // Collapse a run of the same noisy kind into a single entry: „scroll 22% ×7".
+  if (isNoise && last && last.kind === b.kind) {
+    const n = ((last.extra?.repeat as number | undefined) ?? 1) + 1;
+    buf[buf.length - 1] = {
+      ...last,
+      t: Date.now(),
+      label: `${b.label} ×${n}`,
+      extra: { ...(b.extra ?? {}), repeat: n },
+    };
+    return;
+  }
+
   buf.push({ t: Date.now(), ...b });
-  if (buf.length > MAX) buf.splice(0, buf.length - MAX);
+
+  if (buf.length > MAX) {
+    // Evict noise before anything the user actually did.
+    let over = buf.length - MAX;
+    for (let i = 0; i < buf.length && over > 0;) {
+      if (NOISE_KINDS.has(buf[i].kind)) {
+        buf.splice(i, 1);
+        over -= 1;
+      } else {
+        i += 1;
+      }
+    }
+    if (buf.length > MAX) buf.splice(0, buf.length - MAX);
+  }
+}
+
+/**
+ * Breadcrumbs that describe what the user DID (clicks, taps, navigation,
+ * inputs, rage, failed requests) — scroll/visibility/resize excluded.
+ * This is what error reports should lead with.
+ */
+export function getActionBreadcrumbs(limit = 15): Breadcrumb[] {
+  return buf.filter((b) => !NOISE_KINDS.has(b.kind)).slice(-limit);
 }
 
 export function getBreadcrumbs(): Breadcrumb[] {
@@ -79,7 +132,9 @@ function targetLabel(el: Element | null): string {
 }
 
 let installed = false;
-export function installBreadcrumbs(onRage?: (info: { key: string; label: string; count: number }) => void) {
+export function installBreadcrumbs(
+  onRage?: (info: { key: string; label: string; count: number }) => void,
+) {
   if (installed || typeof window === "undefined") return;
   installed = true;
 
@@ -87,19 +142,36 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     "click",
     (e) => {
       const el = e.target as Element | null;
-      const key = targetKey(el);
-      const label = targetLabel(el);
+      // Prefer the nearest interactive ancestor so the crumb reads
+      // „click: Pateikti rezervaciją (button)" instead of „click: span".
+      const interactive = (el?.closest?.(
+        'button, a, [role="button"], [role="tab"], [role="menuitem"], input, select, textarea, label, summary',
+      ) ?? null) as HTMLElement | null;
+      const subject = interactive ?? el;
+      const key = targetKey(subject);
+      const label = targetLabel(subject);
+      const tag = subject?.tagName?.toLowerCase() ?? "?";
+      const href = (subject as HTMLAnchorElement | null)?.href;
       pushBreadcrumb({
         kind: "click",
-        label,
-        extra: { key, x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY },
+        label: `${label || tag} (${tag}${interactive ? "" : ", ne-mygtukas"})`,
+        extra: {
+          key,
+          tag,
+          href: href || undefined,
+          testid: subject?.getAttribute?.("data-testid") ?? undefined,
+          x: (e as MouseEvent).clientX,
+          y: (e as MouseEvent).clientY,
+        },
         path: location.pathname,
       });
 
       // Ignore rage-click detection inside dialogs / cookie banner / non-interactive text —
       // users often click through descriptive text and that's not a broken button.
       const insideDialog = !!el?.closest?.('[role="dialog"], [aria-modal="true"]');
-      const isInteractive = !!el?.closest?.('button, a, [role="button"], input, select, textarea, label');
+      const isInteractive = !!el?.closest?.(
+        'button, a, [role="button"], input, select, textarea, label',
+      );
       if (insideDialog || !isInteractive) {
         rage = null;
         return;
@@ -122,7 +194,6 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     },
     { capture: true, passive: true },
   );
-
 
   window.addEventListener(
     "focusin",
@@ -147,7 +218,11 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
         scrollTimer = null;
         const h = document.documentElement.scrollHeight - window.innerHeight;
         const pct = h > 0 ? Math.round((window.scrollY / h) * 100) : 0;
-        pushBreadcrumb({ kind: "scroll", label: `scroll ${pct}%`, extra: { y: window.scrollY, pct } });
+        pushBreadcrumb({
+          kind: "scroll",
+          label: `scroll ${pct}%`,
+          extra: { y: window.scrollY, pct },
+        });
       }, 400);
     },
     { passive: true },
@@ -178,7 +253,9 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
   // Orientation change (portrait <-> landscape)
   try {
     const onOrient = () => {
-      const o = (screen.orientation?.type) || (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+      const o =
+        screen.orientation?.type ||
+        (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
       pushBreadcrumb({ kind: "custom", label: `orientation: ${o}`, extra: { orientation: o } });
     };
     if (screen.orientation && typeof screen.orientation.addEventListener === "function") {
@@ -186,7 +263,9 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
     } else {
       window.addEventListener("orientationchange", onOrient);
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   // Network online/offline
   window.addEventListener("online", () => {
@@ -225,26 +304,45 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
 
   // Low battery — logs once when battery drops below 15% (helps explain sudden crashes / throttling)
   try {
-    const navBat = navigator as Navigator & { getBattery?: () => Promise<{ level: number; charging: boolean; addEventListener: (t: string, fn: () => void) => void }> };
+    const navBat = navigator as Navigator & {
+      getBattery?: () => Promise<{
+        level: number;
+        charging: boolean;
+        addEventListener: (t: string, fn: () => void) => void;
+      }>;
+    };
     if (typeof navBat.getBattery === "function") {
-      navBat.getBattery().then((bat) => {
-        let warned = false;
-        const check = () => {
-          if (!warned && !bat.charging && bat.level < 0.15) {
-            warned = true;
-            pushBreadcrumb({ kind: "custom", label: `battery low: ${Math.round(bat.level * 100)}%`, extra: { level: bat.level, charging: bat.charging } });
-          }
-        };
-        check();
-        bat.addEventListener("levelchange", check);
-        bat.addEventListener("chargingchange", check);
-      }).catch(() => { /* noop */ });
+      navBat
+        .getBattery()
+        .then((bat) => {
+          let warned = false;
+          const check = () => {
+            if (!warned && !bat.charging && bat.level < 0.15) {
+              warned = true;
+              pushBreadcrumb({
+                kind: "custom",
+                label: `battery low: ${Math.round(bat.level * 100)}%`,
+                extra: { level: bat.level, charging: bat.charging },
+              });
+            }
+          };
+          check();
+          bat.addEventListener("levelchange", check);
+          bat.addEventListener("chargingchange", check);
+        })
+        .catch(() => {
+          /* noop */
+        });
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   // Memory pressure (Chrome only) — periodically sample; log if JS heap usage > 85%
   try {
-    const perf = performance as Performance & { memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number } };
+    const perf = performance as Performance & {
+      memory?: { usedJSHeapSize: number; jsHeapSizeLimit: number };
+    };
     if (perf.memory) {
       let warned = false;
       setInterval(() => {
@@ -255,12 +353,17 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
           pushBreadcrumb({
             kind: "custom",
             label: `memory pressure: ${Math.round(ratio * 100)}%`,
-            extra: { used_mb: Math.round(perf.memory.usedJSHeapSize / 1_048_576), limit_mb: Math.round(perf.memory.jsHeapSizeLimit / 1_048_576) },
+            extra: {
+              used_mb: Math.round(perf.memory.usedJSHeapSize / 1_048_576),
+              limit_mb: Math.round(perf.memory.jsHeapSizeLimit / 1_048_576),
+            },
           });
         }
       }, 30_000);
     }
-  } catch { /* noop */ }
+  } catch {
+    /* noop */
+  }
 
   // Network failure interception (fetch)
   const origFetch = window.fetch.bind(window);
@@ -293,7 +396,11 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
   let lastPath = location.pathname;
   const check = () => {
     if (location.pathname !== lastPath) {
-      pushBreadcrumb({ kind: "nav", label: `${lastPath} → ${location.pathname}`, path: location.pathname });
+      pushBreadcrumb({
+        kind: "nav",
+        label: `${lastPath} → ${location.pathname}`,
+        path: location.pathname,
+      });
       lastPath = location.pathname;
     }
   };
@@ -320,7 +427,9 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
   let netActivityAt = 0;
   const origFetch2 = window.fetch;
   window.fetch = async (...args: Parameters<typeof fetch>) => {
-    const method = (args[1]?.method ?? (args[0] instanceof Request ? args[0].method : "GET")).toUpperCase();
+    const method = (
+      args[1]?.method ?? (args[0] instanceof Request ? args[0].method : "GET")
+    ).toUpperCase();
     if (method !== "GET" && method !== "HEAD") netActivityAt = Date.now();
     return origFetch2(...args);
   };
@@ -351,12 +460,13 @@ export function installBreadcrumbs(onRage?: (info: { key: string; label: string;
         const pathChanged = location.pathname !== startPath || location.hash !== startHash;
         const netSince = netActivityAt >= startedAt;
         // Look at recent breadcrumbs for toast/dialog/error signals
-        const recentNoise = buf.slice(-8).some(
-          (b) =>
-            b.t >= startedAt &&
-            (b.kind === "fetch-fail" ||
-              /toast|dialog|modal|error|success/i.test(b.label ?? "")),
-        );
+        const recentNoise = buf
+          .slice(-8)
+          .some(
+            (b) =>
+              b.t >= startedAt &&
+              (b.kind === "fetch-fail" || /toast|dialog|modal|error|success/i.test(b.label ?? "")),
+          );
         if (!pathChanged && !netSince && !recentNoise) {
           pushBreadcrumb({
             kind: "custom",

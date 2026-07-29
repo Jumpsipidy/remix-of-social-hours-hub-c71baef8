@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { upsertAnalysis } from "@/lib/ai-analysis-store.server";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -221,21 +222,7 @@ ${meta.commit_sha ? `Build: ${String(meta.commit_sha).slice(0, 12)}` : ""}`;
       updated_at: new Date().toISOString(),
     };
 
-    let { data: saved, error } = await supabaseAdmin
-      .from("ai_error_analyses")
-      .upsert(row as never, { onConflict: "fingerprint" })
-      .select()
-      .single();
-    if (error && error.message.includes("error_message")) {
-      const { error_message: _ignored, ...compatibleRow } = row;
-      const retry = await supabaseAdmin
-        .from("ai_error_analyses")
-        .upsert(compatibleRow as never, { onConflict: "fingerprint" })
-        .select()
-        .single();
-      saved = retry.data;
-      error = retry.error;
-    }
+    const { saved, error } = await upsertAnalysis(supabaseAdmin, row);
     if (error) throw new Error(error.message);
 
     // Audit + count against rate limit
