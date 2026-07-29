@@ -229,7 +229,7 @@ export async function logClientError(
   const stack = err instanceof Error ? err.stack : null;
   // eslint-disable-next-line no-console
   console.error("%c[Client error]", "color:#f43f5e;font-weight:bold", opts.source ?? "manual", err);
-  if (shouldIgnore(message)) return;
+  if (opts.extra?.forceEscalate !== true && shouldIgnore(message)) return;
   await insert("client.error", { message, stack, source: opts.source, extra: opts.extra });
 }
 
