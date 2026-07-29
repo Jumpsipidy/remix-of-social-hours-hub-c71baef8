@@ -8,22 +8,14 @@
 
 type AnyRow = Record<string, unknown>;
 
-type UpsertResult = { saved: AnyRow | null; error: { message: string } | null };
-
-export async function upsertAnalysis(
-  client: {
-    from: (t: string) => {
-      upsert: (
-        row: never,
-        opts: { onConflict: string },
-      ) => { select: () => { single: () => Promise<{ data: AnyRow | null; error: { message: string } | null }> } };
-    };
-  },
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function upsertAnalysis<T = any>(
+  client: any,
   row: AnyRow,
-): Promise<UpsertResult> {
+): Promise<{ saved: T | null; error: { message: string } | null }> {
   const payload: AnyRow = { ...row };
   let error: { message: string } | null = null;
-  let saved: AnyRow | null = null;
+  let saved: T | null = null;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const res = await client
@@ -31,8 +23,8 @@ export async function upsertAnalysis(
       .upsert(payload as never, { onConflict: "fingerprint" })
       .select()
       .single();
-    saved = res.data;
-    error = res.error;
+    saved = (res.data ?? null) as T | null;
+    error = (res.error ?? null) as { message: string } | null;
     if (!error) return { saved, error: null };
 
     const missing = /Could not find the '([^']+)' column/.exec(error.message)?.[1];
