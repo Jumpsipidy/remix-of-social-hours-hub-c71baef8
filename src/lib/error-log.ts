@@ -151,8 +151,9 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
   const dev = deviceMeta();
   const key = `${action}:${payload.message.slice(0, 120)}`;
   const now = Date.now();
+  const forcedReport = payload.extra?.forceEscalate === true;
   const last = seen.get(key);
-  if (last && now - last < DEDUPE_MS) return;
+  if (!forcedReport && last && now - last < DEDUPE_MS) return;
   seen.set(key, now);
 
   let uid: string | null = null;
