@@ -85,7 +85,19 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       recurrence_weekday: recurrence === "weekly" || recurrence === "biweekly" ? weekday : null,
       recurrence_until: recurrenceUntil || null,
     };
-    const { error } = await supabase.from("tasks").insert(baseTask as any);
+    // Older databases may not have the address/coords columns yet. PostgREST
+    // answers with PGRST204 „Could not find the 'x' column"; drop that column
+    // and retry so publishing a task never hard-fails on a schema gap.
+    let payload: Record<string, unknown> = { ...baseTask };
+    let error: { message: string; code?: string } | null = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const res = await supabase.from("tasks").insert(payload as any);
+      error = res.error as { message: string; code?: string } | null;
+      if (!error) break;
+      const missing = /Could not find the '([^']+)' column/.exec(error.message)?.[1];
+      if (!missing || !(missing in payload)) break;
+      delete payload[missing];
+    }
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(recurrence === "none" ? "Užduotis paskelbta" : "Pasikartojanti užduotis paskelbta");

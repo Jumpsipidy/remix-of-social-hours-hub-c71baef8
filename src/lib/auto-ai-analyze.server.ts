@@ -1,3 +1,4 @@
+import { upsertAnalysis } from "@/lib/ai-analysis-store.server";
 // Server-only helper. Called from escalateAppError to run instant AI analysis
 // on new error groups and post a follow-up Discord embed with the diagnosis.
 //
@@ -143,21 +144,7 @@ ${(input.stack ?? "(no stack)").slice(0, 2500)}`;
         raw_response: { ...parsed, prompt_for_agent: parsed.prompt_for_agent ?? null } as unknown as never,
         updated_at: new Date().toISOString(),
       };
-      let { data: saved, error: saveError } = await supabaseAdmin
-        .from("ai_error_analyses")
-        .upsert(row as never, { onConflict: "fingerprint" })
-        .select()
-        .single();
-      if (saveError && saveError.message.includes("error_message")) {
-        const { error_message: _ignored, ...compatibleRow } = row;
-        const retry = await supabaseAdmin
-          .from("ai_error_analyses")
-          .upsert(compatibleRow as never, { onConflict: "fingerprint" })
-          .select()
-          .single();
-        saved = retry.data;
-        saveError = retry.error;
-      }
+      const { saved, error: saveError } = await upsertAnalysis(supabaseAdmin, row);
       if (saveError) {
         console.error("[auto-ai] save failed", saveError.message);
         return;
