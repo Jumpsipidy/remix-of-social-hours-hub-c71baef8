@@ -118,7 +118,9 @@ async function maybeEscalate(
         os: dev.os,
         device: dev.device,
         breadcrumbs: crumbs,
+        test: ctx?.test === true,
       },
+
     });
   } catch {
     /* never crash reporting */
