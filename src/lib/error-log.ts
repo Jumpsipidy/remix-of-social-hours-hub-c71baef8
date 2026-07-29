@@ -189,9 +189,17 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
     try { enqueueOutbox(row); } catch { /* ignore */ }
   }
   // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
-  const level: "critical" | "warning" = isCriticalMessage(payload.message) ? "critical" : "warning";
-  void maybeEscalate(level, payload.message, payload.stack ?? null, { source: payload.source, extra: payload.extra });
+  // `forceEscalate` (admin test button) always escalates and bypasses every filter.
+  const forced = payload.extra?.forceEscalate === true;
+  const level: "critical" | "warning" =
+    forced || isCriticalMessage(payload.message) ? "critical" : "warning";
+  void maybeEscalate(level, payload.message, payload.stack ?? null, {
+    source: payload.source,
+    extra: payload.extra,
+    test: forced,
+  });
 }
+
 
 
 /** Public helper: wrap a Supabase call, log its `error` field if any. */
