@@ -14,8 +14,13 @@ export type Breadcrumb = {
   extra?: Record<string, unknown>;
 };
 
-const MAX = 60;
+const MAX = 90;
 const buf: Breadcrumb[] = [];
+
+// Low-signal kinds: they explain context but must never push out real actions
+// (clicks / navigation / inputs). Consecutive duplicates collapse into one
+// entry with an ×N counter, and they're dropped first when the buffer is full.
+const NOISE_KINDS = new Set<Breadcrumb["kind"]>(["scroll", "visibility", "resize"]);
 
 const IGNORED_FETCH_URLS = [
   "https://www.google-analytics.com/g/collect",
@@ -29,8 +34,45 @@ function isIgnoredFetchUrl(url: string) {
 }
 
 export function pushBreadcrumb(b: Omit<Breadcrumb, "t">) {
+  const isNoise = NOISE_KINDS.has(b.kind);
+  const last = buf[buf.length - 1];
+
+  // Collapse a run of the same noisy kind into a single entry: „scroll 22% ×7".
+  if (isNoise && last && last.kind === b.kind) {
+    const n = ((last.extra?.repeat as number | undefined) ?? 1) + 1;
+    buf[buf.length - 1] = {
+      ...last,
+      t: Date.now(),
+      label: `${b.label} ×${n}`,
+      extra: { ...(b.extra ?? {}), repeat: n },
+    };
+    return;
+  }
+
   buf.push({ t: Date.now(), ...b });
-  if (buf.length > MAX) buf.splice(0, buf.length - MAX);
+
+  if (buf.length > MAX) {
+    // Evict noise before anything the user actually did.
+    let over = buf.length - MAX;
+    for (let i = 0; i < buf.length && over > 0; ) {
+      if (NOISE_KINDS.has(buf[i].kind)) {
+        buf.splice(i, 1);
+        over -= 1;
+      } else {
+        i += 1;
+      }
+    }
+    if (buf.length > MAX) buf.splice(0, buf.length - MAX);
+  }
+}
+
+/**
+ * Breadcrumbs that describe what the user DID (clicks, taps, navigation,
+ * inputs, rage, failed requests) — scroll/visibility/resize excluded.
+ * This is what error reports should lead with.
+ */
+export function getActionBreadcrumbs(limit = 15): Breadcrumb[] {
+  return buf.filter((b) => !NOISE_KINDS.has(b.kind)).slice(-limit);
 }
 
 export function getBreadcrumbs(): Breadcrumb[] {

@@ -414,7 +414,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
         (recent ?? []).map((r: { user_id: string | null }) => r.user_id).filter(Boolean) as string[],
       );
       burstUsers = distinct.size;
-      if (burstUsers >= BURST_MIN_USERS) {
+      if (!isTest && burstUsers >= BURST_MIN_USERS) {
         lockdownReason = "burst";
       }
     }
