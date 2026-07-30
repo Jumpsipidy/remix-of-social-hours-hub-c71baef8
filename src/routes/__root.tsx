@@ -30,12 +30,15 @@ import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 function NotFoundComponent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    // Stale hashed assets from an older deploy are not broken links — never log.
+    if (/^\/assets\//.test(path) || /\.(js|css|map|png|jpg|svg|ico|webp|woff2?)$/i.test(path)) return;
     // Log 404 to activity_log so admins can see broken links / missing routes.
     void import("@/lib/activity-log").then(({ insertActivityLogRow }) => {
       insertActivityLogRow({
         action: "route.404",
         meta: {
-          path: window.location.pathname + window.location.search,
+          path: path + window.location.search,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
         },
