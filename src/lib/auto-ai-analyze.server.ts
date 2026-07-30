@@ -89,25 +89,29 @@ ${(input.stack ?? "(no stack)").slice(0, 2500)}`;
     try {
       const ctrl = new AbortController();
       const timeoutId = setTimeout(() => ctrl.abort(), 8_000);
-      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        signal: ctrl.signal,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${openaiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          temperature: 0.2,
-          max_tokens: 900,
-          messages: [
-            { role: "system", content: AUTO_SYSTEM_PROMPT },
-            { role: "user", content: userPrompt },
-          ],
-          response_format: { type: "json_object" },
-        }),
-      });
-      clearTimeout(timeoutId);
+      let resp: Response;
+      try {
+        resp = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openaiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            temperature: 0.2,
+            max_tokens: 900,
+            messages: [
+              { role: "system", content: AUTO_SYSTEM_PROMPT },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (!resp.ok) {
         console.error("[auto-ai] openai", resp.status, await resp.text().catch(() => ""));
         return analysis;
