@@ -505,7 +505,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
 
     // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
     let shouldEmail = lockdownTriggered || isTest;
-    if (!shouldEmail) {
+    if (!shouldEmail && rateLimited) {
+      // Flood in progress: keep counting + locking down, but stop the spam.
+      shouldEmail = false;
+    } else if (!shouldEmail) {
       const dedupeSince = new Date(Date.now() - EMAIL_DEDUPE_MIN * 60_000).toISOString();
       const { count: emailedCount } = await supabaseAdmin
         .from("activity_log")
