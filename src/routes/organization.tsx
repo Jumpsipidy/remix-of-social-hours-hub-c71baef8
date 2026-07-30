@@ -329,13 +329,18 @@ function OrgDashboard() {
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <HeroMetric label="Darbo eilė" value={liveWorkload} sub={liveWorkload ? `${pending.length} laukia · ${approved.length} vyksta` : "nėra aktyvių darbų"} />
               <HeroMetric label="Profilio kokybė" value={`${profilePct}%`} sub={profilePct >= 85 ? "paruoštas mokiniams" : "papildyk logo, banerį ir aprašymą"} />
-              <HeroMetric label="Kitas darbas" value={nextApproved ? nextApproved.reservation_date : "—"} sub={nextApproved ? `${nextApproved.start_time.slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"} />
+              <HeroMetric
+                label="Kitas darbas"
+                value={nextApproved ? String(nextApproved.reservation_date).slice(0, 10) : "—"}
+                sub={nextApproved ? `${String(nextApproved.start_time).slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"}
+              />
             </div>
           </div>
           <div className="relative border-t border-border/70 bg-background/45 px-5 py-3 backdrop-blur sm:px-7">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai</span>
+              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai atliko darbą</span>
               <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary" /> {orgMedia.address ?? "vieta dar nepridėta"}</span>
+
               <span className="h-1 w-1 rounded-full bg-border" />
               <span className="min-w-[140px] flex-1">Profilis</span>
               <span className="font-semibold text-foreground">{profileStrength}/{profileChecks.length}</span>
