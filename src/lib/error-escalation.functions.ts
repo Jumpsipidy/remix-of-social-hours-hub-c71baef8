@@ -429,6 +429,11 @@ export const escalateAppError = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Compute one stable group ID before logging so every row, alert and AI
+    // analysis points to the same fingerprint.
+    const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
+    const fpGroup = computeFp(data.message, data.stack ?? null);
+
     // Only reports from an authenticated user (identified via provided userEmail
     // matched against a real profile) may count toward the auto-lockdown
     // threshold. Anonymous reports are still logged, but they can't take the
@@ -452,8 +457,16 @@ export const escalateAppError = createServerFn({ method: "POST" })
         path: data.path ?? null,
         stack: data.stack?.slice(0, 500) ?? null,
         userAgent: data.userAgent ?? null,
+        source: data.source ?? null,
+        browser: data.browser ?? null,
+        os: data.os ?? null,
+        device: data.device ?? null,
+        breadcrumbs: data.breadcrumbs ?? [],
         anon: authedUserId === null,
         fp,
+        fingerprint: fpGroup.id,
+        fingerprint_norm: fpGroup.norm,
+        fingerprint_frame: fpGroup.frame,
       },
     });
 
@@ -560,10 +573,6 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .slice(0, 8)
         .map(([msg, count]) => ({ msg, count }));
     }
-
-    // Always compute fingerprint so email/discord/AI/dedupe share the exact same group.
-    const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
-    const fpGroup = computeFp(data.message, data.stack ?? null);
 
     // Dedupe alerts by fingerprint within window (lockdown alerts bypass dedupe).
     // This stops one real bug from sending email+Discord again and again while
