@@ -7,6 +7,18 @@ import { useAuth } from "@/hooks/use-auth";
 
 const CRIT_ACTIONS = new Set(["app.critical", "app.email_sent"]);
 
+function isTelemetryMessage(message: unknown, source?: unknown): boolean {
+  const msg = String(message ?? "");
+  const src = String(source ?? "");
+  return (
+    msg.startsWith("telemetry:") ||
+    /\[UI užšalo|pagrindinė gija užblokuota|\[lėtas API|\[ryšys dingo/i.test(msg) ||
+    src === "ui.freeze" ||
+    src === "fetch.slow" ||
+    src === "net.offline"
+  );
+}
+
 function beep() {
   try {
     const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
@@ -55,6 +67,7 @@ export function AdminAlertMonitor() {
         (payload) => {
           const row = payload.new as { action?: string; meta?: any };
           if (!row.action || !CRIT_ACTIONS.has(row.action)) return;
+          if (isTelemetryMessage(row.meta?.message, row.meta?.source)) return;
           const isLockdown = !!row.meta?.lockdown;
           const message = String(row.meta?.message ?? "Kritinė klaida").slice(0, 140);
           const title = isLockdown

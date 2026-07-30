@@ -50,6 +50,14 @@ const IGNORE_SUBSTRINGS = [
   // whose useEffect deps array size changed between edits. Not a production bug.
   "changed size between renders",
   "The final argument passed to",
+  // Telemetry only — useful in admin radar, never an actual user-facing error.
+  "[UI užšalo",
+  "pagrindinė gija užblokuota",
+  "[lėtas API",
+  "[ryšys dingo",
+  "telemetry:ui-freeze",
+  "telemetry:slow-api",
+  "telemetry:offline-drop",
 ];
 
 const IGNORED_NETWORK_URLS = [
@@ -141,7 +149,8 @@ type ErrPayload = {
 };
 
 function shouldIgnore(msg: string) {
-  return IGNORE_SUBSTRINGS.some((s) => msg.includes(s));
+  const text = String(msg ?? "").toLowerCase();
+  return IGNORE_SUBSTRINGS.some((s) => text.includes(s.toLowerCase()));
 }
 
 function shouldIgnoreNetworkUrl(url: string) {

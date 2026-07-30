@@ -23,6 +23,20 @@ export type OutboxItem = {
   };
 };
 
+function isTelemetryRow(row: OutboxItem["row"]): boolean {
+  const meta = row.meta ?? {};
+  const message = String(meta.message ?? meta.fingerprint_norm ?? "");
+  const source = String(meta.source ?? "");
+  return (
+    row.action === "client.telemetry" ||
+    message.startsWith("telemetry:") ||
+    /\[UI užšalo|pagrindinė gija užblokuota|\[lėtas API|\[ryšys dingo/i.test(message) ||
+    source === "ui.freeze" ||
+    source === "fetch.slow" ||
+    source === "net.offline"
+  );
+}
+
 function read(): OutboxItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -43,6 +57,7 @@ function write(items: OutboxItem[]) {
 }
 
 export function enqueue(row: OutboxItem["row"]) {
+  if (isTelemetryRow(row)) return;
   const items = read();
   items.push({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -59,6 +74,10 @@ export async function flush(): Promise<{ sent: number; remaining: number }> {
   const remaining: OutboxItem[] = [];
   let sent = 0;
   for (const item of items) {
+    if (isTelemetryRow(item.row)) {
+      sent++;
+      continue;
+    }
     try {
       const { error } = await supabase.from("activity_log").insert({
         user_id: item.row.user_id,
@@ -81,9 +100,13 @@ export async function flush(): Promise<{ sent: number; remaining: number }> {
 export function beaconFlush() {
   if (typeof navigator === "undefined" || !navigator.sendBeacon) return;
   const items = read();
-  if (items.length === 0) return;
+  const reportable = items.filter((item) => !isTelemetryRow(item.row));
+  if (reportable.length === 0) {
+    write([]);
+    return;
+  }
   try {
-    const blob = new Blob([JSON.stringify({ items })], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ items: reportable })], { type: "application/json" });
     const ok = navigator.sendBeacon("/api/public/error-beacon", blob);
     if (ok) write([]); // optimistic clear — server will dedupe by fingerprint
   } catch {

@@ -174,6 +174,19 @@ function fpOfRow(r: { meta: any }): string {
   return fpOf(r.meta?.message ?? "", r.meta?.stack ?? null).id;
 }
 
+function isTelemetryRow(r: { action?: string; meta: any }): boolean {
+  const msg = String(r.meta?.message ?? r.meta?.fingerprint_norm ?? "");
+  const source = String(r.meta?.source ?? "");
+  return (
+    r.action === "client.telemetry" ||
+    msg.startsWith("telemetry:") ||
+    /\[UI užšalo|pagrindinė gija užblokuota|\[lėtas API|\[ryšys dingo/i.test(msg) ||
+    source === "ui.freeze" ||
+    source === "fetch.slow" ||
+    source === "net.offline"
+  );
+}
+
 type ResolvedDbRow = {
   fingerprint: string;
   resolved_at: string;
@@ -289,7 +302,7 @@ function AdminErrorsPage() {
         .maybeSingle(),
     ]);
     if (error) toast.error("Nepavyko įkelti: " + error.message);
-    setRows((data as ErrRow[]) ?? []);
+    setRows(((data as ErrRow[]) ?? []).filter((row) => !isTelemetryRow(row)));
     setNewSinceLoad(0);
     await refreshResolved();
     // lockdown_code is admin-only via SECURITY DEFINER server fn; not exposed here.
@@ -314,6 +327,7 @@ function AdminErrorsPage() {
             row.action === "app.warning" ||
             row.action === "app.email_sent"
           ) {
+            if (isTelemetryRow(row)) return;
             setRows((r) => [row, ...r].slice(0, 500));
             setNewSinceLoad((n) => n + 1);
             if (row.action === "app.critical" || row.action === "client.error") {
@@ -375,7 +389,7 @@ function AdminErrorsPage() {
   };
 
   const activeRows = useMemo(
-    () => rows.filter((r) => !isRowResolved(r)),
+    () => rows.filter((r) => !isRowResolved(r) && !isTelemetryRow(r)),
     [rows, resolvedMap],
   );
 
@@ -393,7 +407,7 @@ function AdminErrorsPage() {
       if (analysisInflight.current.has(fp)) return false;
       const sample = activeRows.find((r) => fpOfRow(r) === fp);
       const msg = String(sample?.meta?.message ?? sample?.meta?.fingerprint_norm ?? "");
-      if (sample?.action === "client.telemetry" || msg.startsWith("telemetry:") || /\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg)) return false;
+      if (sample && isTelemetryRow(sample)) return false;
       if (!(fp in analyses)) return true;
       // null = failed — retry every 5 min
       if (analyses[fp] === null) {
@@ -825,8 +839,7 @@ function AdminErrorsPage() {
       // building the clipboard text — otherwise old rows copy as
       // "analizuojama fone…" even though a cached row exists in DB.
       const aiEligible = list.filter((r) => {
-        const msg = String(r.meta?.message ?? r.meta?.fingerprint_norm ?? "");
-        return r.action !== "client.telemetry" && !msg.startsWith("telemetry:") && !/\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg);
+        return !isTelemetryRow(r);
       });
       const fps = Array.from(new Set(aiEligible.map(fpOfRow))).filter(Boolean);
       const missing = fps.filter((fp) => !analyses[fp]); // undefined OR null
