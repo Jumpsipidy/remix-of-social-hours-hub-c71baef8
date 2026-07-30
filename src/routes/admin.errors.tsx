@@ -70,7 +70,16 @@ const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; V
 
 
 export const Route = createFileRoute("/admin/errors")({
-  head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
+  head: () => ({
+    meta: [
+      { title: "Klaidų centras — Socialinės Valandos" },
+      { name: "description", content: "Administratoriaus klaidų, AI analizės ir lockdown stebėjimo centras." },
+      { property: "og:title", content: "Klaidų centras — Socialinės Valandos" },
+      { property: "og:description", content: "Klaidų, AI analizės ir incidentų valdymo dashboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminErrorsPage,
 });
 
