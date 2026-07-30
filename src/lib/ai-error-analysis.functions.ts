@@ -297,9 +297,12 @@ export const listPendingFingerprints = createServerFn({ method: "GET" })
     // Suskaičiuok pasitaikymus per fingerprint
     const counts = new Map<string, { count: number; last: string; message: string }>();
     for (const r of rows ?? []) {
-      const meta = (r.meta as { fingerprint?: string; message?: string }) ?? {};
+      const meta = (r.meta as { fingerprint?: string; fingerprint_norm?: string; message?: string }) ?? {};
       const fp = meta.fingerprint;
       if (!fp) continue;
+      const msg = String(meta.message ?? "");
+      const norm = String(meta.fingerprint_norm ?? "");
+      if (norm.startsWith("telemetry:") || /\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg)) continue;
       const cur = counts.get(fp);
       if (cur) cur.count += 1;
       else counts.set(fp, { count: 1, last: r.created_at, message: String(meta.message ?? "").slice(0, 200) });

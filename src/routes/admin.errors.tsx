@@ -391,6 +391,9 @@ function AdminErrorsPage() {
     const now = Date.now();
     const unknown = fps.filter((fp) => {
       if (analysisInflight.current.has(fp)) return false;
+      const sample = activeRows.find((r) => fpOfRow(r) === fp);
+      const msg = String(sample?.meta?.message ?? sample?.meta?.fingerprint_norm ?? "");
+      if (sample?.action === "client.telemetry" || msg.startsWith("telemetry:") || /\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg)) return false;
       if (!(fp in analyses)) return true;
       // null = failed — retry every 5 min
       if (analyses[fp] === null) {
@@ -430,7 +433,8 @@ function AdminErrorsPage() {
       const queue = [...unknown];
       const workers = Array.from({ length: 6 }, async () => {
         while (queue.length && !cancelled) {
-          const fp = queue.shift()!;
+          const fp = queue.shift();
+          if (!fp) break;
           await runOne(fp);
         }
       });
