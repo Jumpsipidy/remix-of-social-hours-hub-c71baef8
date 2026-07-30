@@ -463,10 +463,12 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .eq("id", true)
         .maybeSingle();
       if (!ss?.lockdown_enabled) {
-        const code = lockdownReason === "burst" ? "E-5002" : "E-5001";
+        const code = lockdownReason === "burst" ? "E-5002" : lockdownReason === "flood" ? "E-5003" : "E-5001";
         const msg = lockdownReason === "burst"
           ? `[auto] Aptikta ${burstUsers} vartotojų su klaidomis per ${BURST_WINDOW_S}s (burst). Prieiga ribojama.`
-          : `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`;
+          : lockdownReason === "flood"
+            ? `[auto] Aptikta ${criticalCount} klaidų per ${FLOOD_WINDOW_MIN} min (flood). Prieiga ribojama.`
+            : `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`;
         await supabaseAdmin.from("site_settings").upsert({
           id: true,
           lockdown_enabled: true,
