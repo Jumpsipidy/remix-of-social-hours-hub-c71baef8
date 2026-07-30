@@ -356,7 +356,7 @@ export function installGlobalErrorLogging() {
               body: await peekBody(res),
             },
           });
-        } else if (!skip && isAppApi(url) && took >= SLOW_MS) {
+        } else if (!skip && isAppApi(url) && took >= SLOW_MS && !isAdminToolingCall(url)) {
           void insert("client.error", {
             message: `[lėtas API ${Math.round(took / 100) / 10}s] ${method} ${shortUrl(url)}`,
             source: "fetch.slow",
