@@ -14,6 +14,20 @@ type Item = {
   };
 };
 
+function isTelemetryRow(row: NonNullable<Item["row"]>): boolean {
+  const meta = row.meta ?? {};
+  const message = String(meta.message ?? meta.fingerprint_norm ?? "");
+  const source = String(meta.source ?? "");
+  return (
+    row.action === "client.telemetry" ||
+    message.startsWith("telemetry:") ||
+    /\[UI užšalo|pagrindinė gija užblokuota|\[lėtas API|\[ryšys dingo/i.test(message) ||
+    source === "ui.freeze" ||
+    source === "fetch.slow" ||
+    source === "net.offline"
+  );
+}
+
 export const Route = createFileRoute("/api/public/error-beacon")({
   server: {
     handlers: {
@@ -28,6 +42,7 @@ export const Route = createFileRoute("/api/public/error-beacon")({
           const rows = items
             .map((it) => it.row)
             .filter((r): r is NonNullable<typeof r> => !!r && typeof r.action === "string")
+            .filter((r) => !isTelemetryRow(r))
             .map((r) => ({
               user_id: r.user_id ?? null,
               action: String(r.action).slice(0, 100),

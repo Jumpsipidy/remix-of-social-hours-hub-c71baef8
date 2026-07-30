@@ -75,7 +75,13 @@ const IGNORE_RX = [
   /\[lėtas API/i,
   /pagrindinė gija užblokuota/i,
   /\[ryšys dingo/i,
+  /^telemetry:/i,
 ];
+
+function isTelemetryNoise(message: string | undefined | null): boolean {
+  const msg = String(message ?? "");
+  return IGNORE_RX.some((rx) => rx.test(msg));
+}
 
 const breadcrumbSchema = z.object({
   t: z.number().optional(),
@@ -414,8 +420,9 @@ export const escalateAppError = createServerFn({ method: "POST" })
     // super admin can prove the alert channels actually work end-to-end.
     const isTest = data.test === true;
 
-    // Filter noise server-side too
-    if (!isTest && IGNORE_RX.some((rx) => rx.test(data.message))) {
+    // Filter noise server-side too. UI freezes / slow API are telemetry only:
+    // log them for debugging context, but never email, Discord, AI-analyze, or lockdown.
+    if (!isTest && isTelemetryNoise(data.message)) {
       return { ok: true, ignored: true };
     }
 
