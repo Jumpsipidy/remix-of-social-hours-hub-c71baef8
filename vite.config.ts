@@ -1,10 +1,30 @@
 import { execSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+
+// Nitro emits to `.output/`, but Lovable's post-build dist check (and some
+// static hosts) expect a `dist/` folder. Mirror the built assets there.
+function mirrorOutputToDist(): Plugin {
+  return {
+    name: "mirror-output-to-dist",
+    apply: "build",
+    closeBundle() {
+      try {
+        if (!existsSync(".output/public")) return;
+        mkdirSync("dist", { recursive: true });
+        cpSync(".output/public", "dist", { recursive: true });
+      } catch {
+        // never fail the build because of the mirror
+      }
+    },
+  };
+}
+
 
 const SUPABASE_PROJECT_ID = "bacqlmhfokfnmoexijkj";
 const SUPABASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co`;
@@ -44,5 +64,6 @@ export default defineConfig({
     tsconfigPaths(),
     nitro(),
     viteReact(),
+    mirrorOutputToDist(),
   ],
 });
