@@ -408,7 +408,7 @@ const SLOW_MS = 15_000;
  * be slow. Logging those as „lėtas API" only spams the very page you're using
  * to read errors, so they never count as bugs.
  */
-function isAdminToolingCall(url: string): boolean {
+function isAdminToolingCall(_url: string): boolean {
   try {
     const path = window.location.pathname || "";
     return path.startsWith("/admin");
