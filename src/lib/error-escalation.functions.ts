@@ -438,6 +438,21 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
+    // FLOOD DETECTION — dozens of non-critical client errors in a few minutes is
+    // itself an outage (this is what "50 klaidų, jokio lockdown" looked like).
+    if (!lockdownReason && !isTest) {
+      const floodSince = new Date(Date.now() - FLOOD_WINDOW_MIN * 60_000).toISOString();
+      const { count: floodCount } = await supabaseAdmin
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+        .gte("created_at", floodSince);
+      if ((floodCount ?? 0) >= FLOOD_THRESHOLD) {
+        lockdownReason = "flood";
+        criticalCount = Math.max(criticalCount, floodCount ?? 0);
+      }
+    }
+
     if (lockdownReason) {
       const { data: ss } = await supabaseAdmin
         .from("site_settings")
