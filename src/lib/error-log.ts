@@ -402,6 +402,20 @@ export function installGlobalErrorLogging() {
 // ---------------------------------------------------------------------------
 
 const SLOW_MS = 15_000;
+
+/**
+ * Admin tooling (AI error analysis, deep health scans, exports) is expected to
+ * be slow. Logging those as „lėtas API" only spams the very page you're using
+ * to read errors, so they never count as bugs.
+ */
+function isAdminToolingCall(url: string): boolean {
+  try {
+    const path = window.location.pathname || "";
+    return path.startsWith("/admin");
+  } catch {
+    return false;
+  }
+}
 const CAPTURED_4XX = new Set([400, 403, 409, 422, 429]);
 
 /** Only our own backend calls — third-party 4xx is not our bug. */
