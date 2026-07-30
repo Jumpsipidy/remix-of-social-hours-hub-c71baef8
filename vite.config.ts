@@ -64,5 +64,6 @@ export default defineConfig({
     tsconfigPaths(),
     nitro(),
     viteReact(),
+    mirrorOutputToDist(),
   ],
 });
