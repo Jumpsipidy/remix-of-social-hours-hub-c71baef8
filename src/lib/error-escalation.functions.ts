@@ -20,6 +20,9 @@ const EMAIL_DEDUPE_MIN = 15;
 // deploys where thousands of users would otherwise get errors before we react.
 const BURST_WINDOW_S = 90;
 const BURST_MIN_USERS = 3;
+// Flood: many client errors of any severity in a short window = outage.
+const FLOOD_WINDOW_MIN = 5;
+const FLOOD_THRESHOLD = 25;
 
 
 // Per-IP rate limit (in-memory, per-worker). Prevents an anonymous flood from
@@ -108,7 +111,7 @@ async function sendResendEmail(to: string, subject: string, html: string, opts: 
 async function sendDiscordAlert(opts: {
   level: "critical" | "warning";
   lockdown: boolean;
-  lockdownReason: "critical-threshold" | "burst" | null;
+  lockdownReason: "critical-threshold" | "burst" | "flood" | null;
   message: string;
   path?: string;
   userEmail?: string;
@@ -243,7 +246,7 @@ function alertEmailHtml(opts: {
   lockdown?: boolean;
   criticalCount?: number;
   burstUsers?: number;
-  lockdownReason?: "critical-threshold" | "burst" | null;
+  lockdownReason?: "critical-threshold" | "burst" | "flood" | null;
   digest?: { msg: string; count: number }[];
 }) {
 
@@ -397,7 +400,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
     });
 
     let lockdownTriggered = false;
-    let lockdownReason: "critical-threshold" | "burst" | null = null;
+    let lockdownReason: "critical-threshold" | "burst" | "flood" | null = null;
     let criticalCount = 0;
     let burstUsers = 0;
 
