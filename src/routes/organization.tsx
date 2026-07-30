@@ -520,10 +520,10 @@ function OrgDashboard() {
                   </span>
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => toggleTask(t)} className="flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                  <button onClick={() => toggleTask(t)} disabled={busyId === t.id} className="flex-1 disabled:opacity-50 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
                   </button>
-                  <button onClick={() => deleteTask(t)} aria-label="Ištrinti užduotį" className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                  <button onClick={() => deleteTask(t)} disabled={busyId === t.id} aria-label="Ištrinti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -605,10 +605,10 @@ function OrgDashboard() {
                     </div>
                   )}
                   <div className="mt-4 flex gap-2">
-                    <button onClick={() => approveInitial(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
-                      <Check className="h-4 w-4" /> Patvirtinti ir pradėti darbą
+                    <button onClick={() => approveInitial(r)} disabled={busyId === r.id} className="disabled:opacity-60 inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+                      <Check className="h-4 w-4" /> {busyId === r.id ? "Vykdoma…" : "Patvirtinti ir pradėti darbą"}
                     </button>
-                    <button onClick={() => decline(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                    <button onClick={() => decline(r)} disabled={busyId === r.id} className="disabled:opacity-60 inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                       <X className="h-4 w-4" /> Atmesti
                     </button>
                   </div>
