@@ -20,6 +20,9 @@ const EMAIL_DEDUPE_MIN = 15;
 // deploys where thousands of users would otherwise get errors before we react.
 const BURST_WINDOW_S = 90;
 const BURST_MIN_USERS = 3;
+// Flood: many client errors of any severity in a short window = outage.
+const FLOOD_WINDOW_MIN = 5;
+const FLOOD_THRESHOLD = 25;
 
 
 // Per-IP rate limit (in-memory, per-worker). Prevents an anonymous flood from
@@ -108,7 +111,7 @@ async function sendResendEmail(to: string, subject: string, html: string, opts: 
 async function sendDiscordAlert(opts: {
   level: "critical" | "warning";
   lockdown: boolean;
-  lockdownReason: "critical-threshold" | "burst" | null;
+  lockdownReason: "critical-threshold" | "burst" | "flood" | null;
   message: string;
   path?: string;
   userEmail?: string;
@@ -243,7 +246,7 @@ function alertEmailHtml(opts: {
   lockdown?: boolean;
   criticalCount?: number;
   burstUsers?: number;
-  lockdownReason?: "critical-threshold" | "burst" | null;
+  lockdownReason?: "critical-threshold" | "burst" | "flood" | null;
   digest?: { msg: string; count: number }[];
 }) {
 
@@ -361,7 +364,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
       const req = getRequest();
       if (req) fp = clientFingerprint(req);
     } catch { /* ignore — SSR / missing request */ }
-    if (!isTest && !checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
+    // A flood is exactly when auto-lockdown must fire, so we never drop the
+    // request outright. Rate limiting only silences the notification channels;
+    // logging + lockdown evaluation always run.
+    const rateLimited = !isTest && !checkRate(fp);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -394,7 +400,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
     });
 
     let lockdownTriggered = false;
-    let lockdownReason: "critical-threshold" | "burst" | null = null;
+    let lockdownReason: "critical-threshold" | "burst" | "flood" | null = null;
     let criticalCount = 0;
     let burstUsers = 0;
 
@@ -435,6 +441,21 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
+    // FLOOD DETECTION — dozens of non-critical client errors in a few minutes is
+    // itself an outage (this is what "50 klaidų, jokio lockdown" looked like).
+    if (!lockdownReason && !isTest) {
+      const floodSince = new Date(Date.now() - FLOOD_WINDOW_MIN * 60_000).toISOString();
+      const { count: floodCount } = await supabaseAdmin
+        .from("activity_log")
+        .select("*", { count: "exact", head: true })
+        .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+        .gte("created_at", floodSince);
+      if ((floodCount ?? 0) >= FLOOD_THRESHOLD) {
+        lockdownReason = "flood";
+        criticalCount = Math.max(criticalCount, floodCount ?? 0);
+      }
+    }
+
     if (lockdownReason) {
       const { data: ss } = await supabaseAdmin
         .from("site_settings")
@@ -442,10 +463,12 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .eq("id", true)
         .maybeSingle();
       if (!ss?.lockdown_enabled) {
-        const code = lockdownReason === "burst" ? "E-5002" : "E-5001";
+        const code = lockdownReason === "burst" ? "E-5002" : lockdownReason === "flood" ? "E-5003" : "E-5001";
         const msg = lockdownReason === "burst"
           ? `[auto] Aptikta ${burstUsers} vartotojų su klaidomis per ${BURST_WINDOW_S}s (burst). Prieiga ribojama.`
-          : `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`;
+          : lockdownReason === "flood"
+            ? `[auto] Aptikta ${criticalCount} klaidų per ${FLOOD_WINDOW_MIN} min (flood). Prieiga ribojama.`
+            : `[auto] Aptiktos ${criticalCount} kritinės klaidos per ${CRITICAL_WINDOW_MIN} min. Prieiga ribojama.`;
         await supabaseAdmin.from("site_settings").upsert({
           id: true,
           lockdown_enabled: true,
@@ -482,7 +505,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
 
     // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
     let shouldEmail = lockdownTriggered || isTest;
-    if (!shouldEmail) {
+    if (!shouldEmail && rateLimited) {
+      // Flood in progress: keep counting + locking down, but stop the spam.
+      shouldEmail = false;
+    } else if (!shouldEmail) {
       const dedupeSince = new Date(Date.now() - EMAIL_DEDUPE_MIN * 60_000).toISOString();
       const { count: emailedCount } = await supabaseAdmin
         .from("activity_log")
@@ -559,18 +585,20 @@ export const escalateAppError = createServerFn({ method: "POST" })
     // Internally cached per fingerprint (6h TTL) + globally capped (80/24h) so
     // repeats or bursts won't hit OpenAI. Discord follow-up embed is sent only
     // if a fresh analysis was produced or cache exists.
-    try {
-      const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
-      await autoAnalyzeAndAlert({
-        fingerprint: fpGroup.id,
-        message: data.message,
-        stack: data.stack ?? null,
-        path: data.path ?? null,
-        userEmail: data.userEmail ?? null,
-        level: data.level,
-      });
-    } catch (err) {
-      console.error("[escalate] auto-ai failed", err);
+    if (!rateLimited || lockdownTriggered) {
+      try {
+        const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
+        await autoAnalyzeAndAlert({
+          fingerprint: fpGroup.id,
+          message: data.message,
+          stack: data.stack ?? null,
+          path: data.path ?? null,
+          userEmail: data.userEmail ?? null,
+          level: data.level,
+        });
+      } catch (err) {
+        console.error("[escalate] auto-ai failed", err);
+      }
     }
 
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
