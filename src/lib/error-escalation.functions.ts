@@ -586,6 +586,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
     // repeats or bursts won't hit OpenAI. Discord follow-up embed is sent only
     // if a fresh analysis was produced or cache exists.
     try {
+      if (rateLimited && !lockdownTriggered) throw new Error("skip-ai-flood");
       const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
       await autoAnalyzeAndAlert({
         fingerprint: fpGroup.id,
