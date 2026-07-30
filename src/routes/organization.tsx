@@ -464,7 +464,7 @@ function OrgDashboard() {
           <KPI icon={Percent} label="Priėmimo lygis" value={`${acceptanceRate}%`} sub={`${completed.length} / ${totalHandled} apdorotos`} />
           <KPI icon={Target} label="Vid. valandos / vizitui" value={avgHours.toFixed(1)} sub={`iš ${completed.length} vizitų`} />
           <KPI icon={Repeat} label="Grįžtantys savanoriai" value={returningStudents} sub={`iš ${uniqueStudents} visų`} />
-          <KPI icon={CalendarDays} label="Aktyviausia diena" value={weekdays[busiestIdx] ?? "—"} sub={`${weekdayCounts[busiestIdx] ?? 0} vizitai`} />
+          <KPI icon={CalendarDays} label="Aktyviausia diena" value={hasWeekdayData ? weekdays[busiestIdx] : "—"} sub={hasWeekdayData ? `${weekdayCounts[busiestIdx]} vizitai` : "dar nėra užbaigtų vizitų"} />
         </div>
 
         {/* Weekday distribution */}
