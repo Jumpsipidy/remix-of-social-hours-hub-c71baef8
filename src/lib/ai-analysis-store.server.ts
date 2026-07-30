@@ -8,6 +8,13 @@
 
 type AnyRow = Record<string, unknown>;
 
+export function normalizeConfidenceForStorage(value: unknown): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 50;
+  if (Math.abs(n) <= 1) return Math.round(n * 100);
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function upsertAnalysis<T = any>(
   client: any,
@@ -35,7 +42,7 @@ export async function upsertAnalysis<T = any>(
       let fixed = false;
       for (const [key, value] of Object.entries(payload)) {
         if (typeof value !== "number" || String(value) !== badInt) continue;
-        payload[key] = Math.abs(value) <= 1 ? Math.round(value * 100) : Math.round(value);
+        payload[key] = normalizeConfidenceForStorage(value);
         fixed = true;
       }
       if (fixed) continue;
