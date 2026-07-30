@@ -372,12 +372,6 @@ export function installGlobalErrorLogging() {
               body: await peekBody(res),
             },
           });
-        } else if (!skip && isAppApi(url) && took >= SLOW_MS && !isAdminToolingCall(url)) {
-          void insert("client.telemetry", {
-            message: `[lėtas API ${Math.round(took / 100) / 10}s] ${method} ${shortUrl(url)}`,
-            source: "fetch.slow",
-            extra: { url: url.slice(0, 500), method, ms: took, status: res.status },
-          });
         }
         return res;
       } catch (err) {
@@ -406,9 +400,6 @@ export function installGlobalErrorLogging() {
     };
   }
 
-  installFreezeDetector();
-  installConnectivityWatch();
-
   // Start the retry loop + beacon-on-unload flush
   startOutbox();
 }
@@ -417,21 +408,6 @@ export function installGlobalErrorLogging() {
 // Deep capture helpers
 // ---------------------------------------------------------------------------
 
-const SLOW_MS = 15_000;
-
-/**
- * Admin tooling (AI error analysis, deep health scans, exports) is expected to
- * be slow. Logging those as „lėtas API" only spams the very page you're using
- * to read errors, so they never count as bugs.
- */
-function isAdminToolingCall(_url: string): boolean {
-  try {
-    const path = window.location.pathname || "";
-    return path.startsWith("/admin");
-  } catch {
-    return false;
-  }
-}
 const CAPTURED_4XX = new Set([400, 403, 409, 422, 429]);
 
 /** Only our own backend calls — third-party 4xx is not our bug. */
@@ -467,47 +443,3 @@ async function peekBody(res: Response): Promise<string | undefined> {
   }
 }
 
-/**
- * Frozen-UI detector: if the main thread is blocked long enough that the user
- * sees a dead page, that's a bug even without an exception.
- */
-function installFreezeDetector() {
-  const TICK = 1_000;
-  const FREEZE_MS = 20_000;
-  let last = Date.now();
-  let reported = 0;
-  setInterval(() => {
-    const now = Date.now();
-    const drift = now - last - TICK;
-    last = now;
-    if (document.hidden) return; // background tabs are throttled on purpose
-    if (isAdminToolingCall("")) return;
-    if (drift >= FREEZE_MS && now - reported > 10 * 60_000) {
-      reported = now;
-      void insert("client.telemetry", {
-        message: `[UI užšalo ${Math.round(drift / 100) / 10}s] pagrindinė gija užblokuota`,
-        source: "ui.freeze",
-        extra: { driftMs: drift },
-      });
-    }
-  }, TICK);
-}
-
-/** Offline drops are the #1 silent cause of "nieko nevyksta" reports. */
-function installConnectivityWatch() {
-  let offlineSince = 0;
-  window.addEventListener("offline", () => {
-    offlineSince = Date.now();
-  });
-  window.addEventListener("online", () => {
-    if (!offlineSince) return;
-    const ms = Date.now() - offlineSince;
-    offlineSince = 0;
-    if (ms < 5_000) return;
-    void insert("client.telemetry", {
-      message: `[ryšys dingo ${Math.round(ms / 1000)}s] vartotojas buvo offline`,
-      source: "net.offline",
-      extra: { offlineMs: ms },
-    });
-  });
-}
