@@ -561,7 +561,13 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .map(([msg, count]) => ({ msg, count }));
     }
 
-    // Dedupe email by first 80 chars of message within window (lockdown alerts bypass dedupe)
+    // Always compute fingerprint so email/discord/AI/dedupe share the exact same group.
+    const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
+    const fpGroup = computeFp(data.message, data.stack ?? null);
+
+    // Dedupe alerts by fingerprint within window (lockdown alerts bypass dedupe).
+    // This stops one real bug from sending email+Discord again and again while
+    // still keeping every occurrence logged for counters and lockdown.
     let shouldEmail = lockdownTriggered || isTest;
     if (!shouldEmail && rateLimited) {
       // Flood in progress: keep counting + locking down, but stop the spam.
@@ -573,13 +579,26 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .select("*", { count: "exact", head: true })
         .eq("action", "app.email_sent")
         .gte("created_at", dedupeSince)
-        .ilike("meta->>message", data.message.slice(0, 80));
+        .eq("meta->>fingerprint", fpGroup.id);
       shouldEmail = (emailedCount ?? 0) === 0;
     }
 
-    // Always compute fingerprint so both email/discord/AI paths share it
-    const { fingerprint: computeFp } = await import("@/lib/error-fingerprint");
-    const fpGroup = computeFp(data.message, data.stack ?? null);
+    let aiAnalysis: InlineAiAnalysis | null = null;
+    if (shouldEmail || lockdownTriggered) {
+      try {
+        const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
+        aiAnalysis = await autoAnalyzeAndAlert({
+          fingerprint: fpGroup.id,
+          message: data.message,
+          stack: data.stack ?? null,
+          path: data.path ?? null,
+          userEmail: data.userEmail ?? null,
+          level: data.level,
+        });
+      } catch (err) {
+        console.error("[escalate] auto-ai failed", err);
+      }
+    }
 
     if (shouldEmail) {
       const { data: admins } = await supabaseAdmin
@@ -604,6 +623,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
           burstUsers,
           lockdownReason,
           digest,
+          aiAnalysis,
         });
         await Promise.all(recipients.map((to) => sendResendEmail(to, subject, html, { urgent: lockdownTriggered || data.level === "critical" })));
         await supabaseAdmin.from("activity_log").insert({
@@ -616,6 +636,13 @@ export const escalateAppError = createServerFn({ method: "POST" })
             lockdown_reason: lockdownReason,
             burst_users: burstUsers,
             level: data.level,
+            fingerprint: fpGroup.id,
+            ai: aiAnalysis ? {
+              suspected_cause: aiAnalysis.suspected_cause ?? null,
+              suggested_file: aiAnalysis.suggested_file ?? null,
+              severity_estimate: aiAnalysis.severity_estimate ?? null,
+              confidence: confidencePercent(aiAnalysis.confidence),
+            } : null,
           },
         });
       }
@@ -636,27 +663,8 @@ export const escalateAppError = createServerFn({ method: "POST" })
         device: data.device,
         stack: data.stack,
         breadcrumbs: data.breadcrumbs,
+        aiAnalysis,
       });
-    }
-
-    // Instant AI analysis — runs for EVERY escalated error, not just emailed ones.
-    // Internally cached per fingerprint (6h TTL) + globally capped (80/24h) so
-    // repeats or bursts won't hit OpenAI. Discord follow-up embed is sent only
-    // if a fresh analysis was produced or cache exists.
-    if (!rateLimited || lockdownTriggered) {
-      try {
-        const { autoAnalyzeAndAlert } = await import("@/lib/auto-ai-analyze.server");
-        await autoAnalyzeAndAlert({
-          fingerprint: fpGroup.id,
-          message: data.message,
-          stack: data.stack ?? null,
-          path: data.path ?? null,
-          userEmail: data.userEmail ?? null,
-          level: data.level,
-        });
-      } catch (err) {
-        console.error("[escalate] auto-ai failed", err);
-      }
     }
 
     return { ok: true, lockdownTriggered, lockdownReason, criticalCount, burstUsers };
