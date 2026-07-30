@@ -361,7 +361,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
       const req = getRequest();
       if (req) fp = clientFingerprint(req);
     } catch { /* ignore — SSR / missing request */ }
-    if (!isTest && !checkRate(fp)) return { ok: true, ignored: true, reason: "rate_limited" as const };
+    // A flood is exactly when auto-lockdown must fire, so we never drop the
+    // request outright. Rate limiting only silences the notification channels;
+    // logging + lockdown evaluation always run.
+    const rateLimited = !isTest && !checkRate(fp);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
