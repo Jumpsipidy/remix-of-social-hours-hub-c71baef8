@@ -85,7 +85,18 @@ export async function enablePush(): Promise<{ ok: boolean; error?: string }> {
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Nežinoma klaida." };
+    const raw = e instanceof Error ? e.message : "Nežinoma klaida.";
+    // Chrome/Edge return "Registration failed - push service error" when the
+    // VAPID key doesn't match the one the server signs with, or when the
+    // browser can't reach the push service (blocked network / no Google FCM).
+    if (/push service error|Registration failed/i.test(raw)) {
+      return {
+        ok: false,
+        error:
+          "Naršyklė negalėjo užsiregistruoti push paslaugoje. Dažniausios priežastys: neteisingas VAPID raktas, blokuojamas tinklas arba naršyklė be push palaikymo. Pabandyk kitoje naršyklėje arba be VPN.",
+      };
+    }
+    return { ok: false, error: raw };
   }
 }
 
