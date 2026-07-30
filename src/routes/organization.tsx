@@ -13,6 +13,7 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
+import { Button } from "@/components/ui/button";
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
 
@@ -165,6 +166,10 @@ function OrgDashboard() {
   }
 
   const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
+  const openTasks = tasks.filter((t) => t.is_open).length;
+  const nextApproved = [...approved].sort((a, b) => `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`))[0];
+  const orgMedia = profile as typeof profile & { logo_url?: string | null; cover_url?: string | null };
+  const profileStrength = [profile.organization_name, profile.email, orgMedia.logo_url, orgMedia.cover_url].filter(Boolean).length;
 
   const approveInitial = async (r: Reservation) => {
     const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
@@ -200,26 +205,41 @@ function OrgDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Organizacijos sritis</p>
-            <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">{orgLabel}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              to="/organization/scan"
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20"
-            >
-              <ScanLine className="h-3.5 w-3.5" /> Skenuoti QR
-            </Link>
-            <span className="rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+        <div className="overflow-hidden rounded-3xl border border-border bg-gradient-card shadow-xl">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+                <ShieldCheck className="h-3.5 w-3.5" /> Organizacijos sritis
+              </div>
+              <h1 className="mt-4 truncate font-display text-3xl font-black tracking-tight sm:text-5xl">{orgLabel}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                {profile.email} · {pending.length ? `${pending.length} laukia sprendimo` : "nėra laukiančių užklausų"} · {openTasks} aktyvios užduotys
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button asChild size="sm" className="rounded-full shadow-glow">
+                  <Link to="/organization/scan">
+                    <ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-full">
+                  <Link to="/org/$id" params={{ id: user.id }} target="_blank">
+                    Viešas profilis
+                  </Link>
+                </Button>
+                <span className="inline-flex items-center rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <HeroMetric label="Kitas darbas" value={nextApproved ? nextApproved.reservation_date : "—"} sub={nextApproved ? `${nextApproved.start_time.slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"} />
+              <HeroMetric label="Profilis" value={`${profileStrength}/4`} sub={profileStrength >= 4 ? "paruoštas mokiniams" : "trūksta logo / banerio"} />
+              <HeroMetric label="Šiandien signalas" value={pending.length > 0 ? "Veikti" : "Ramu"} sub={pending.length > 0 ? "patvirtink naujas užklausas" : "viskas apdorota"} />
+            </div>
           </div>
         </div>
 
         {/* View switcher */}
-        <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
+        <div className="mt-6 inline-flex rounded-full border border-border bg-card/80 p-1 shadow-sm backdrop-blur">
           <button
             onClick={() => setView("dashboard")}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${view === "dashboard" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
@@ -232,14 +252,6 @@ function OrgDashboard() {
           >
             🏢 Mano profilis
           </button>
-          <Link
-            to="/org/$id"
-            params={{ id: user.id }}
-            target="_blank"
-            className="rounded-full px-4 py-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-          >
-            👁 Peržiūrėti viešą
-          </Link>
         </div>
       </section>
 
@@ -594,6 +606,16 @@ function KPI({ icon: Icon, label, value, sub }: { icon: typeof Percent; label: s
       </div>
       <p className="mt-2 font-display text-2xl font-bold tabular-nums">{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
+
+function HeroMetric({ label, value, sub }: { label: string; value: React.ReactNode; sub: string }) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-background/55 p-4 backdrop-blur">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+      <p className="mt-1 font-display text-2xl font-black tabular-nums">{value}</p>
+      <p className="text-[11px] text-muted-foreground">{sub}</p>
     </div>
   );
 }
