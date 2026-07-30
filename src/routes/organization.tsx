@@ -4,7 +4,7 @@ import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Clock, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
+  Clock, Users, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
   PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays, CheckCircle2,
   BarChart3, Target, Repeat, Percent, ScanLine, ImageIcon, Eye, MapPin, UserCheck,
 } from "lucide-react";
