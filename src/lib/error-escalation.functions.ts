@@ -13,7 +13,7 @@ import { clientFingerprint } from "@/lib/security-crypto.server";
 
 const CRITICAL_THRESHOLD = 2;
 const CRITICAL_WINDOW_MIN = 5;
-const EMAIL_DEDUPE_MIN = 15;
+const EMAIL_DEDUPE_MIN = 60;
 // Burst detection: if ≥ BURST_MIN_USERS distinct users hit any error in the last
 // BURST_WINDOW_S seconds, we treat the whole site as unstable and lockdown
 // immediately, regardless of severity classification. This catches broken
@@ -23,6 +23,25 @@ const BURST_MIN_USERS = 3;
 // Flood: many client errors of any severity in a short window = outage.
 const FLOOD_WINDOW_MIN = 5;
 const FLOOD_THRESHOLD = 25;
+
+type InlineAiAnalysis = {
+  suspected_cause?: string | null;
+  suggested_file?: string | null;
+  suggested_fix?: string | null;
+  severity_estimate?: string | null;
+  confidence?: number | null;
+  raw_response?: { prompt_for_agent?: unknown } | null;
+};
+
+function trimText(s: string, max: number) {
+  return s.length > max ? `${s.slice(0, Math.max(0, max - 1))}…` : s;
+}
+
+function confidencePercent(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(0, Math.min(100, Math.round(Math.abs(n) <= 1 ? n * 100 : n)));
+}
 
 
 // Per-IP rate limit (in-memory, per-worker). Prevents an anonymous flood from
@@ -124,6 +143,7 @@ async function sendDiscordAlert(opts: {
   device?: string;
   stack?: string;
   breadcrumbs?: { t?: number; kind?: string; label?: string; path?: string }[];
+  aiAnalysis?: InlineAiAnalysis | null;
 }) {
   const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) return;
@@ -158,6 +178,27 @@ async function sendDiscordAlert(opts: {
     return `Įspėjimas: nekritinė runtime klaida iš \`${opts.source ?? "?"}\`.`;
   })();
   fields.push({ name: "Kodėl pranešu", value: whyLine });
+
+  if (opts.aiAnalysis) {
+    const ai = opts.aiAnalysis;
+    const pct = confidencePercent(ai.confidence);
+    const severity = ai.severity_estimate ? String(ai.severity_estimate).toUpperCase() : opts.level.toUpperCase();
+    fields.push({
+      name: "AI diagnozė",
+      value: trimText(ai.suspected_cause || "AI priežastis dar nenustatyta.", 900),
+    });
+    if (ai.suggested_file && ai.suggested_file !== "unknown") {
+      fields.push({ name: "AI failas", value: `\`${trimText(ai.suggested_file, 180)}\``, inline: true });
+    }
+    fields.push({ name: "AI sunkumas", value: `**${severity}**${pct === null ? "" : ` · ${pct}%`}`, inline: true });
+    if (ai.suggested_fix) {
+      fields.push({ name: "AI fix", value: trimText(ai.suggested_fix, 1000) });
+    }
+    const prompt = typeof ai.raw_response?.prompt_for_agent === "string" ? ai.raw_response.prompt_for_agent : "";
+    if (prompt) {
+      fields.push({ name: "Lovable promptas", value: "```" + trimText(prompt, 850).replace(/```/g, "ʼʼʼ") + "```" });
+    }
+  }
 
   // Breadcrumbs — last few actions before crash
   if (opts.breadcrumbs && opts.breadcrumbs.length) {
@@ -248,6 +289,7 @@ function alertEmailHtml(opts: {
   burstUsers?: number;
   lockdownReason?: "critical-threshold" | "burst" | "flood" | null;
   digest?: { msg: string; count: number }[];
+  aiAnalysis?: InlineAiAnalysis | null;
 }) {
 
   const isLock = !!opts.lockdown;
@@ -317,6 +359,22 @@ function alertEmailHtml(opts: {
       ${typeof opts.burstUsers === "number" && opts.burstUsers > 0 ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Burst (90s)</td><td style="padding:8px 0"><span style="display:inline-block;padding:4px 12px;background:${accent}22;color:${accent};border-radius:999px;font-weight:800;font-size:12px">${opts.burstUsers} vartotojai</span></td></tr>` : ""}
       ${opts.lockdownReason ? `<tr><td style="padding:8px 0;font-size:11px;color:#64748b;letter-spacing:.1em;text-transform:uppercase">Priežastis</td><td style="padding:8px 0;font-size:12px;color:#e2e8f0"><code style="background:#020617;padding:3px 8px;border-radius:6px;border:1px solid #1e293b">${escapeHtml(opts.lockdownReason)}</code></td></tr>` : ""}
     </table>
+
+    ${opts.aiAnalysis ? (() => {
+      const ai = opts.aiAnalysis;
+      const pct = confidencePercent(ai.confidence);
+      const prompt = typeof ai.raw_response?.prompt_for_agent === "string" ? ai.raw_response.prompt_for_agent : "";
+      return `<div style="margin-top:22px;padding:16px 18px;background:linear-gradient(135deg,#111827,#020617);border:1px solid #8b5cf666;border-radius:14px">
+        <div style="font-size:10px;font-weight:800;color:#c4b5fd;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px">▸ AI analizė jau paruošta</div>
+        ${ai.suspected_cause ? `<div style="font-size:13px;color:#f8fafc;line-height:1.6;margin-bottom:10px"><b>Priežastis:</b> ${escapeHtml(ai.suspected_cause)}</div>` : ""}
+        <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+          ${ai.suggested_file ? `<tr><td style="padding:5px 0;font-size:11px;color:#94a3b8;width:90px">Failas</td><td style="padding:5px 0"><code style="color:#67e8f9;background:#020617;padding:3px 8px;border-radius:6px;border:1px solid #1e293b">${escapeHtml(ai.suggested_file)}</code></td></tr>` : ""}
+          ${ai.severity_estimate ? `<tr><td style="padding:5px 0;font-size:11px;color:#94a3b8">Sunkumas</td><td style="padding:5px 0;color:#e2e8f0"><b>${escapeHtml(ai.severity_estimate)}</b>${pct === null ? "" : ` · ${pct}%`}</td></tr>` : ""}
+        </table>
+        ${ai.suggested_fix ? `<div style="font-size:11px;color:#94a3b8;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Fix</div><pre style="margin:0 0 10px;padding:12px;background:#020617;border:1px solid #1e293b;border-radius:10px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.55;color:#d1fae5;font-family:'JetBrains Mono',ui-monospace,monospace">${escapeHtml(ai.suggested_fix)}</pre>` : ""}
+        ${prompt ? `<div style="font-size:11px;color:#94a3b8;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Promptas Lovable agentui</div><pre style="margin:0;padding:12px;background:#020617;border:1px solid #312e81;border-radius:10px;white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.5;color:#ddd6fe;font-family:'JetBrains Mono',ui-monospace,monospace">${escapeHtml(prompt)}</pre>` : ""}
+      </div>`;
+    })() : ""}
 
     ${opts.digest && opts.digest.length > 0 ? `
     <div style="margin-top:22px;padding:14px 16px;background:#020617;border:1px solid #1e293b;border-radius:12px">
