@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Clock, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
+  Clock, Users, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
   PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays, CheckCircle2,
   BarChart3, Target, Repeat, Percent, ScanLine, ImageIcon, Eye, MapPin, UserCheck,
 } from "lucide-react";
@@ -75,87 +75,135 @@ function OrgDashboard() {
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
+  const [dataLoading, setDataLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const refresh = async (uid: string) => {
-    const [{ data: rData }, { data: tData }] = await Promise.all([
-      supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
-      supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
-    ]);
-    const rs = (rData as Reservation[]) ?? [];
-    setReservations(rs);
-    setTasks((tData as TaskRow[]) ?? []);
-    const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
-    if (ids.length) {
-      const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
-      const map: Record<string, StudentLite> = {};
-      (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
-      setStudents(map);
+  const refresh = useCallback(async (uid: string) => {
+    try {
+      const [{ data: rData, error: rErr }, { data: tData, error: tErr }] = await Promise.all([
+        supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
+        supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
+      ]);
+      if (rErr) throw rErr;
+      if (tErr) throw tErr;
+      const rs = (rData as Reservation[]) ?? [];
+      setReservations(rs);
+      setTasks((tData as TaskRow[]) ?? []);
+      const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
+      if (ids.length) {
+        const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
+        const map: Record<string, StudentLite> = {};
+        (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
+        setStudents(map);
+      } else {
+        setStudents({});
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti duomenų");
+    } finally {
+      setDataLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { if (user) refresh(user.id); }, [user]);
+  useEffect(() => { if (user) refresh(user.id); }, [user, refresh]);
+
+  // Realaus laiko atnaujinimas — naujos užklausos matomos iškart
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`org-dash-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user, refresh]);
 
   const toggleTask = async (t: TaskRow) => {
+    if (busyId) return;
+    setBusyId(t.id);
     const { error } = await supabase.from("tasks").update({ is_open: !t.is_open }).eq("id", t.id);
+    setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
     if (user) refresh(user.id);
   };
   const deleteTask = async (t: TaskRow) => {
+    if (busyId) return;
     if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
+    setBusyId(t.id);
     const { error } = await supabase.from("tasks").delete().eq("id", t.id);
+    setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success("Užduotis ištrinta");
     if (user) refresh(user.id);
   };
 
   // -------------- ANALYTICS ---------------
-  const pending = reservations.filter((r) => r.status === "pending");
-  const approved = reservations.filter((r) => r.status === "approved");
-  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
-  const declined = reservations.filter((r) => r.status === "declined");
-  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
-  const uniqueStudents = new Set(reservations.map((r) => r.student_id)).size;
-  const returningStudents = (() => {
+  const { pending, approved, completed, declined } = useMemo(() => ({
+    pending: reservations.filter((r) => r.status === "pending"),
+    approved: reservations.filter((r) => r.status === "approved"),
+    completed: reservations.filter((r) => r.status === "completed" || r.status === "confirmed"),
+    declined: reservations.filter((r) => r.status === "declined"),
+  }), [reservations]);
+
+  const hoursDelivered = useMemo(
+    () => Math.round(completed.reduce((a, r) => a + (Number(r.hours_to_earn) || 0), 0) * 10) / 10,
+    [completed],
+  );
+  // Tikslu: savanoriai, kurie realiai atliko darbą (ne atmestos užklausos)
+  const uniqueStudents = useMemo(
+    () => new Set(completed.map((r) => r.student_id).filter(Boolean)).size,
+    [completed],
+  );
+  const engagedStudents = useMemo(
+    () => new Set(reservations.map((r) => r.student_id).filter(Boolean)).size,
+    [reservations],
+  );
+  const returningStudents = useMemo(() => {
     const byS: Record<string, number> = {};
     completed.forEach((r) => (byS[r.student_id] = (byS[r.student_id] ?? 0) + 1));
     return Object.values(byS).filter((n) => n >= 2).length;
-  })();
+  }, [completed]);
   const totalHandled = completed.length + declined.length;
   const acceptanceRate = totalHandled ? Math.round((completed.length / totalHandled) * 100) : 0;
-  const avgHours = completed.length ? (hoursDelivered / completed.length) : 0;
+  const avgHours = completed.length ? hoursDelivered / completed.length : 0;
 
   const chartData = useMemo(() => {
     const days: { label: string; hrs: number; count: number; iso: string }[] = [];
+    const today = new Date();
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const iso = d.toISOString().slice(0, 10);
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({ iso, label: `${d.getDate()}.${d.getMonth() + 1}`, hrs: 0, count: 0 });
     }
     const idx: Record<string, number> = Object.fromEntries(days.map((d, i) => [d.iso, i]));
     completed.forEach((r) => {
-      const i = idx[r.reservation_date];
-      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn); days[i].count += 1; }
+      const i = idx[String(r.reservation_date).slice(0, 10)];
+      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn) || 0; days[i].count += 1; }
     });
-    return days;
+    return days.map((d) => ({ ...d, hrs: Math.round(d.hrs * 10) / 10 }));
   }, [completed]);
 
-  const pieData = [
+  const pieData = useMemo(() => [
     { name: "Užbaigtos", value: completed.length, color: STATUS_COLORS.completed },
     { name: "Vykdomos", value: approved.length, color: STATUS_COLORS.approved },
     { name: "Laukia", value: pending.length, color: STATUS_COLORS.pending },
     { name: "Atmesta", value: declined.length, color: STATUS_COLORS.declined },
-  ].filter((s) => s.value > 0);
+  ].filter((s) => s.value > 0), [completed, approved, pending, declined]);
 
   // Busiest weekday
-  const weekdayCounts = [0, 0, 0, 0, 0, 0, 0];
-  completed.forEach((r) => {
-    const d = new Date(r.reservation_date);
-    weekdayCounts[(d.getDay() + 6) % 7] += 1;
-  });
+  const { weekdayCounts, maxWD, busiestIdx, hasWeekdayData } = useMemo(() => {
+    const counts = [0, 0, 0, 0, 0, 0, 0];
+    completed.forEach((r) => {
+      const d = new Date(`${String(r.reservation_date).slice(0, 10)}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return;
+      counts[(d.getDay() + 6) % 7] += 1;
+    });
+    const max = Math.max(...counts);
+    return { weekdayCounts: counts, maxWD: Math.max(max, 1), busiestIdx: counts.indexOf(max), hasWeekdayData: max > 0 };
+  }, [completed]);
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
-  const maxWD = Math.max(...weekdayCounts, 1);
-  const busiestIdx = weekdayCounts.indexOf(Math.max(...weekdayCounts));
+
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "organization") {
@@ -171,7 +219,13 @@ function OrgDashboard() {
 
   const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
   const openTasks = tasks.filter((t) => t.is_open).length;
-  const nextApproved = [...approved].sort((a, b) => `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`))[0];
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const approvedSorted = [...approved].sort((a, b) =>
+    `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`),
+  );
+  // Kitas darbas = artimiausias dar neįvykęs; jei visi praėję — rodom naujausią
+  const nextApproved = approvedSorted.find((r) => String(r.reservation_date).slice(0, 10) >= todayIso) ?? approvedSorted[0];
+  const overdue = approvedSorted.filter((r) => String(r.reservation_date).slice(0, 10) < todayIso);
   const orgMedia = profile as typeof profile & { logo_url?: string | null; cover_url?: string | null; address?: string | null; bio?: string | null };
   const profileChecks = [profile.organization_name, profile.email, orgMedia.logo_url, orgMedia.cover_url, orgMedia.bio, orgMedia.address];
   const profileStrength = profileChecks.filter(Boolean).length;
@@ -179,36 +233,50 @@ function OrgDashboard() {
   const liveWorkload = pending.length + approved.length;
 
   const approveInitial = async (r: Reservation) => {
-    const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
-    if (error) { toast.error(error.message); return; }
+    if (busyId) return;
+    setBusyId(r.id);
+    const { data, error } = await supabase
+      .from("reservations").update({ status: "approved" }).eq("id", r.id).eq("status", "pending").select("id");
+    if (error) { setBusyId(null); toast.error(error.message); return; }
+    if (!data?.length) { setBusyId(null); toast.info("Ši užklausa jau apdorota"); refresh(user.id); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`, user.id);
     sendReservationApprovedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] reservation-approved failed", e));
     toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
+    setBusyId(null);
     refresh(user.id);
   };
 
   const decline = async (r: Reservation) => {
-    const { error } = await supabase.from("reservations").update({ status: "declined" }).eq("id", r.id);
-    if (error) { toast.error(error.message); return; }
+    if (busyId) return;
+    setBusyId(r.id);
+    const { data, error } = await supabase
+      .from("reservations").update({ status: "declined" }).eq("id", r.id).eq("status", "pending").select("id");
+    if (error) { setBusyId(null); toast.error(error.message); return; }
+    if (!data?.length) { setBusyId(null); toast.info("Ši užklausa jau apdorota"); refresh(user.id); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
     sendReservationDeclinedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] reservation-declined failed", e));
     toast.success("Atmesta — žinutė nusiųsta į pokalbį");
+    setBusyId(null);
     refresh(user.id);
   };
 
   const finalizeCompleted = async (r: Reservation) => {
+    if (busyId) return;
+    setBusyId(r.id);
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
-    if (error) { toast.error(error.message); return; }
+    if (error) { setBusyId(null); toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
     // Fire-and-forget email — never block the UI on Resend
     sendHoursConfirmedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] hours-confirmed failed", e));
     toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
     setVerifyRes(null);
+    setBusyId(null);
     refresh(user.id);
   };
+
 
   return (
     <PageShell>
@@ -261,13 +329,18 @@ function OrgDashboard() {
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <HeroMetric label="Darbo eilė" value={liveWorkload} sub={liveWorkload ? `${pending.length} laukia · ${approved.length} vyksta` : "nėra aktyvių darbų"} />
               <HeroMetric label="Profilio kokybė" value={`${profilePct}%`} sub={profilePct >= 85 ? "paruoštas mokiniams" : "papildyk logo, banerį ir aprašymą"} />
-              <HeroMetric label="Kitas darbas" value={nextApproved ? nextApproved.reservation_date : "—"} sub={nextApproved ? `${nextApproved.start_time.slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"} />
+              <HeroMetric
+                label="Kitas darbas"
+                value={nextApproved ? String(nextApproved.reservation_date).slice(0, 10) : "—"}
+                sub={nextApproved ? `${String(nextApproved.start_time).slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"}
+              />
             </div>
           </div>
           <div className="relative border-t border-border/70 bg-background/45 px-5 py-3 backdrop-blur sm:px-7">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai</span>
+              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai atliko darbą</span>
               <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary" /> {orgMedia.address ?? "vieta dar nepridėta"}</span>
+
               <span className="h-1 w-1 rounded-full bg-border" />
               <span className="min-w-[140px] flex-1">Profilis</span>
               <span className="font-semibold text-foreground">{profileStrength}/{profileChecks.length}</span>
@@ -306,27 +379,34 @@ function OrgDashboard() {
 
       {/* Primary stats */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
+        {overdue.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+            <AlarmClock className="h-4 w-4 text-warning-foreground" />
+            <span className="font-semibold">{overdue.length} vykdomos užduotys jau praėjo pagal datą</span>
+            <span className="text-muted-foreground">— uždaryk jas, kad mokiniams būtų įskaitytos valandos.</span>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length, sub: pending.length ? "Reikia dėmesio" : "Viskas apdorota" },
-            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: "In progress" },
+            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: overdue.length ? `${overdue.length} vėluoja` : "Vyksta dabar" },
             { icon: Clock, label: "Suteikta valandų", value: hoursDelivered, sub: `${completed.length} užbaigti vizitai` },
-            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių` },
+            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių · ${engagedStudents} kreipėsi` },
           ].map((s) => (
             <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
               <div className="flex items-center justify-between">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
                   <s.icon className="h-5 w-5" />
                 </div>
-                <TrendingUp className="h-4 w-4 text-success" />
               </div>
-              <p className="mt-5 font-display text-3xl font-bold">{s.value}</p>
+              <p className="mt-5 font-display text-3xl font-bold tabular-nums">{dataLoading ? "…" : s.value}</p>
               <p className="text-sm text-muted-foreground">{s.label}</p>
               {s.sub && <p className="text-xs text-muted-foreground/70">{s.sub}</p>}
             </div>
           ))}
         </div>
       </section>
+
 
       {/* Analytics */}
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
@@ -384,7 +464,7 @@ function OrgDashboard() {
           <KPI icon={Percent} label="Priėmimo lygis" value={`${acceptanceRate}%`} sub={`${completed.length} / ${totalHandled} apdorotos`} />
           <KPI icon={Target} label="Vid. valandos / vizitui" value={avgHours.toFixed(1)} sub={`iš ${completed.length} vizitų`} />
           <KPI icon={Repeat} label="Grįžtantys savanoriai" value={returningStudents} sub={`iš ${uniqueStudents} visų`} />
-          <KPI icon={CalendarDays} label="Aktyviausia diena" value={weekdays[busiestIdx] ?? "—"} sub={`${weekdayCounts[busiestIdx] ?? 0} vizitai`} />
+          <KPI icon={CalendarDays} label="Aktyviausia diena" value={hasWeekdayData ? weekdays[busiestIdx] : "—"} sub={hasWeekdayData ? `${weekdayCounts[busiestIdx]} vizitai` : "dar nėra užbaigtų vizitų"} />
         </div>
 
         {/* Weekday distribution */}
@@ -440,10 +520,10 @@ function OrgDashboard() {
                   </span>
                 </div>
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => toggleTask(t)} className="flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
+                  <button onClick={() => toggleTask(t)} disabled={busyId === t.id} className="flex-1 disabled:opacity-50 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
                   </button>
-                  <button onClick={() => deleteTask(t)} aria-label="Ištrinti užduotį" className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                  <button onClick={() => deleteTask(t)} disabled={busyId === t.id} aria-label="Ištrinti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -525,10 +605,10 @@ function OrgDashboard() {
                     </div>
                   )}
                   <div className="mt-4 flex gap-2">
-                    <button onClick={() => approveInitial(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
-                      <Check className="h-4 w-4" /> Patvirtinti ir pradėti darbą
+                    <button onClick={() => approveInitial(r)} disabled={busyId === r.id} className="disabled:opacity-60 inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+                      <Check className="h-4 w-4" /> {busyId === r.id ? "Vykdoma…" : "Patvirtinti ir pradėti darbą"}
                     </button>
-                    <button onClick={() => decline(r)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
+                    <button onClick={() => decline(r)} disabled={busyId === r.id} className="disabled:opacity-60 inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive">
                       <X className="h-4 w-4" /> Atmesti
                     </button>
                   </div>
