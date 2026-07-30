@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Users, TrendingUp, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
   PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays, CheckCircle2,
-  BarChart3, Target, Repeat, Percent, ScanLine,
+  BarChart3, Target, Repeat, Percent, ScanLine, ImageIcon, Eye, MapPin, UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
@@ -172,8 +172,11 @@ function OrgDashboard() {
   const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
   const openTasks = tasks.filter((t) => t.is_open).length;
   const nextApproved = [...approved].sort((a, b) => `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`))[0];
-  const orgMedia = profile as typeof profile & { logo_url?: string | null; cover_url?: string | null };
-  const profileStrength = [profile.organization_name, profile.email, orgMedia.logo_url, orgMedia.cover_url].filter(Boolean).length;
+  const orgMedia = profile as typeof profile & { logo_url?: string | null; cover_url?: string | null; address?: string | null; bio?: string | null };
+  const profileChecks = [profile.organization_name, profile.email, orgMedia.logo_url, orgMedia.cover_url, orgMedia.bio, orgMedia.address];
+  const profileStrength = profileChecks.filter(Boolean).length;
+  const profilePct = Math.round((profileStrength / profileChecks.length) * 100);
+  const liveWorkload = pending.length + approved.length;
 
   const approveInitial = async (r: Reservation) => {
     const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
@@ -210,15 +213,33 @@ function OrgDashboard() {
   return (
     <PageShell>
       <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
-        <div className="overflow-hidden rounded-3xl border border-border bg-gradient-card shadow-xl">
-          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card shadow-xl">
+          {orgMedia.cover_url && (
+            <img
+              src={orgMedia.cover_url}
+              alt="Organizacijos viršelio nuotrauka"
+              className="absolute inset-0 h-full w-full object-cover opacity-30"
+            />
+          )}
+          <div className="absolute inset-0 bg-[radial-gradient(900px_360px_at_12%_0%,hsl(var(--primary)/0.24),transparent_60%),linear-gradient(90deg,hsl(var(--background)/0.96),hsl(var(--background)/0.78),hsl(var(--background)/0.92))]" aria-hidden />
+          <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
                 <ShieldCheck className="h-3.5 w-3.5" /> Organizacijos sritis
               </div>
-              <h1 className="mt-4 truncate font-display text-3xl font-black tracking-tight sm:text-5xl">{orgLabel}</h1>
+              <div className="mt-4 flex items-center gap-4">
+                <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-border bg-gradient-primary text-xl font-black text-primary-foreground shadow-glow sm:h-20 sm:w-20">
+                  {orgMedia.logo_url ? <img src={orgMedia.logo_url} alt="Organizacijos logotipas" className="h-full w-full object-cover" /> : orgLabel.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <h1 className="truncate font-display text-3xl font-black tracking-tight sm:text-5xl">{orgLabel}</h1>
+                  <p className="mt-1 max-w-2xl truncate text-sm text-muted-foreground">
+                    {profile.email} · {openTasks} aktyvios užduotys · {hoursDelivered} val. suteikta
+                  </p>
+                </div>
+              </div>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                {profile.email} · {pending.length ? `${pending.length} laukia sprendimo` : "nėra laukiančių užklausų"} · {openTasks} aktyvios užduotys
+                {pending.length ? `${pending.length} naujos užklausos laukia sprendimo.` : "Naujos užklausos apdorotos."} {approved.length ? ` ${approved.length} darbai šiuo metu vykdomi.` : ""}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button asChild size="sm" className="rounded-full shadow-glow">
@@ -228,16 +249,31 @@ function OrgDashboard() {
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-full">
                   <Link to="/org/$id" params={{ id: user.id }} target="_blank">
-                    Viešas profilis
+                    <Eye className="mr-1.5 h-4 w-4" /> Viešas profilis
                   </Link>
+                </Button>
+                <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setView("profile")}>
+                  <ImageIcon className="mr-1.5 h-4 w-4" /> Logo / baneris
                 </Button>
                 <span className="inline-flex items-center rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <HeroMetric label="Darbo eilė" value={liveWorkload} sub={liveWorkload ? `${pending.length} laukia · ${approved.length} vyksta` : "nėra aktyvių darbų"} />
+              <HeroMetric label="Profilio kokybė" value={`${profilePct}%`} sub={profilePct >= 85 ? "paruoštas mokiniams" : "papildyk logo, banerį ir aprašymą"} />
               <HeroMetric label="Kitas darbas" value={nextApproved ? nextApproved.reservation_date : "—"} sub={nextApproved ? `${nextApproved.start_time.slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"} />
-              <HeroMetric label="Profilis" value={`${profileStrength}/4`} sub={profileStrength >= 4 ? "paruoštas mokiniams" : "trūksta logo / banerio"} />
-              <HeroMetric label="Šiandien signalas" value={pending.length > 0 ? "Veikti" : "Ramu"} sub={pending.length > 0 ? "patvirtink naujas užklausas" : "viskas apdorota"} />
+            </div>
+          </div>
+          <div className="relative border-t border-border/70 bg-background/45 px-5 py-3 backdrop-blur sm:px-7">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai</span>
+              <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary" /> {orgMedia.address ?? "vieta dar nepridėta"}</span>
+              <span className="h-1 w-1 rounded-full bg-border" />
+              <span className="min-w-[140px] flex-1">Profilis</span>
+              <span className="font-semibold text-foreground">{profileStrength}/{profileChecks.length}</span>
+              <span className="h-2 w-28 overflow-hidden rounded-full bg-muted">
+                <span className="block h-full rounded-full bg-gradient-primary" style={{ width: `${profilePct}%` }} />
+              </span>
             </div>
           </div>
         </div>
@@ -616,7 +652,7 @@ function KPI({ icon: Icon, label, value, sub }: { icon: typeof Percent; label: s
 
 function HeroMetric({ label, value, sub }: { label: string; value: React.ReactNode; sub: string }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/55 p-4 backdrop-blur">
+    <div className="rounded-2xl border border-border/70 bg-background/70 p-4 shadow-sm backdrop-blur">
       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
       <p className="mt-1 font-display text-2xl font-black tabular-nums">{value}</p>
       <p className="text-[11px] text-muted-foreground">{sub}</p>

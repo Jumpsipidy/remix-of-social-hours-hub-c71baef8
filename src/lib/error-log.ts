@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { deviceMeta } from "@/lib/device-meta";
 import { escalateAppError } from "@/lib/error-escalation.functions";
 import { getActionBreadcrumbs, getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
-import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
+import { fingerprint as computeFingerprint, isTelemetryFingerprint } from "@/lib/error-fingerprint";
 import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
 
 const IGNORE_SUBSTRINGS = [
@@ -84,7 +84,8 @@ async function maybeEscalate(
   ctx?: { source?: string; extra?: Record<string, unknown>; test?: boolean },
 ) {
   try {
-    const key = `${level}:${message.slice(0, 120)}`;
+    const fp = computeFingerprint(message, stack ?? null);
+    const key = `${level}:${fp.id}`;
     const now = Date.now();
     if (!ctx?.test) {
       const last = escalated.get(key);
@@ -129,6 +130,7 @@ async function maybeEscalate(
 // Ring buffer + dedupe to avoid flooding the DB
 const seen = new Map<string, number>();
 const DEDUPE_MS = 30_000;
+const TELEMETRY_DEDUPE_MS = 10 * 60_000;
 
 type ErrPayload = {
   message: string;
@@ -146,13 +148,15 @@ function shouldIgnoreNetworkUrl(url: string) {
   return IGNORED_NETWORK_URLS.some((s) => url.includes(s));
 }
 
-async function insert(action: "client.error" | "supabase.error", payload: ErrPayload) {
+async function insert(action: "client.error" | "supabase.error" | "client.telemetry", payload: ErrPayload) {
   const dev = deviceMeta();
-  const key = `${action}:${payload.message.slice(0, 120)}`;
+  const fp = computeFingerprint(payload.message, payload.stack ?? null);
+  const telemetry = action === "client.telemetry" || isTelemetryFingerprint(payload.message);
+  const key = `${action}:${fp.id}`;
   const now = Date.now();
   const forcedReport = payload.extra?.forceEscalate === true;
   const last = seen.get(key);
-  if (!forcedReport && last && now - last < DEDUPE_MS) return;
+  if (!forcedReport && last && now - last < (telemetry ? TELEMETRY_DEDUPE_MS : DEDUPE_MS)) return;
   seen.set(key, now);
 
   let uid: string | null = null;
@@ -163,7 +167,6 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
     /* offline / no session */
   }
 
-  const fp = computeFingerprint(payload.message, payload.stack ?? null);
   const row = {
     user_id: uid,
     action,
@@ -195,6 +198,10 @@ async function insert(action: "client.error" | "supabase.error", payload: ErrPay
       /* ignore */
     }
   }
+  // Telemetry (slow API / UI freeze / offline blips) is useful context but not
+  // an exception. Keep it out of email/Discord/AI so recordings don't spam you.
+  if (telemetry) return;
+
   // Escalate: critical → auto-lockdown + email; otherwise send warning email (server dedupes).
   // `forceEscalate` (admin test button) always escalates and bypasses every filter.
   const forced = payload.extra?.forceEscalate === true;
@@ -357,7 +364,7 @@ export function installGlobalErrorLogging() {
             },
           });
         } else if (!skip && isAppApi(url) && took >= SLOW_MS && !isAdminToolingCall(url)) {
-          void insert("client.error", {
+          void insert("client.telemetry", {
             message: `[lėtas API ${Math.round(took / 100) / 10}s] ${method} ${shortUrl(url)}`,
             source: "fetch.slow",
             extra: { url: url.slice(0, 500), method, ms: took, status: res.status },
@@ -457,7 +464,7 @@ async function peekBody(res: Response): Promise<string | undefined> {
  */
 function installFreezeDetector() {
   const TICK = 1_000;
-  const FREEZE_MS = 4_000;
+  const FREEZE_MS = 20_000;
   let last = Date.now();
   let reported = 0;
   setInterval(() => {
@@ -465,9 +472,10 @@ function installFreezeDetector() {
     const drift = now - last - TICK;
     last = now;
     if (document.hidden) return; // background tabs are throttled on purpose
-    if (drift >= FREEZE_MS && now - reported > 120_000) {
+    if (isAdminToolingCall("")) return;
+    if (drift >= FREEZE_MS && now - reported > 10 * 60_000) {
       reported = now;
-      void insert("client.error", {
+      void insert("client.telemetry", {
         message: `[UI užšalo ${Math.round(drift / 100) / 10}s] pagrindinė gija užblokuota`,
         source: "ui.freeze",
         extra: { driftMs: drift },
@@ -487,7 +495,7 @@ function installConnectivityWatch() {
     const ms = Date.now() - offlineSince;
     offlineSince = 0;
     if (ms < 5_000) return;
-    void insert("client.error", {
+    void insert("client.telemetry", {
       message: `[ryšys dingo ${Math.round(ms / 1000)}s] vartotojas buvo offline`,
       source: "net.offline",
       extra: { offlineMs: ms },

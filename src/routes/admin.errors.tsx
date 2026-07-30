@@ -391,6 +391,9 @@ function AdminErrorsPage() {
     const now = Date.now();
     const unknown = fps.filter((fp) => {
       if (analysisInflight.current.has(fp)) return false;
+      const sample = activeRows.find((r) => fpOfRow(r) === fp);
+      const msg = String(sample?.meta?.message ?? sample?.meta?.fingerprint_norm ?? "");
+      if (sample?.action === "client.telemetry" || msg.startsWith("telemetry:") || /\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg)) return false;
       if (!(fp in analyses)) return true;
       // null = failed — retry every 5 min
       if (analyses[fp] === null) {
@@ -430,7 +433,8 @@ function AdminErrorsPage() {
       const queue = [...unknown];
       const workers = Array.from({ length: 6 }, async () => {
         while (queue.length && !cancelled) {
-          const fp = queue.shift()!;
+          const fp = queue.shift();
+          if (!fp) break;
           await runOne(fp);
         }
       });
@@ -820,7 +824,11 @@ function AdminErrorsPage() {
       // Force-fetch AI analyses for any missing/failed fingerprints BEFORE
       // building the clipboard text — otherwise old rows copy as
       // "analizuojama fone…" even though a cached row exists in DB.
-      const fps = Array.from(new Set(list.map(fpOfRow))).filter(Boolean);
+      const aiEligible = list.filter((r) => {
+        const msg = String(r.meta?.message ?? r.meta?.fingerprint_norm ?? "");
+        return r.action !== "client.telemetry" && !msg.startsWith("telemetry:") && !/\[UI užšalo|\[lėtas API|\[ryšys dingo/i.test(msg);
+      });
+      const fps = Array.from(new Set(aiEligible.map(fpOfRow))).filter(Boolean);
       const missing = fps.filter((fp) => !analyses[fp]); // undefined OR null
       if (missing.length > 0) {
         const tid = toast.loading(`Kraunam AI analizes… 0/${missing.length}`);
@@ -829,7 +837,8 @@ function AdminErrorsPage() {
         const queue = [...missing];
         const workers = Array.from({ length: 6 }, async () => {
           while (queue.length) {
-            const fp = queue.shift()!;
+            const fp = queue.shift();
+            if (!fp) break;
             try {
               let a = await getAnalysisFn({ data: { fingerprint: fp } });
               if (!a) {

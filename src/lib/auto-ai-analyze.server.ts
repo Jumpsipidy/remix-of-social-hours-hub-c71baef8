@@ -4,10 +4,10 @@ import { normalizeConfidenceForStorage, upsertAnalysis } from "@/lib/ai-analysis
 // Discord/email alert already contains the AI result (no duplicate follow-up).
 //
 // Safe rate limiting: caches one row per fingerprint in ai_error_analyses and
-// skips re-analysis if the row was updated in the last 6h. Also global daily
+// skips re-analysis if the row was updated in the last 30d. Also global daily
 // cap of 80 auto analyses (system-triggered) per 24h to protect OpenAI cost.
 
-const AUTO_ANALYSIS_TTL_MS = 6 * 60 * 60 * 1000;
+const AUTO_ANALYSIS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const AUTO_GLOBAL_DAILY_CAP = 80;
 
 const AUTO_SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui (TanStack Start + React 19 + Supabase + Tailwind v4 + framer-motion).
@@ -43,6 +43,10 @@ export type AutoAnalysisResult = {
 };
 
 export async function autoAnalyzeAndAlert(input: AutoInput): Promise<AutoAnalysisResult | null> {
+  if (/\[UI užšalo|\[lėtas API|pagrindinė gija užblokuota|\[ryšys dingo/i.test(input.message)) {
+    return null;
+  }
+
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return null; // nothing to do without an OpenAI key
 
@@ -100,8 +104,8 @@ ${(input.stack ?? "(no stack)").slice(0, 2500)}`;
           },
           body: JSON.stringify({
             model: "gpt-4o-mini",
-            temperature: 0.2,
-            max_tokens: 900,
+            temperature: 0.1,
+            max_tokens: 520,
             messages: [
               { role: "system", content: AUTO_SYSTEM_PROMPT },
               { role: "user", content: userPrompt },

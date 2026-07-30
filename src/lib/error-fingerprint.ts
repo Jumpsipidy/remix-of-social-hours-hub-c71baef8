@@ -7,14 +7,36 @@
 
 const UUID_RX = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 const HEX_RX = /\b0x[0-9a-f]+\b|\b[0-9a-f]{16,}\b/gi;
-const NUM_RX = /\b\d{2,}\b/g;
+const NUM_RX = /\b\d+(\.\d+)?\b/g;
 const URL_RX = /https?:\/\/[^\s"')]+/g;
 const QUOTED_RX = /(['"`])(?:\\.|(?!\1).)*\1/g;
 const WS_RX = /\s+/g;
 
+function telemetrySignature(message: string): string | null {
+  const msg = message.toLowerCase();
+  if (msg.includes("[ui užšalo") || msg.includes("pagrindinė gija užblokuota")) {
+    return "telemetry:ui-freeze";
+  }
+  if (msg.includes("[lėtas api")) {
+    const method = message.match(/\]\s+(GET|POST|PUT|PATCH|DELETE)\s+/i)?.[1]?.toUpperCase() ?? "REQUEST";
+    const path = message.match(/\]\s+(?:GET|POST|PUT|PATCH|DELETE)\s+([^\s]+)/i)?.[1] ?? "app-api";
+    const normalizedPath = path
+      .replace(/\?.*$/, "")
+      .replace(UUID_RX, "<uuid>")
+      .replace(NUM_RX, "<n>")
+      .slice(0, 120);
+    return `telemetry:slow-api:${method}:${normalizedPath}`;
+  }
+  if (msg.includes("[ryšys dingo")) return "telemetry:offline-drop";
+  return null;
+}
+
 export function normalizeMessage(raw: string | undefined | null): string {
   if (!raw) return "(no message)";
-  return String(raw)
+  const text = String(raw);
+  const telemetry = telemetrySignature(text);
+  if (telemetry) return telemetry;
+  return text
     .replace(URL_RX, "<url>")
     .replace(UUID_RX, "<uuid>")
     .replace(HEX_RX, "<hex>")
@@ -59,9 +81,13 @@ export type Fingerprint = {
 
 export function fingerprint(message: string | undefined | null, stack?: string | null): Fingerprint {
   const norm = normalizeMessage(message);
-  const frame = firstFrame(stack ?? "");
+  const frame = norm.startsWith("telemetry:") ? "" : firstFrame(stack ?? "");
   const id = hash32(`${norm}|${frame}`);
   return { id, norm, frame };
+}
+
+export function isTelemetryFingerprint(message: string | undefined | null): boolean {
+  return normalizeMessage(message).startsWith("telemetry:");
 }
 
 /**
