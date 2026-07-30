@@ -7,7 +7,7 @@
 
 const UUID_RX = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 const HEX_RX = /\b0x[0-9a-f]+\b|\b[0-9a-f]{16,}\b/gi;
-const NUM_RX = /\b\d{2,}\b/g;
+const NUM_RX = /\b\d+(\.\d+)?\b/g;
 const URL_RX = /https?:\/\/[^\s"')]+/g;
 const QUOTED_RX = /(['"`])(?:\\.|(?!\1).)*\1/g;
 const WS_RX = /\s+/g;
