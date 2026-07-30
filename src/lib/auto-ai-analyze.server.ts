@@ -42,26 +42,6 @@ export type AutoAnalysisResult = {
   raw_response?: Record<string, unknown> | null;
 };
 
-async function postDiscord(url: string, body: unknown): Promise<void> {
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 3000);
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-  } catch (err) {
-    console.error("[auto-ai discord] failed", err);
-  }
-}
-
-function trim(s: string, max: number) {
-  return s.length > max ? s.slice(0, max - 1) + "…" : s;
-}
-
 export async function autoAnalyzeAndAlert(input: AutoInput): Promise<AutoAnalysisResult | null> {
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return null; // nothing to do without an OpenAI key
@@ -165,53 +145,4 @@ ${(input.stack ?? "(no stack)").slice(0, 2500)}`;
   }
 
   return analysis;
-
-  // Legacy follow-up sender kept only for old deployments that import this file;
-  // current flow returns the analysis and embeds it in the first alert.
-  /*
-  const discordUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!discordUrl || !analysis) return;
-  const promptForAgent = (analysis.raw_response as { prompt_for_agent?: string } | null)?.prompt_for_agent ?? "";
-  const sev = (analysis.severity_estimate ?? input.level).toLowerCase();
-  const sevColor =
-    sev === "critical" ? 0xef4444 :
-    sev === "high" ? 0xf97316 :
-    sev === "medium" ? 0xeab308 :
-    0x38bdf8;
-  const conf = Math.round((analysis.confidence ?? 0) * 100);
-  const fields: { name: string; value: string; inline?: boolean }[] = [
-    { name: "Priežastis", value: trim(analysis.suspected_cause || "(nepavyko nustatyti)", 1000) },
-  ];
-  if (analysis.suggested_file) {
-    fields.push({ name: "Failas", value: `\`${trim(analysis.suggested_file, 200)}\``, inline: true });
-  }
-  fields.push({ name: "Sunkumas", value: `**${sev.toUpperCase()}** · ${conf}% pasitikėjimas`, inline: true });
-  if (analysis.suggested_fix) {
-    fields.push({ name: "Fix žingsniai", value: trim(analysis.suggested_fix, 1024) });
-  }
-  if (promptForAgent) {
-    fields.push({ name: "Super-promptas Lovable agentui", value: "```" + trim(promptForAgent, 900) + "```" });
-  }
-
-  await postDiscord(discordUrl, {
-    username: "Socialinės Valandos · AI",
-    avatar_url: "https://socialinesvalandos.dev/apple-touch-icon.png",
-    embeds: [
-      {
-        author: {
-          name: isFresh ? "🧠 AI diagnozė · (cache)" : "🧠 AI diagnozė · instant",
-          url: "https://socialinesvalandos.dev/admin/autofix",
-        },
-        title: `AI: ${trim(input.message, 220)}`,
-        color: sevColor,
-        fields,
-        footer: {
-          text: `Fingerprint: ${input.fingerprint} · Model: gpt-4o-mini · Kopijuoti promptą /admin/autofix`,
-        },
-        url: "https://socialinesvalandos.dev/admin/autofix",
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  });
-  */
 }
