@@ -401,7 +401,7 @@ export function installGlobalErrorLogging() {
 // Deep capture helpers
 // ---------------------------------------------------------------------------
 
-const SLOW_MS = 9_000;
+const SLOW_MS = 15_000;
 const CAPTURED_4XX = new Set([400, 403, 409, 422, 429]);
 
 /** Only our own backend calls — third-party 4xx is not our bug. */
