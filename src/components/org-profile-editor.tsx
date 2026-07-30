@@ -68,6 +68,12 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
 
   const update = (patch: Partial<OrgProfile>) => setP((cur) => (cur ? { ...cur, ...patch } : cur));
 
+  const persistMediaPatch = async (patch: Pick<Partial<OrgProfile>, "logo_url" | "cover_url" | "gallery_urls">) => {
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+    if (error) throw error;
+    update(patch);
+  };
+
   const save = async () => {
     setSaving(true);
     const { error } = await supabase.from("profiles").update({
@@ -101,15 +107,15 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
     try {
       if (kind === "logo") {
         const url = await uploadImage("org-logos", userId, file);
-        update({ logo_url: url });
+        await persistMediaPatch({ logo_url: url });
       } else if (kind === "cover") {
         const url = await uploadImage("org-photos", userId, file, "covers/");
-        update({ cover_url: url });
+        await persistMediaPatch({ cover_url: url });
       } else {
         const url = await uploadImage("org-photos", userId, file, "gallery/");
-        update({ gallery_urls: [...(p.gallery_urls ?? []), url] });
+        await persistMediaPatch({ gallery_urls: [...(p.gallery_urls ?? []), url].slice(0, 6) });
       }
-      toast.success("Nuotrauka įkelta");
+      toast.success("Nuotrauka įkelta ir išsaugota");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -117,8 +123,13 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
     }
   };
 
-  const removeGallery = (url: string) => {
-    update({ gallery_urls: (p.gallery_urls ?? []).filter((u) => u !== url) });
+  const removeGallery = async (url: string) => {
+    try {
+      await persistMediaPatch({ gallery_urls: (p.gallery_urls ?? []).filter((u) => u !== url) });
+      toast.success("Nuotrauka pašalinta ir išsaugota");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   const addTag = (t: string) => {

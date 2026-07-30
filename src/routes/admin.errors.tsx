@@ -70,7 +70,16 @@ const CURRENT_BUILD_TIME = (import.meta as { env?: { VITE_COMMIT_SHA?: string; V
 
 
 export const Route = createFileRoute("/admin/errors")({
-  head: () => ({ meta: [{ title: "Klaidų centras — Sistemos administracija" }] }),
+  head: () => ({
+    meta: [
+      { title: "Klaidų centras — Socialinės Valandos" },
+      { name: "description", content: "Administratoriaus klaidų, AI analizės ir lockdown stebėjimo centras." },
+      { property: "og:title", content: "Klaidų centras — Socialinės Valandos" },
+      { property: "og:description", content: "Klaidų, AI analizės ir incidentų valdymo dashboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminErrorsPage,
 });
 
@@ -94,6 +103,13 @@ type ErrRow = {
     [k: string]: unknown;
   } | null;
 };
+
+function aiConfidencePct(value: unknown) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  if (Math.abs(n) <= 1) return Math.round(n * 100);
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
 
 type SiteSettings = {
   lockdown_enabled: boolean;
@@ -777,7 +793,7 @@ function AdminErrorsPage() {
         aiBlock = [
           `ai.cause:      ${ai.suspected_cause ?? "(nežinoma)"}`,
           ai.suggested_file ? `ai.file:       ${ai.suggested_file}` : null,
-          ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${ai.confidence != null ? ` (conf ${Math.round((ai.confidence ?? 0) * 100)}%)` : ""}` : null,
+          ai.severity_estimate ? `ai.severity:   ${ai.severity_estimate}${aiConfidencePct(ai.confidence) != null ? ` (conf ${aiConfidencePct(ai.confidence)}%)` : ""}` : null,
           ai.suggested_fix ? `ai.fix:\n${String(ai.suggested_fix).split("\n").map((l) => "  " + l).join("\n")}` : null,
           ai.raw_response?.prompt_for_agent ? `ai.prompt:\n${String(ai.raw_response.prompt_for_agent).split("\n").map((l) => "  " + l).join("\n")}` : null,
         ].filter(Boolean).join("\n");
@@ -2030,7 +2046,7 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
             )}
             {typeof data.confidence === "number" && (
               <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                pasitikėjimas {Math.round(data.confidence * 100)}%
+                pasitikėjimas {aiConfidencePct(data.confidence)}%
               </span>
             )}
           </div>
@@ -2320,7 +2336,7 @@ function AiCenterPanel() {
                   <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase ${sevColor[sev] ?? sevColor.medium}`}>{sev}</span>
                   {typeof a.confidence === "number" && (
                     <span className="rounded-full border border-border/40 bg-background/40 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-                      {Math.round((a.confidence ?? 0) * 100)}% pasitikėjimo
+                      {aiConfidencePct(a.confidence)}% pasitikėjimo
                     </span>
                   )}
                   {typeof a.occurrences_24h === "number" && a.occurrences_24h > 0 && (
