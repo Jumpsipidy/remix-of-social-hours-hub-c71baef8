@@ -75,87 +75,135 @@ function OrgDashboard() {
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
+  const [dataLoading, setDataLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  const refresh = async (uid: string) => {
-    const [{ data: rData }, { data: tData }] = await Promise.all([
-      supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
-      supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
-    ]);
-    const rs = (rData as Reservation[]) ?? [];
-    setReservations(rs);
-    setTasks((tData as TaskRow[]) ?? []);
-    const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
-    if (ids.length) {
-      const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
-      const map: Record<string, StudentLite> = {};
-      (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
-      setStudents(map);
+  const refresh = useCallback(async (uid: string) => {
+    try {
+      const [{ data: rData, error: rErr }, { data: tData, error: tErr }] = await Promise.all([
+        supabase.from("reservations").select("*").eq("organization_id", uid).order("created_at", { ascending: false }),
+        supabase.from("tasks").select("id, title, task_date, available_hours, location, is_open, created_at").eq("organization_id", uid).order("created_at", { ascending: false }),
+      ]);
+      if (rErr) throw rErr;
+      if (tErr) throw tErr;
+      const rs = (rData as Reservation[]) ?? [];
+      setReservations(rs);
+      setTasks((tData as TaskRow[]) ?? []);
+      const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
+      if (ids.length) {
+        const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
+        const map: Record<string, StudentLite> = {};
+        (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
+        setStudents(map);
+      } else {
+        setStudents({});
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti duomenų");
+    } finally {
+      setDataLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { if (user) refresh(user.id); }, [user]);
+  useEffect(() => { if (user) refresh(user.id); }, [user, refresh]);
+
+  // Realaus laiko atnaujinimas — naujos užklausos matomos iškart
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`org-dash-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user, refresh]);
 
   const toggleTask = async (t: TaskRow) => {
+    if (busyId) return;
+    setBusyId(t.id);
     const { error } = await supabase.from("tasks").update({ is_open: !t.is_open }).eq("id", t.id);
+    setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
     if (user) refresh(user.id);
   };
   const deleteTask = async (t: TaskRow) => {
+    if (busyId) return;
     if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
+    setBusyId(t.id);
     const { error } = await supabase.from("tasks").delete().eq("id", t.id);
+    setBusyId(null);
     if (error) return toast.error(error.message);
     toast.success("Užduotis ištrinta");
     if (user) refresh(user.id);
   };
 
   // -------------- ANALYTICS ---------------
-  const pending = reservations.filter((r) => r.status === "pending");
-  const approved = reservations.filter((r) => r.status === "approved");
-  const completed = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
-  const declined = reservations.filter((r) => r.status === "declined");
-  const hoursDelivered = completed.reduce((a, r) => a + Number(r.hours_to_earn), 0);
-  const uniqueStudents = new Set(reservations.map((r) => r.student_id)).size;
-  const returningStudents = (() => {
+  const { pending, approved, completed, declined } = useMemo(() => ({
+    pending: reservations.filter((r) => r.status === "pending"),
+    approved: reservations.filter((r) => r.status === "approved"),
+    completed: reservations.filter((r) => r.status === "completed" || r.status === "confirmed"),
+    declined: reservations.filter((r) => r.status === "declined"),
+  }), [reservations]);
+
+  const hoursDelivered = useMemo(
+    () => Math.round(completed.reduce((a, r) => a + (Number(r.hours_to_earn) || 0), 0) * 10) / 10,
+    [completed],
+  );
+  // Tikslu: savanoriai, kurie realiai atliko darbą (ne atmestos užklausos)
+  const uniqueStudents = useMemo(
+    () => new Set(completed.map((r) => r.student_id).filter(Boolean)).size,
+    [completed],
+  );
+  const engagedStudents = useMemo(
+    () => new Set(reservations.map((r) => r.student_id).filter(Boolean)).size,
+    [reservations],
+  );
+  const returningStudents = useMemo(() => {
     const byS: Record<string, number> = {};
     completed.forEach((r) => (byS[r.student_id] = (byS[r.student_id] ?? 0) + 1));
     return Object.values(byS).filter((n) => n >= 2).length;
-  })();
+  }, [completed]);
   const totalHandled = completed.length + declined.length;
   const acceptanceRate = totalHandled ? Math.round((completed.length / totalHandled) * 100) : 0;
-  const avgHours = completed.length ? (hoursDelivered / completed.length) : 0;
+  const avgHours = completed.length ? hoursDelivered / completed.length : 0;
 
   const chartData = useMemo(() => {
     const days: { label: string; hrs: number; count: number; iso: string }[] = [];
+    const today = new Date();
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const iso = d.toISOString().slice(0, 10);
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       days.push({ iso, label: `${d.getDate()}.${d.getMonth() + 1}`, hrs: 0, count: 0 });
     }
     const idx: Record<string, number> = Object.fromEntries(days.map((d, i) => [d.iso, i]));
     completed.forEach((r) => {
-      const i = idx[r.reservation_date];
-      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn); days[i].count += 1; }
+      const i = idx[String(r.reservation_date).slice(0, 10)];
+      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn) || 0; days[i].count += 1; }
     });
-    return days;
+    return days.map((d) => ({ ...d, hrs: Math.round(d.hrs * 10) / 10 }));
   }, [completed]);
 
-  const pieData = [
+  const pieData = useMemo(() => [
     { name: "Užbaigtos", value: completed.length, color: STATUS_COLORS.completed },
     { name: "Vykdomos", value: approved.length, color: STATUS_COLORS.approved },
     { name: "Laukia", value: pending.length, color: STATUS_COLORS.pending },
     { name: "Atmesta", value: declined.length, color: STATUS_COLORS.declined },
-  ].filter((s) => s.value > 0);
+  ].filter((s) => s.value > 0), [completed, approved, pending, declined]);
 
   // Busiest weekday
-  const weekdayCounts = [0, 0, 0, 0, 0, 0, 0];
-  completed.forEach((r) => {
-    const d = new Date(r.reservation_date);
-    weekdayCounts[(d.getDay() + 6) % 7] += 1;
-  });
+  const { weekdayCounts, maxWD, busiestIdx, hasWeekdayData } = useMemo(() => {
+    const counts = [0, 0, 0, 0, 0, 0, 0];
+    completed.forEach((r) => {
+      const d = new Date(`${String(r.reservation_date).slice(0, 10)}T00:00:00`);
+      if (Number.isNaN(d.getTime())) return;
+      counts[(d.getDay() + 6) % 7] += 1;
+    });
+    const max = Math.max(...counts);
+    return { weekdayCounts: counts, maxWD: Math.max(max, 1), busiestIdx: counts.indexOf(max), hasWeekdayData: max > 0 };
+  }, [completed]);
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
-  const maxWD = Math.max(...weekdayCounts, 1);
-  const busiestIdx = weekdayCounts.indexOf(Math.max(...weekdayCounts));
+
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
   if (!user || profile?.role !== "organization") {
