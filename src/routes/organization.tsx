@@ -219,7 +219,13 @@ function OrgDashboard() {
 
   const orgLabel = profile.organization_name ?? profile.full_name ?? "Organizacija";
   const openTasks = tasks.filter((t) => t.is_open).length;
-  const nextApproved = [...approved].sort((a, b) => `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`))[0];
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const approvedSorted = [...approved].sort((a, b) =>
+    `${a.reservation_date} ${a.start_time}`.localeCompare(`${b.reservation_date} ${b.start_time}`),
+  );
+  // Kitas darbas = artimiausias dar neįvykęs; jei visi praėję — rodom naujausią
+  const nextApproved = approvedSorted.find((r) => String(r.reservation_date).slice(0, 10) >= todayIso) ?? approvedSorted[0];
+  const overdue = approvedSorted.filter((r) => String(r.reservation_date).slice(0, 10) < todayIso);
   const orgMedia = profile as typeof profile & { logo_url?: string | null; cover_url?: string | null; address?: string | null; bio?: string | null };
   const profileChecks = [profile.organization_name, profile.email, orgMedia.logo_url, orgMedia.cover_url, orgMedia.bio, orgMedia.address];
   const profileStrength = profileChecks.filter(Boolean).length;
@@ -227,36 +233,50 @@ function OrgDashboard() {
   const liveWorkload = pending.length + approved.length;
 
   const approveInitial = async (r: Reservation) => {
-    const { error } = await supabase.from("reservations").update({ status: "approved" }).eq("id", r.id);
-    if (error) { toast.error(error.message); return; }
+    if (busyId) return;
+    setBusyId(r.id);
+    const { data, error } = await supabase
+      .from("reservations").update({ status: "approved" }).eq("id", r.id).eq("status", "pending").select("id");
+    if (error) { setBusyId(null); toast.error(error.message); return; }
+    if (!data?.length) { setBusyId(null); toast.info("Ši užklausa jau apdorota"); refresh(user.id); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Statusas: ON WORK / IN PROGRESS. Valandos bus įskaitytos tik po galutinio uždarymo.`, user.id);
     sendReservationApprovedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] reservation-approved failed", e));
     toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
+    setBusyId(null);
     refresh(user.id);
   };
 
   const decline = async (r: Reservation) => {
-    const { error } = await supabase.from("reservations").update({ status: "declined" }).eq("id", r.id);
-    if (error) { toast.error(error.message); return; }
+    if (busyId) return;
+    setBusyId(r.id);
+    const { data, error } = await supabase
+      .from("reservations").update({ status: "declined" }).eq("id", r.id).eq("status", "pending").select("id");
+    if (error) { setBusyId(null); toast.error(error.message); return; }
+    if (!data?.length) { setBusyId(null); toast.info("Ši užklausa jau apdorota"); refresh(user.id); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
     sendReservationDeclinedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] reservation-declined failed", e));
     toast.success("Atmesta — žinutė nusiųsta į pokalbį");
+    setBusyId(null);
     refresh(user.id);
   };
 
   const finalizeCompleted = async (r: Reservation) => {
+    if (busyId) return;
+    setBusyId(r.id);
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
-    if (error) { toast.error(error.message); return; }
+    if (error) { setBusyId(null); toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
     // Fire-and-forget email — never block the UI on Resend
     sendHoursConfirmedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] hours-confirmed failed", e));
     toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
     setVerifyRes(null);
+    setBusyId(null);
     refresh(user.id);
   };
+
 
   return (
     <PageShell>
