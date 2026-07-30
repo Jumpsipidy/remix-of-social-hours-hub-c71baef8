@@ -22,6 +22,10 @@ export const Route = createFileRoute("/organization")({
     meta: [
       { title: "Organizacijos sritis — Socialinės Valandos" },
       { name: "description", content: "Tvarkyk savanorystės užklausas ir stebėk savo organizacijos statistiką." },
+      { property: "og:title", content: "Organizacijos sritis — Socialinės Valandos" },
+      { property: "og:description", content: "Organizacijos savanorystės užklausų, QR tikrinimo ir statistikos valdymas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: OrgDashboard,
