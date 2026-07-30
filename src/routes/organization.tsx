@@ -379,27 +379,34 @@ function OrgDashboard() {
 
       {/* Primary stats */}
       <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
+        {overdue.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+            <AlarmClock className="h-4 w-4 text-warning-foreground" />
+            <span className="font-semibold">{overdue.length} vykdomos užduotys jau praėjo pagal datą</span>
+            <span className="text-muted-foreground">— uždaryk jas, kad mokiniams būtų įskaitytos valandos.</span>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length, sub: pending.length ? "Reikia dėmesio" : "Viskas apdorota" },
-            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: "In progress" },
+            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: overdue.length ? `${overdue.length} vėluoja` : "Vyksta dabar" },
             { icon: Clock, label: "Suteikta valandų", value: hoursDelivered, sub: `${completed.length} užbaigti vizitai` },
-            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių` },
+            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių · ${engagedStudents} kreipėsi` },
           ].map((s) => (
             <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
               <div className="flex items-center justify-between">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
                   <s.icon className="h-5 w-5" />
                 </div>
-                <TrendingUp className="h-4 w-4 text-success" />
               </div>
-              <p className="mt-5 font-display text-3xl font-bold">{s.value}</p>
+              <p className="mt-5 font-display text-3xl font-bold tabular-nums">{dataLoading ? "…" : s.value}</p>
               <p className="text-sm text-muted-foreground">{s.label}</p>
               {s.sub && <p className="text-xs text-muted-foreground/70">{s.sub}</p>}
             </div>
           ))}
         </div>
       </section>
+
 
       {/* Analytics */}
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
