@@ -13,7 +13,7 @@ import { clientFingerprint } from "@/lib/security-crypto.server";
 
 const CRITICAL_THRESHOLD = 2;
 const CRITICAL_WINDOW_MIN = 5;
-const EMAIL_DEDUPE_MIN = 60;
+const EMAIL_DEDUPE_MIN = 12 * 60;
 // Burst detection: if ≥ BURST_MIN_USERS distinct users hit any error in the last
 // BURST_WINDOW_S seconds, we treat the whole site as unstable and lockdown
 // immediately, regardless of severity classification. This catches broken
@@ -71,6 +71,10 @@ const IGNORE_RX = [
   /\[vite\]/i,
   /Minified React error #418/i,
   /ResizeObserver loop/i,
+  /\[UI užšalo/i,
+  /\[lėtas API/i,
+  /pagrindinė gija užblokuota/i,
+  /\[ryšys dingo/i,
 ];
 
 const breadcrumbSchema = z.object({

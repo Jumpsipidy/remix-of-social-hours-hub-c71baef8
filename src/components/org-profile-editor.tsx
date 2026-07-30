@@ -8,6 +8,7 @@ import {
 import { AddressPicker } from "./address-picker";
 import { LeafletMap } from "./leaflet-map";
 import { MapillaryPreview } from "./mapillary-preview";
+import { Button } from "@/components/ui/button";
 
 type OrgProfile = {
   id: string;
@@ -33,6 +34,14 @@ const ACTIVITY_SUGGESTIONS = [
   "renginiai", "sportas", "kultūra", "švietimas",
   "sveikata", "bendruomenė", "labdara", "menas",
 ];
+
+const MAX_IMAGE_SIZE = 6 * 1024 * 1024;
+
+function validateImage(file: File) {
+  if (!file.type.startsWith("image/")) return "Įkelk paveikslėlį, ne kitą failą.";
+  if (file.size > MAX_IMAGE_SIZE) return "Nuotrauka per didelė — iki 6 MB.";
+  return null;
+}
 
 async function uploadImage(bucket: "org-logos" | "org-photos", userId: string, file: File, subfolder = "") {
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
@@ -103,6 +112,11 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
     file: File | null | undefined,
   ) => {
     if (!file) return;
+    const invalid = validateImage(file);
+    if (invalid) {
+      toast.error(invalid);
+      return;
+    }
     setUploading(kind);
     try {
       if (kind === "logo") {
@@ -151,14 +165,14 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
           <h2 className="flex items-center gap-2 text-xl font-bold"><Building2 className="h-5 w-5 text-primary" /> Mano organizacijos profilis</h2>
           <p className="text-sm text-muted-foreground">Ką matys mokiniai, kai atsidarys tavo viešą profilį.</p>
         </div>
-        <button
+        <Button
           onClick={save}
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60"
+          className="rounded-full shadow-glow"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Išsaugoti pakeitimus
-        </button>
+        </Button>
       </div>
 
       {/* Cover + logo */}
@@ -172,7 +186,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
             {uploading === "cover" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
             Įkelti viršelį (16:9)
           </button>
-          <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload("cover", e.target.files?.[0])} />
+          <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleUpload("cover", e.target.files?.[0]); e.currentTarget.value = ""; }} />
         </div>
         <div className="flex flex-wrap items-end gap-4 px-6 pb-6">
           <div className="relative -mt-10 h-24 w-24 shrink-0 overflow-hidden rounded-3xl border-4 border-background bg-gradient-primary shadow-glow">
@@ -189,7 +203,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
             >
               {uploading === "logo" ? <Loader2 className="h-5 w-5 animate-spin text-white" /> : <Upload className="h-5 w-5 text-white" />}
             </button>
-            <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload("logo", e.target.files?.[0])} />
+            <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleUpload("logo", e.target.files?.[0]); e.currentTarget.value = ""; }} />
           </div>
           <div className="flex-1 min-w-[240px]">
             <label className="text-xs font-semibold text-muted-foreground">Organizacijos pavadinimas</label>
@@ -281,11 +295,11 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
             placeholder="Pridėk žymą ir spausk Enter"
             className="flex-1 rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary/60"
           />
-          <button onClick={() => addTag(tagInput)} className="rounded-2xl border border-border bg-background px-4 text-sm font-semibold hover:bg-accent">Pridėti</button>
+          <Button type="button" variant="outline" onClick={() => addTag(tagInput)} className="rounded-2xl">Pridėti</Button>
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {ACTIVITY_SUGGESTIONS.filter((s) => !(p.activity_tags ?? []).includes(s)).map((s) => (
-            <button key={s} onClick={() => addTag(s)} className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground">+ {s}</button>
+            <Button key={s} type="button" variant="outline" size="sm" onClick={() => addTag(s)} className="h-6 rounded-full px-2 text-[11px] text-muted-foreground">+ {s}</Button>
           ))}
         </div>
       </div>
@@ -296,15 +310,17 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
           <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary">
             <ImageIcon className="h-4 w-4" /> Galerija ({(p.gallery_urls ?? []).length}/6)
           </h3>
-          <button
+          <Button
             onClick={() => galleryRef.current?.click()}
             disabled={(p.gallery_urls ?? []).length >= 6 || uploading === "gallery"}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-accent disabled:opacity-50"
+            variant="outline"
+            size="sm"
+            className="rounded-full"
           >
             {uploading === "gallery" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
             Įkelti nuotrauką
-          </button>
-          <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleUpload("gallery", e.target.files?.[0])} />
+          </Button>
+          <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleUpload("gallery", e.target.files?.[0]); e.currentTarget.value = ""; }} />
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {(p.gallery_urls ?? []).map((url) => (
