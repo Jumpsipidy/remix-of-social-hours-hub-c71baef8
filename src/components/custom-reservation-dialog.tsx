@@ -97,7 +97,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("reservations").insert({
+    const { error } = await insertWithSchemaFallback("reservations", {
       student_id: user.id,
       organization_id: orgId,
       reservation_date: date,
@@ -110,12 +110,13 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       location: address,
       latitude: lat,
       longitude: lng,
-    } as any);
+    });
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+
     toast.success("Pasiūlymas išsiųstas organizacijai");
     onCreated?.();
     onClose();
