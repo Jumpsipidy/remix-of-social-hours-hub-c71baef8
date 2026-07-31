@@ -42,6 +42,8 @@ type Reservation = {
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
   created_at?: string;
   tags?: string[] | null;
+  checked_in_at?: string | null;
+
 };
 
 type StudentLite = { id: string; full_name: string | null; email: string | null; hours_earned: number };
@@ -264,7 +266,13 @@ function OrgDashboard() {
 
   const finalizeCompleted = async (r: Reservation) => {
     if (busyId) return;
+    if (!r.checked_in_at) {
+      toast.error("Mokinys dar neįsiregistravo — nuskaityk jo QR arba 6 skaitmenų kodą");
+      setVerifyRes(null);
+      return;
+    }
     setBusyId(r.id);
+
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
     if (error) { setBusyId(null); toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
@@ -651,14 +659,33 @@ function OrgDashboard() {
                         <MessageSquare className="h-3 w-3" /> Pokalbis
                       </button>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-2">
+                      {r.checked_in_at ? (
+                        <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs font-semibold text-success">
+                          <UserCheck className="h-3.5 w-3.5" />
+                          Mokinys įsiregistravo {new Date(r.checked_in_at).toLocaleString("lt-LT")}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
+                          <div className="flex items-center gap-2 font-semibold"><ScanLine className="h-3.5 w-3.5" /> Mokinys dar neįsiregistravo</div>
+                          <p className="mt-1 text-[11px] text-muted-foreground">
+                            Kai mokinys atvyks, paprašyk jo QR kodo arba 6 skaitmenų kodo iš jo telefono — tik tada galėsi uždaryti užduotį.
+                          </p>
+                          <Link to="/organization/scan" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:bg-foreground/20">
+                            <ScanLine className="h-3 w-3" /> Nuskaityti kodą
+                          </Link>
+                        </div>
+                      )}
                       <button
                         onClick={() => setVerifyRes(r)}
-                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
+                        disabled={!r.checked_in_at}
+                        title={r.checked_in_at ? undefined : "Pirma įregistruok mokinį QR arba 6 skaitmenų kodu"}
+                        className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                       >
                         <ShieldCheck className="h-4 w-4" /> Patvirtinti ir uždaryti užduotį
                       </button>
                     </div>
+
                   </div>
                 );
               })}

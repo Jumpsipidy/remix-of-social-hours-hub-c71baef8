@@ -29,21 +29,41 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
     const secret = process.env.CERT_SIGNING_SECRET;
     if (!secret) throw new Error("Server misconfigured: CERT_SIGNING_SECRET missing");
 
-    // Owner reservations (approved, not yet checked in / not yet completed)
-    const { data: owned } = await supabase
+    // Owner reservations (approved, not yet completed). Codes are generated on
+    // demand when the DB trigger never fired (older rows / missing trigger).
+    const { data: ownedRaw } = await supabase
       .from("reservations")
       .select("id, check_in_code, checked_in_at, status, reservation_date, organization_id")
       .eq("student_id", userId)
-      .eq("status", "approved")
-      .not("check_in_code", "is", null);
+      .eq("status", "approved");
 
     // Group participant rows
-    const { data: parts } = await supabase
+    const { data: partsRaw } = await supabase
       .from("reservation_participants")
       .select("id, reservation_id, check_in_code, checked_in_at, status")
       .eq("student_id", userId)
-      .eq("status", "accepted")
-      .not("check_in_code", "is", null);
+      .eq("status", "accepted");
+
+    const ensureCode = async (args: { reservationId?: string; participantId?: string }) => {
+      const { data, error } = await supabase.rpc("ensure_check_in_code" as never, {
+        _reservation_id: args.reservationId ?? null,
+        _participant_id: args.participantId ?? null,
+      } as never);
+      if (error) return null;
+      return typeof data === "string" ? data : null;
+    };
+
+    const owned: NonNullable<typeof ownedRaw> = [];
+    for (const r of ownedRaw ?? []) {
+      const code = r.check_in_code ?? (await ensureCode({ reservationId: r.id }));
+      if (code) owned.push({ ...r, check_in_code: code });
+    }
+
+    const parts: NonNullable<typeof partsRaw> = [];
+    for (const p of partsRaw ?? []) {
+      const code = p.check_in_code ?? (await ensureCode({ participantId: p.id }));
+      if (code) parts.push({ ...p, check_in_code: code });
+    }
 
     const window = Math.floor(Date.now() / 1000 / WINDOW_SECONDS);
 
