@@ -266,7 +266,13 @@ function OrgDashboard() {
 
   const finalizeCompleted = async (r: Reservation) => {
     if (busyId) return;
+    if (!r.checked_in_at) {
+      toast.error("Mokinys dar neįsiregistravo — nuskaityk jo QR arba 6 skaitmenų kodą");
+      setVerifyRes(null);
+      return;
+    }
     setBusyId(r.id);
+
     const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
     if (error) { setBusyId(null); toast.error(error.message); return; }
     await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
