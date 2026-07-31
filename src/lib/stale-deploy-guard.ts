@@ -38,6 +38,24 @@ function reloadOnce() {
   window.location.replace(url.toString());
 }
 
+// A <link rel="stylesheet"> or <script> that 404s does NOT produce an error
+// message — it fires a resource error event whose target is the element.
+// Without this, a stale CSS reference leaves the page completely unstyled.
+function isStaleResourceElement(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || !el.tagName) return false;
+  const tag = el.tagName.toUpperCase();
+  if (tag === "LINK") {
+    const link = el as HTMLLinkElement;
+    if (!/stylesheet/i.test(link.rel || "")) return false;
+    return /\/assets\/|\/_build\/|\.css(\?|$)/.test(link.href || "");
+  }
+  if (tag === "SCRIPT") {
+    return /\/assets\//.test((el as HTMLScriptElement).src || "");
+  }
+  return false;
+}
+
 let installed = false;
 export function installStaleDeployGuard() {
   if (installed || typeof window === "undefined") return;
@@ -46,10 +64,15 @@ export function installStaleDeployGuard() {
   window.addEventListener(
     "error",
     (e) => {
+      if (e.target && e.target !== window) {
+        if (isStaleResourceElement(e.target)) reloadOnce();
+        return;
+      }
       if (looksLikeStaleAsset(e.message, e.filename)) reloadOnce();
     },
     true,
   );
+
 
   window.addEventListener("unhandledrejection", (e) => {
     const r = e.reason as unknown;
