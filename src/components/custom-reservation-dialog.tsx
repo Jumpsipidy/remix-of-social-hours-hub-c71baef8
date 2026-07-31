@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { AddressPicker, type AddressValue } from "@/components/address-picker";
 import { LeafletMap } from "@/components/leaflet-map";
+import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
+
 
 type OrgRow = {
   id: string;
@@ -97,7 +99,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("reservations").insert({
+    const { error } = await insertWithSchemaFallback("reservations", {
       student_id: user.id,
       organization_id: orgId,
       reservation_date: date,
@@ -110,12 +112,13 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       location: address,
       latitude: lat,
       longitude: lng,
-    } as any);
+    });
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+
     toast.success("Pasiūlymas išsiųstas organizacijai");
     onCreated?.();
     onClose();

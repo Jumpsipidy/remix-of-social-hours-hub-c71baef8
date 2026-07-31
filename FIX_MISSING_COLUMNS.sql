@@ -59,3 +59,15 @@ CREATE POLICY "Admins can read ai analyses"
 
 -- 4) PostgREST schema cache perkrovimas (be šito klaida gali likti kelias minutes)
 NOTIFY pgrst, 'reload schema';
+
+-- ============================================================
+-- 5) reservations — adresas + koordinatės
+--    Sutvarko: "Could not find the 'address' column of 'reservations'
+--    in the schema cache" (pasiūlyto laiko rezervacija su vieta).
+-- ============================================================
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS address   TEXT;
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS location  TEXT;
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS latitude  DOUBLE PRECISION;
+ALTER TABLE public.reservations ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+
+NOTIFY pgrst, 'reload schema';

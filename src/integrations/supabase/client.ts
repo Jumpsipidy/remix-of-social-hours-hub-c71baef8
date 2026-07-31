@@ -6,8 +6,39 @@ function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith('sb_publishable_') || value.startsWith('sb_secret_');
 }
 
+/**
+ * Every PostgREST/Storage failure is reported to the error center, even when the
+ * calling component only shows a toast. Without this, silent `{ error }` returns
+ * (e.g. "Could not find the 'address' column ... in the schema cache") never
+ * reach /admin/errors.
+ */
+async function reportRestFailure(url: string, status: number, bodyText: string) {
+  if (typeof window === 'undefined') return;
+  // Never report the reporting pipeline itself (infinite loop) or auth 400s.
+  if (url.includes('/rest/v1/activity_log') || url.includes('/auth/v1/')) return;
+  if (status === 401 || status === 403 || status === 406) return;
+
+  let message = bodyText.slice(0, 400);
+  let code: string | undefined;
+  try {
+    const parsed = JSON.parse(bodyText) as { message?: string; code?: string; hint?: string };
+    if (parsed?.message) message = parsed.message;
+    code = parsed?.code;
+  } catch {
+    /* keep raw text */
+  }
+  const table = url.split('/rest/v1/')[1]?.split('?')[0] ?? 'rest';
+
+  try {
+    const { logSupabaseError } = await import('@/lib/error-log');
+    await logSupabaseError(table, { error: { message, code, details: `HTTP ${status} · ${url.split('?')[0]}` } });
+  } catch {
+    /* logging must never break the request */
+  }
+}
+
 function createSupabaseFetch(supabaseKey: string): typeof fetch {
-  return (input, init) => {
+  return async (input, init) => {
     const headers = new Headers(
       typeof Request !== 'undefined' && input instanceof Request ? input.headers : undefined,
     );
@@ -22,9 +53,20 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
     }
 
     headers.set('apikey', supabaseKey);
-    return fetch(input, { ...init, headers });
+    const response = await fetch(input, { ...init, headers });
+
+    if (!response.ok) {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      void response
+        .clone()
+        .text()
+        .then((text) => reportRestFailure(url, response.status, text))
+        .catch(() => {});
+    }
+    return response;
   };
 }
+
 
 
 // Ultimate fallback so the app never breaks in Lovable preview or misconfigured
