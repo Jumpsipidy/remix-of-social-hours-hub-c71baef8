@@ -392,32 +392,42 @@ function Home() {
 
         {/* MARQUEE — school band ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden border-y border-white/10 py-14">
-          <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
-            Mūsų bendruomenėje jau dalyvauja
-          </p>
-          <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-            <motion.div
-              className="flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic text-base sm:text-xl md:text-2xl text-white/60 whitespace-nowrap"
-              style={{ fontWeight: 400 }}
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 40, ease: "linear", repeat: Infinity }}
+          <Reveal>
+            <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
+              Mūsų bendruomenėje jau dalyvauja
+            </p>
+          </Reveal>
+          {[
+            { dir: ["0%", "-50%"], dur: 42, dot: LT_YELLOW, cls: "text-white/60" },
+            { dir: ["-50%", "0%"], dur: 55, dot: LT_GREEN, cls: "text-white/35" },
+          ].map((row, r) => (
+            <div
+              key={r}
+              className="mt-3 flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
             >
-              {Array.from({ length: 2 }).flatMap((_, k) => [
-                "Šeduvos gimnazija",
-                "Vilniaus licėjus",
-                "Kauno KTU gimnazija",
-                "Klaipėdos Ąžuolyno gimnazija",
-                "Panevėžio J. Balčikonio gimnazija",
-                "Šiaulių Didždvario gimnazija",
-              ].map((name, j) => (
-                <span key={`${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
-                  <span>{name}</span>
-                  <span aria-hidden style={{ color: EMBER }}>◆</span>
-                </span>
-              )))}
-            </motion.div>
-          </div>
+              <motion.div
+                className={`flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic font-normal text-base sm:text-xl md:text-2xl whitespace-nowrap ${row.cls}`}
+                animate={calm ? undefined : { x: row.dir }}
+                transition={{ duration: row.dur, ease: "linear", repeat: Infinity }}
+              >
+                {Array.from({ length: 2 }).flatMap((_, k) => [
+                  "Šeduvos gimnazija",
+                  "Vilniaus licėjus",
+                  "Kauno KTU gimnazija",
+                  "Klaipėdos Ąžuolyno gimnazija",
+                  "Panevėžio J. Balčikonio gimnazija",
+                  "Šiaulių Didždvario gimnazija",
+                ].map((name, j) => (
+                  <span key={`${r}-${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
+                    <span>{name}</span>
+                    <span aria-hidden style={{ color: r === 0 ? row.dot : LT_RED }}>◆</span>
+                  </span>
+                )))}
+              </motion.div>
+            </div>
+          ))}
         </section>
+
 
         {/* CLOSING CTA ─────────────────────────────────────────────────── */}
         <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32 text-center overflow-hidden">
