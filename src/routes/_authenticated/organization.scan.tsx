@@ -103,7 +103,10 @@ function ScanPage() {
             </div>
           </div>
 
+          <CheckinSetupBanner />
+
           <div className="mb-4 inline-flex rounded-2xl border border-border bg-card p-1">
+
             {(["code", "camera"] as const).map((m) => (
               <button
                 key={m}
