@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { PreLaunchBanner } from "@/components/prelaunch-banner";
+import {
+  CountUp,
+  KineticHeadline,
+  Magnetic,
+  Reveal,
+  TricolorRail,
+  TricolorRibbons,
+  useCalmMotion,
+  LT_GREEN,
+  LT_RED,
+  LT_YELLOW,
+} from "@/components/motion-kit";
 import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
