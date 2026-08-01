@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "../components/layout";
-import { supabase } from "@/integrations/supabase/client";
+import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { PreLaunchBanner } from "@/components/prelaunch-banner";
 import {
