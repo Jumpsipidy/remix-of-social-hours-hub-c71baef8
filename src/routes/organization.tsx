@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
+import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { useAuth } from "@/hooks/use-auth";
 import { listOrgStudents } from "@/lib/org-students.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -407,21 +408,12 @@ function OrgDashboard() {
         )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length, sub: pending.length ? "Reikia dėmesio" : "Viskas apdorota" },
-            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: overdue.length ? `${overdue.length} vėluoja` : "Vyksta dabar" },
-            { icon: Clock, label: "Suteikta valandų", value: hoursDelivered, sub: `${completed.length} užbaigti vizitai` },
-            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių · ${engagedStudents} kreipėsi` },
-          ].map((s) => (
-            <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-              <div className="flex items-center justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                  <s.icon className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="mt-5 font-display text-3xl font-bold tabular-nums">{dataLoading ? "…" : s.value}</p>
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              {s.sub && <p className="text-xs text-muted-foreground/70">{s.sub}</p>}
-            </div>
+            { icon: Inbox, label: "Laukia patvirtinimo", value: pending.length, sub: pending.length ? "Reikia dėmesio" : "Viskas apdorota", accent: DASH_GOLD },
+            { icon: PlayCircle, label: "Vykdomos", value: approved.length, sub: overdue.length ? `${overdue.length} vėluoja` : "Vyksta dabar", accent: DASH_EMBER },
+            { icon: Clock, label: "Suteikta valandų", value: hoursDelivered, sub: `${completed.length} užbaigti vizitai`, accent: DASH_GREEN },
+            { icon: Users, label: "Skirtingų savanorių", value: uniqueStudents, sub: `${returningStudents} grįžtančių · ${engagedStudents} kreipėsi`, accent: DASH_GREEN },
+          ].map((s, i) => (
+            <StatTile key={s.label} icon={s.icon} label={s.label} value={s.value} sub={s.sub} accent={s.accent} loading={dataLoading} delay={i * 0.06} />
           ))}
         </div>
       </section>

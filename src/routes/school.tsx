@@ -29,6 +29,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { PageShell } from "../components/layout";
+import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
@@ -886,6 +887,22 @@ function SchoolDashboard() {
 }
 
 function Metric({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  accent = DASH_EMBER,
+}: {
+  icon: typeof Users;
+  label: string;
+  value: string | number;
+  hint: string;
+  accent?: string;
+}) {
+  return <StatTile icon={Icon} label={label} value={value} sub={hint} accent={accent} />;
+}
+
+function LegacyMetric({
   icon: Icon,
   label,
   value,
