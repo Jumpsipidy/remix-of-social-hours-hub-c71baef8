@@ -34,7 +34,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition
       id="badge"
       component={BadgeClip}
-      durationInFrames={132}
+      durationInFrames={210}
       fps={30}
       width={1080}
       height={1080}
