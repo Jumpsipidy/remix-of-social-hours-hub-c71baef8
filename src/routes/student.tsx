@@ -136,21 +136,58 @@ function StudentDashboard() {
     })();
   }, [user]);
 
-  // Bump the login streak once per session (RPC itself is idempotent per day).
+  // Streak is claimed by the student with a click (RPC is idempotent per day).
+  const [streakActivated, setStreakActivated] = useState(false);
+  const [streakLoading, setStreakLoading] = useState(true);
+
+  const loadStreakBoard = async () => {
+    const { data: board } = await supabase.rpc("get_school_streak_leaderboard" as never);
+    if (Array.isArray(board)) setStreakBoard(board as typeof streakBoard);
+  };
+
   useEffect(() => {
     if (!user || profile?.role !== "student") return;
     (async () => {
-      const { data } = await supabase.rpc("bump_login_streak" as never);
-      const row = Array.isArray(data) ? (data as Array<{ login_streak: number; longest_login_streak: number; freeze_used_at: string | null }>)[0] : null;
+      setStreakLoading(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("login_streak, longest_login_streak, freeze_used_at, last_login_day")
+        .eq("id", user.id)
+        .maybeSingle();
+      const row = data as
+        | { login_streak: number | null; longest_login_streak: number | null; freeze_used_at: string | null; last_login_day: string | null }
+        | null;
       if (row) {
         setLoginStreak(row.login_streak ?? 0);
         setLongestStreak(row.longest_login_streak ?? 0);
         setFreezeUsedAt(row.freeze_used_at ?? null);
+        setStreakActivated(row.last_login_day === new Date().toISOString().slice(0, 10));
       }
-      const { data: board } = await supabase.rpc("get_school_streak_leaderboard" as never);
-      if (Array.isArray(board)) setStreakBoard(board as typeof streakBoard);
+      setStreakLoading(false);
+      await loadStreakBoard();
     })();
   }, [user, profile?.role]);
+
+  const activateStreak = async () => {
+    const { data, error } = await supabase.rpc("bump_login_streak" as never);
+    if (error) {
+      toast.error("Nepavyko aktyvuoti serijos", { description: error.message });
+      return;
+    }
+    const row = Array.isArray(data)
+      ? (data as Array<{ login_streak: number; longest_login_streak: number; freeze_used_at: string | null }>)[0]
+      : null;
+    if (row) {
+      setLoginStreak(row.login_streak ?? 0);
+      setLongestStreak(row.longest_login_streak ?? 0);
+      setFreezeUsedAt(row.freeze_used_at ?? null);
+    }
+    setStreakActivated(true);
+    toast.success(`🔥 Serija aktyvuota — ${row?.login_streak ?? loginStreak} d. iš eilės`, {
+      description: "Užsuk ir rytoj, kad nenutrūktų.",
+    });
+    await loadStreakBoard();
+  };
 
   useEffect(() => {
     if (!user || !profile) return;
