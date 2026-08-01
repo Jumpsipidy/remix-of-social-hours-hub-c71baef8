@@ -359,12 +359,15 @@ function Home() {
                 >
 
                   <SpotlightCard accent={c.accent} className="h-full p-6 sm:p-8">
-                    <div
+                    <motion.div
                       className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl"
                       style={{ background: `${c.accent}22`, border: `1px solid ${c.accent}44` }}
+                      whileHover={calm ? undefined : { rotate: [0, -10, 8, 0], scale: 1.08 }}
+                      transition={{ duration: 0.6 }}
                     >
                       <c.icon className="h-6 w-6" style={{ color: c.accent }} />
-                    </div>
+                    </motion.div>
+
                     <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/50">
                       {c.tag}
                     </div>
