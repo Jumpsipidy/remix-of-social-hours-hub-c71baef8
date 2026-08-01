@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   getSchoolSnapshot,
   getSchoolStudentReservations,
+  type SchoolScope,
   type SchoolReservation,
 } from "@/lib/school-data.functions";
 
@@ -135,21 +136,20 @@ function SchoolDashboard() {
     }
   });
 
+  const [scope, setScope] = useState<SchoolScope | null>(null);
   const assignedClasses = useMemo(
-    () => profile?.assigned_classes ?? [],
-    [profile?.assigned_classes],
+    () => scope?.assigned_classes ?? profile?.assigned_classes ?? [],
+    [scope?.assigned_classes, profile?.assigned_classes],
   );
-  const classRestricted = assignedClasses.length > 0;
+  const classRestricted = (scope?.class_restricted ?? assignedClasses.length > 0) === true;
 
   const refresh = useCallback(async () => {
     if (!user || profile?.role !== "school_admin") return;
     try {
       const snap = await getSchoolSnapshot();
-      const rawStudents = (snap.students as Student[]).filter(
-        (student) =>
-          !classRestricted ||
-          (student.class_year && assignedClasses.includes(String(student.class_year))),
-      );
+      setScope(snap.scope ?? null);
+      // Serveris jau apriboja pagal mokyklą + priskirtas klases.
+      const rawStudents = snap.students as Student[];
       setStudents(rawStudents);
 
       const orgList = snap.organizations as OrgProfile[];
@@ -163,7 +163,7 @@ function SchoolDashboard() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nepavyko įkelti mokyklos duomenų");
     }
-  }, [assignedClasses, classRestricted, profile?.role, user]);
+  }, [profile?.role, user]);
 
   useEffect(() => {
     refresh();
