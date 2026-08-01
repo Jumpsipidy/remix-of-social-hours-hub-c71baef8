@@ -6,6 +6,7 @@ import { submitCheckIn } from "@/lib/checkin.functions";
 import { toast } from "sonner";
 import { ArrowLeft, Camera, CameraOff, KeyRound, ScanLine, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/layout";
+import { CheckinSetupBanner } from "@/components/checkin-setup-banner";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 
 export const Route = createFileRoute("/_authenticated/organization/scan")({
