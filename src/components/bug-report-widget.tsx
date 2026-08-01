@@ -172,6 +172,7 @@ export function BugReportWidget() {
                 <li>Paskutiniai veiksmai: {diagPreview.steps}</li>
                 <li>Sesija: {diagPreview.session}…</li>
                 <li>Puslapis, kuriame esi</li>
+                <li>Ekrano nuotrauka: {shot ? "pridėta ✅" : "ruošiama…"}</li>
               </ul>
             )}
 
