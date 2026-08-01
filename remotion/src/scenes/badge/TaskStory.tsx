@@ -34,8 +34,8 @@ export const TaskStory: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
   // cursor walks the list
   const path = [
     { frame: 6, x: 860, y: 940 },
-    ...ROWS.map((_, i) => ({ frame: START + i * GAP, x: 300, y: 372 + i * rowH, click: true })),
-    { frame: START + ROWS.length * GAP + 12, x: 300, y: 372 + (ROWS.length - 1) * rowH },
+    ...ROWS.map((_, i) => ({ frame: START + i * GAP, x: 300, y: 440 + i * rowH, click: true })),
+    { frame: START + ROWS.length * GAP + 12, x: 300, y: 440 + (ROWS.length - 1) * rowH },
   ];
 
   return (

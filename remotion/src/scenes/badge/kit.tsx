@@ -180,7 +180,7 @@ export const KineticTitle: React.FC<{ text: string; from: string; to: string; st
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 22px" }}>
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 22px", maxWidth: 940 }}>
       {text.split(" ").map((w, i) => {
         const s = spring({
           frame: frame - start - i * 4,
@@ -311,7 +311,7 @@ export const RevealCard: React.FC<{ badge: BadgeSpec; start?: number; medal?: bo
           from={badge.from}
           to={badge.to}
           start={start + 12}
-          size={badge.title.length > 18 ? 78 : 98}
+          size={badge.title.length > 20 ? 66 : badge.title.length > 13 ? 80 : 98}
         />
       </div>
 
