@@ -47,6 +47,7 @@
         "date-fns": "^4.1.0",
         "embla-carousel-react": "^8.6.0",
         "framer-motion": "^12.41.0",
+        "html-to-image": "^1.11.13",
         "input-otp": "^1.4.2",
         "leaflet": "^1.9.4",
         "lucide-react": "^0.575.0",
@@ -790,6 +791,8 @@
     "hookable": ["hookable@6.1.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/hookable/-/hookable-6.1.1.tgz", {}, "sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ=="],
 
     "html-encoding-sniffer": ["html-encoding-sniffer@6.0.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/html-encoding-sniffer/-/html-encoding-sniffer-6.0.0.tgz", { "dependencies": { "@exodus/bytes": "^1.6.0" } }, "sha512-CV9TW3Y3f8/wT0BRFc1/KAVQ3TUHiXmaAb6VW9vtiMFf7SLoMd1PdAc4W3KFOFETBJUb90KatHqlsZMWV+R9Gg=="],
+
+    "html-to-image": ["html-to-image@1.11.13", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/html-to-image/-/html-to-image-1.11.13.tgz", {}, "sha512-cuOPoI7WApyhBElTTb9oqsawRvZ0rHhaHwghRLlTuffoD1B2aDemlCruLeZrUIIdvG7gs9xeELEPm6PhuASqrg=="],
 
     "httpxy": ["httpxy@0.5.4", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/httpxy/-/httpxy-0.5.4.tgz", {}, "sha512-URfeibL0kTH6VuIxxaJDXWQWEk8fKr+9L8MGv6CuAiNy0fGnoVhWbXBvJR1mkdsvCDUxvhX9cW60k2AhtH5s6w=="],
 
