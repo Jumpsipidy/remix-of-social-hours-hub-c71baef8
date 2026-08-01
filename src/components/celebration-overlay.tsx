@@ -82,6 +82,8 @@ function Bands({ out }: { out?: boolean }) {
 export function CelebrationStage() {
   const calm = useCalmMotion();
   const [queue, setQueue] = useState<CelebrationEvent[]>([]);
+  const [failed, setFailed] = useState<string | null>(null);
+
   const current = queue[0] ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
