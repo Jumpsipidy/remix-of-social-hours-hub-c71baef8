@@ -138,49 +138,25 @@ function SchoolDashboard() {
 
   const refresh = useCallback(async () => {
     if (!user || profile?.role !== "school_admin") return;
-    const [{ data: st, error: stError }, { data: og, error: ogError }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, full_name, email, hours_needed, hours_earned, class_year")
-        .eq("role", "student")
-        .order("full_name", { ascending: true }),
-      supabase
-        .from("profiles")
-        .select("id, full_name, email, organization_name")
-        .eq("role", "organization")
-        .order("organization_name", { ascending: true }),
-    ]);
+    try {
+      const snap = await getSchoolSnapshot();
+      const rawStudents = (snap.students as Student[]).filter(
+        (student) =>
+          !classRestricted ||
+          (student.class_year && assignedClasses.includes(String(student.class_year))),
+      );
+      setStudents(rawStudents);
 
-    if (stError) toast.error(stError.message);
-    if (ogError) toast.error(ogError.message);
+      const orgList = snap.organizations as OrgProfile[];
+      setOrgs(orgList);
+      const nextMap: Record<string, OrgProfile> = {};
+      orgList.forEach((o) => (nextMap[o.id] = o));
+      setOrgMap(nextMap);
 
-    const rawStudents = ((st as Student[]) ?? []).filter(
-      (student) =>
-        !classRestricted ||
-        (student.class_year && assignedClasses.includes(String(student.class_year))),
-    );
-    setStudents(rawStudents);
-
-    const orgList = (og as OrgProfile[]) ?? [];
-    setOrgs(orgList);
-    const nextMap: Record<string, OrgProfile> = {};
-    orgList.forEach((o) => (nextMap[o.id] = o));
-    setOrgMap(nextMap);
-
-    const ids = rawStudents.map((s) => s.id);
-    if (ids.length) {
-      const { data: rs, error: resError } = await supabase
-        .from("reservations")
-        .select(
-          "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
-        )
-        .in("student_id", ids)
-        .order("reservation_date", { ascending: false })
-        .limit(700);
-      if (resError) toast.error(resError.message);
-      setAllRes((rs as Reservation[]) ?? []);
-    } else {
-      setAllRes([]);
+      const allowed = new Set(rawStudents.map((s) => s.id));
+      setAllRes((snap.reservations as Reservation[]).filter((r) => allowed.has(r.student_id)));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti mokyklos duomenų");
     }
   }, [assignedClasses, classRestricted, profile?.role, user]);
 
@@ -190,18 +166,19 @@ function SchoolDashboard() {
 
   useEffect(() => {
     if (!auditing) return;
-    supabase
-      .from("reservations")
-      .select(
-        "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
-      )
-      .eq("student_id", auditing.id)
-      .order("reservation_date", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) toast.error(error.message);
-        setAuditRes((data as Reservation[]) ?? []);
+    let active = true;
+    getSchoolStudentReservations({ data: { studentId: auditing.id } })
+      .then((rows) => {
+        if (active) setAuditRes((rows as Reservation[]) ?? []);
+      })
+      .catch((e: unknown) => {
+        toast.error(e instanceof Error ? e.message : "Nepavyko įkelti audito");
       });
+    return () => {
+      active = false;
+    };
   }, [auditing]);
+
 
   const filteredStudents = useMemo(() => {
     const term = q.toLowerCase().trim();
