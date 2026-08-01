@@ -267,6 +267,8 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster />
+        <CelebrationStage />
+
         <BugReportWidget />
         <CookieConsent />
         {import.meta.env.DEV && <MockTesterPanel />}
