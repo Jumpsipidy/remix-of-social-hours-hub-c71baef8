@@ -33,6 +33,7 @@ import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashbo
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
+import { SchoolClaimPanel } from "@/components/school-claim-panel";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getSchoolSnapshot,
@@ -513,14 +514,8 @@ function SchoolDashboard() {
         </aside>
 
         <main className="min-w-0 space-y-6">
-          {scope?.unscoped && (
-            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
-              <p className="font-semibold">Paskyra dar nepriskirta mokyklai</p>
-              <p className="mt-1 text-muted-foreground">
-                Kol super administratorius nepriskirs mokyklos, mokinių duomenys nerodomi.
-              </p>
-            </div>
-          )}
+          {scope?.unscoped && <SchoolClaimPanel onClaimed={() => void refresh()} />}
+
           {scope && !scope.unscoped && (
             <div className="rounded-2xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
               Matomi duomenys:{" "}

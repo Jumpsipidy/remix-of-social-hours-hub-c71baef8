@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { RES_COLUMNS, isMissingAssignedClasses } from "./school-data.server";
+import { RES_COLUMNS, fetchAdminProfile, effectiveSchoolId } from "./school-data.server";
 
 export type SchoolStudent = {
   id: string;
@@ -62,36 +62,19 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<SchoolSnapshot> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // `assigned_classes` gali neegzistuoti senesnėse DB – tada krentam atgal.
-    let meRes = await supabaseAdmin
-      .from("profiles")
-      .select("id, role, school_id, assigned_classes")
-      .eq("id", context.userId)
-      .maybeSingle();
-    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
-      meRes = (await supabaseAdmin
-        .from("profiles")
-        .select("id, role, school_id")
-        .eq("id", context.userId)
-        .maybeSingle()) as typeof meRes;
-    }
-    const { data: me, error: meErr } = meRes;
-    if (meErr) throw new Error(meErr.message);
-
-    const meRow = me as
-      | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
-      | null;
+    const meRow = await fetchAdminProfile(supabaseAdmin as never, context.userId);
     if (!meRow || (meRow.role !== "school_admin" && meRow.role !== "admin")) {
       throw new Error("Prieiga tik mokyklos administratoriams.");
     }
 
-    const assigned = (meRow.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
+    const mySchoolId = effectiveSchoolId(meRow);
+    const assigned = (meRow.assigned_classes ?? []).map(String).map((c: string) => c.trim()).filter(Boolean);
     const scope: SchoolScope = {
       role: meRow.role === "admin" ? "admin" : "school_admin",
-      school_id: meRow.school_id ?? null,
+      school_id: mySchoolId,
       assigned_classes: assigned,
       class_restricted: meRow.role === "school_admin" && assigned.length > 0,
-      unscoped: meRow.role === "school_admin" && !meRow.school_id,
+      unscoped: meRow.role === "school_admin" && !mySchoolId,
     };
 
     // Mokyklos administratorius be priskirtos mokyklos nemato nieko –
@@ -107,10 +90,11 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       .order("full_name", { ascending: true });
 
     // Admins see everything; school admins are scoped to their school when set.
-    if (meRow.role === "school_admin" && meRow.school_id) {
-      studentQuery = studentQuery.eq("school_id", meRow.school_id);
+    if (meRow.role === "school_admin" && mySchoolId) {
+      studentQuery = studentQuery.eq("school_id", mySchoolId);
       if (assigned.length) studentQuery = studentQuery.in("class_year", assigned);
     }
+
 
     const [{ data: st, error: stErr }, { data: og, error: ogErr }] = await Promise.all([
       studentQuery,
@@ -164,26 +148,12 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
   })
   .handler(async ({ context, data }): Promise<SchoolReservation[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let meRes = await supabaseAdmin
-      .from("profiles")
-      .select("role, school_id, assigned_classes")
-      .eq("id", context.userId)
-      .maybeSingle();
-    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
-      meRes = (await supabaseAdmin
-        .from("profiles")
-        .select("role, school_id")
-        .eq("id", context.userId)
-        .maybeSingle()) as typeof meRes;
-    }
-    const { data: me } = meRes;
-    const meRow = me as
-      | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
-      | null;
+    const meRow = await fetchAdminProfile(supabaseAdmin as never, context.userId);
     const role = meRow?.role;
     if (role !== "school_admin" && role !== "admin") {
       throw new Error("Prieiga tik mokyklos administratoriams.");
     }
+    const mySchoolId = effectiveSchoolId(meRow);
 
     // Auditą galima matyti tik savo mokyklos (ir priskirtos klasės) mokinio.
     if (role === "school_admin") {
@@ -195,9 +165,10 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
       const s = stu as
         | { role?: string | null; school_id?: string | null; class_year?: string | null }
         | null;
-      const assigned = (meRow?.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
-      const sameSchool = !!meRow?.school_id && s?.school_id === meRow.school_id;
+      const assigned = (meRow?.assigned_classes ?? []).map(String).map((c: string) => c.trim()).filter(Boolean);
+      const sameSchool = !!mySchoolId && s?.school_id === mySchoolId;
       const inClass = !assigned.length || (!!s?.class_year && assigned.includes(String(s.class_year)));
+
       if (!s || s.role !== "student" || !sameSchool || !inClass) {
         throw new Error("Šis mokinys nepriklauso jūsų klasei ar mokyklai.");
       }
@@ -209,4 +180,42 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
       .order("reservation_date", { ascending: false });
     if (error) throw new Error(error.message);
     return (rs as SchoolReservation[]) ?? [];
+  });
+
+/**
+ * Mokyklos administratorius pats prisiriša prie mokyklos su mokyklos kodu –
+ * nereikia laukti super administratoriaus.
+ */
+export const claimSchoolForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { schoolId: string; code: string }) => {
+    if (!input?.schoolId) throw new Error("Pasirink mokyklą.");
+    if (!input?.code) throw new Error("Įvesk mokyklos kodą.");
+    return { schoolId: String(input.schoolId), code: String(input.code).trim().toUpperCase() };
+  })
+  .handler(async ({ context, data }): Promise<{ ok: true; schoolId: string }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const me = await fetchAdminProfile(supabaseAdmin as never, context.userId);
+    if (!me || (me.role !== "school_admin" && me.role !== "admin")) {
+      throw new Error("Prieiga tik mokyklos administratoriams.");
+    }
+    const { data: valid, error: rpcErr } = await supabaseAdmin.rpc("verify_school_signup_code", {
+      _school_id: data.schoolId,
+      _code: data.code,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+    if (!valid) throw new Error("Neteisingas mokyklos kodas.");
+
+    let upd = await supabaseAdmin
+      .from("profiles")
+      .update({ school_id: data.schoolId, associated_school_id: data.schoolId })
+      .eq("id", context.userId);
+    if (upd.error) {
+      upd = await supabaseAdmin
+        .from("profiles")
+        .update({ school_id: data.schoolId })
+        .eq("id", context.userId);
+    }
+    if (upd.error) throw new Error(upd.error.message);
+    return { ok: true, schoolId: data.schoolId };
   });
