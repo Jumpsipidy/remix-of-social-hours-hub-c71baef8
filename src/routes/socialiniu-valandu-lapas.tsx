@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
@@ -242,8 +242,8 @@ function Page() {
                   const c = checks[i]!;
                   const bad = c.errors.length > 0;
                   return (
-                    <>
-                      <tr key={i} className="border-t border-border/60">
+                    <Fragment key={i}>
+                      <tr className="border-t border-border/60">
                         <td className="py-1.5 pr-2">
                           <input type="date" max={new Date().toISOString().slice(0, 10)} value={r.date} onChange={(e) => update(i, "date", e.target.value)}
                             className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
@@ -276,7 +276,7 @@ function Page() {
                         </td>
                       </tr>
                       {bad && (
-                        <tr key={`${i}-err`}>
+                        <tr>
                           <td colSpan={6} className="pb-2 pl-1 text-[11px] text-destructive">
                             <span className="inline-flex items-start gap-1.5">
                               <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
@@ -285,7 +285,7 @@ function Page() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>
