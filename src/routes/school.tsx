@@ -1283,14 +1283,27 @@ function AuditDrawer({
                 </p>
                 <h3 className="mt-1 font-display text-xl font-bold">{auditing.full_name}</h3>
                 <p className="text-xs text-muted-foreground">{auditing.email}</p>
-                <div className="mt-3 flex gap-3 text-xs">
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full bg-success/15 px-2.5 py-1 font-semibold text-success">
                     Užbaigta: {completedRes.length}
                   </span>
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
                     Surinkta: {Number(auditing.hours_earned)} / {auditing.hours_needed} val.
                   </span>
+                  <span className="rounded-full bg-success/15 px-2.5 py-1 font-semibold text-success">
+                    QR patvirtinta: {verifiedHours.toFixed(1)} val.
+                  </span>
+                  {unverifiedHours > 0 && (
+                    <span className="rounded-full bg-warning/15 px-2.5 py-1 font-semibold text-warning-foreground">
+                      Be QR įrodymo: {unverifiedHours.toFixed(1)} val.
+                    </span>
+                  )}
                 </div>
+                <p className="mt-2 max-w-md text-[11px] text-muted-foreground">
+                  „QR patvirtinta“ reiškia, kad organizacija vietoje nuskenavo mokinio kodą — laikas užfiksuotas
+                  sistemoje. Likusias valandas verta patikrinti su organizacija prieš užskaitant.
+                </p>
+
               </div>
               <button
                 onClick={() => setAuditing(null)}
