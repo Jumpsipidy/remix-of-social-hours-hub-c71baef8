@@ -334,6 +334,24 @@ function SchoolDashboard() {
   ).length;
   const pendingCount = allRes.filter((r) => r.status === "pending").length;
   const completedRes = auditRes.filter((r) => r.status === "completed" || r.status === "confirmed");
+  /* Mokyklos masto anti-sukčiavimo suvestinė: kiek valandų turi QR įrodymą. */
+  const schoolCompleted = allRes.filter(
+    (r) => r.status === "completed" || r.status === "confirmed",
+  );
+  const schoolVerifiedHours = schoolCompleted.reduce(
+    (a, r) => (r.checked_in_at ? a + Number(r.hours_to_earn ?? 0) : a),
+    0,
+  );
+  const schoolUnverifiedHours = schoolCompleted.reduce(
+    (a, r) => (r.checked_in_at ? a : a + Number(r.hours_to_earn ?? 0)),
+    0,
+  );
+  const schoolTotalHours = schoolVerifiedHours + schoolUnverifiedHours;
+  const verifiedPct = schoolTotalHours
+    ? Math.round((schoolVerifiedHours / schoolTotalHours) * 100)
+    : 0;
+  const unverifiedRows = schoolCompleted.filter((r) => !r.checked_in_at).length;
+
   const orgName = (id: string) =>
     orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
 
@@ -572,6 +590,55 @@ function SchoolDashboard() {
               accent={DASH_GOLD}
             />
           </div>
+
+          {/* Anti-sukčiavimo / valandų tikrumo juosta */}
+          <div className="rounded-3xl border border-border bg-card/60 p-5 backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-success/15 text-success">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-display text-lg font-bold">Valandų tikrumo patikra</p>
+                  <p className="text-xs text-muted-foreground">
+                    „QR patvirtinta“ = organizacija vietoje nuskenavo mokinio kodą. Be QR — tik
+                    organizacijos rankinis patvirtinimas, todėl reikia papildomos peržiūros.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-success">
+                  <ShieldCheck className="h-3.5 w-3.5" /> QR patvirtinta:{" "}
+                  {schoolVerifiedHours.toFixed(1)} val.
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 ${
+                    schoolUnverifiedHours > 0
+                      ? "border-warning/40 bg-warning/10 text-warning-foreground"
+                      : "border-border bg-accent text-muted-foreground"
+                  }`}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" /> Be QR įrodymo:{" "}
+                  {schoolUnverifiedHours.toFixed(1)} val. ({unverifiedRows} įrašai)
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-3 py-1">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Įtartinų rezervacijų: {flaggedCount}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-accent">
+                <motion.div
+                  className="h-full rounded-full bg-success"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${verifiedPct}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold tabular-nums">{verifiedPct}% su įrodymu</span>
+            </div>
+          </div>
+
+
 
           {tab === "overview" && (
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -1128,14 +1195,16 @@ function QueueTable({
             <th className="py-3 pr-3">Val.</th>
             <th className="hidden py-3 pr-3 md:table-cell">Organizacija</th>
             <th className="py-3 pr-3">Statusas</th>
+            <th className="py-3 pr-3">Įrodymas</th>
             <th className="py-3 pr-3">Įtarimai</th>
+
             <th className="py-3 pr-3"></th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+              <td colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
                 Nieko nerasta pagal filtrus.
               </td>
             </tr>
@@ -1184,6 +1253,23 @@ function QueueTable({
                   </span>
                 </td>
                 <td className="py-2 pr-3">
+                  {r.checked_in_at ? (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success"
+                      title={`QR nuskenuota ${new Date(r.checked_in_at).toLocaleString("lt-LT")}`}
+                    >
+                      <ShieldCheck className="h-3 w-3" /> QR
+                    </span>
+                  ) : r.status === "completed" || r.status === "confirmed" ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
+                      <AlertTriangle className="h-3 w-3" /> Be QR
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="py-2 pr-3">
+
                   {fl.length === 0 ? (
                     <span className="text-xs text-muted-foreground">—</span>
                   ) : (
