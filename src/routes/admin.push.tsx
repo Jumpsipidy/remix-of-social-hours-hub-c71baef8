@@ -103,7 +103,15 @@ function PushAdminPage() {
         </div>
       </motion.header>
 
+      {tableMissing && (
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+          Lentelė <code className="font-mono">public.push_subscriptions</code> dar nesukurta tavo Supabase projekte.
+          Paleisk <code className="font-mono">FIX_PUSH_SUBSCRIPTIONS.sql</code> SQL redaktoriuje ir atnaujink puslapį.
+        </div>
+      )}
+
       <PushToggle />
+
 
       <motion.section
         initial={{ opacity: 0, y: 8 }}
