@@ -1253,6 +1253,23 @@ function QueueTable({
                   </span>
                 </td>
                 <td className="py-2 pr-3">
+                  {r.checked_in_at ? (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success"
+                      title={`QR nuskenuota ${new Date(r.checked_in_at).toLocaleString("lt-LT")}`}
+                    >
+                      <ShieldCheck className="h-3 w-3" /> QR
+                    </span>
+                  ) : r.status === "completed" || r.status === "confirmed" ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground">
+                      <AlertTriangle className="h-3 w-3" /> Be QR
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="py-2 pr-3">
+
                   {fl.length === 0 ? (
                     <span className="text-xs text-muted-foreground">—</span>
                   ) : (
