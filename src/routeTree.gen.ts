@@ -17,6 +17,7 @@ import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
 import { Route as SchoolRouteImport } from './routes/school'
+import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivatumasRouteImport } from './routes/privatumas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -97,6 +98,11 @@ const SocialiniuValanduLapasRoute = SocialiniuValanduLapasRouteImport.update({
 const SchoolRoute = SchoolRouteImport.update({
   id: '/school',
   path: '/school',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavanorysteSeduvojeRoute = SavanorysteSeduvojeRouteImport.update({
+  id: '/savanoryste-seduvoje',
+  path: '/savanoryste-seduvoje',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -366,6 +373,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -470,6 +479,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/savanoryste-seduvoje'
     | '/school'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -519,6 +529,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/savanoryste-seduvoje'
     | '/school'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -570,6 +581,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/savanoryste-seduvoje'
     | '/school'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -622,6 +634,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
+  SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
   SocialiniuValanduLapasRoute: typeof SocialiniuValanduLapasRoute
   StatusRoute: typeof StatusRoute
@@ -696,6 +709,13 @@ declare module '@tanstack/react-router' {
       path: '/school'
       fullPath: '/school'
       preLoaderRoute: typeof SchoolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/savanoryste-seduvoje': {
+      id: '/savanoryste-seduvoje'
+      path: '/savanoryste-seduvoje'
+      fullPath: '/savanoryste-seduvoje'
+      preLoaderRoute: typeof SavanorysteSeduvojeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -1062,6 +1082,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
+  SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,
   SocialiniuValanduLapasRoute: SocialiniuValanduLapasRoute,
   StatusRoute: StatusRoute,

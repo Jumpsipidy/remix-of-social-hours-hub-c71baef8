@@ -17,6 +17,7 @@ import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { PushToggle } from "@/components/push-toggle";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+import { listOrganizations } from "@/lib/orgs.functions";
 import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/achievements-grid";
@@ -82,6 +83,17 @@ function StudentDashboard() {
       const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
       const m: Record<string, OrgLite> = {};
       (ps as OrgLite[] | null)?.forEach((p) => (m[p.id] = p));
+      // RLS often hides other users' profiles from students, which used to show
+      // a generic „Organizacija" label. Fall back to the public org directory.
+      const missing = ids.filter((id) => !m[id]?.organization_name && !m[id]?.full_name);
+      if (missing.length) {
+        try {
+          const dir = await listOrganizations();
+          dir.forEach((o) => {
+            if (missing.includes(o.id)) m[o.id] = { id: o.id, organization_name: o.organization_name, full_name: o.full_name };
+          });
+        } catch { /* directory unavailable — keep fallback label */ }
+      }
       setOrgMap(m);
     }
   };
@@ -750,6 +762,15 @@ function OpenTasksFeed() {
         const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
         const map: Record<string, { organization_name: string | null; full_name: string | null }> = {};
         (ps ?? []).forEach((p: { id: string; organization_name: string | null; full_name: string | null }) => (map[p.id] = p));
+        const missing = ids.filter((id) => !map[id]?.organization_name && !map[id]?.full_name);
+        if (missing.length) {
+          try {
+            const dir = await listOrganizations();
+            dir.forEach((o) => {
+              if (missing.includes(o.id)) map[o.id] = { organization_name: o.organization_name, full_name: o.full_name };
+            });
+          } catch { /* ignore */ }
+        }
         setOrgs(map);
       }
     })();
