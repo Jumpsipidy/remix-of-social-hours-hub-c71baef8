@@ -120,7 +120,7 @@ function Home() {
     {
       tag: "Mokiniams",
       title: "Atrask save",
-      body: "Rinkis iš šimtų veiklų, kaupk valandas ir formuok savo ateities CV per prasmingą darbą.",
+      body: "Rinkis iš patikrintų veiklų, kaupk valandas ir formuok savo ateities CV per prasmingą darbą.",
       cta: "Naršyti užduotis",
       to: "/tasks",
       icon: GraduationCap,
