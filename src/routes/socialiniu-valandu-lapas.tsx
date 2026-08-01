@@ -156,7 +156,11 @@ function Page() {
   const [grade, setGrade] = useState("");
   const [rows, setRows] = useState<Row[]>([{ ...EMPTY }, { ...EMPTY }, { ...EMPTY }]);
 
-  const total = rows.reduce((s, r) => s + (parseFloat(r.hours.replace(",", ".")) || 0), 0);
+  const checks = useMemo(() => checkRows(rows), [rows]);
+  const total = checks.reduce((s, c) => (c.valid ? s + c.hours : s), 0);
+  const rejected = checks.reduce((s, c) => (!c.valid && c.hours > 0 ? s + c.hours : s), 0);
+  const problems = checks.filter((c) => c.errors.length > 0).length;
+
 
   function update(i: number, key: keyof Row, value: string) {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [key]: value } : r)));
