@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare,
   CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School,
-  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star, ShieldCheck,
+  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star, ShieldCheck, GraduationCap,
 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
@@ -21,6 +21,7 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/achievements-grid";
 import { StreakCard } from "@/components/streak-card";
+import { DashHero, StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { celebrate, setCelebrationContext } from "@/lib/celebrate";
 import { toast } from "sonner";
 
