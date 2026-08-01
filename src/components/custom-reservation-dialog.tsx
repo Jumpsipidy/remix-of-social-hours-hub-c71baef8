@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { AddressPicker, type AddressValue } from "@/components/address-picker";
 import { LeafletMap } from "@/components/leaflet-map";
 import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
+import { listOrganizations } from "@/lib/orgs.functions";
 
 
 type OrgRow = {
