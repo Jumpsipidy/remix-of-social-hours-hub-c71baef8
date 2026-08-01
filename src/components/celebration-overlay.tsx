@@ -84,7 +84,10 @@ export function CelebrationStage() {
   const current = queue[0] ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => onCelebrate((e) => setQueue((q) => (q.length > 4 ? q : [...q, e]))), []);
+  useEffect(() => {
+    const off = onCelebrate((e) => setQueue((q) => (q.length > 4 ? q : [...q, e])));
+    return () => { off(); };
+  }, []);
 
   useEffect(() => {
     if (!current) return;
