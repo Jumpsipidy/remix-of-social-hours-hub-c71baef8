@@ -166,6 +166,8 @@ BEGIN
     'student_name', COALESCE(sname,'Mokinys'), 'checked_in_at', ts, 'is_owner', false);
 END $$;
 
+REVOKE ALL ON FUNCTION public.check_in_by_code(TEXT) FROM PUBLIC, anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT EXECUTE ON FUNCTION public.check_in_by_code(TEXT) TO authenticated;
 
 -- ---------------------------------------------------------------
