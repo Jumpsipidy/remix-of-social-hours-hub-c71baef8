@@ -216,10 +216,14 @@ function SchoolDashboard() {
     });
     const m: Record<string, FraudFlag[]> = {};
     allRes.forEach((r) => {
-      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? []);
+      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? [], {
+        config: antiCheatCfg,
+        hoursNeeded: studentById[r.student_id]?.hours_needed,
+      });
     });
     return m;
-  }, [allRes]);
+  }, [allRes, antiCheatCfg, studentById]);
+
 
   const visibleStudentIds = useMemo(
     () => new Set(filteredStudents.map((s) => s.id)),
