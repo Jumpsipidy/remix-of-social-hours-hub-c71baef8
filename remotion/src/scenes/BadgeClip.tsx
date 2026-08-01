@@ -325,7 +325,7 @@ export const BadgeClip: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
 
         {/* vignette */}
         <AbsoluteFill
-          style={{ boxShadow: `inset 0 0 ${width * 0.35}px ${width * 0.09}px #000000cc`, pointerEvents: "none" }}
+          style={{ boxShadow: `inset 0 0 ${width * 0.3}px ${width * 0.05}px #000000aa`, pointerEvents: "none" }}
         />
       </AbsoluteFill>
 
