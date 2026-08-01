@@ -92,16 +92,18 @@ export function CelebrationStage() {
     return () => { off(); };
   }, []);
 
+  const clipUrl =
+    current?.kind === "achievement" ? CLIP_URLS[current.iconKey] : current ? clipForStreak(current.days) : undefined;
+  const hasClip = !!clipUrl && failed !== clipUrl;
+
   useEffect(() => {
     if (!current) return;
-    timer.current = setTimeout(() => setQueue((q) => q.slice(1)), calm ? 1800 : HOLD_MS);
+    timer.current = setTimeout(() => setQueue((q) => q.slice(1)), calm ? 1800 : hasClip ? 7000 : HOLD_MS);
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [current, calm]);
+  }, [current, calm, hasClip]);
 
   const skip = () => setQueue((q) => q.slice(1));
 
-  const clipUrl =
-    current?.kind === "achievement" ? CLIP_URLS[current.iconKey] : current ? clipForStreak(current.days) : undefined;
 
   const Icon =
     current?.kind === "achievement"
