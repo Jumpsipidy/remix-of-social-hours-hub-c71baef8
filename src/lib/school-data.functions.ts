@@ -62,36 +62,19 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<SchoolSnapshot> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // `assigned_classes` gali neegzistuoti senesnėse DB – tada krentam atgal.
-    let meRes = await supabaseAdmin
-      .from("profiles")
-      .select("id, role, school_id, assigned_classes")
-      .eq("id", context.userId)
-      .maybeSingle();
-    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
-      meRes = (await supabaseAdmin
-        .from("profiles")
-        .select("id, role, school_id")
-        .eq("id", context.userId)
-        .maybeSingle()) as typeof meRes;
-    }
-    const { data: me, error: meErr } = meRes;
-    if (meErr) throw new Error(meErr.message);
-
-    const meRow = me as
-      | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
-      | null;
+    const meRow = await fetchAdminProfile(supabaseAdmin as never, context.userId);
     if (!meRow || (meRow.role !== "school_admin" && meRow.role !== "admin")) {
       throw new Error("Prieiga tik mokyklos administratoriams.");
     }
 
+    const mySchoolId = effectiveSchoolId(meRow);
     const assigned = (meRow.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
     const scope: SchoolScope = {
       role: meRow.role === "admin" ? "admin" : "school_admin",
-      school_id: meRow.school_id ?? null,
+      school_id: mySchoolId,
       assigned_classes: assigned,
       class_restricted: meRow.role === "school_admin" && assigned.length > 0,
-      unscoped: meRow.role === "school_admin" && !meRow.school_id,
+      unscoped: meRow.role === "school_admin" && !mySchoolId,
     };
 
     // Mokyklos administratorius be priskirtos mokyklos nemato nieko –
@@ -107,10 +90,11 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       .order("full_name", { ascending: true });
 
     // Admins see everything; school admins are scoped to their school when set.
-    if (meRow.role === "school_admin" && meRow.school_id) {
-      studentQuery = studentQuery.eq("school_id", meRow.school_id);
+    if (meRow.role === "school_admin" && mySchoolId) {
+      studentQuery = studentQuery.eq("school_id", mySchoolId);
       if (assigned.length) studentQuery = studentQuery.in("class_year", assigned);
     }
+
 
     const [{ data: st, error: stErr }, { data: og, error: ogErr }] = await Promise.all([
       studentQuery,
