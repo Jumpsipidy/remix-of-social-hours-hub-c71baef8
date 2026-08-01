@@ -1195,7 +1195,9 @@ function QueueTable({
             <th className="py-3 pr-3">Val.</th>
             <th className="hidden py-3 pr-3 md:table-cell">Organizacija</th>
             <th className="py-3 pr-3">Statusas</th>
+            <th className="py-3 pr-3">Įrodymas</th>
             <th className="py-3 pr-3">Įtarimai</th>
+
             <th className="py-3 pr-3"></th>
           </tr>
         </thead>
