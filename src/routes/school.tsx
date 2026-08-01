@@ -467,6 +467,7 @@ function SchoolDashboard() {
       icon: AlertTriangle,
       badge: String(riskStudents.length),
     },
+    { id: "verify", label: "PDF / QR patikra", icon: ShieldCheck, badge: "skenuoti" },
     { id: "orgs", label: "Partneriai", icon: Building2, badge: String(orgs.length) },
     { id: "events", label: "Renginiai", icon: CalendarPlus, badge: "kurti" },
     { id: "accounts", label: "Paskyros", icon: UserPlus, badge: "org" },
