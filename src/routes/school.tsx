@@ -78,6 +78,8 @@ type Reservation = {
   status: "pending" | "approved" | "completed" | "confirmed" | "declined";
   legal_disclosure?: string | null;
   created_at?: string;
+  checked_in_at?: string | null;
+  checked_in_by?: string | null;
 };
 
 type OrgProfile = {
@@ -170,7 +172,7 @@ function SchoolDashboard() {
       const { data: rs, error: resError } = await supabase
         .from("reservations")
         .select(
-          "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at",
+          "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
         )
         .in("student_id", ids)
         .order("reservation_date", { ascending: false })
@@ -191,7 +193,7 @@ function SchoolDashboard() {
     supabase
       .from("reservations")
       .select(
-        "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at",
+        "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
       )
       .eq("student_id", auditing.id)
       .order("reservation_date", { ascending: false })
