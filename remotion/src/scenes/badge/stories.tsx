@@ -1,7 +1,7 @@
 import React from "react";
 import { AbsoluteFill, interpolate, random, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { LT_GREEN, LT_RED, LT_YELLOW, type BadgeSpec } from "../../badges";
-import { Backdrop, BG, body, clampIn, Confetti, display, Flash, lucide, REVEAL, Shockwave, Vignette } from "./kit";
+import { Backdrop, BG, body, clampIn, Confetti, display, Flash, lucide, REVEAL, Shockwave, SupportTag, Vignette } from "./kit";
 import { Reveal } from "./reveals";
 
 /* Shared shell so every story fades out into its own reveal style. */
@@ -20,8 +20,9 @@ export const Story: React.FC<{
       <AbsoluteFill style={{ opacity: out }}>{children}</AbsoluteFill>
       <Shockwave color={badge.to} at={outAt} size={380} />
       {confetti && <Confetti from={badge.from} to={badge.to} at={outAt + 2} originY={0.45} />}
-      <Flash at={outAt} strength={0.5} />
+      <Flash at={outAt} strength={0.22} />
       <Reveal badge={badge} start={REVEAL} />
+      <SupportTag badge={badge} />
       <Vignette />
     </AbsoluteFill>
   );

@@ -56,7 +56,7 @@ export const RevealShatter: React.FC<{ badge: BadgeSpec; start?: number }> = ({ 
           fontFamily: body,
           fontSize: 32,
           color: "#C7CDDA",
-          marginTop: 12,
+          marginTop: 26,
           maxWidth: 820,
           textAlign: "center",
           opacity: sub,
@@ -97,24 +97,26 @@ export const RevealCurtain: React.FC<{ badge: BadgeSpec; start?: number }> = ({ 
         <div style={{ marginTop: 18 }}>
           <KineticTitle text={badge.title} from={badge.from} to={badge.to} start={start + 18} size={badge.title.length > 16 ? 68 : 92} />
         </div>
-        <p style={{ fontFamily: body, fontSize: 32, color: "#C7CDDA", marginTop: 10, opacity: sub }}>{badge.subtitle}</p>
+        <p style={{ fontFamily: body, fontSize: 32, color: "#C7CDDA", marginTop: 26, opacity: sub }}>{badge.subtitle}</p>
       </div>
 
-      {[LT_YELLOW, LT_GREEN, LT_RED].map((c, i) => (
-        <div
-          key={c}
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: `${i * 33.34}%`,
-            height: "33.34%",
-            background: c,
-            transformOrigin: i % 2 ? "right" : "left",
-            transform: `scaleX(${close * (1 - open)})`,
-          }}
-        />
-      ))}
+      <AbsoluteFill>
+        {[LT_YELLOW, LT_GREEN, LT_RED].map((c, i) => (
+          <div
+            key={c}
+            style={{
+              position: "absolute",
+              left: 0,
+              width: "100%",
+              top: `${i * 33.34}%`,
+              height: "33.4%",
+              background: c,
+              transformOrigin: i % 2 ? "right center" : "left center",
+              transform: `scaleX(${close * (1 - open)})`,
+            }}
+          />
+        ))}
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -155,10 +157,17 @@ export const RevealFlip: React.FC<{ badge: BadgeSpec; start?: number }> = ({ bad
             <div style={{ marginTop: 22 }}>
               <KineticTitle text={badge.title} from={badge.from} to={badge.to} start={start + 22} size={badge.title.length > 16 ? 58 : 78} />
             </div>
-            <p style={{ fontFamily: body, fontSize: 30, color: "#C7CDDA", marginTop: 14 }}>{badge.subtitle}</p>
+            <p style={{ fontFamily: body, fontSize: 30, color: "#C7CDDA", marginTop: 24 }}>{badge.subtitle}</p>
           </div>
         ) : (
-          <span style={{ fontFamily: display, fontSize: 160, color: BG, transform: "scaleX(-1)" }}>?</span>
+          <div style={{ transform: "scaleX(-1)", display: "grid", placeItems: "center", gap: 24 }}>
+            <Icon size={150} color={BG} strokeWidth={1.6} />
+            <div style={{ display: "flex", gap: 10 }}>
+              {[LT_YELLOW, LT_GREEN, LT_RED].map((c) => (
+                <span key={c} style={{ width: 46, height: 8, borderRadius: 99, background: c, opacity: 0.65 }} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 40 }}>
@@ -181,7 +190,7 @@ export const RevealBanner: React.FC<{ badge: BadgeSpec; start?: number }> = ({ b
   const sub = spring({ frame: t - 26, fps, config: { damping: 200 }, durationInFrames: 20 });
 
   return (
-    <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 60 }}>
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 40 }}>
       <div style={{ width: 780, height: 14, borderRadius: 8, background: "#C7CDDA", boxShadow: "0 12px 40px #000a" }} />
       <div
         style={{
@@ -189,7 +198,7 @@ export const RevealBanner: React.FC<{ badge: BadgeSpec; start?: number }> = ({ b
           transformOrigin: "top center",
           transform: `rotate(${sway}deg) scaleY(${drop})`,
           background: `linear-gradient(180deg, ${badge.from}, ${badge.to})`,
-          padding: "60px 44px 90px",
+          padding: "52px 44px 76px",
           textAlign: "center",
           clipPath: "polygon(0 0, 100% 0, 100% 92%, 50% 100%, 0 92%)",
           boxShadow: `0 60px 160px ${badge.from}55`,
