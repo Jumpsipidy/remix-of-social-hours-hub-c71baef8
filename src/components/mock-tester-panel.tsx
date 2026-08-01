@@ -219,7 +219,7 @@ export function MockTesterPanel() {
                     <div key={r} className="flex gap-1.5">
                       <button onClick={() => handleCreateOne(r, true)} disabled={!!busy}
                         className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-glow disabled:opacity-50">
-                        <LogIn className="h-3.5 w-3.5" /> Sukurti + Login: {ROLE_LABEL[r]}
+                        <LogIn className="h-3.5 w-3.5" /> Sukurti ir prisijungti: {ROLE_LABEL[r]}
                       </button>
                       <button onClick={() => handleCreateOne(r, false)} disabled={!!busy}
                         title="Tik sukurti, be prisijungimo"
