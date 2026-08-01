@@ -351,22 +351,12 @@ function StudentDashboard() {
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Clock, label: "Užbaigtos valandos", value: `${completed}`, sub: `iš ${required} reikalingų` },
-            { icon: Target, label: "Liko valandų", value: `${remaining}`, sub: `${progress}% iki tikslo` },
-            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: active.length, sub: nextRes ? `Artimiausia: ${nextRes.reservation_date}` : "" },
-            { icon: Building2, label: "Organizacijos", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "kur savanoriavai" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-              <div className="flex items-center justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                  <s.icon className="h-5 w-5" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-success" />
-              </div>
-              <p className="mt-5 font-display text-3xl font-bold">{s.value}</p>
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              {s.sub && <p className="text-xs text-muted-foreground/80">{s.sub}</p>}
-            </div>
+            { icon: Clock, label: "Užbaigtos valandos", value: completed, sub: `iš ${required} reikalingų`, accent: DASH_GREEN },
+            { icon: Target, label: "Liko valandų", value: remaining, sub: `${progress}% iki tikslo`, accent: DASH_GOLD },
+            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: active.length, sub: nextRes ? `Artimiausia: ${nextRes.reservation_date}` : "Kol kas nieko nesuplanuota", accent: DASH_EMBER },
+            { icon: Building2, label: "Organizacijos", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "kur savanoriavai", accent: DASH_EMBER },
+          ].map((s, i) => (
+            <StatTile key={s.label} icon={s.icon} label={s.label} value={s.value} sub={s.sub} accent={s.accent} delay={i * 0.06} />
           ))}
         </div>
       </section>
