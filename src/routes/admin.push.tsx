@@ -28,13 +28,24 @@ function PushAdminPage() {
   const [url, setUrl] = useState("/");
   const [targetRole, setTargetRole] = useState<"all" | "student" | "organization" | "school_admin">("all");
   const [busy, setBusy] = useState(false);
+  const [tableMissing, setTableMissing] = useState(false);
 
   async function refresh() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("push_subscriptions")
       .select("user_id, endpoint, created_at")
       .order("created_at", { ascending: false })
       .limit(200);
+    if (error) {
+      // PGRST205 = lentelė dar nesukurta duomenų bazėje. Rodome instrukciją,
+      // o ne verčiame klaidą į globalų klaidų srautą.
+      const missing = error.code === "PGRST205" || /schema cache/i.test(error.message);
+      setTableMissing(missing);
+      if (!missing) toast.error(error.message);
+      setRows([]);
+      return;
+    }
+    setTableMissing(false);
     setRows(data || []);
   }
 
