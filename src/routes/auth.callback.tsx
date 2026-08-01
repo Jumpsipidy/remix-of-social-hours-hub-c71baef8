@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShieldCheck, Sparkles, UserCheck, KeyRound, Rocket } from "lucide-react";
+import { Heart, ShieldCheck, Sparkles, UserCheck, KeyRound, Rocket, Building2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
@@ -34,11 +34,28 @@ export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackPage,
 });
 
+const ROLE_CARDS = [
+  { key: "student", label: "Mokinys", icon: UserCheck, color: "#E9B44C" },
+  { key: "organization", label: "Organizacija", icon: Building2, color: "#4CA3E9" },
+  { key: "school_admin", label: "Mokyklos adminas", icon: GraduationCap, color: "#7CE97C" },
+  { key: "admin", label: "Super adminas", icon: ShieldCheck, color: "#C8452A" },
+] as const;
+
 function AuthCallbackPage() {
   const navigate = useNavigate();
   const ensureProfile = useServerFn(ensureSignedInProfile);
   const [stepIdx, setStepIdx] = useState(0);
   const [roleLabel, setRoleLabel] = useState<string | null>(null);
+  const [roleKey, setRoleKey] = useState<string | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [scanIdx, setScanIdx] = useState(0);
+
+  useEffect(() => {
+    if (roleKey || stepIdx < 2) return;
+    const id = setInterval(() => setScanIdx((i) => (i + 1) % ROLE_CARDS.length), 160);
+    return () => clearInterval(id);
+  }, [roleKey, stepIdx]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +91,6 @@ function AuthCallbackPage() {
           role === "organization" ? "Organizacija" :
           role === "school_admin" ? "Mokyklos administratorius" :
           role === "admin" ? "Super administratorius" : "Naudotojas";
-        setRoleLabel(label);
 
         await insertActivityLogRow({
           user_id: data.session.user.id,
@@ -85,10 +101,18 @@ function AuthCallbackPage() {
         });
         try { localStorage.setItem("sv_last_role_v1", role); } catch {}
 
-        await new Promise((r) => setTimeout(r, 500));
+        // Role „scanner“ — trumpai persuka visus vaidmenis, tada užsifiksuoja.
+        await new Promise((r) => setTimeout(r, 900));
+        if (cancelled) return;
+        setRoleKey(role);
+        setRoleLabel(label);
+
+        await new Promise((r) => setTimeout(r, 900));
         setStepIdx(3);
-        await new Promise((r) => setTimeout(r, 600));
+        setLaunching(true);
+        await new Promise((r) => setTimeout(r, 750));
         if (!cancelled) navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
+
       } catch (err) {
         const text = err instanceof Error ? err.message : "Nepavyko užbaigti prisijungimo";
         toast.error(text);
@@ -155,10 +179,82 @@ function AuthCallbackPage() {
           </motion.div>
         </div>
 
-        <h1 className="text-center text-2xl font-bold text-white">Prisijungimas beveik baigtas</h1>
+        <h1 className="text-center text-2xl font-bold text-white">
+          {roleKey ? "Vaidmuo nustatytas" : stepIdx >= 2 ? "Nustatomas tavo vaidmuo" : "Prisijungimas beveik baigtas"}
+        </h1>
         <p className="mt-1 text-center text-sm text-white/60">
           {roleLabel ? `Sveiki, ${roleLabel.toLowerCase()}!` : "Užbaigiam paskutinius žingsnius…"}
         </p>
+
+        {/* Role scanner — persuka vaidmenis ir užsifiksuoja ties tavuoju */}
+        {stepIdx >= 2 && (
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            {ROLE_CARDS.map((r, i) => {
+              const locked = roleKey === r.key;
+              const dim = !!roleKey && !locked;
+              const scanning = !roleKey && scanIdx === i;
+              const Icon = r.icon;
+              return (
+                <motion.div
+                  key={r.key}
+                  animate={{
+                    opacity: dim ? 0.2 : 1,
+                    scale: locked ? 1.08 : scanning ? 1.04 : 0.96,
+                    y: locked ? -4 : 0,
+                  }}
+                  transition={{ type: "spring", stiffness: 340, damping: 22 }}
+                  className="relative flex flex-col items-center gap-1 rounded-2xl border p-2 text-center"
+                  style={{
+                    borderColor: locked ? `${r.color}aa` : scanning ? `${r.color}66` : "#ffffff12",
+                    background: locked ? `${r.color}22` : scanning ? `${r.color}12` : "#ffffff05",
+                    boxShadow: locked ? `0 0 30px ${r.color}55` : "none",
+                  }}
+                >
+                  <Icon className="h-4 w-4" style={{ color: locked || scanning ? r.color : "#ffffff40" }} />
+                  <span className="text-[10px] leading-tight text-white/70">{r.label}</span>
+                  {locked && (
+                    <motion.span
+                      layoutId="role-lock-ring"
+                      className="pointer-events-none absolute inset-0 rounded-2xl border-2"
+                      style={{ borderColor: r.color }}
+                    />
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Paleidimo perėjimas į skydelį */}
+        <AnimatePresence>
+          {launching && (
+            <motion.div
+              key="launch"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 grid place-items-center"
+              style={{ background: "#0a0819" }}
+            >
+              <motion.div
+                initial={{ scale: 0.2, opacity: 0 }}
+                animate={{ scale: [0.2, 1, 26], opacity: [0, 1, 1] }}
+                transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1], times: [0, 0.45, 1] }}
+                className="h-24 w-24 rounded-full"
+                style={{ background: "radial-gradient(circle, #E9B44C, #C8452A 70%)" }}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: [0, 1, 0], y: 0 }}
+                transition={{ duration: 0.7 }}
+                className="absolute flex items-center gap-2 text-sm font-semibold text-white"
+              >
+                <Rocket className="h-4 w-4" /> Nukreipiame…
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
 
         {/* Step list */}
         <ul className="mt-6 space-y-2">
