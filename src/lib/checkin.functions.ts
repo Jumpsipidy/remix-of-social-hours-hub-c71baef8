@@ -162,7 +162,7 @@ export const submitCheckIn = createServerFn({ method: "POST" })
       }
       if (!code) throw new Error("Rezervacija nerasta");
       const { data: result, error } = await supabase.rpc("check_in_by_code", { _code: code });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyRpcError(error.message));
       return result as {
         ok: boolean; already: boolean; reservation_id: string;
         student_id: string; student_name: string; checked_in_at: string; is_owner: boolean;
