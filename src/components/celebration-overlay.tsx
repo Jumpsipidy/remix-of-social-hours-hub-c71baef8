@@ -240,6 +240,10 @@ export function CelebrationStage() {
   const stats: CelebrationStats = current?.stats ?? {};
   const tint = current?.kind === "streak" ? LT_RED : LT_GREEN;
   const quiet = calm || prefersReduced === true;
+  // While an MP4 plays, keep the compositor free: fullscreen blur + rotating
+  // conic gradients + confetti next to a decoding video is what caused jank.
+  const heavyFx = !quiet && !hasClip;
+
 
   const Icon =
     current?.kind === "achievement"
