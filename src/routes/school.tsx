@@ -1377,14 +1377,39 @@ function AuditDrawer({
                         </button>
                       </div>
                     </div>
+                    {isDone && (
+                      <div
+                        className={`mt-3 flex flex-wrap items-center gap-2 rounded-xl border p-2.5 text-[11px] ${
+                          r.checked_in_at
+                            ? "border-success/25 bg-success/5 text-success"
+                            : "border-warning/30 bg-warning/5 text-warning-foreground"
+                        }`}
+                      >
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          {r.checked_in_at ? (
+                            <>
+                              <ShieldCheck className="h-3 w-3" /> QR patvirtinta vietoje ·{" "}
+                              {new Date(r.checked_in_at).toLocaleString("lt-LT")}
+                            </>
+                          ) : (
+                            <>
+                              <AlertTriangle className="h-3 w-3" /> Be QR įrodymo — patvirtino tik organizacija
+                            </>
+                          )}
+                        </span>
+                        {r.legal_disclosure && (
+                          <span className="inline-flex items-center gap-1 font-semibold text-foreground/70">
+                            <ScrollText className="h-3 w-3" /> Pasirašytas teisinis patvirtinimas
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {isDone && r.legal_disclosure && (
-                      <div className="mt-3 rounded-xl border border-success/20 bg-success/5 p-3 text-xs text-foreground/80">
-                        <p className="mb-1 inline-flex items-center gap-1 font-semibold text-success">
-                          <ScrollText className="h-3 w-3" /> Pasirašytas teisinis patvirtinimas
-                        </p>
+                      <div className="mt-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-foreground/80">
                         <p className="whitespace-pre-wrap leading-relaxed">{r.legal_disclosure}</p>
                       </div>
                     )}
+
                   </div>
                 );
               })}
