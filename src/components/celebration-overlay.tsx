@@ -272,12 +272,12 @@ export function CelebrationStage() {
         >
           {/* backdrop */}
           <motion.div
-            className="absolute inset-0 bg-background/85 backdrop-blur-xl"
+            className={`absolute inset-0 bg-background/90 ${hasClip ? "backdrop-blur-sm" : "backdrop-blur-xl"}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           />
-          {!quiet && (
+          {heavyFx && (
             <>
               <Rays tint={tint} />
               <motion.div
@@ -288,11 +288,17 @@ export function CelebrationStage() {
               />
               <Bands />
               <Shockwave tint={tint} />
-              <Confetti seed={queue.length} count={narrow ? 26 : 48} />
+              <Confetti seed={queue.length} count={narrow ? 18 : 34} />
             </>
           )}
+          {!quiet && hasClip && (
+            /* light-weight accent only: one static glow, no repeating animation */
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: `radial-gradient(55% 55% at 50% 45%, ${tint}26, transparent 72%)` }}
+            />
+          )}
 
-          {/* skip */}
           <button
             type="button"
             data-testid="celebration-skip"
