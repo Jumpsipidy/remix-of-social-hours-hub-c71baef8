@@ -42,44 +42,53 @@ const GOLD = "#E9B44C";
 
 
 
-/** Cursor-tracking spotlight card */
+/** Cursor-tracking spotlight card with parallax tilt + sheen sweep */
 function SpotlightCard({
   children,
   className = "",
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
+  const calm = useCalmMotion();
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(50);
   const my = useMotionValue(50);
-  const rx = useSpring(useTransform(my, [0, 100], [6, -6]), { stiffness: 120, damping: 15 });
-  const ry = useSpring(useTransform(mx, [0, 100], [-6, 6]), { stiffness: 120, damping: 15 });
+  const rx = useSpring(useTransform(my, [0, 100], [7, -7]), { stiffness: 140, damping: 16 });
+  const ry = useSpring(useTransform(mx, [0, 100], [-7, 7]), { stiffness: 140, damping: 16 });
+  const glow = useTransform(
+    [mx, my] as never,
+    ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
+  );
 
   return (
     <motion.div
       ref={ref}
-      onMouseMove={(e) => {
-        const r = ref.current!.getBoundingClientRect();
+      onPointerMove={(e) => {
+        if (calm || e.pointerType !== "mouse" || !ref.current) return;
+        const r = ref.current.getBoundingClientRect();
         mx.set(((e.clientX - r.left) / r.width) * 100);
         my.set(((e.clientY - r.top) / r.height) * 100);
       }}
-      onMouseLeave={() => { mx.set(50); my.set(50); }}
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/20 ${className}`}
+      onPointerLeave={() => { mx.set(50); my.set(50); }}
+      whileHover={calm ? undefined : { y: -6 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+      style={calm ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/25 ${className}`}
     >
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: useTransform(
-            [mx, my] as any,
-            ([x, y]: any) => `radial-gradient(400px circle at ${x}% ${y}%, ${accent}22, transparent 60%)`,
-          ),
-        }}
+        style={{ background: glow }}
+      />
+      {/* diagonal sheen that sweeps across on hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
       />
       {children}
     </motion.div>
   );
 }
+
 
 function Home() {
   const { profile, isAuthenticated } = useAuth();
