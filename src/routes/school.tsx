@@ -48,6 +48,8 @@ import {
   type FraudFlag,
   type ReservationLike,
 } from "@/lib/fraud-flags";
+import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
+import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/school")({
