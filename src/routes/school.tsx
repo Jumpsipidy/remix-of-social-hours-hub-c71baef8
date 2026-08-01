@@ -34,7 +34,6 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
 import {
   getSchoolSnapshot,
   getSchoolStudentReservations,
