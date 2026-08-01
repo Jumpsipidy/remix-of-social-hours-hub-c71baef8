@@ -50,6 +50,11 @@ export type SchoolSnapshot = {
   scope: SchoolScope;
 };
 
+function isMissingAssignedClasses(message?: string | null): boolean {
+  const m = (message ?? "").toLowerCase();
+  return m.includes("assigned_classes") && (m.includes("does not exist") || m.includes("schema cache") || m.includes("column"));
+}
+
 const RES_COLUMNS =
   "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by";
 
@@ -63,11 +68,20 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<SchoolSnapshot> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: me, error: meErr } = await supabaseAdmin
+    // `assigned_classes` gali neegzistuoti senesnėse DB – tada krentam atgal.
+    let meRes = await supabaseAdmin
       .from("profiles")
       .select("id, role, school_id, assigned_classes")
       .eq("id", context.userId)
       .maybeSingle();
+    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
+      meRes = (await supabaseAdmin
+        .from("profiles")
+        .select("id, role, school_id")
+        .eq("id", context.userId)
+        .maybeSingle()) as typeof meRes;
+    }
+    const { data: me, error: meErr } = meRes;
     if (meErr) throw new Error(meErr.message);
 
     const meRow = me as
@@ -156,11 +170,19 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
   })
   .handler(async ({ context, data }): Promise<SchoolReservation[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: me } = await supabaseAdmin
+    let meRes = await supabaseAdmin
       .from("profiles")
       .select("role, school_id, assigned_classes")
       .eq("id", context.userId)
       .maybeSingle();
+    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
+      meRes = (await supabaseAdmin
+        .from("profiles")
+        .select("role, school_id")
+        .eq("id", context.userId)
+        .maybeSingle()) as typeof meRes;
+    }
+    const { data: me } = meRes;
     const meRow = me as
       | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
       | null;

@@ -60,6 +60,9 @@ export async function captureScreenshot(opts: { force?: boolean } = {}): Promise
           quality: 0.62,
           backgroundColor: "#0b1020",
           cacheBust: false,
+          // Cross-origin stylesheets throw on sheet.cssRules; font embedding
+          // is what triggers that read, so skip it entirely.
+          skipFonts: true,
           width,
           height,
           pixelRatio: 1,
