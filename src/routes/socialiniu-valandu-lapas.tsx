@@ -1,7 +1,17 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { FileText, Plus, Trash2, Printer, Download, CheckCircle2, ArrowRight } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  Trash2,
+  Printer,
+  Download,
+  CheckCircle2,
+  ArrowRight,
+  AlertTriangle,
+  ShieldCheck,
+} from "lucide-react";
 import { PageShell } from "@/components/layout";
 
 const URL = "https://socialinesvalandos.dev/socialiniu-valandu-lapas";
@@ -9,9 +19,56 @@ const TITLE = "Socialinių valandų lapas — atsisiųsk arba pildyk internetu (
 const DESC =
   "Nemokamas socialinių valandų lapas: pildyk internetu, atsispausdink arba atsisiųsk CSV. Paaiškiname, kaip teisingai užpildyti valandų apskaitos lapą mokyklai.";
 
-type Row = { date: string; org: string; activity: string; hours: string };
+type Row = { date: string; org: string; contact: string; activity: string; hours: string };
 
-const EMPTY: Row = { date: "", org: "", activity: "", hours: "" };
+const EMPTY: Row = { date: "", org: "", contact: "", activity: "", hours: "" };
+
+/** Vienai veiklai (vienam įrašui) — daugiausia 8 val., kaip ir platformoje. */
+const MAX_PER_ENTRY = 8;
+/** Vienai dienai — daugiausia 8 val. iš viso. */
+const MAX_PER_DAY = 8;
+
+function parseHours(v: string) {
+  const n = parseFloat(v.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+type RowCheck = { valid: boolean; hours: number; errors: string[] };
+
+function checkRows(rows: Row[]): RowCheck[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const perDay: Record<string, number> = {};
+  const seen = new Set<string>();
+
+  return rows.map((r) => {
+    const filled = !!(r.date || r.org || r.activity || r.hours || r.contact);
+    const hours = parseHours(r.hours);
+    const errors: string[] = [];
+    if (!filled) return { valid: false, hours: 0, errors };
+
+    if (!r.date) errors.push("Trūksta datos.");
+    else if (r.date > today) errors.push("Data negali būti ateityje.");
+    if (!r.org.trim()) errors.push("Nurodyk organizaciją.");
+    if (!r.contact.trim()) errors.push("Nurodyk atsakingą asmenį ir kontaktą (be jo mokykla neužskaitys).");
+    if (r.activity.trim().length < 8) errors.push("Aprašyk veiklą konkrečiau (bent 8 simboliai).");
+    if (hours <= 0) errors.push("Įrašyk realiai dirbtas valandas.");
+    if (hours > MAX_PER_ENTRY) errors.push(`Vienai veiklai daugiausia ${MAX_PER_ENTRY} val.`);
+
+    if (r.date) {
+      const key = `${r.date}|${r.org.trim().toLowerCase()}`;
+      if (seen.has(key)) errors.push("Tą pačią dieną toje pačioje organizacijoje jau yra įrašas — sujunk juos.");
+      seen.add(key);
+
+      const capped = Math.min(hours, MAX_PER_ENTRY);
+      const dayTotal = (perDay[r.date] ?? 0) + capped;
+      perDay[r.date] = dayTotal;
+      if (dayTotal > MAX_PER_DAY) errors.push(`Tą dieną viršyta ${MAX_PER_DAY} val. riba.`);
+    }
+
+    return { valid: errors.length === 0, hours, errors };
+  });
+}
+
 
 export const Route = createFileRoute("/socialiniu-valandu-lapas")({
   head: () => ({
