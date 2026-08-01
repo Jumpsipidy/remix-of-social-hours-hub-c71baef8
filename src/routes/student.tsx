@@ -207,8 +207,20 @@ function StudentDashboard() {
       groupJoined,
       loginStreakDays: loginStreak,
     };
+    // Feed live numbers to the celebration overlay so every clip is personalised.
+    setCelebrationContext({
+      name: profile.full_name ?? null,
+      hoursEarned: ctx.hoursEarned,
+      hoursNeeded: ctx.hoursNeeded,
+      completedCount: ctx.completedCount,
+      uniqueOrgs,
+      friendsCount,
+      loginStreakDays: loginStreak,
+      longestStreak,
+      classYear: profile.class_year ?? null,
+    });
     syncAchievements(user.id, ctx).then(setUnlockedKeys);
-  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined, loginStreak]);
+  }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined, loginStreak, longestStreak]);
 
 
   if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
