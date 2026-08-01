@@ -16,6 +16,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
+import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/socialines-valandos-mokykloms'
 import { Route as SchoolsRouteImport } from './routes/schools'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
@@ -96,6 +97,12 @@ const SocialiniuValanduLapasRoute = SocialiniuValanduLapasRouteImport.update({
   path: '/socialiniu-valandu-lapas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialinesValandosMokyklomsRoute =
+  SocialinesValandosMokyklomsRouteImport.update({
+    id: '/socialines-valandos-mokykloms',
+    path: '/socialines-valandos-mokykloms',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const SchoolsRoute = SchoolsRouteImport.update({
   id: '/schools',
   path: '/schools',
@@ -332,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
@@ -383,6 +391,7 @@ export interface FileRoutesByTo {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
@@ -437,6 +446,7 @@ export interface FileRoutesById {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
@@ -491,6 +501,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
@@ -595,6 +607,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
@@ -649,6 +662,7 @@ export interface RootRouteChildren {
   SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
   SchoolsRoute: typeof SchoolsRoute
+  SocialinesValandosMokyklomsRoute: typeof SocialinesValandosMokyklomsRoute
   SocialiniuValanduLapasRoute: typeof SocialiniuValanduLapasRoute
   StatusRoute: typeof StatusRoute
   StudentRoute: typeof StudentRoute
@@ -715,6 +729,13 @@ declare module '@tanstack/react-router' {
       path: '/socialiniu-valandu-lapas'
       fullPath: '/socialiniu-valandu-lapas'
       preLoaderRoute: typeof SocialiniuValanduLapasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socialines-valandos-mokykloms': {
+      id: '/socialines-valandos-mokykloms'
+      path: '/socialines-valandos-mokykloms'
+      fullPath: '/socialines-valandos-mokykloms'
+      preLoaderRoute: typeof SocialinesValandosMokyklomsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/schools': {
@@ -1105,6 +1126,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,
   SchoolsRoute: SchoolsRoute,
+  SocialinesValandosMokyklomsRoute: SocialinesValandosMokyklomsRoute,
   SocialiniuValanduLapasRoute: SocialiniuValanduLapasRoute,
   StatusRoute: StatusRoute,
   StudentRoute: StudentRoute,
