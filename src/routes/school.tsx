@@ -98,7 +98,15 @@ type OrgProfile = {
   email: string | null;
 };
 type SchoolTab =
-  "overview" | "students" | "classes" | "queue" | "risk" | "orgs" | "events" | "accounts";
+  | "overview"
+  | "students"
+  | "classes"
+  | "queue"
+  | "risk"
+  | "verify"
+  | "orgs"
+  | "events"
+  | "accounts";
 
 const STATUS_LT: Record<string, string> = {
   pending: "Laukia patvirtinimo",
