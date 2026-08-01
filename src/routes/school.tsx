@@ -334,6 +334,24 @@ function SchoolDashboard() {
   ).length;
   const pendingCount = allRes.filter((r) => r.status === "pending").length;
   const completedRes = auditRes.filter((r) => r.status === "completed" || r.status === "confirmed");
+  /* Mokyklos masto anti-sukčiavimo suvestinė: kiek valandų turi QR įrodymą. */
+  const schoolCompleted = allRes.filter(
+    (r) => r.status === "completed" || r.status === "confirmed",
+  );
+  const schoolVerifiedHours = schoolCompleted.reduce(
+    (a, r) => (r.checked_in_at ? a + Number(r.hours_to_earn ?? 0) : a),
+    0,
+  );
+  const schoolUnverifiedHours = schoolCompleted.reduce(
+    (a, r) => (r.checked_in_at ? a : a + Number(r.hours_to_earn ?? 0)),
+    0,
+  );
+  const schoolTotalHours = schoolVerifiedHours + schoolUnverifiedHours;
+  const verifiedPct = schoolTotalHours
+    ? Math.round((schoolVerifiedHours / schoolTotalHours) * 100)
+    : 0;
+  const unverifiedRows = schoolCompleted.filter((r) => !r.checked_in_at).length;
+
   const orgName = (id: string) =>
     orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
 
