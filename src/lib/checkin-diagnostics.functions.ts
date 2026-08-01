@@ -32,8 +32,8 @@ export const checkInDiagnostics = createServerFn({ method: "GET" })
       items.push({
         key: name,
         label,
-        ok: !error,
-        detail: error?.message,
+        ok: !missing,
+        detail: missing ? error?.message : undefined,
       });
     };
 
