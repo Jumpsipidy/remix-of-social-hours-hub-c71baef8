@@ -22,7 +22,7 @@ import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achie
 import { AchievementsGrid } from "@/components/achievements-grid";
 import { StreakCard } from "@/components/streak-card";
 import { CelebrationStage } from "@/components/celebration-overlay";
-import { celebrate } from "@/lib/celebrate";
+import { celebrate, setCelebrationContext } from "@/lib/celebrate";
 import { toast } from "sonner";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
