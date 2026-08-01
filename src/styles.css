@@ -172,3 +172,49 @@ body { overscroll-behavior-y: none; }
   input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
 }
 .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+
+/* ---- Custom notification (toast) surface ---- */
+@keyframes sv-toast-in {
+  from { opacity: 0; transform: translate3d(24px, -8px, 0) scale(0.94); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes sv-toast-out {
+  from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  to   { opacity: 0; transform: translate3d(24px, -6px, 0) scale(0.96); }
+}
+@keyframes sv-rail {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.sv-toast { animation: sv-toast-in 0.34s cubic-bezier(0.22, 1.2, 0.36, 1) both; }
+.sv-toast[data-removed="true"],
+.sv-toast[data-swiping="false"][data-visible="false"] { animation: sv-toast-out 0.2s ease-in both; }
+.sv-toast::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 9999px;
+  background: var(--gradient-primary);
+  transform-origin: top;
+  animation: sv-rail 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sv-toast::after {
+  content: "";
+  position: absolute;
+  inset: -40% -30% auto auto;
+  height: 140px; width: 140px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--primary) 22%, transparent);
+  filter: blur(48px);
+  pointer-events: none;
+}
+.sv-toast-success::before { background: linear-gradient(180deg, var(--success), color-mix(in oklab, var(--success) 40%, transparent)); }
+.sv-toast-success::after { background: color-mix(in oklab, var(--success) 22%, transparent); }
+.sv-toast-error::before { background: linear-gradient(180deg, var(--destructive), color-mix(in oklab, var(--destructive) 40%, transparent)); }
+.sv-toast-error::after { background: color-mix(in oklab, var(--destructive) 22%, transparent); }
+.sv-toast-warning::before { background: linear-gradient(180deg, var(--warning), color-mix(in oklab, var(--warning) 40%, transparent)); }
+.sv-toast-warning::after { background: color-mix(in oklab, var(--warning) 22%, transparent); }
+@media (max-width: 640px) {
+  .sv-toaster [data-sonner-toast] { width: calc(100vw - 24px) !important; }
+}
