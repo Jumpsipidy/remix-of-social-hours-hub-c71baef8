@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { RES_COLUMNS, isMissingAssignedClasses } from "./school-data.server";
+import { RES_COLUMNS, fetchAdminProfile, effectiveSchoolId } from "./school-data.server";
 
 export type SchoolStudent = {
   id: string;
