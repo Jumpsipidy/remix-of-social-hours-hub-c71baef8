@@ -214,6 +214,9 @@ export function Footer() {
           <h4 className="text-sm font-semibold">Platforma</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
             <li><Link to="/tasks" className="hover:text-foreground">Užduotys ir organizacijos</Link></li>
+            <li><Link to="/socialiniu-valandu-lapas" className="hover:text-foreground">Socialinių valandų lapas</Link></li>
+            <li><Link to="/blog/kas-yra-socialines-valandos" className="hover:text-foreground">Kas yra socialinės valandos?</Link></li>
+            <li><Link to="/blog/kaip-surinkti-socialines-valandas" className="hover:text-foreground">Kaip surinkti valandas</Link></li>
             {dash && (
               <li><Link to={dash.to} className="hover:text-foreground">{dash.label}</Link></li>
             )}
