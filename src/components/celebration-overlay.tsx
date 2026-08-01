@@ -254,7 +254,7 @@ export function CelebrationStage() {
         <motion.div
           key={`${current.kind}-${queue.length}-${"days" in current ? current.days : current.label}`}
           data-testid="celebration-stage"
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[10050] flex flex-col items-center justify-center overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.4 } }}
