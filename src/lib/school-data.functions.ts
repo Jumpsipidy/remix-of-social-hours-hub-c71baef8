@@ -32,10 +32,22 @@ export type SchoolReservation = {
   checked_in_by: string | null;
 };
 
+export type SchoolScope = {
+  role: "school_admin" | "admin";
+  school_id: string | null;
+  /** Empty array = visos mokyklos klasės. */
+  assigned_classes: string[];
+  /** true kai matomos tik priskirtos klasės (auklėtojo režimas). */
+  class_restricted: boolean;
+  /** true kai paskyrai nepriskirta mokykla – duomenys neprieinami. */
+  unscoped: boolean;
+};
+
 export type SchoolSnapshot = {
   students: SchoolStudent[];
   organizations: SchoolOrg[];
   reservations: SchoolReservation[];
+  scope: SchoolScope;
 };
 
 const RES_COLUMNS =
@@ -65,6 +77,21 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       throw new Error("Prieiga tik mokyklos administratoriams.");
     }
 
+    const assigned = (meRow.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
+    const scope: SchoolScope = {
+      role: meRow.role === "admin" ? "admin" : "school_admin",
+      school_id: meRow.school_id ?? null,
+      assigned_classes: assigned,
+      class_restricted: meRow.role === "school_admin" && assigned.length > 0,
+      unscoped: meRow.role === "school_admin" && !meRow.school_id,
+    };
+
+    // Mokyklos administratorius be priskirtos mokyklos nemato nieko –
+    // kitaip jis pamatytų visų mokyklų mokinius.
+    if (scope.unscoped) {
+      return { students: [], organizations: [], reservations: [], scope };
+    }
+
     let studentQuery = supabaseAdmin
       .from("profiles")
       .select("id, full_name, email, hours_needed, hours_earned, class_year, school_id")
@@ -74,6 +101,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     // Admins see everything; school admins are scoped to their school when set.
     if (meRow.role === "school_admin" && meRow.school_id) {
       studentQuery = studentQuery.eq("school_id", meRow.school_id);
+      if (assigned.length) studentQuery = studentQuery.in("class_year", assigned);
     }
 
     const [{ data: st, error: stErr }, { data: og, error: ogErr }] = await Promise.all([
@@ -87,9 +115,8 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     if (stErr) throw new Error(stErr.message);
     if (ogErr) throw new Error(ogErr.message);
 
-    const assigned = (meRow.assigned_classes ?? []).map(String).filter(Boolean);
     const students = (((st as (SchoolStudent & { school_id?: string | null })[]) ?? []).filter(
-      (s) => !assigned.length || (s.class_year && assigned.includes(String(s.class_year))),
+      (s) => !scope.class_restricted || (s.class_year && assigned.includes(String(s.class_year))),
     ) as SchoolStudent[]).map((s) => ({
       id: s.id,
       full_name: s.full_name ?? null,
@@ -116,6 +143,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       students,
       organizations: (og as SchoolOrg[]) ?? [],
       reservations,
+      scope,
     };
   });
 
@@ -130,12 +158,33 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin
       .from("profiles")
-      .select("role")
+      .select("role, school_id, assigned_classes")
       .eq("id", context.userId)
       .maybeSingle();
-    const role = (me as { role?: string } | null)?.role;
+    const meRow = me as
+      | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
+      | null;
+    const role = meRow?.role;
     if (role !== "school_admin" && role !== "admin") {
       throw new Error("Prieiga tik mokyklos administratoriams.");
+    }
+
+    // Auditą galima matyti tik savo mokyklos (ir priskirtos klasės) mokinio.
+    if (role === "school_admin") {
+      const { data: stu } = await supabaseAdmin
+        .from("profiles")
+        .select("id, role, school_id, class_year")
+        .eq("id", data.studentId)
+        .maybeSingle();
+      const s = stu as
+        | { role?: string | null; school_id?: string | null; class_year?: string | null }
+        | null;
+      const assigned = (meRow?.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
+      const sameSchool = !!meRow?.school_id && s?.school_id === meRow.school_id;
+      const inClass = !assigned.length || (!!s?.class_year && assigned.includes(String(s.class_year)));
+      if (!s || s.role !== "student" || !sameSchool || !inClass) {
+        throw new Error("Šis mokinys nepriklauso jūsų klasei ar mokyklai.");
+      }
     }
     const { data: rs, error } = await supabaseAdmin
       .from("reservations")
