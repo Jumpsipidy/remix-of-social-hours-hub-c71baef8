@@ -84,9 +84,9 @@ export const Vignette: React.FC = () => {
 };
 
 /* ── impact flash ──────────────────────────────────────────────────────── */
-export const Flash: React.FC<{ at: number; strength?: number }> = ({ at, strength = 0.5 }) => {
+export const Flash: React.FC<{ at: number; strength?: number }> = ({ at, strength = 0.22 }) => {
   const frame = useCurrentFrame();
-  const o = interpolate(frame, [at, at + 3, at + 15], [0, strength, 0], {
+  const o = interpolate(frame, [at, at + 2, at + 9], [0, strength, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -321,7 +321,7 @@ export const RevealCard: React.FC<{ badge: BadgeSpec; start?: number; medal?: bo
           fontWeight: 500,
           fontSize: 34,
           color: "#C7CDDA",
-          marginTop: 6,
+          marginTop: 26,
           maxWidth: 860,
           opacity: subIn,
           transform: `translateY(${(1 - subIn) * 18}px)`,
@@ -471,5 +471,63 @@ export const Pointer: React.FC<{
         />
       </svg>
     </div>
+  );
+};
+
+
+/* ── closing support tag shown at the tail of every clip ───────────────── */
+export const SupportTag: React.FC<{ badge: BadgeSpec; at?: number }> = ({ badge, at = 168 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  if (frame < at - 2) return null;
+  const s = spring({ frame: frame - at, fps, config: { damping: 200 }, durationInFrames: 18 });
+  const sweep = clampIn(frame, at + 6, at + 30);
+  return (
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "flex-end", paddingBottom: 54 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          padding: "14px 30px",
+          borderRadius: 999,
+          background: "#0A0C13d9",
+          border: `1px solid ${badge.to}44`,
+          boxShadow: `0 20px 60px #000000aa`,
+          opacity: s,
+          transform: `translateY(${(1 - s) * 26}px)`,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        <span style={{ display: "flex", gap: 5 }}>
+          {[LT_YELLOW, LT_GREEN, LT_RED].map((c) => (
+            <span key={c} style={{ width: 9, height: 9, borderRadius: 99, background: c }} />
+          ))}
+        </span>
+        <span
+          style={{
+            fontFamily: body,
+            fontWeight: 700,
+            fontSize: 27,
+            letterSpacing: 0.6,
+            color: "#EDF1F8",
+          }}
+        >
+          Pagalba: pagalba@socialinesvalandos.dev
+        </span>
+        <span
+          style={{
+            position: "absolute",
+            top: -40,
+            left: `${-30 + sweep * 150}%`,
+            width: 90,
+            height: 200,
+            background: "linear-gradient(90deg, transparent, #ffffff22, transparent)",
+            transform: "rotate(16deg)",
+          }}
+        />
+      </div>
+    </AbsoluteFill>
   );
 };
