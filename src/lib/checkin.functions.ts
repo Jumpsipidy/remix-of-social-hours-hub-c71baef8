@@ -173,7 +173,7 @@ export const submitCheckIn = createServerFn({ method: "POST" })
     const cleaned = raw.replace(/\D/g, "");
     if (cleaned.length !== 6) throw new Error("Kodas turi būti 6 skaitmenys");
     const { data: result, error } = await supabase.rpc("check_in_by_code", { _code: cleaned });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(friendlyRpcError(error.message));
     void userId;
     return result as {
       ok: boolean; already: boolean; reservation_id: string;
