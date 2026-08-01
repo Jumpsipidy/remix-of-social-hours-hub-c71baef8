@@ -68,7 +68,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     }
 
     const mySchoolId = effectiveSchoolId(meRow);
-    const assigned = (meRow.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
+    const assigned = (meRow.assigned_classes ?? []).map(String).map((c: string) => c.trim()).filter(Boolean);
     const scope: SchoolScope = {
       role: meRow.role === "admin" ? "admin" : "school_admin",
       school_id: mySchoolId,
