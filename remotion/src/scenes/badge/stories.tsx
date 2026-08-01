@@ -5,7 +5,7 @@ import { Backdrop, BG, body, clampIn, Confetti, display, Flash, lucide, REVEAL, 
 import { Reveal } from "./reveals";
 
 /* Shared shell so every story fades out into its own reveal style. */
-const Story: React.FC<{
+export const Story: React.FC<{
   badge: BadgeSpec;
   mood?: "grid" | "dots" | "rings" | "beams" | "paper";
   outAt?: number;
@@ -27,7 +27,7 @@ const Story: React.FC<{
   );
 };
 
-const Caption: React.FC<{ text: string; color: string; at?: number; bottom?: number }> = ({
+export const Caption: React.FC<{ text: string; color: string; at?: number; bottom?: number }> = ({
   text,
   color,
   at = 6,
@@ -58,7 +58,7 @@ const Caption: React.FC<{ text: string; color: string; at?: number; bottom?: num
   );
 };
 
-const useCount = (to: number, from = 0, start = 20, dur = 66) => {
+export const useCount = (to: number, from = 0, start = 20, dur = 66) => {
   const frame = useCurrentFrame();
   const t = interpolate(frame, [start, start + dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const eased = 1 - Math.pow(1 - t, 3);
