@@ -5,6 +5,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // Rotating QR window: token valid for 30 seconds.
 const WINDOW_SECONDS = 30;
 
+/** Turn raw PostgREST plumbing errors into something an organization can act on. */
+function friendlyRpcError(message: string): string {
+  if (/PGRST202|could not find the function|does not exist/i.test(message)) {
+    return "Duomenų bazėje trūksta check_in_by_code funkcijos — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
+  }
+  if (/PGRST204|schema cache/i.test(message)) {
+    return "Duomenų bazėje trūksta įsiregistravimo stulpelių — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
+  }
+  if (/not found|nerast/i.test(message)) {
+    return "Toks kodas nerastas arba jis priklauso kitai organizacijai.";
+  }
+  return message;
+}
+
+
 async function hmacHex(secret: string, msg: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
