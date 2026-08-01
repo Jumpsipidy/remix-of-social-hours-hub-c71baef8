@@ -30,6 +30,10 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Socialinesvalandos.dev — Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma. Rezervuok, sekk ir surink savo valandas." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
 
+      { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
   }),

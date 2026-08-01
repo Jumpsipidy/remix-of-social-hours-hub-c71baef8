@@ -28,6 +28,7 @@ export const Route = createFileRoute("/organization")({
       { property: "og:description", content: "Organizacijos savanorystės užklausų, QR tikrinimo ir statistikos valdymas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: OrgDashboard,

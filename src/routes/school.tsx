@@ -52,6 +52,7 @@ export const Route = createFileRoute("/school")({
         content:
           "Stebėk priskirtų klasių mokinių progresą, audituok rezervacijas ir valdyk mokyklos partnerius.",
       },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: SchoolDashboard,

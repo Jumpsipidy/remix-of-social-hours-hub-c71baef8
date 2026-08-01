@@ -32,6 +32,7 @@ export const Route = createFileRoute("/student")({
     meta: [
       { title: "Mokinio sritis — Socialinės Valandos" },
       { name: "description", content: "Stebėk sukauptas valandas, suplanuotus vizitus ir savanorystės progresą." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: StudentDashboard,
