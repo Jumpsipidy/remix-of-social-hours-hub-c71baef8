@@ -1,0 +1,204 @@
+[
+  {
+    "key": "first_hour",
+    "kind": "achievement",
+    "title": "Pirmoji valanda",
+    "subtitle": "Užbaigei pirmąją socialinę valandą.",
+    "icon": "Star",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "five_hours",
+    "kind": "achievement",
+    "title": "5 valandos",
+    "subtitle": "Surinkai 5 valandas.",
+    "icon": "Sparkles",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "ten_hours",
+    "kind": "achievement",
+    "title": "10 valandų",
+    "subtitle": "Dviženklis skaičius!",
+    "icon": "Trophy",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "half_way",
+    "kind": "achievement",
+    "title": "Pusiaukelė",
+    "subtitle": "Įveikei 50% metinio tikslo.",
+    "icon": "Rocket",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "goal_reached",
+    "kind": "achievement",
+    "title": "Tikslas pasiektas",
+    "subtitle": "100% metinių valandų — nuostabu!",
+    "icon": "Award",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "overachiever",
+    "kind": "achievement",
+    "title": "Perviršininkas",
+    "subtitle": "150% nuo tikslo. Nesustabdomas.",
+    "icon": "Medal",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "three_orgs",
+    "kind": "achievement",
+    "title": "3 organizacijos",
+    "subtitle": "Savanoriavai trijose vietose.",
+    "icon": "Building2",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "five_orgs",
+    "kind": "achievement",
+    "title": "5 organizacijos",
+    "subtitle": "Tikras keliautojas — 5 organizacijos.",
+    "icon": "Target",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "streak_2",
+    "kind": "achievement",
+    "title": "2 sav. iš eilės",
+    "subtitle": "Dvi savaites paeiliui su valandomis.",
+    "icon": "Flame",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "streak_4",
+    "kind": "achievement",
+    "title": "Mėnesio ritmas",
+    "subtitle": "4 savaitės iš eilės.",
+    "icon": "Flame",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "social_starter",
+    "kind": "achievement",
+    "title": "Pirmasis draugas",
+    "subtitle": "Susiradai bent vieną draugą.",
+    "icon": "Heart",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "squad",
+    "kind": "achievement",
+    "title": "Klasės būrys",
+    "subtitle": "5 draugai mokykloje.",
+    "icon": "Users",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "team_player",
+    "kind": "achievement",
+    "title": "Komandinis žaidėjas",
+    "subtitle": "Prisijungei prie grupinės rezervacijos.",
+    "icon": "Users",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "ten_tasks",
+    "kind": "achievement",
+    "title": "10 užbaigtų vizitų",
+    "subtitle": "Užbaigei 10 skirtingų užduočių.",
+    "icon": "Calendar",
+    "from": "#1E9E63",
+    "to": "#F5C542"
+  },
+  {
+    "key": "login_streak_3",
+    "kind": "achievement",
+    "title": "3 dienos iš eilės",
+    "subtitle": "Prisijungei 3 dienas paeiliui.",
+    "icon": "Flame",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "login_streak_7",
+    "kind": "achievement",
+    "title": "Savaitė be pertraukų",
+    "subtitle": "7 dienos iš eilės. Įprotis!",
+    "icon": "Flame",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "login_streak_14",
+    "kind": "achievement",
+    "title": "2 savaitės iš eilės",
+    "subtitle": "14 dienų — retas žvėris.",
+    "icon": "Flame",
+    "from": "#C8452A",
+    "to": "#F5C542"
+  },
+  {
+    "key": "login_streak_30",
+    "kind": "achievement",
+    "title": "Mėnuo iš eilės",
+    "subtitle": "30 dienų. Tu jau legenda.",
+    "icon": "Trophy",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "streak-3",
+    "kind": "streak",
+    "title": "3 dienos",
+    "subtitle": "Serija įsibėgėja",
+    "icon": "Flame",
+    "big": "3",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "streak-7",
+    "kind": "streak",
+    "title": "7 dienos",
+    "subtitle": "Visa savaitė iš eilės",
+    "icon": "Flame",
+    "big": "7",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "streak-14",
+    "kind": "streak",
+    "title": "14 dienų",
+    "subtitle": "Dvi savaitės nesustojant",
+    "icon": "Flame",
+    "big": "14",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  },
+  {
+    "key": "streak-30",
+    "kind": "streak",
+    "title": "30 dienų",
+    "subtitle": "Mėnuo be pertraukų",
+    "icon": "Flame",
+    "big": "30",
+    "from": "#F5C542",
+    "to": "#C8452A"
+  }
+]
