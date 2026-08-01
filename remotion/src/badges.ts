@@ -6,7 +6,22 @@
  * `variant` decides WHICH story animation plays — each variant is a totally
  * different 7 second mini-film, not a re-skin of the same template.
  */
-export type BadgeVariant = "hours" | "streak" | "orgs" | "social" | "tasks";
+export type BadgeVariant =
+  | "liquid"
+  | "bars"
+  | "orbit"
+  | "typestorm"
+  | "domino"
+  | "torch"
+  | "stamps"
+  | "constellation"
+  | "odometer"
+  | "forge"
+  | "route"
+  | "pulse";
+
+/** How the final title card lands — varied so no two clips end the same way. */
+export type BadgeReveal = "medal" | "stamp" | "ticker" | "plain";
 
 export type BadgeSpec = {
   key: string;
@@ -28,13 +43,15 @@ export type BadgeSpec = {
   unit?: string;
   /** hours variant: how full the goal ring gets (1 = 100%) */
   progress?: number;
+  /** closing card style */
+  reveal?: BadgeReveal;
 };
 
 export const LT_YELLOW = "#F5C542";
 export const LT_GREEN = "#1E9E63";
 export const LT_RED = "#C8452A";
 
-type Extra = Partial<Pick<BadgeSpec, "count" | "unit" | "progress" | "big">>;
+type Extra = Partial<Pick<BadgeSpec, "count" | "unit" | "progress" | "big" | "reveal">>;
 
 const A = (
   key: string,
@@ -48,38 +65,35 @@ const A = (
 ): BadgeSpec => ({ key, kind: "achievement", title, subtitle, icon, variant, from, to, ...extra });
 
 export const BADGES: BadgeSpec[] = [
-  /* ── hours: goal ring fills, counter climbs ───────────────────────────── */
-  A("first_hour", "Pirmoji valanda", "Užbaigei pirmąją socialinę valandą.", "Star", "hours", { count: 1, unit: "val.", progress: 0.1 }),
-  A("five_hours", "5 valandos", "Surinkai 5 valandas.", "Sparkles", "hours", { count: 5, unit: "val.", progress: 0.25 }),
-  A("ten_hours", "10 valandų", "Dviženklis skaičius!", "Trophy", "hours", { count: 10, unit: "val.", progress: 0.5 }, LT_YELLOW, LT_RED),
-  A("half_way", "Pusiaukelė", "Įveikei 50% metinio tikslo.", "Rocket", "hours", { count: 50, unit: "%", progress: 0.5 }),
-  A("goal_reached", "Tikslas pasiektas", "100% metinių valandų — nuostabu!", "Award", "hours", { count: 100, unit: "%", progress: 1 }, LT_YELLOW, LT_RED),
-  A("overachiever", "Perviršininkas", "150% nuo tikslo. Nesustabdomas.", "Medal", "hours", { count: 150, unit: "%", progress: 1.5 }, LT_RED, LT_YELLOW),
+  /* Every badge gets its OWN story engine + its own closing card style.
+     No two clips share the same combination. */
 
-  /* ── orgs: map pins land one by one ───────────────────────────────────── */
-  A("three_orgs", "3 organizacijos", "Savanoriavai trijose vietose.", "Building2", "orgs", { count: 3, unit: "org." }),
-  A("five_orgs", "5 organizacijos", "Tikras keliautojas — 5 organizacijos.", "Target", "orgs", { count: 5, unit: "org." }),
+  A("first_hour", "Pirmoji valanda", "Užbaigei pirmąją socialinę valandą.", "Star", "liquid", { count: 1, unit: "val.", progress: 0.14, reveal: "medal" }),
+  A("five_hours", "5 valandos", "Surinkai 5 valandas.", "Sparkles", "bars", { count: 5, unit: "val.", reveal: "ticker" }),
+  A("ten_hours", "10 valandų", "Dviženklis skaičius!", "Trophy", "odometer", { count: 10, unit: "valandos", reveal: "stamp" }, LT_YELLOW, LT_RED),
+  A("half_way", "Pusiaukelė", "Įveikei 50% metinio tikslo.", "Rocket", "liquid", { count: 50, unit: "%", progress: 0.5, reveal: "ticker" }),
+  A("goal_reached", "Tikslas pasiektas", "100% metinių valandų — nuostabu!", "Award", "forge", { count: 100, unit: "%", reveal: "medal" }, LT_YELLOW, LT_RED),
+  A("overachiever", "Perviršininkas", "150% nuo tikslo. Nesustabdomas.", "Medal", "orbit", { count: 150, unit: "%", reveal: "stamp" }, LT_RED, LT_YELLOW),
 
-  /* ── streak: calendar lights up day by day ────────────────────────────── */
-  A("streak_2", "2 sav. iš eilės", "Dvi savaites paeiliui su valandomis.", "Flame", "streak", { count: 14, unit: "d.", big: "2" }, LT_RED, LT_YELLOW),
-  A("streak_4", "Mėnesio ritmas", "4 savaitės iš eilės.", "Flame", "streak", { count: 28, unit: "d.", big: "4" }, LT_RED, LT_YELLOW),
+  A("three_orgs", "3 organizacijos", "Savanoriavai trijose vietose.", "Building2", "stamps", { count: 3, unit: "org.", reveal: "stamp" }),
+  A("five_orgs", "5 organizacijos", "Tikras keliautojas — 5 organizacijos.", "Target", "route", { count: 5, unit: "org.", reveal: "ticker" }),
 
-  /* ── social: friend network assembles ─────────────────────────────────── */
-  A("social_starter", "Pirmasis draugas", "Susiradai bent vieną draugą.", "Heart", "social", { count: 1, unit: "draugas" }, LT_RED, LT_YELLOW),
-  A("squad", "Klasės būrys", "5 draugai mokykloje.", "Users", "social", { count: 5, unit: "draugai" }),
-  A("team_player", "Komandinis žaidėjas", "Prisijungei prie grupinės rezervacijos.", "Users", "social", { count: 4, unit: "komanda" }),
+  A("streak_2", "2 sav. iš eilės", "Dvi savaites paeiliui su valandomis.", "Flame", "domino", { count: 14, unit: "d.", big: "2", reveal: "plain" }, LT_RED, LT_YELLOW),
+  A("streak_4", "Mėnesio ritmas", "4 savaitės iš eilės.", "Flame", "torch", { count: 28, unit: "d.", big: "4", reveal: "ticker" }, LT_RED, LT_YELLOW),
 
-  /* ── tasks: cursor ticks off a checklist in the app ───────────────────── */
-  A("ten_tasks", "10 užbaigtų vizitų", "Užbaigei 10 skirtingų užduočių.", "Calendar", "tasks", { count: 10, unit: "vizitai" }),
+  A("social_starter", "Pirmasis draugas", "Susiradai bent vieną draugą.", "Heart", "pulse", { count: 1, unit: "draugas", reveal: "medal" }, LT_RED, LT_YELLOW),
+  A("squad", "Klasės būrys", "5 draugai mokykloje.", "Users", "constellation", { count: 5, unit: "draugai", reveal: "ticker" }),
+  A("team_player", "Komandinis žaidėjas", "Prisijungei prie grupinės rezervacijos.", "Users", "pulse", { count: 4, unit: "komanda", reveal: "plain" }),
 
-  /* ── login streaks ────────────────────────────────────────────────────── */
-  A("login_streak_3", "3 dienos iš eilės", "Prisijungei 3 dienas paeiliui.", "Flame", "streak", { count: 3, unit: "d.", big: "3" }, LT_RED, LT_YELLOW),
-  A("login_streak_7", "Savaitė be pertraukų", "7 dienos iš eilės. Įprotis!", "Flame", "streak", { count: 7, unit: "d.", big: "7" }, LT_RED, LT_YELLOW),
-  A("login_streak_14", "2 savaitės iš eilės", "14 dienų — retas žvėris.", "Flame", "streak", { count: 14, unit: "d.", big: "14" }, LT_RED, LT_YELLOW),
-  A("login_streak_30", "Mėnuo iš eilės", "30 dienų. Tu jau legenda.", "Trophy", "streak", { count: 30, unit: "d.", big: "30" }, LT_YELLOW, LT_RED),
+  A("ten_tasks", "10 užbaigtų vizitų", "Užbaigei 10 skirtingų užduočių.", "Calendar", "typestorm", { count: 10, unit: "vizitai", reveal: "stamp" }),
 
-  { key: "streak-3", kind: "streak", title: "3 dienos", subtitle: "Serija įsibėgėja", icon: "Flame", big: "3", from: LT_YELLOW, to: LT_RED, variant: "streak", count: 3, unit: "d." },
-  { key: "streak-7", kind: "streak", title: "7 dienos", subtitle: "Visa savaitė iš eilės", icon: "Flame", big: "7", from: LT_YELLOW, to: LT_RED, variant: "streak", count: 7, unit: "d." },
-  { key: "streak-14", kind: "streak", title: "14 dienų", subtitle: "Dvi savaitės nesustojant", icon: "Flame", big: "14", from: LT_YELLOW, to: LT_RED, variant: "streak", count: 14, unit: "d." },
-  { key: "streak-30", kind: "streak", title: "30 dienų", subtitle: "Mėnuo be pertraukų", icon: "Flame", big: "30", from: LT_YELLOW, to: LT_RED, variant: "streak", count: 30, unit: "d." },
+  A("login_streak_3", "3 dienos iš eilės", "Prisijungei 3 dienas paeiliui.", "Flame", "torch", { count: 3, unit: "d.", big: "3", reveal: "medal" }, LT_RED, LT_YELLOW),
+  A("login_streak_7", "Savaitė be pertraukų", "7 dienos iš eilės. Įprotis!", "Flame", "domino", { count: 7, unit: "d.", big: "7", reveal: "ticker" }, LT_RED, LT_YELLOW),
+  A("login_streak_14", "2 savaitės iš eilės", "14 dienų — retas žvėris.", "Flame", "constellation", { count: 14, unit: "d.", big: "14", reveal: "stamp" }, LT_RED, LT_YELLOW),
+  A("login_streak_30", "Mėnuo iš eilės", "30 dienų. Tu jau legenda.", "Trophy", "forge", { count: 30, unit: "d.", big: "30", reveal: "ticker" }, LT_YELLOW, LT_RED),
+
+  { key: "streak-3", kind: "streak", title: "3 dienos", subtitle: "Serija įsibėgėja", icon: "Flame", big: "3", from: LT_YELLOW, to: LT_RED, variant: "odometer", count: 3, unit: "dienos", reveal: "plain" },
+  { key: "streak-7", kind: "streak", title: "7 dienos", subtitle: "Visa savaitė iš eilės", icon: "Flame", big: "7", from: LT_YELLOW, to: LT_RED, variant: "typestorm", count: 7, unit: "d.", reveal: "medal" },
+  { key: "streak-14", kind: "streak", title: "14 dienų", subtitle: "Dvi savaitės nesustojant", icon: "Flame", big: "14", from: LT_YELLOW, to: LT_RED, variant: "route", count: 6, unit: "d.", reveal: "stamp" },
+  { key: "streak-30", kind: "streak", title: "30 dienų", subtitle: "Mėnuo be pertraukų", icon: "Trophy", big: "30", from: LT_YELLOW, to: LT_RED, variant: "orbit", count: 30, unit: "d.", reveal: "ticker" },
 ];

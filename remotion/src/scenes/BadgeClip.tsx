@@ -1,27 +1,50 @@
 import React from "react";
 import type { BadgeSpec } from "../badges";
-import { HoursStory } from "./badge/HoursStory";
-import { OrgStory } from "./badge/OrgStory";
-import { SocialStory } from "./badge/SocialStory";
-import { StreakStory } from "./badge/StreakStory";
-import { TaskStory } from "./badge/TaskStory";
+import {
+  BarsStory,
+  ConstellationStory,
+  DominoStory,
+  ForgeStory,
+  LiquidStory,
+  OdometerStory,
+  OrbitStory,
+  PulseStory,
+  RouteStory,
+  StampsStory,
+  TorchStory,
+  TypeStormStory,
+} from "./badge/stories";
 
 /**
- * One 7-second film per badge. The `variant` on the badge picks a completely
- * different story — no two categories share a template.
+ * One 7-second film per badge. Every badge picks a different story engine AND
+ * a different closing card, so no two clips look alike.
  */
 export const BadgeClip: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
   switch (badge.variant) {
-    case "streak":
-      return <StreakStory badge={badge} />;
-    case "orgs":
-      return <OrgStory badge={badge} />;
-    case "social":
-      return <SocialStory badge={badge} />;
-    case "tasks":
-      return <TaskStory badge={badge} />;
-    case "hours":
+    case "bars":
+      return <BarsStory badge={badge} />;
+    case "orbit":
+      return <OrbitStory badge={badge} />;
+    case "typestorm":
+      return <TypeStormStory badge={badge} />;
+    case "domino":
+      return <DominoStory badge={badge} />;
+    case "torch":
+      return <TorchStory badge={badge} />;
+    case "stamps":
+      return <StampsStory badge={badge} />;
+    case "constellation":
+      return <ConstellationStory badge={badge} />;
+    case "odometer":
+      return <OdometerStory badge={badge} />;
+    case "forge":
+      return <ForgeStory badge={badge} />;
+    case "route":
+      return <RouteStory badge={badge} />;
+    case "pulse":
+      return <PulseStory badge={badge} />;
+    case "liquid":
     default:
-      return <HoursStory badge={badge} />;
+      return <LiquidStory badge={badge} />;
   }
 };
