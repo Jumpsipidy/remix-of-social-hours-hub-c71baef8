@@ -39,6 +39,8 @@ const wordVariants: Variants = {
 /** Words rise out of a clipping mask with a slight 3D tilt — classic motion-graphics reveal. */
 export function KineticHeadline({ text, className = "", accentWords = [], delay = 0, as = "h2" }: KineticProps) {
   const calm = useCalmMotion();
+  const ref = useRef<HTMLHeadingElement>(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
   const Tag = motion[as];
   const words = text.split(" ");
   const accents = new Set(accentWords.map((w) => w.toLowerCase()));
@@ -48,7 +50,7 @@ export function KineticHeadline({ text, className = "", accentWords = [], delay 
   }
 
   return (
-    <Tag className={className} style={{ perspective: 900 }}>
+    <Tag ref={ref} className={className} style={{ perspective: 900 }}>
       {words.map((w, i) => {
         const clean = w.replace(/[.,—?!]/g, "").toLowerCase();
         const accent = accents.has(clean);
@@ -59,8 +61,8 @@ export function KineticHeadline({ text, className = "", accentWords = [], delay 
               variants={wordVariants}
               custom={i + delay * 10}
               initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: "-60px" }}
+              animate={inView ? "show" : "hidden"}
+
               style={
                 accent
                   ? {
