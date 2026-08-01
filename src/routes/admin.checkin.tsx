@@ -31,50 +31,112 @@ function AdminCheckinPage() {
 
   async function load() {
     setLoading(true);
-    const { data: res } = await supabase
-      .from("reservations")
-      .select("id, check_in_code, checked_in_at, status, reservation_date, hours_to_earn, student_id, organization_id, profiles!reservations_student_id_fkey(full_name), org:profiles!reservations_organization_id_fkey(full_name,organization_name)")
-      .in("status", ["approved", "completed"])
-      .not("check_in_code", "is", null)
-      .order("reservation_date", { ascending: false })
-      .limit(200);
+    try {
+      // NOTE: no PostgREST embeds here. The production database does not always
+      // expose the reservations→profiles foreign keys to the schema cache
+      // (PGRST200), so we resolve names with a second plain query instead.
+      const { data: res, error: resError } = await supabase
+        .from("reservations")
+        .select("id, check_in_code, checked_in_at, status, reservation_date, hours_to_earn, student_id, organization_id")
+        .in("status", ["approved", "completed"])
+        .not("check_in_code", "is", null)
+        .order("reservation_date", { ascending: false })
+        .limit(200);
+      if (resError) throw resError;
 
-    const owners: Row[] = ((res as any[]) ?? []).map((r) => ({
-      kind: "owner",
-      reservation_id: r.id,
-      code: r.check_in_code,
-      checked_in_at: r.checked_in_at,
-      student_id: r.student_id,
-      student_name: r.profiles?.full_name ?? "—",
-      organization_name: r.org?.organization_name ?? r.org?.full_name ?? "—",
-      reservation_date: r.reservation_date,
-      hours_to_earn: r.hours_to_earn,
-      status: r.status,
-    }));
+      const { data: parts, error: partsError } = await supabase
+        .from("reservation_participants")
+        .select("id, reservation_id, check_in_code, checked_in_at, status, student_id")
+        .eq("status", "accepted")
+        .not("check_in_code", "is", null)
+        .limit(200);
+      if (partsError) throw partsError;
 
-    const { data: parts } = await supabase
-      .from("reservation_participants")
-      .select("id, reservation_id, check_in_code, checked_in_at, status, student_id, profiles(full_name), reservation:reservations(status,reservation_date,hours_to_earn,org:profiles!reservations_organization_id_fkey(full_name,organization_name))")
-      .eq("status", "accepted")
-      .not("check_in_code", "is", null)
-      .limit(200);
+      const reservations = (res as any[]) ?? [];
+      const participantRows = (parts as any[]) ?? [];
+      const reservationById = new Map(reservations.map((r) => [r.id, r]));
 
-    const participants: Row[] = ((parts as any[]) ?? []).map((p) => ({
-      kind: "participant",
-      reservation_id: p.reservation_id,
-      participant_id: p.id,
-      code: p.check_in_code,
-      checked_in_at: p.checked_in_at,
-      student_id: p.student_id,
-      student_name: p.profiles?.full_name ?? "—",
-      organization_name: p.reservation?.org?.organization_name ?? p.reservation?.org?.full_name ?? "—",
-      reservation_date: p.reservation?.reservation_date ?? null,
-      hours_to_earn: p.reservation?.hours_to_earn ?? null,
-      status: p.reservation?.status ?? "approved",
-    }));
+      // Some participant rows can point at reservations outside the first page.
+      const missingIds = Array.from(
+        new Set(
+          participantRows
+            .map((p) => p.reservation_id)
+            .filter((id: string) => id && !reservationById.has(id)),
+        ),
+      );
+      if (missingIds.length > 0) {
+        const { data: extra } = await supabase
+          .from("reservations")
+          .select("id, status, reservation_date, hours_to_earn, organization_id")
+          .in("id", missingIds);
+        for (const r of (extra as any[]) ?? []) reservationById.set(r.id, r);
+      }
 
-    setRows([...owners, ...participants]);
-    setLoading(false);
+      const profileIds = Array.from(
+        new Set([
+          ...reservations.flatMap((r) => [r.student_id, r.organization_id]),
+          ...participantRows.map((p) => p.student_id),
+          ...Array.from(reservationById.values()).map((r: any) => r.organization_id),
+        ].filter(Boolean) as string[]),
+      );
+
+      const profileById = new Map<string, { full_name: string | null; organization_name: string | null }>();
+      if (profileIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, organization_name")
+          .in("id", profileIds);
+        for (const p of (profs as any[]) ?? []) {
+          profileById.set(p.id, { full_name: p.full_name ?? null, organization_name: p.organization_name ?? null });
+        }
+      }
+
+      const orgName = (id: string | null | undefined) => {
+        const p = id ? profileById.get(id) : undefined;
+        return p?.organization_name || p?.full_name || "—";
+      };
+      const studentName = (id: string | null | undefined) => {
+        const p = id ? profileById.get(id) : undefined;
+        return p?.full_name || "Mokinys";
+      };
+
+      const owners: Row[] = reservations.map((r) => ({
+        kind: "owner",
+        reservation_id: r.id,
+        code: r.check_in_code,
+        checked_in_at: r.checked_in_at,
+        student_id: r.student_id,
+        student_name: studentName(r.student_id),
+        organization_name: orgName(r.organization_id),
+        reservation_date: r.reservation_date,
+        hours_to_earn: r.hours_to_earn,
+        status: r.status,
+      }));
+
+      const participants: Row[] = participantRows.map((p) => {
+        const r = reservationById.get(p.reservation_id) as any | undefined;
+        return {
+          kind: "participant",
+          reservation_id: p.reservation_id,
+          participant_id: p.id,
+          code: p.check_in_code,
+          checked_in_at: p.checked_in_at,
+          student_id: p.student_id,
+          student_name: studentName(p.student_id),
+          organization_name: orgName(r?.organization_id),
+          reservation_date: r?.reservation_date ?? null,
+          hours_to_earn: r?.hours_to_earn ?? null,
+          status: r?.status ?? "approved",
+        };
+      });
+
+      setRows([...owners, ...participants]);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti įsiregistravimų");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { void load(); }, []);
