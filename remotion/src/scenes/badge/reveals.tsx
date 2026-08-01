@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig, random } from "remotion";
 import { LT_GREEN, LT_RED, LT_YELLOW, type BadgeSpec } from "../../badges";
 import { BG, body, clampIn, display, KineticTitle, lucide, RevealCard, REVEAL } from "./kit";
+import { RevealBanner, RevealCurtain, RevealFlip, RevealShatter } from "./reveals2";
 
 /** Rubber-stamp slam: title crashes in at an angle with ink spray. */
 export const RevealStamp: React.FC<{ badge: BadgeSpec; start?: number }> = ({ badge, start = REVEAL }) => {
@@ -168,6 +169,14 @@ export const Reveal: React.FC<{ badge: BadgeSpec; start?: number }> = ({ badge, 
       return <RevealStamp badge={badge} start={start} />;
     case "ticker":
       return <RevealTicker badge={badge} start={start} />;
+    case "shatter":
+      return <RevealShatter badge={badge} start={start} />;
+    case "curtain":
+      return <RevealCurtain badge={badge} start={start} />;
+    case "flip":
+      return <RevealFlip badge={badge} start={start} />;
+    case "banner":
+      return <RevealBanner badge={badge} start={start} />;
     case "plain":
       return <RevealCard badge={badge} start={start} medal={false} />;
     default:

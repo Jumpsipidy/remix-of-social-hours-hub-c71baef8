@@ -390,7 +390,102 @@ function Home() {
           </div>
         </section>
 
+        {/* KAIP VEIKIA ───────────────────────────────────────────────────── */}
+        <section className="relative px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl">
+            <Reveal>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">Nr. 03 · Kelias</p>
+            </Reveal>
+            <KineticHeadline
+              as="h2"
+              text="Nuo idėjos iki sertifikato"
+              accentWords={["sertifikato"]}
+              className="mb-10 sm:mb-16 text-3xl sm:text-4xl md:text-6xl font-display font-medium text-white tracking-[-0.01em]"
+            />
+
+            <div className="relative">
+              {/* tricolour spine */}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute left-[19px] top-2 hidden w-[2px] origin-top md:block"
+                style={{ background: `linear-gradient(180deg, ${LT_YELLOW}, ${LT_GREEN}, ${LT_RED})`, height: "calc(100% - 1rem)" }}
+                initial={{ scaleY: 0 }}
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+              />
+              <ol className="space-y-5 sm:space-y-7">
+                {[
+                  { t: "Prisiregistruok su mokyklos kodu", b: "Kodą duoda auklėtoja ar administracija — taip platformoje lieka tik tikri mokiniai.", c: LT_YELLOW },
+                  { t: "Rask veiklą arba pasiūlyk savo", b: "Naršyk patikrintas organizacijas arba pateik savo idėją patvirtinimui.", c: LT_GREEN },
+                  { t: "Ateik ir nuskenuok QR kodą", b: "Organizacija patvirtina tavo atvykimą per QR arba 6 skaitmenų kodą — be popierių.", c: LT_RED },
+                  { t: "Gauk valandas ir PDF sertifikatą", b: "Valandos užskaitomos automatiškai, sertifikatą galima patikrinti internete.", c: GOLD },
+                ].map((s, i) => (
+                  <motion.li
+                    key={s.t}
+                    initial={{ opacity: 0, x: -28, filter: "blur(6px)" }}
+                    whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    viewport={{ once: true, margin: "-70px" }}
+                    transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                    className="relative flex gap-4 sm:gap-6 md:pl-0"
+                  >
+                    <span
+                      className="relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full font-display text-sm font-bold text-black"
+                      style={{ background: s.c, boxShadow: `0 0 32px ${s.c}66` }}
+                    >
+                      {i + 1}
+                    </span>
+                    <SpotlightCard accent={s.c} className="flex-1 p-5 sm:p-6">
+                      <h3 className="text-lg sm:text-xl font-display font-medium text-white">{s.t}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-white/65">{s.b}</p>
+                    </SpotlightCard>
+                  </motion.li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* DKK ───────────────────────────────────────────────────────────── */}
+        <section className="relative px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="mx-auto max-w-3xl">
+            <Reveal>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">Nr. 04 · Klausimai</p>
+            </Reveal>
+            <KineticHeadline
+              as="h2"
+              text="Dažniausiai klausiama"
+              accentWords={["klausiama"]}
+              className="mb-8 sm:mb-12 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
+            />
+            <div className="space-y-3">
+              {[
+                { q: "Kiek kainuoja?", a: "Mokiniams, mokykloms ir organizacijoms platforma nemokama." },
+                { q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą parašą." },
+                { q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje." },
+                { q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
+              ].map((f, i) => (
+                <motion.details
+                  key={f.q}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ delay: i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  className="group rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur-xl transition-colors hover:border-white/25"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-white marker:hidden">
+                    {f.q}
+                    <span aria-hidden className="text-white/40 transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">{f.a}</p>
+                </motion.details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* MARQUEE — school band ─────────────────────────────────────────── */}
+
         <section className="relative overflow-hidden border-y border-white/10 py-14">
           <Reveal>
             <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">

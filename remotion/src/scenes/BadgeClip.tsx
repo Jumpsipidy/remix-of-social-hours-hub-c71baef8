@@ -14,6 +14,18 @@ import {
   TorchStory,
   TypeStormStory,
 } from "./badge/stories";
+import {
+  ClockworkStory,
+  LadderStory,
+  MosaicStory,
+  PolaroidStory,
+  RibbonStory,
+  RocketStory,
+  ScoreboardStory,
+  SeedStory,
+  SunriseStory,
+  VinylStory,
+} from "./badge/stories2";
 
 /**
  * One 7-second film per badge. Every badge picks a different story engine AND
@@ -43,6 +55,26 @@ export const BadgeClip: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
       return <RouteStory badge={badge} />;
     case "pulse":
       return <PulseStory badge={badge} />;
+    case "ladder":
+      return <LadderStory badge={badge} />;
+    case "sunrise":
+      return <SunriseStory badge={badge} />;
+    case "polaroid":
+      return <PolaroidStory badge={badge} />;
+    case "vinyl":
+      return <VinylStory badge={badge} />;
+    case "seed":
+      return <SeedStory badge={badge} />;
+    case "mosaic":
+      return <MosaicStory badge={badge} />;
+    case "rocket":
+      return <RocketStory badge={badge} />;
+    case "clockwork":
+      return <ClockworkStory badge={badge} />;
+    case "ribbon":
+      return <RibbonStory badge={badge} />;
+    case "scoreboard":
+      return <ScoreboardStory badge={badge} />;
     case "liquid":
     default:
       return <LiquidStory badge={badge} />;
