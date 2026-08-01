@@ -222,8 +222,12 @@ function ToolsPage() {
       </div>
 
 
+      {/* Celebration animation sandbox */}
+      <CelebrationSimulator />
+
       {/* PDF Certificate Testing */}
       <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">
+
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-500/20 text-blue-300">
