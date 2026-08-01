@@ -1204,7 +1204,7 @@ function QueueTable({
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+              <td colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
                 Nieko nerasta pagal filtrus.
               </td>
             </tr>
