@@ -45,13 +45,13 @@
     "title": "Pusiaukelė",
     "subtitle": "Įveikei 50% metinio tikslo.",
     "icon": "Rocket",
-    "variant": "liquid",
+    "variant": "clockwork",
     "from": "#1E9E63",
     "to": "#F5C542",
     "count": 50,
     "unit": "%",
     "progress": 0.5,
-    "reveal": "ticker"
+    "reveal": "curtain"
   },
   {
     "key": "goal_reached",
@@ -64,7 +64,7 @@
     "to": "#C8452A",
     "count": 100,
     "unit": "%",
-    "reveal": "medal"
+    "reveal": "shatter"
   },
   {
     "key": "overachiever",
@@ -72,12 +72,12 @@
     "title": "Perviršininkas",
     "subtitle": "150% nuo tikslo. Nesustabdomas.",
     "icon": "Medal",
-    "variant": "orbit",
+    "variant": "rocket",
     "from": "#C8452A",
     "to": "#F5C542",
     "count": 150,
     "unit": "%",
-    "reveal": "stamp"
+    "reveal": "flip"
   },
   {
     "key": "three_orgs",
@@ -90,7 +90,7 @@
     "to": "#F5C542",
     "count": 3,
     "unit": "org.",
-    "reveal": "stamp"
+    "reveal": "banner"
   },
   {
     "key": "five_orgs",
@@ -131,7 +131,7 @@
     "count": 28,
     "unit": "d.",
     "big": "4",
-    "reveal": "ticker"
+    "reveal": "curtain"
   },
   {
     "key": "social_starter",
@@ -157,7 +157,7 @@
     "to": "#F5C542",
     "count": 5,
     "unit": "draugai",
-    "reveal": "ticker"
+    "reveal": "banner"
   },
   {
     "key": "team_player",
@@ -165,12 +165,12 @@
     "title": "Komandinis žaidėjas",
     "subtitle": "Prisijungei prie grupinės rezervacijos.",
     "icon": "Users",
-    "variant": "pulse",
+    "variant": "polaroid",
     "from": "#1E9E63",
     "to": "#F5C542",
     "count": 4,
     "unit": "komanda",
-    "reveal": "plain"
+    "reveal": "flip"
   },
   {
     "key": "ten_tasks",
@@ -191,7 +191,7 @@
     "title": "3 dienos iš eilės",
     "subtitle": "Prisijungei 3 dienas paeiliui.",
     "icon": "Flame",
-    "variant": "torch",
+    "variant": "seed",
     "from": "#C8452A",
     "to": "#F5C542",
     "count": 3,
@@ -205,13 +205,13 @@
     "title": "Savaitė be pertraukų",
     "subtitle": "7 dienos iš eilės. Įprotis!",
     "icon": "Flame",
-    "variant": "domino",
+    "variant": "ladder",
     "from": "#C8452A",
     "to": "#F5C542",
     "count": 7,
     "unit": "d.",
     "big": "7",
-    "reveal": "ticker"
+    "reveal": "shatter"
   },
   {
     "key": "login_streak_14",
@@ -219,13 +219,13 @@
     "title": "2 savaitės iš eilės",
     "subtitle": "14 dienų — retas žvėris.",
     "icon": "Flame",
-    "variant": "constellation",
+    "variant": "mosaic",
     "from": "#C8452A",
     "to": "#F5C542",
     "count": 14,
     "unit": "d.",
     "big": "14",
-    "reveal": "stamp"
+    "reveal": "ticker"
   },
   {
     "key": "login_streak_30",
@@ -233,13 +233,13 @@
     "title": "Mėnuo iš eilės",
     "subtitle": "30 dienų. Tu jau legenda.",
     "icon": "Trophy",
-    "variant": "forge",
+    "variant": "sunrise",
     "from": "#F5C542",
     "to": "#C8452A",
     "count": 30,
     "unit": "d.",
     "big": "30",
-    "reveal": "ticker"
+    "reveal": "banner"
   },
   {
     "key": "streak-3",
@@ -250,7 +250,7 @@
     "big": "3",
     "from": "#F5C542",
     "to": "#C8452A",
-    "variant": "odometer",
+    "variant": "vinyl",
     "count": 3,
     "unit": "dienos",
     "reveal": "plain"
@@ -264,10 +264,10 @@
     "big": "7",
     "from": "#F5C542",
     "to": "#C8452A",
-    "variant": "typestorm",
+    "variant": "scoreboard",
     "count": 7,
     "unit": "d.",
-    "reveal": "medal"
+    "reveal": "flip"
   },
   {
     "key": "streak-14",
@@ -278,10 +278,10 @@
     "big": "14",
     "from": "#F5C542",
     "to": "#C8452A",
-    "variant": "route",
+    "variant": "ribbon",
     "count": 6,
     "unit": "d.",
-    "reveal": "stamp"
+    "reveal": "curtain"
   },
   {
     "key": "streak-30",
@@ -295,6 +295,6 @@
     "variant": "orbit",
     "count": 30,
     "unit": "d.",
-    "reveal": "ticker"
+    "reveal": "shatter"
   }
 ]
