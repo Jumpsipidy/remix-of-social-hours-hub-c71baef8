@@ -3,7 +3,10 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type DiagItem = { key: string; label: string; ok: boolean; detail?: string };
 
-const MISSING_FN = /(PGRST202|could not find the function|does not exist)/i;
+// PGRST202 is the only reliable signal that PostgREST cannot resolve an RPC.
+// A function that exists can itself raise "relation/operator does not exist";
+// treating that as a missing RPC hides the real SQL error.
+const MISSING_FN = /(PGRST202|could not find the function\s+public\.)/i;
 const MISSING_COL = /(PGRST204|column .* does not exist|Could not find the ')/i;
 
 /**
@@ -26,7 +29,12 @@ export const checkInDiagnostics = createServerFn({ method: "GET" })
     const probeFn = async (name: string, args: Record<string, unknown>, label: string) => {
       const { error } = await supabase.rpc(name as never, args as never);
       const missing = !!error && MISSING_FN.test(error.message);
-      items.push({ key: name, label, ok: !missing, detail: missing ? error?.message : undefined });
+      items.push({
+        key: name,
+        label,
+        ok: !missing,
+        detail: missing ? error?.message : undefined,
+      });
     };
 
     await probeColumn("reservations", "check_in_code", "reservations.check_in_code stulpelis");

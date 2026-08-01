@@ -7,8 +7,8 @@ const WINDOW_SECONDS = 30;
 
 /** Turn raw PostgREST plumbing errors into something an organization can act on. */
 function friendlyRpcError(message: string): string {
-  if (/PGRST202|could not find the function|does not exist/i.test(message)) {
-    return "Duomenų bazėje trūksta check_in_by_code funkcijos — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
+  if (/PGRST202|could not find the function\s+public\.check_in_by_code/i.test(message)) {
+    return "PostgREST nemato check_in_by_code(_code text) funkcijos. Paleisk FIX_CHECK_IN_BY_CODE.sql Supabase SQL Editor ir perkrauk puslapį.";
   }
   if (/PGRST204|schema cache/i.test(message)) {
     return "Duomenų bazėje trūksta įsiregistravimo stulpelių — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
