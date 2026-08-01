@@ -15,6 +15,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivatumasRouteImport } from './routes/privatumas'
@@ -86,6 +87,11 @@ const StudentRoute = StudentRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SocialiniuValanduLapasRoute = SocialiniuValanduLapasRouteImport.update({
+  id: '/socialiniu-valandu-lapas',
+  path: '/socialiniu-valandu-lapas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SchoolRoute = SchoolRouteImport.update({
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
+  '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
+  '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -411,6 +419,7 @@ export interface FileRoutesById {
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
   '/school': typeof SchoolRoute
+  '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
   '/student': typeof StudentRoute
   '/tasks': typeof TasksRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/privatumas'
     | '/register'
     | '/school'
+    | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
     | '/tasks'
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/privatumas'
     | '/register'
     | '/school'
+    | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
     | '/tasks'
@@ -560,6 +571,7 @@ export interface FileRouteTypes {
     | '/privatumas'
     | '/register'
     | '/school'
+    | '/socialiniu-valandu-lapas'
     | '/status'
     | '/student'
     | '/tasks'
@@ -611,6 +623,7 @@ export interface RootRouteChildren {
   PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
   SchoolRoute: typeof SchoolRoute
+  SocialiniuValanduLapasRoute: typeof SocialiniuValanduLapasRoute
   StatusRoute: typeof StatusRoute
   StudentRoute: typeof StudentRoute
   TasksRoute: typeof TasksRoute
@@ -669,6 +682,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socialiniu-valandu-lapas': {
+      id: '/socialiniu-valandu-lapas'
+      path: '/socialiniu-valandu-lapas'
+      fullPath: '/socialiniu-valandu-lapas'
+      preLoaderRoute: typeof SocialiniuValanduLapasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/school': {
@@ -1043,6 +1063,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
   SchoolRoute: SchoolRoute,
+  SocialiniuValanduLapasRoute: SocialiniuValanduLapasRoute,
   StatusRoute: StatusRoute,
   StudentRoute: StudentRoute,
   TasksRoute: TasksRoute,
