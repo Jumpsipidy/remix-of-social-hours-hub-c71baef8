@@ -61,6 +61,8 @@ function CheckinPage() {
             </div>
           </div>
 
+          <CheckinSetupBanner />
+
           {loading && <p className="text-sm text-muted-foreground">Kraunama…</p>}
           {!loading && active.length === 0 && (
             <div className="rounded-3xl border border-border bg-card p-8 text-center">
