@@ -344,11 +344,14 @@ export function CelebrationStage() {
                   autoPlay
                   muted
                   playsInline
+                  preload="auto"
                   disablePictureInPicture
                   onEnded={skip}
                   onError={() => setFailed(clipUrl)}
                   className="block aspect-square h-auto w-full object-cover"
+                  style={{ contain: "paint" }}
                 />
+
                 {/* real-data caption burned over the clip */}
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-10 sm:p-4 sm:pt-14">
                   <motion.p
