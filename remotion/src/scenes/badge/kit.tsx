@@ -180,7 +180,7 @@ export const KineticTitle: React.FC<{ text: string; from: string; to: string; st
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 22px", maxWidth: 940 }}>
+    <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "10px 22px", maxWidth: 940 }}>
       {text.split(" ").map((w, i) => {
         const s = spring({
           frame: frame - start - i * 4,
