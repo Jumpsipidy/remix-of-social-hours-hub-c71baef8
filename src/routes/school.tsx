@@ -48,6 +48,8 @@ import {
   type FraudFlag,
   type ReservationLike,
 } from "@/lib/fraud-flags";
+import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
+import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/school")({
@@ -96,7 +98,15 @@ type OrgProfile = {
   email: string | null;
 };
 type SchoolTab =
-  "overview" | "students" | "classes" | "queue" | "risk" | "orgs" | "events" | "accounts";
+  | "overview"
+  | "students"
+  | "classes"
+  | "queue"
+  | "risk"
+  | "verify"
+  | "orgs"
+  | "events"
+  | "accounts";
 
 const STATUS_LT: Record<string, string> = {
   pending: "Laukia patvirtinimo",
@@ -124,6 +134,8 @@ function SchoolDashboard() {
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [tab, setTab] = useState<SchoolTab>("overview");
+  const [antiCheatCfg, setAntiCheatCfg] = useState<Record<string, boolean> | undefined>(undefined);
+  useEffect(() => setAntiCheatCfg(loadAntiCheatConfig()), []);
   const [allRes, setAllRes] = useState<Reservation[]>([]);
   const [classFilter, setClassFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -216,10 +228,14 @@ function SchoolDashboard() {
     });
     const m: Record<string, FraudFlag[]> = {};
     allRes.forEach((r) => {
-      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? []);
+      m[r.id] = detectFlags(r as unknown as ReservationLike, byStudent[r.student_id] ?? [], {
+        config: antiCheatCfg,
+        hoursNeeded: studentById[r.student_id]?.hours_needed,
+      });
     });
     return m;
-  }, [allRes]);
+  }, [allRes, antiCheatCfg, studentById]);
+
 
   const visibleStudentIds = useMemo(
     () => new Set(filteredStudents.map((s) => s.id)),
@@ -451,6 +467,7 @@ function SchoolDashboard() {
       icon: AlertTriangle,
       badge: String(riskStudents.length),
     },
+    { id: "verify", label: "PDF / QR patikra", icon: ShieldCheck, badge: "skenuoti" },
     { id: "orgs", label: "Partneriai", icon: Building2, badge: String(orgs.length) },
     { id: "events", label: "Renginiai", icon: CalendarPlus, badge: "kurti" },
     { id: "accounts", label: "Paskyros", icon: UserPlus, badge: "org" },
@@ -911,6 +928,15 @@ function SchoolDashboard() {
                 ))}
                 {filteredOrgs.length === 0 && <Empty text="Organizacijų nerasta." />}
               </div>
+            </Panel>
+          )}
+
+          {tab === "verify" && (
+            <Panel
+              title="Mokinio pažymos patikra"
+              subtitle="Mokinys atneša PDF su QR kodu — nuskenuok arba įvesk kodą ir palygink su tikrais duomenimis"
+            >
+              <CertificateVerifyPanel />
             </Panel>
           )}
 

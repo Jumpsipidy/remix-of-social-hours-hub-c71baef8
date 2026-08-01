@@ -54,6 +54,7 @@ import { Route as AdminCheckinRouteImport } from './routes/admin.checkin'
 import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
 import { Route as AdminAutofixRouteImport } from './routes/admin.autofix'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAnticheatRouteImport } from './routes/admin.anticheat'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminActivityRouteImport } from './routes/admin.activity'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
@@ -289,6 +290,11 @@ const AdminAuditRoute = AdminAuditRouteImport.update({
   path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnticheatRoute = AdminAnticheatRouteImport.update({
+  id: '/anticheat',
+  path: '/anticheat',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -351,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/anticheat': typeof AdminAnticheatRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/autofix': typeof AdminAutofixRoute
   '/admin/bugs': typeof AdminBugsRoute
@@ -403,6 +410,7 @@ export interface FileRoutesByTo {
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/anticheat': typeof AdminAnticheatRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/autofix': typeof AdminAutofixRoute
   '/admin/bugs': typeof AdminBugsRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/anticheat': typeof AdminAnticheatRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/autofix': typeof AdminAutofixRoute
   '/admin/bugs': typeof AdminBugsRoute
@@ -513,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
+    | '/admin/anticheat'
     | '/admin/audit'
     | '/admin/autofix'
     | '/admin/bugs'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
+    | '/admin/anticheat'
     | '/admin/audit'
     | '/admin/autofix'
     | '/admin/bugs'
@@ -619,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/accounts'
     | '/admin/activity'
     | '/admin/analytics'
+    | '/admin/anticheat'
     | '/admin/audit'
     | '/admin/autofix'
     | '/admin/bugs'
@@ -997,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/anticheat': {
+      id: '/admin/anticheat'
+      path: '/anticheat'
+      fullPath: '/admin/anticheat'
+      preLoaderRoute: typeof AdminAnticheatRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/analytics'
@@ -1066,6 +1085,7 @@ interface AdminRouteChildren {
   AdminAccountsRoute: typeof AdminAccountsRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAnticheatRoute: typeof AdminAnticheatRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminAutofixRoute: typeof AdminAutofixRoute
   AdminBugsRoute: typeof AdminBugsRoute
@@ -1090,6 +1110,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAccountsRoute: AdminAccountsRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAnticheatRoute: AdminAnticheatRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminAutofixRoute: AdminAutofixRoute,
   AdminBugsRoute: AdminBugsRoute,
