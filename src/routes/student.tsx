@@ -353,42 +353,15 @@ function StudentDashboard() {
       {profile.role === "student" && (
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-warning/30 bg-gradient-to-br from-warning/10 via-background to-primary/5 p-6 shadow-md">
-            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-warning/20 blur-3xl" />
-            <div className="relative flex items-center gap-4">
-              <motion.div
-                animate={{ scale: [1, 1.08, 1], rotate: [0, -4, 4, 0] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg"
-              >
-                <Flame className="h-8 w-8" fill="currentColor" />
-              </motion.div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-warning">Prisijungimo serija</p>
-                <p className="mt-0.5 font-display text-4xl font-bold">
-                  {loginStreak} <span className="text-lg font-medium text-muted-foreground">d. iš eilės</span>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Rekordas: <span className="font-semibold text-foreground">{longestStreak} d.</span>
-                  {freezeUsedAt && <> · <span title="1 praleista diena atleista">🧊 „šaldiklis" panaudotas</span></>}
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-4 gap-1.5">
-              {[3, 7, 14, 30].map((milestone) => {
-                const reached = loginStreak >= milestone;
-                return (
-                  <div key={milestone} className={`rounded-xl border p-2 text-center transition ${reached ? "border-warning/50 bg-warning/10" : "border-dashed border-border bg-background/40 opacity-60"}`}>
-                    <p className={`font-display text-lg font-bold ${reached ? "text-warning" : "text-muted-foreground"}`}>{milestone}</p>
-                    <p className="text-[10px] text-muted-foreground">d.</p>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Švelnios taisyklės: 1 praleista diena per savaitę atleidžiama automatiškai. Užsuk kiekvieną dieną!
-            </p>
-          </div>
+          <StreakCard
+            streak={loginStreak}
+            longest={longestStreak}
+            freezeUsedAt={freezeUsedAt}
+            activated={streakActivated}
+            loading={streakLoading}
+            onActivate={activateStreak}
+          />
+
 
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
             <div className="flex items-center justify-between">
