@@ -1258,7 +1258,16 @@ function AuditDrawer({
   orgName: (id: string) => string;
   setChatRes: (r: ChatReservation) => void;
 }) {
+  const verifiedHours = completedRes.reduce(
+    (a, r) => (r.checked_in_at ? a + Number(r.hours_to_earn ?? 0) : a),
+    0,
+  );
+  const unverifiedHours = completedRes.reduce(
+    (a, r) => (r.checked_in_at ? a : a + Number(r.hours_to_earn ?? 0)),
+    0,
+  );
   return (
+
     <AnimatePresence>
       {auditing && (
         <motion.div
