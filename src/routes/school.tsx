@@ -78,6 +78,8 @@ type Reservation = {
   status: "pending" | "approved" | "completed" | "confirmed" | "declined";
   legal_disclosure?: string | null;
   created_at?: string;
+  checked_in_at?: string | null;
+  checked_in_by?: string | null;
 };
 
 type OrgProfile = {
@@ -170,7 +172,7 @@ function SchoolDashboard() {
       const { data: rs, error: resError } = await supabase
         .from("reservations")
         .select(
-          "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at",
+          "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
         )
         .in("student_id", ids)
         .order("reservation_date", { ascending: false })
@@ -191,7 +193,7 @@ function SchoolDashboard() {
     supabase
       .from("reservations")
       .select(
-        "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at",
+        "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by",
       )
       .eq("student_id", auditing.id)
       .order("reservation_date", { ascending: false })
@@ -1256,7 +1258,16 @@ function AuditDrawer({
   orgName: (id: string) => string;
   setChatRes: (r: ChatReservation) => void;
 }) {
+  const verifiedHours = completedRes.reduce(
+    (a, r) => (r.checked_in_at ? a + Number(r.hours_to_earn ?? 0) : a),
+    0,
+  );
+  const unverifiedHours = completedRes.reduce(
+    (a, r) => (r.checked_in_at ? a : a + Number(r.hours_to_earn ?? 0)),
+    0,
+  );
   return (
+
     <AnimatePresence>
       {auditing && (
         <motion.div
@@ -1281,14 +1292,27 @@ function AuditDrawer({
                 </p>
                 <h3 className="mt-1 font-display text-xl font-bold">{auditing.full_name}</h3>
                 <p className="text-xs text-muted-foreground">{auditing.email}</p>
-                <div className="mt-3 flex gap-3 text-xs">
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
                   <span className="rounded-full bg-success/15 px-2.5 py-1 font-semibold text-success">
                     Užbaigta: {completedRes.length}
                   </span>
                   <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
                     Surinkta: {Number(auditing.hours_earned)} / {auditing.hours_needed} val.
                   </span>
+                  <span className="rounded-full bg-success/15 px-2.5 py-1 font-semibold text-success">
+                    QR patvirtinta: {verifiedHours.toFixed(1)} val.
+                  </span>
+                  {unverifiedHours > 0 && (
+                    <span className="rounded-full bg-warning/15 px-2.5 py-1 font-semibold text-warning-foreground">
+                      Be QR įrodymo: {unverifiedHours.toFixed(1)} val.
+                    </span>
+                  )}
                 </div>
+                <p className="mt-2 max-w-md text-[11px] text-muted-foreground">
+                  „QR patvirtinta“ reiškia, kad organizacija vietoje nuskenavo mokinio kodą — laikas užfiksuotas
+                  sistemoje. Likusias valandas verta patikrinti su organizacija prieš užskaitant.
+                </p>
+
               </div>
               <button
                 onClick={() => setAuditing(null)}
@@ -1353,14 +1377,39 @@ function AuditDrawer({
                         </button>
                       </div>
                     </div>
+                    {isDone && (
+                      <div
+                        className={`mt-3 flex flex-wrap items-center gap-2 rounded-xl border p-2.5 text-[11px] ${
+                          r.checked_in_at
+                            ? "border-success/25 bg-success/5 text-success"
+                            : "border-warning/30 bg-warning/5 text-warning-foreground"
+                        }`}
+                      >
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          {r.checked_in_at ? (
+                            <>
+                              <ShieldCheck className="h-3 w-3" /> QR patvirtinta vietoje ·{" "}
+                              {new Date(r.checked_in_at).toLocaleString("lt-LT")}
+                            </>
+                          ) : (
+                            <>
+                              <AlertTriangle className="h-3 w-3" /> Be QR įrodymo — patvirtino tik organizacija
+                            </>
+                          )}
+                        </span>
+                        {r.legal_disclosure && (
+                          <span className="inline-flex items-center gap-1 font-semibold text-foreground/70">
+                            <ScrollText className="h-3 w-3" /> Pasirašytas teisinis patvirtinimas
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {isDone && r.legal_disclosure && (
-                      <div className="mt-3 rounded-xl border border-success/20 bg-success/5 p-3 text-xs text-foreground/80">
-                        <p className="mb-1 inline-flex items-center gap-1 font-semibold text-success">
-                          <ScrollText className="h-3 w-3" /> Pasirašytas teisinis patvirtinimas
-                        </p>
+                      <div className="mt-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-foreground/80">
                         <p className="whitespace-pre-wrap leading-relaxed">{r.legal_disclosure}</p>
                       </div>
                     )}
+
                   </div>
                 );
               })}
