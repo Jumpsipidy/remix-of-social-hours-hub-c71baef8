@@ -5,6 +5,21 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // Rotating QR window: token valid for 30 seconds.
 const WINDOW_SECONDS = 30;
 
+/** Turn raw PostgREST plumbing errors into something an organization can act on. */
+function friendlyRpcError(message: string): string {
+  if (/PGRST202|could not find the function|does not exist/i.test(message)) {
+    return "Duomenų bazėje trūksta check_in_by_code funkcijos — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
+  }
+  if (/PGRST204|schema cache/i.test(message)) {
+    return "Duomenų bazėje trūksta įsiregistravimo stulpelių — paleisk FIX_CHECKIN_AND_STREAKS.sql Supabase SQL Editor.";
+  }
+  if (/not found|nerast/i.test(message)) {
+    return "Toks kodas nerastas arba jis priklauso kitai organizacijai.";
+  }
+  return message;
+}
+
+
 async function hmacHex(secret: string, msg: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
@@ -147,7 +162,7 @@ export const submitCheckIn = createServerFn({ method: "POST" })
       }
       if (!code) throw new Error("Rezervacija nerasta");
       const { data: result, error } = await supabase.rpc("check_in_by_code", { _code: code });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyRpcError(error.message));
       return result as {
         ok: boolean; already: boolean; reservation_id: string;
         student_id: string; student_name: string; checked_in_at: string; is_owner: boolean;
@@ -158,7 +173,7 @@ export const submitCheckIn = createServerFn({ method: "POST" })
     const cleaned = raw.replace(/\D/g, "");
     if (cleaned.length !== 6) throw new Error("Kodas turi būti 6 skaitmenys");
     const { data: result, error } = await supabase.rpc("check_in_by_code", { _code: cleaned });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(friendlyRpcError(error.message));
     void userId;
     return result as {
       ok: boolean; already: boolean; reservation_id: string;

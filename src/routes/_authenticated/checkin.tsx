@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMyCheckInTokens } from "@/lib/checkin.functions";
 import { ArrowLeft, RefreshCw, ShieldCheck, WifiOff, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/layout";
+import { CheckinSetupBanner } from "@/components/checkin-setup-banner";
 
 export const Route = createFileRoute("/_authenticated/checkin")({
   component: CheckinPage,
@@ -60,6 +61,8 @@ function CheckinPage() {
               <p className="text-sm text-muted-foreground">Parodyk QR kodą organizacijai atvykus. Interneto neturi? Naudok 6 skaitmenų kodą.</p>
             </div>
           </div>
+
+          <CheckinSetupBanner />
 
           {loading && <p className="text-sm text-muted-foreground">Kraunama…</p>}
           {!loading && active.length === 0 && (
