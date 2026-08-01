@@ -1910,6 +1910,10 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
           {/* AI analysis card */}
           <AiAnalysisCard fingerprint={String((row.meta as { fingerprint?: string })?.fingerprint ?? "")} />
 
+          <ErrorScreenshot meta={row.meta} />
+
+
+
 
 
           <div className="grid grid-cols-2 gap-3 text-xs">
