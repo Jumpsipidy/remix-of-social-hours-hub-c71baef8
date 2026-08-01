@@ -4,7 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { PreLaunchBanner } from "@/components/prelaunch-banner";
+import {
+  CountUp,
+  KineticHeadline,
+  Magnetic,
+  Reveal,
+  TricolorRail,
+  TricolorRibbons,
+  useCalmMotion,
+  LT_GREEN,
+  LT_RED,
+  LT_YELLOW,
+} from "@/components/motion-kit";
 import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,76 +39,70 @@ export const Route = createFileRoute("/")({
 const EMBER = "#C8452A";
 const GOLD = "#E9B44C";
 
-const fmt = (n: number) => new Intl.NumberFormat("lt-LT").format(n);
 
-function CountUp({ value, className }: { value: number; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const start = performance.now();
-    const dur = 1600;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setN(Math.round(value * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, value]);
-  return <span ref={ref} className={className}>{fmt(n)}</span>;
-}
 
-/** Cursor-tracking spotlight card */
+
+/** Cursor-tracking spotlight card with parallax tilt + sheen sweep */
 function SpotlightCard({
   children,
   className = "",
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
+  const calm = useCalmMotion();
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(50);
   const my = useMotionValue(50);
-  const rx = useSpring(useTransform(my, [0, 100], [6, -6]), { stiffness: 120, damping: 15 });
-  const ry = useSpring(useTransform(mx, [0, 100], [-6, 6]), { stiffness: 120, damping: 15 });
+  const rx = useSpring(useTransform(my, [0, 100], [7, -7]), { stiffness: 140, damping: 16 });
+  const ry = useSpring(useTransform(mx, [0, 100], [-7, 7]), { stiffness: 140, damping: 16 });
+  const glow = useTransform(
+    [mx, my] as never,
+    ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
+  );
 
   return (
     <motion.div
       ref={ref}
-      onMouseMove={(e) => {
-        const r = ref.current!.getBoundingClientRect();
+      onPointerMove={(e) => {
+        if (calm || e.pointerType !== "mouse" || !ref.current) return;
+        const r = ref.current.getBoundingClientRect();
         mx.set(((e.clientX - r.left) / r.width) * 100);
         my.set(((e.clientY - r.top) / r.height) * 100);
       }}
-      onMouseLeave={() => { mx.set(50); my.set(50); }}
-      style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/20 ${className}`}
+      onPointerLeave={() => { mx.set(50); my.set(50); }}
+      whileHover={calm ? undefined : { y: -6 }}
+      transition={{ type: "spring", stiffness: 260, damping: 22 }}
+      style={calm ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/25 ${className}`}
     >
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{
-          background: useTransform(
-            [mx, my] as any,
-            ([x, y]: any) => `radial-gradient(400px circle at ${x}% ${y}%, ${accent}22, transparent 60%)`,
-          ),
-        }}
+        style={{ background: glow }}
+      />
+      {/* diagonal sheen that sweeps across on hover */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
       />
       {children}
     </motion.div>
   );
 }
 
+
 function Home() {
   const { profile, isAuthenticated } = useAuth();
   const isStudent = isAuthenticated && profile?.role === "student";
+  const calm = useCalmMotion();
 
   const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: pageProgress } = useScroll();
+  const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
   const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
+
 
   const [counts, setCounts] = useState({ students: 0, orgs: 0, hours: 0, schools: 0 });
   useEffect(() => {
@@ -161,8 +169,12 @@ function Home() {
       </h1>
 
       <div className="relative selection:bg-[#C8452A] selection:text-white">
+        <TricolorRail progress={railProgress} />
+        <PreLaunchBanner />
+
         {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative overflow-hidden px-4 pt-14 pb-20 sm:px-6 sm:pt-24 sm:pb-32 md:pt-36 md:pb-44">
+        <section ref={heroRef} className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
+          <TricolorRibbons />
           {/* animated halos on top of the shell BackgroundFX */}
           <motion.div
             aria-hidden
@@ -172,55 +184,49 @@ function Home() {
             <motion.div
               className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 65%)` }}
-              animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
+              animate={calm ? undefined : { x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
               transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
               className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 65%)` }}
-              animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
+              animate={calm ? undefined : { x: [0, -30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
 
-          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative mx-auto max-w-4xl text-center">
+          <motion.div
+            style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+            className="relative mx-auto max-w-4xl text-center"
+          >
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
+              initial={{ opacity: 0, y: 10, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
-              <Sparkles className="h-3 w-3" style={{ color: GOLD }} />
-              Lietuvos moksleiviams · nemokamai
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 motion-reduce:hidden"
+                style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
+                animate={calm ? undefined : { backgroundPosition: ["0% 0%", "220% 0%"] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+              />
+              <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
+              <span className="relative">Lietuvos moksleiviams · nemokamai</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0)" }}
-              transition={{ duration: 0.9, delay: 0.05 }}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display"
-              style={{ fontWeight: 500 }}
-            >
-              Kiekviena{" "}
-              <span className="relative inline-block italic" style={{ fontWeight: 400 }}>
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER}, ${GOLD})`,
-                    backgroundSize: "200% 100%",
-                    animation: "shine 6s linear infinite",
-                  }}
-                >
-                  valanda
-                </span>
-              </span>{" "}
-              — žingsnis pokyčio link
-            </motion.h1>
+            <KineticHeadline
+              as="h2"
+              text="Kiekviena valanda — žingsnis pokyčio link"
+              accentWords={["valanda"]}
+              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display font-medium text-white"
+            />
 
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25 }}
+              transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="mx-auto mb-8 sm:mb-12 max-w-xl text-base sm:text-lg md:text-xl leading-[1.6] text-white/70"
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
@@ -228,40 +234,53 @@ function Home() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
-              <Link
-                to={primaryCta}
-                className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
-              >
-                <span className="relative z-10">{primaryLabel}</span>
-                <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                <span
-                  aria-hidden
-                  className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
-                />
-              </Link>
-              <Link
-                to="/tasks"
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
-              >
-                Naršyti užduotis
-              </Link>
+              <Magnetic className="w-full sm:w-auto">
+                <Link
+                  to={primaryCta}
+                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
+                >
+                  <span className="relative z-10">{primaryLabel}</span>
+                  <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/25 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                  />
+                </Link>
+              </Magnetic>
+              <Magnetic className="w-full sm:w-auto" strength={10}>
+                <Link
+                  to="/tasks"
+                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
+                >
+                  Naršyti užduotis
+                </Link>
+              </Magnetic>
             </motion.div>
 
             {/* floating stat pill under CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+              transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
               className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl"
             >
-              <Clock className="h-5 w-5" style={{ color: GOLD }} />
+              <motion.span
+                animate={calm ? undefined : { rotate: [0, 12, 0, -12, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Clock className="h-5 w-5" style={{ color: GOLD }} />
+              </motion.span>
               <div className="text-left">
                 <div className="text-2xl font-display font-semibold text-white">
                   <CountUp value={counts.hours} /> val.
@@ -274,6 +293,7 @@ function Home() {
           </motion.div>
         </section>
 
+
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
         <section className="relative border-y border-white/10 backdrop-blur-sm">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
@@ -284,19 +304,29 @@ function Home() {
             ].map((s, i) => (
               <motion.div
                 key={s.l}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="relative px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
+                transition={{ delay: i * 0.12, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+                className="group relative overflow-hidden px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
                 style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : undefined }}
               >
-                <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display" style={{ fontWeight: 300, color: s.c }}>
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left"
+                  style={{ background: `linear-gradient(90deg, transparent, ${s.c}, transparent)` }}
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.25 + i * 0.12, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                />
+                <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display font-light" style={{ color: s.c }}>
                   <CountUp value={s.v} />
                 </div>
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/60">{s.l}</div>
               </motion.div>
             ))}
+
           </div>
         </section>
 
@@ -304,33 +334,40 @@ function Home() {
         <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
           <div className="mx-auto max-w-7xl">
             <div className="mb-10 sm:mb-16 max-w-3xl">
-              <p className="mb-3 sm:mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
-                Nr. 02 · Bendruomenė
-              </p>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl font-display text-white" style={{ fontWeight: 500, letterSpacing: "-0.01em" }}>
-                Platforma skirta{" "}
-                <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${EMBER}, ${GOLD})` }}>
-                  visiems
-                </span>
-              </h2>
+              <Reveal>
+                <p className="mb-3 sm:mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
+                  Nr. 02 · Bendruomenė
+                </p>
+              </Reveal>
+              <KineticHeadline
+                as="h2"
+                text="Platforma skirta visiems"
+                accentWords={["visiems"]}
+                className="text-3xl sm:text-4xl md:text-6xl font-display font-medium text-white tracking-[-0.01em]"
+              />
             </div>
 
             <div className="grid gap-5 sm:gap-8 md:grid-cols-3">
               {roles.map((c, i) => (
                 <motion.div
                   key={c.tag}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 34, rotateX: -10 }}
+                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  transition={{ delay: i * 0.1, duration: 0.6 }}
+                  transition={{ delay: i * 0.12, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ perspective: 1000 }}
                 >
+
                   <SpotlightCard accent={c.accent} className="h-full p-6 sm:p-8">
-                    <div
+                    <motion.div
                       className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl"
                       style={{ background: `${c.accent}22`, border: `1px solid ${c.accent}44` }}
+                      whileHover={calm ? undefined : { rotate: [0, -10, 8, 0], scale: 1.08 }}
+                      transition={{ duration: 0.6 }}
                     >
                       <c.icon className="h-6 w-6" style={{ color: c.accent }} />
-                    </div>
+                    </motion.div>
+
                     <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/50">
                       {c.tag}
                     </div>
@@ -355,32 +392,42 @@ function Home() {
 
         {/* MARQUEE — school band ─────────────────────────────────────────── */}
         <section className="relative overflow-hidden border-y border-white/10 py-14">
-          <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
-            Mūsų bendruomenėje jau dalyvauja
-          </p>
-          <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-            <motion.div
-              className="flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic text-base sm:text-xl md:text-2xl text-white/60 whitespace-nowrap"
-              style={{ fontWeight: 400 }}
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ duration: 40, ease: "linear", repeat: Infinity }}
+          <Reveal>
+            <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
+              Mūsų bendruomenėje jau dalyvauja
+            </p>
+          </Reveal>
+          {[
+            { dir: ["0%", "-50%"], dur: 42, dot: LT_YELLOW, cls: "text-white/60" },
+            { dir: ["-50%", "0%"], dur: 55, dot: LT_GREEN, cls: "text-white/35" },
+          ].map((row, r) => (
+            <div
+              key={r}
+              className="mt-3 flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
             >
-              {Array.from({ length: 2 }).flatMap((_, k) => [
-                "Šeduvos gimnazija",
-                "Vilniaus licėjus",
-                "Kauno KTU gimnazija",
-                "Klaipėdos Ąžuolyno gimnazija",
-                "Panevėžio J. Balčikonio gimnazija",
-                "Šiaulių Didždvario gimnazija",
-              ].map((name, j) => (
-                <span key={`${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
-                  <span>{name}</span>
-                  <span aria-hidden style={{ color: EMBER }}>◆</span>
-                </span>
-              )))}
-            </motion.div>
-          </div>
+              <motion.div
+                className={`flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic font-normal text-base sm:text-xl md:text-2xl whitespace-nowrap ${row.cls}`}
+                animate={calm ? undefined : { x: row.dir }}
+                transition={{ duration: row.dur, ease: "linear", repeat: Infinity }}
+              >
+                {Array.from({ length: 2 }).flatMap((_, k) => [
+                  "Šeduvos gimnazija",
+                  "Vilniaus licėjus",
+                  "Kauno KTU gimnazija",
+                  "Klaipėdos Ąžuolyno gimnazija",
+                  "Panevėžio J. Balčikonio gimnazija",
+                  "Šiaulių Didždvario gimnazija",
+                ].map((name, j) => (
+                  <span key={`${r}-${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
+                    <span>{name}</span>
+                    <span aria-hidden style={{ color: r === 0 ? row.dot : LT_RED }}>◆</span>
+                  </span>
+                )))}
+              </motion.div>
+            </div>
+          ))}
         </section>
+
 
         {/* CLOSING CTA ─────────────────────────────────────────────────── */}
         <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32 text-center overflow-hidden">
@@ -389,47 +436,44 @@ function Home() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <motion.div
-              className="h-[600px] w-[600px] rounded-full blur-3xl"
+              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
-              animate={{ scale: [1, 1.15, 1] }}
+              animate={calm ? undefined : { scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
 
           <div className="relative mx-auto max-w-3xl">
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7 }}
-              className="mb-6 sm:mb-8 text-3xl sm:text-4xl md:text-6xl leading-[1.05] font-display text-white"
-              style={{ fontWeight: 500 }}
-            >
-              Pasiruošęs{" "}
-              <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER})` }}>
-                pradėti?
-              </span>
-            </motion.h2>
-            <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
-              Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
-            </p>
-            <Link
-              to="/register"
-              className="group inline-flex items-center gap-2 rounded-full px-6 py-3.5 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white transition-transform hover:scale-[1.03]"
-              style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
-            >
-              Sukurti nemokamą paskyrą
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <KineticHeadline
+              as="h2"
+              text="Pasiruošęs pradėti?"
+              accentWords={["pradėti?"]}
+              className="mb-6 sm:mb-8 text-3xl sm:text-4xl md:text-6xl leading-[1.05] font-display font-medium text-white"
+            />
+            <Reveal delay={0.1}>
+              <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
+                Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
+              </p>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <Magnetic strength={16}>
+                <Link
+                  to="/register"
+                  className="group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full px-6 py-3.5 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white transition-transform hover:scale-[1.03]"
+                  style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
+                >
+                  <span className="relative z-10">Sukurti nemokamą paskyrą</span>
+                  <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                  />
+                </Link>
+              </Magnetic>
+            </Reveal>
           </div>
         </section>
 
-        <style>{`
-          @keyframes shine {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-          }
-        `}</style>
       </div>
     </PageShell>
   );
