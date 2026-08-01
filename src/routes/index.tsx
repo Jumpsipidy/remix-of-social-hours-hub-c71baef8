@@ -436,47 +436,44 @@ function Home() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <motion.div
-              className="h-[600px] w-[600px] rounded-full blur-3xl"
+              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
-              animate={{ scale: [1, 1.15, 1] }}
+              animate={calm ? undefined : { scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
 
           <div className="relative mx-auto max-w-3xl">
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.7 }}
-              className="mb-6 sm:mb-8 text-3xl sm:text-4xl md:text-6xl leading-[1.05] font-display text-white"
-              style={{ fontWeight: 500 }}
-            >
-              Pasiruošęs{" "}
-              <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER})` }}>
-                pradėti?
-              </span>
-            </motion.h2>
-            <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
-              Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
-            </p>
-            <Link
-              to="/register"
-              className="group inline-flex items-center gap-2 rounded-full px-6 py-3.5 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white transition-transform hover:scale-[1.03]"
-              style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
-            >
-              Sukurti nemokamą paskyrą
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Link>
+            <KineticHeadline
+              as="h2"
+              text="Pasiruošęs pradėti?"
+              accentWords={["pradėti?"]}
+              className="mb-6 sm:mb-8 text-3xl sm:text-4xl md:text-6xl leading-[1.05] font-display font-medium text-white"
+            />
+            <Reveal delay={0.1}>
+              <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
+                Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
+              </p>
+            </Reveal>
+            <Reveal delay={0.2}>
+              <Magnetic strength={16}>
+                <Link
+                  to="/register"
+                  className="group relative inline-flex min-h-12 items-center gap-2 overflow-hidden rounded-full px-6 py-3.5 sm:px-10 sm:py-5 text-base sm:text-lg font-bold text-white transition-transform hover:scale-[1.03]"
+                  style={{ background: `linear-gradient(135deg, ${EMBER}, ${GOLD})` }}
+                >
+                  <span className="relative z-10">Sukurti nemokamą paskyrą</span>
+                  <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                  />
+                </Link>
+              </Magnetic>
+            </Reveal>
           </div>
         </section>
 
-        <style>{`
-          @keyframes shine {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-          }
-        `}</style>
       </div>
     </PageShell>
   );
