@@ -1327,6 +1327,9 @@ function AdminErrorsPage() {
                                     <span className="text-xs text-muted-foreground tabular-nums">{relTime(r.created_at)}</span>
                                     {r.meta?.path && <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.meta.path}</code>}
                                     {r.meta?.source && <span className="text-xs text-muted-foreground">via {r.meta.source}</span>}
+                                    {(r.meta as any)?.screenshot && (
+                                      <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">📷 ekranas</span>
+                                    )}
                                     {r.meta?.lockdown && (
                                       <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">LOCKDOWN</span>
                                     )}
