@@ -304,19 +304,29 @@ function Home() {
             ].map((s, i) => (
               <motion.div
                 key={s.l}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="relative px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
+                transition={{ delay: i * 0.12, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+                className="group relative overflow-hidden px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
                 style={{ borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : undefined }}
               >
-                <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display" style={{ fontWeight: 300, color: s.c }}>
+                <motion.span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left"
+                  style={{ background: `linear-gradient(90deg, transparent, ${s.c}, transparent)` }}
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.25 + i * 0.12, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                />
+                <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display font-light" style={{ color: s.c }}>
                   <CountUp value={s.v} />
                 </div>
                 <div className="text-[11px] uppercase tracking-[0.24em] text-white/60">{s.l}</div>
               </motion.div>
             ))}
+
           </div>
         </section>
 
