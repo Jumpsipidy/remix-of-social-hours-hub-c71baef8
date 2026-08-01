@@ -258,28 +258,35 @@ function StudentDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Mokinio sritis</p>
-            <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">Sveika, {profile.full_name ?? "moksleivi"} 👋</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <button
-              onClick={() => setCustomOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40 hover:shadow-md"
-            >
-              <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
-            </button>
-            <CertificateButton />
-            <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
-              <ShieldCheck className="h-4 w-4" /> Mano QR kodas
-            </Link>
-            <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
-          </div>
-
-        </div>
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+        <DashHero
+          eyebrow="Mokinio sritis"
+          icon={GraduationCap}
+          title={<>Sveika, {profile.full_name ?? "moksleivi"} 👋</>}
+          subtitle={
+            <>
+              Čia matai visas savo socialines valandas vienoje vietoje: kiek jau surinkai, kas suplanuota ir ką verta
+              daryti toliau. {remaining > 0 ? `Iki tikslo liko ${remaining} val.` : "Tikslas jau pasiektas — puiku!"}
+            </>
+          }
+          actions={
+            <>
+              <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
+                + Naršyti užduotis
+              </Link>
+              <button
+                onClick={() => setCustomOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:border-primary/40"
+              >
+                <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
+              </button>
+              <CertificateButton />
+              <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
+                <ShieldCheck className="h-4 w-4" /> Mano QR kodas
+              </Link>
+            </>
+          }
+        />
       </section>
 
       {/* Hero: Ring + Next reservation */}
