@@ -36,6 +36,12 @@ import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  getSchoolSnapshot,
+  getSchoolStudentReservations,
+  type SchoolReservation,
+} from "@/lib/school-data.functions";
+
+import {
   detectFlags,
   highestSeverity,
   type FraudFlag,
