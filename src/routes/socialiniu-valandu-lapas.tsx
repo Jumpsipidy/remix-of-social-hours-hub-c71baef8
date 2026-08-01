@@ -173,9 +173,16 @@ function Page() {
       ["Mokykla", school].map(esc).join(","),
       ["Klasė", grade].map(esc).join(","),
       "",
-      ["Data", "Organizacija", "Veikla", "Valandos"].map(esc).join(","),
-      ...rows.filter((r) => r.date || r.org || r.activity || r.hours).map((r) => [r.date, r.org, r.activity, r.hours].map(esc).join(",")),
-      ["", "", "Iš viso", String(total)].map(esc).join(","),
+      ["Data", "Organizacija", "Atsakingas asmuo / kontaktas", "Veikla", "Valandos", "Būsena"].map(esc).join(","),
+      ...rows
+        .map((r, i) => ({ r, c: checks[i]! }))
+        .filter(({ r }) => r.date || r.org || r.activity || r.hours || r.contact)
+        .map(({ r, c }) =>
+          [r.date, r.org, r.contact, r.activity, r.hours, c.valid ? "OK" : c.errors.join(" ")]
+            .map(esc)
+            .join(","),
+        ),
+      ["", "", "", "Užskaitoma iš viso", String(total.toFixed(1)), ""].map(esc).join(","),
     ].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = window.URL.createObjectURL(blob);
@@ -200,7 +207,18 @@ function Page() {
           </p>
         </motion.header>
 
-        <section className="mt-8 rounded-2xl border border-border bg-card/60 p-5 print:border-0 print:bg-transparent">
+        <div className="mt-6 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-sm print:hidden">
+          <p className="inline-flex items-center gap-2 font-semibold text-primary">
+            <ShieldCheck className="h-4 w-4" /> Sąžiningumo taisyklės
+          </p>
+          <p className="mt-1.5 text-muted-foreground">
+            Vienai veiklai — daugiausia <b>{MAX_PER_ENTRY} val.</b>, vienai dienai — daugiausia{" "}
+            <b>{MAX_PER_DAY} val.</b> Visos valandos negali būti surašytos vienu įrašu: kiekviena veikla įrašoma
+            atskirai, su data, atsakingu asmeniu ir kontaktu, kad mokykla galėtų patikrinti.
+          </p>
+        </div>
+
+        <section className="mt-6 rounded-2xl border border-border bg-card/60 p-5 print:border-0 print:bg-transparent">
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="Vardas, pavardė" value={name} onChange={setName} placeholder="Vardenis Pavardenis" />
             <Field label="Mokykla" value={school} onChange={setSchool} placeholder="Šeduvos gimnazija" />
@@ -208,44 +226,68 @@ function Page() {
           </div>
 
           <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
+            <table className="w-full min-w-[820px] border-collapse text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                   <th className="pb-2 pr-2 font-semibold">Data</th>
                   <th className="pb-2 pr-2 font-semibold">Organizacija</th>
+                  <th className="pb-2 pr-2 font-semibold">Atsakingas asmuo · tel./el. paštas</th>
                   <th className="pb-2 pr-2 font-semibold">Veikla</th>
                   <th className="pb-2 pr-2 font-semibold">Val.</th>
                   <th className="pb-2 print:hidden" />
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r, i) => (
-                  <tr key={i} className="border-t border-border/60">
-                    <td className="py-1.5 pr-2">
-                      <input type="date" value={r.date} onChange={(e) => update(i, "date", e.target.value)}
-                        className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <input value={r.org} onChange={(e) => update(i, "org", e.target.value)} placeholder="Maisto bankas"
-                        className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <input value={r.activity} onChange={(e) => update(i, "activity", e.target.value)} placeholder="Rūšiavau paramos siuntas"
-                        className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
-                    </td>
-                    <td className="py-1.5 pr-2">
-                      <input inputMode="decimal" value={r.hours} onChange={(e) => update(i, "hours", e.target.value)} placeholder="2"
-                        className="h-9 w-20 rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
-                    </td>
-                    <td className="py-1.5 print:hidden">
-                      <button type="button" onClick={() => setRows((p) => p.filter((_, idx) => idx !== i))}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-destructive"
-                        aria-label="Šalinti eilutę">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {rows.map((r, i) => {
+                  const c = checks[i]!;
+                  const bad = c.errors.length > 0;
+                  return (
+                    <>
+                      <tr key={i} className="border-t border-border/60">
+                        <td className="py-1.5 pr-2">
+                          <input type="date" max={new Date().toISOString().slice(0, 10)} value={r.date} onChange={(e) => update(i, "date", e.target.value)}
+                            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
+                        </td>
+                        <td className="py-1.5 pr-2">
+                          <input value={r.org} onChange={(e) => update(i, "org", e.target.value)} placeholder="Maisto bankas"
+                            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
+                        </td>
+                        <td className="py-1.5 pr-2">
+                          <input value={r.contact} onChange={(e) => update(i, "contact", e.target.value)} placeholder="Rasa J., 8 600 00000"
+                            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
+                        </td>
+                        <td className="py-1.5 pr-2">
+                          <input value={r.activity} onChange={(e) => update(i, "activity", e.target.value)} placeholder="Rūšiavau paramos siuntas"
+                            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary" />
+                        </td>
+                        <td className="py-1.5 pr-2">
+                          <input inputMode="decimal" type="number" min={0} max={MAX_PER_ENTRY} step={0.5} value={r.hours}
+                            onChange={(e) => update(i, "hours", e.target.value)} placeholder="2"
+                            className={`h-9 w-20 rounded-lg border bg-background px-2 text-sm outline-none focus:border-primary ${
+                              bad ? "border-destructive/60" : "border-border"
+                            }`} />
+                        </td>
+                        <td className="py-1.5 print:hidden">
+                          <button type="button" onClick={() => setRows((p) => p.filter((_, idx) => idx !== i))}
+                            className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-destructive"
+                            aria-label="Šalinti eilutę">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                      {bad && (
+                        <tr key={`${i}-err`}>
+                          <td colSpan={6} className="pb-2 pl-1 text-[11px] text-destructive">
+                            <span className="inline-flex items-start gap-1.5">
+                              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                              <span>{c.errors.join(" ")}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -255,8 +297,13 @@ function Page() {
               className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-accent print:hidden">
               <Plus className="h-3.5 w-3.5" /> Pridėti eilutę
             </button>
+            {rejected > 0 && (
+              <span className="rounded-lg bg-destructive/10 px-3 py-1.5 text-sm font-semibold text-destructive print:hidden">
+                Neužskaitoma: {rejected.toFixed(1)} val. ({problems} eil. su klaidomis)
+              </span>
+            )}
             <span className="ml-auto rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-bold text-primary">
-              Iš viso: {total.toFixed(1)} val.
+              Užskaitoma iš viso: {total.toFixed(1)} val.
             </span>
           </div>
 
@@ -271,10 +318,19 @@ function Page() {
             </button>
           </div>
 
-          <div className="mt-6 border-t border-border pt-4 text-xs text-muted-foreground">
-            Organizacijos atstovo parašas: ____________________ · Data: ____________
+          <div className="mt-6 space-y-2 border-t border-border pt-4 text-xs text-muted-foreground">
+            <p>
+              <b>Kiekvieną eilutę</b> pasirašo organizacijos atstovas (parašas prie savo eilutės arba antspaudas
+              lapo apačioje).
+            </p>
+            <p>Organizacijos atstovo vardas, pavardė: ____________________ · Parašas: ____________ · Data: ____________</p>
+            <p>
+              Mokyklos patikra: __ paskambinta kontaktui · __ patikrinta platformoje · Užskaitė (mokyklos
+              atstovas): ____________________
+            </p>
           </div>
         </section>
+
 
         <section className="mt-12 print:hidden">
           <h2 className="font-display text-2xl font-bold">Kaip teisingai užpildyti lapą</h2>
