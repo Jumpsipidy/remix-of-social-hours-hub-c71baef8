@@ -65,16 +65,44 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
+    setOrgsLoading(true);
+    setOrgsError(null);
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, full_name, organization_name, email")
-        .eq("role", "organization")
-        .order("organization_name", { ascending: true });
-      setOrgs((data as OrgRow[]) ?? []);
+      // RLS on `profiles` normally hides other users' rows, so the direct query
+      // can come back empty even though organizations exist. Try it first, then
+      // fall back to the server directory.
+      let rows: OrgRow[] = [];
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name, organization_name, email")
+          .eq("role", "organization")
+          .order("organization_name", { ascending: true });
+        rows = (data as OrgRow[]) ?? [];
+      } catch {
+        rows = [];
+      }
+      if (rows.length === 0) {
+        try {
+          rows = (await listOrganizations()) as OrgRow[];
+        } catch (e) {
+          if (!cancelled) setOrgsError(e instanceof Error ? e.message : "Nepavyko įkelti organizacijų");
+        }
+      }
+      if (!cancelled) {
+        setOrgs(rows);
+        setOrgsLoading(false);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const filtered = useMemo(() => {
