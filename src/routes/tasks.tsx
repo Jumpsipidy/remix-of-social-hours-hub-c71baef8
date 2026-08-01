@@ -13,6 +13,7 @@ import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, Calend
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
 import { logActivity } from "@/lib/activity-log";
+import { listOrganizations } from "@/lib/orgs.functions";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -99,7 +100,18 @@ function TasksPage() {
       ]);
       const list = (tData as Task[]) ?? [];
       setTasks(list);
-      const orgList = (oData as OrgProfile[]) ?? [];
+      let orgList = (oData as OrgProfile[]) ?? [];
+      // RLS can hide organization profiles, which showed a generic „Organizacija"
+      // label instead of the real name. Fall back to the public directory.
+      const missing = list.some((t) => !orgList.find((o) => o.id === t.organization_id));
+      if (orgList.length === 0 || missing) {
+        try {
+          const dir = await listOrganizations();
+          const byId = new Map(orgList.map((o) => [o.id, o]));
+          dir.forEach((o) => { if (!byId.has(o.id)) byId.set(o.id, o as OrgProfile); });
+          orgList = Array.from(byId.values());
+        } catch { /* not signed in or directory unavailable */ }
+      }
       setAllOrgs(orgList);
       const map: Record<string, OrgProfile> = {};
       orgList.forEach((p) => (map[p.id] = p));
