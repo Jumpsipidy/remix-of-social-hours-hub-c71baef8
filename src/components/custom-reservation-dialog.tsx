@@ -232,9 +232,17 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                       />
                     </div>
                     <div className="max-h-56 overflow-y-auto">
-                      {filtered.length === 0 && (
+                      {orgsLoading && (
+                        <p className="flex items-center justify-center gap-2 px-3 py-6 text-center text-xs text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Kraunamos organizacijos…
+                        </p>
+                      )}
+                      {!orgsLoading && orgsError && (
+                        <p className="px-3 py-6 text-center text-xs text-destructive">{orgsError}</p>
+                      )}
+                      {!orgsLoading && !orgsError && filtered.length === 0 && (
                         <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                          Nieko nerasta
+                          {orgs.length === 0 ? "Organizacijų kol kas nėra" : "Nieko nerasta"}
                         </p>
                       )}
                       {filtered.map((o) => (
