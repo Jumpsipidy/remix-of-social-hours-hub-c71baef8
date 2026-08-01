@@ -169,8 +169,12 @@ function Home() {
       </h1>
 
       <div className="relative selection:bg-[#C8452A] selection:text-white">
+        <TricolorRail progress={railProgress} />
+        <PreLaunchBanner />
+
         {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative overflow-hidden px-4 pt-14 pb-20 sm:px-6 sm:pt-24 sm:pb-32 md:pt-36 md:pb-44">
+        <section ref={heroRef} className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
+          <TricolorRibbons />
           {/* animated halos on top of the shell BackgroundFX */}
           <motion.div
             aria-hidden
@@ -180,55 +184,49 @@ function Home() {
             <motion.div
               className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 65%)` }}
-              animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
+              animate={calm ? undefined : { x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
               transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
               className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 65%)` }}
-              animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
+              animate={calm ? undefined : { x: [0, -30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
 
-          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative mx-auto max-w-4xl text-center">
+          <motion.div
+            style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+            className="relative mx-auto max-w-4xl text-center"
+          >
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
+              initial={{ opacity: 0, y: 10, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
-              <Sparkles className="h-3 w-3" style={{ color: GOLD }} />
-              Lietuvos moksleiviams · nemokamai
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 motion-reduce:hidden"
+                style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
+                animate={calm ? undefined : { backgroundPosition: ["0% 0%", "220% 0%"] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+              />
+              <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
+              <span className="relative">Lietuvos moksleiviams · nemokamai</span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0)" }}
-              transition={{ duration: 0.9, delay: 0.05 }}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display"
-              style={{ fontWeight: 500 }}
-            >
-              Kiekviena{" "}
-              <span className="relative inline-block italic" style={{ fontWeight: 400 }}>
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage: `linear-gradient(120deg, ${GOLD}, ${EMBER}, ${GOLD})`,
-                    backgroundSize: "200% 100%",
-                    animation: "shine 6s linear infinite",
-                  }}
-                >
-                  valanda
-                </span>
-              </span>{" "}
-              — žingsnis pokyčio link
-            </motion.h1>
+            <KineticHeadline
+              as="h2"
+              text="Kiekviena valanda — žingsnis pokyčio link"
+              accentWords={["valanda"]}
+              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display font-medium text-white"
+            />
 
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25 }}
+              transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
               className="mx-auto mb-8 sm:mb-12 max-w-xl text-base sm:text-lg md:text-xl leading-[1.6] text-white/70"
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
@@ -236,40 +234,53 @@ function Home() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
-              <Link
-                to={primaryCta}
-                className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
-              >
-                <span className="relative z-10">{primaryLabel}</span>
-                <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                <span
-                  aria-hidden
-                  className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                  style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
-                />
-              </Link>
-              <Link
-                to="/tasks"
-                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
-              >
-                Naršyti užduotis
-              </Link>
+              <Magnetic className="w-full sm:w-auto">
+                <Link
+                  to={primaryCta}
+                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
+                >
+                  <span className="relative z-10">{primaryLabel}</span>
+                  <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/25 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                  />
+                </Link>
+              </Magnetic>
+              <Magnetic className="w-full sm:w-auto" strength={10}>
+                <Link
+                  to="/tasks"
+                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
+                >
+                  Naršyti užduotis
+                </Link>
+              </Magnetic>
             </motion.div>
 
             {/* floating stat pill under CTA */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+              transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
               className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl"
             >
-              <Clock className="h-5 w-5" style={{ color: GOLD }} />
+              <motion.span
+                animate={calm ? undefined : { rotate: [0, 12, 0, -12, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Clock className="h-5 w-5" style={{ color: GOLD }} />
+              </motion.span>
               <div className="text-left">
                 <div className="text-2xl font-display font-semibold text-white">
                   <CountUp value={counts.hours} /> val.
@@ -281,6 +292,7 @@ function Home() {
             </motion.div>
           </motion.div>
         </section>
+
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
         <section className="relative border-y border-white/10 backdrop-blur-sm">
