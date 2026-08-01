@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Target, CalendarCheck, Building2, TrendingUp, MessageSquare,
   CheckCircle2, AlarmClock, XCircle, PlayCircle, Sparkles, School,
-  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star, ShieldCheck,
+  Flame, Award, Trophy, CalendarDays, MapPin, Rocket, Timer, Star, ShieldCheck, GraduationCap,
 } from "lucide-react";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
@@ -21,6 +21,7 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/achievements-grid";
 import { StreakCard } from "@/components/streak-card";
+import { DashHero, StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { celebrate, setCelebrationContext } from "@/lib/celebrate";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/student")({
     meta: [
       { title: "Mokinio sritis — Socialinės Valandos" },
       { name: "description", content: "Stebėk sukauptas valandas, suplanuotus vizitus ir savanorystės progresą." },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: StudentDashboard,
@@ -258,28 +260,35 @@ function StudentDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:flex-wrap sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Mokinio sritis</p>
-            <h1 className="mt-1 truncate text-3xl font-bold tracking-tight sm:text-4xl">Sveika, {profile.full_name ?? "moksleivi"} 👋</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{profile.email}</p>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <button
-              onClick={() => setCustomOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-semibold shadow-sm transition hover:border-primary/40 hover:shadow-md"
-            >
-              <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
-            </button>
-            <CertificateButton />
-            <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
-              <ShieldCheck className="h-4 w-4" /> Mano QR kodas
-            </Link>
-            <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">+ Naršyti užduotis</Link>
-          </div>
-
-        </div>
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+        <DashHero
+          eyebrow="Mokinio sritis"
+          icon={GraduationCap}
+          title={<>Sveika, {profile.full_name ?? "moksleivi"} 👋</>}
+          subtitle={
+            <>
+              Čia matai visas savo socialines valandas vienoje vietoje: kiek jau surinkai, kas suplanuota ir ką verta
+              daryti toliau. {remaining > 0 ? `Iki tikslo liko ${remaining} val.` : "Tikslas jau pasiektas — puiku!"}
+            </>
+          }
+          actions={
+            <>
+              <Link to="/tasks" className="rounded-full bg-gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
+                + Naršyti užduotis
+              </Link>
+              <button
+                onClick={() => setCustomOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:border-primary/40"
+              >
+                <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
+              </button>
+              <CertificateButton />
+              <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
+                <ShieldCheck className="h-4 w-4" /> Mano QR kodas
+              </Link>
+            </>
+          }
+        />
       </section>
 
       {/* Hero: Ring + Next reservation */}
@@ -343,22 +352,12 @@ function StudentDashboard() {
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Clock, label: "Užbaigtos valandos", value: `${completed}`, sub: `iš ${required} reikalingų` },
-            { icon: Target, label: "Liko valandų", value: `${remaining}`, sub: `${progress}% iki tikslo` },
-            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: active.length, sub: nextRes ? `Artimiausia: ${nextRes.reservation_date}` : "" },
-            { icon: Building2, label: "Organizacijos", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "kur savanoriavai" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-              <div className="flex items-center justify-between">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                  <s.icon className="h-5 w-5" />
-                </div>
-                <TrendingUp className="h-4 w-4 text-success" />
-              </div>
-              <p className="mt-5 font-display text-3xl font-bold">{s.value}</p>
-              <p className="text-sm text-muted-foreground">{s.label}</p>
-              {s.sub && <p className="text-xs text-muted-foreground/80">{s.sub}</p>}
-            </div>
+            { icon: Clock, label: "Užbaigtos valandos", value: completed, sub: `iš ${required} reikalingų`, accent: DASH_GREEN },
+            { icon: Target, label: "Liko valandų", value: remaining, sub: `${progress}% iki tikslo`, accent: DASH_GOLD },
+            { icon: CalendarCheck, label: "Aktyvios rezervacijos", value: active.length, sub: nextRes ? `Artimiausia: ${nextRes.reservation_date}` : "Kol kas nieko nesuplanuota", accent: DASH_EMBER },
+            { icon: Building2, label: "Organizacijos", value: new Set(reservations.map((r) => r.organization_id)).size, sub: "kur savanoriavai", accent: DASH_EMBER },
+          ].map((s, i) => (
+            <StatTile key={s.label} icon={s.icon} label={s.label} value={s.value} sub={s.sub} accent={s.accent} delay={i * 0.06} />
           ))}
         </div>
       </section>

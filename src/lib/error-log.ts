@@ -9,6 +9,7 @@ import { escalateAppError } from "@/lib/error-escalation.functions";
 import { getActionBreadcrumbs, getBreadcrumbs, getSessionReplay } from "@/lib/user-breadcrumbs";
 import { fingerprint as computeFingerprint, isTelemetryFingerprint } from "@/lib/error-fingerprint";
 import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
+import { captureScreenshot } from "@/lib/screenshot";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
@@ -195,6 +196,17 @@ async function insert(action: "client.error" | "supabase.error" | "client.teleme
     },
   };
 
+  // Visual evidence: what the user actually saw when it broke. Best-effort,
+  // throttled, and skipped for telemetry so the dashboard isn't flooded.
+  if (!telemetry) {
+    try {
+      const shot = await captureScreenshot({ force: forcedReport });
+      if (shot) (row.meta as Record<string, unknown>).screenshot = shot;
+    } catch {
+      /* screenshots are never allowed to block error reporting */
+    }
+  }
+
   try {
     const { error } = await supabase.from("activity_log").insert(row as any);
     if (error) throw error;
@@ -202,7 +214,9 @@ async function insert(action: "client.error" | "supabase.error" | "client.teleme
     // Primary insert failed (offline / RLS / auth). Queue for retry
     // + beacon on tab close so the report ALWAYS reaches admin.
     try {
-      enqueueOutbox(row);
+      const light = { ...row, meta: { ...(row.meta as Record<string, unknown>) } };
+      delete (light.meta as Record<string, unknown>).screenshot;
+      enqueueOutbox(light);
     } catch {
       /* ignore */
     }

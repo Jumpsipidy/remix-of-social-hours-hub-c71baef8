@@ -1327,6 +1327,9 @@ function AdminErrorsPage() {
                                     <span className="text-xs text-muted-foreground tabular-nums">{relTime(r.created_at)}</span>
                                     {r.meta?.path && <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{r.meta.path}</code>}
                                     {r.meta?.source && <span className="text-xs text-muted-foreground">via {r.meta.source}</span>}
+                                    {(r.meta as any)?.screenshot && (
+                                      <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">📷 ekranas</span>
+                                    )}
                                     {r.meta?.lockdown && (
                                       <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-bold text-rose-300">LOCKDOWN</span>
                                     )}
@@ -1910,6 +1913,10 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
           {/* AI analysis card */}
           <AiAnalysisCard fingerprint={String((row.meta as { fingerprint?: string })?.fingerprint ?? "")} />
 
+          <ErrorScreenshot meta={row.meta} />
+
+
+
 
 
           <div className="grid grid-cols-2 gap-3 text-xs">
@@ -1937,6 +1944,37 @@ function DetailModal({ row, onClose, onDelete }: { row: ErrRow; onClose: () => v
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+/** Visual evidence: the exact screen the user saw when the error fired. */
+function ErrorScreenshot({ meta }: { meta: Record<string, any> | null }) {
+  const src = typeof meta?.screenshot === "string" ? (meta.screenshot as string) : null;
+  const [zoom, setZoom] = useState(false);
+  if (!src) return null;
+  return (
+    <div className="rounded-2xl border border-border/60 bg-background/40 p-3">
+      <div className="flex items-center justify-between">
+        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+          Ekrano nuotrauka (ką matė vartotojas)
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setZoom((v) => !v)} className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-semibold hover:bg-accent">
+            {zoom ? "Sumažinti" : "Padidinti"}
+          </button>
+          <a href={src} download={`klaida-${Date.now()}.jpg`} className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-semibold hover:bg-accent">
+            Atsisiųsti
+          </a>
+        </div>
+      </div>
+      <button type="button" onClick={() => setZoom((v) => !v)} className="mt-2 block w-full">
+        <img
+          src={src}
+          alt="Vartotojo ekrano nuotrauka klaidos metu"
+          className={`w-full rounded-xl border border-border/50 object-cover object-top transition-all ${zoom ? "max-h-[70vh] object-contain" : "max-h-56"}`}
+        />
+      </button>
+    </div>
   );
 }
 
