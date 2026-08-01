@@ -173,7 +173,7 @@ function SchoolDashboard() {
     if (!auditing) return;
     let active = true;
     getSchoolStudentReservations({ data: { studentId: auditing.id } })
-      .then((rows) => {
+      .then((rows: SchoolReservation[]) => {
         if (active) setAuditRes((rows as Reservation[]) ?? []);
       })
       .catch((e: unknown) => {
