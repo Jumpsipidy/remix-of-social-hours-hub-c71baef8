@@ -38,7 +38,7 @@ for (const badge of list) {
     composition,
     serveUrl: bundled,
     codec: "h264",
-    crf: 23,
+    crf: 18,
     inputProps: { badge },
     outputLocation,
     puppeteerInstance: browser,
