@@ -123,6 +123,16 @@ export function CelebrationStage() {
           role="status"
           aria-live="polite"
         >
+          {/* skip */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); skip(); }}
+            className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-20 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/50 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur transition hover:bg-black/70 hover:text-white sm:right-6"
+          >
+            Praleisti
+            <span aria-hidden>›</span>
+          </button>
+
           {/* backdrop */}
           <motion.div
             className="absolute inset-0 bg-background/80 backdrop-blur-xl"
