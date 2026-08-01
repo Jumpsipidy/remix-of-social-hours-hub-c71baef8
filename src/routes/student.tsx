@@ -19,6 +19,9 @@ import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
+import { AchievementsGrid } from "@/components/achievements-grid";
+import { StreakCard } from "@/components/streak-card";
+import { toast } from "sonner";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
@@ -136,21 +139,58 @@ function StudentDashboard() {
     })();
   }, [user]);
 
-  // Bump the login streak once per session (RPC itself is idempotent per day).
+  // Streak is claimed by the student with a click (RPC is idempotent per day).
+  const [streakActivated, setStreakActivated] = useState(false);
+  const [streakLoading, setStreakLoading] = useState(true);
+
+  const loadStreakBoard = async () => {
+    const { data: board } = await supabase.rpc("get_school_streak_leaderboard" as never);
+    if (Array.isArray(board)) setStreakBoard(board as typeof streakBoard);
+  };
+
   useEffect(() => {
     if (!user || profile?.role !== "student") return;
     (async () => {
-      const { data } = await supabase.rpc("bump_login_streak" as never);
-      const row = Array.isArray(data) ? (data as Array<{ login_streak: number; longest_login_streak: number; freeze_used_at: string | null }>)[0] : null;
+      setStreakLoading(true);
+      const { data } = await supabase
+        .from("profiles")
+        .select("login_streak, longest_login_streak, freeze_used_at, last_login_day")
+        .eq("id", user.id)
+        .maybeSingle();
+      const row = data as
+        | { login_streak: number | null; longest_login_streak: number | null; freeze_used_at: string | null; last_login_day: string | null }
+        | null;
       if (row) {
         setLoginStreak(row.login_streak ?? 0);
         setLongestStreak(row.longest_login_streak ?? 0);
         setFreezeUsedAt(row.freeze_used_at ?? null);
+        setStreakActivated(row.last_login_day === new Date().toISOString().slice(0, 10));
       }
-      const { data: board } = await supabase.rpc("get_school_streak_leaderboard" as never);
-      if (Array.isArray(board)) setStreakBoard(board as typeof streakBoard);
+      setStreakLoading(false);
+      await loadStreakBoard();
     })();
   }, [user, profile?.role]);
+
+  const activateStreak = async () => {
+    const { data, error } = await supabase.rpc("bump_login_streak" as never);
+    if (error) {
+      toast.error("Nepavyko aktyvuoti serijos", { description: error.message });
+      return;
+    }
+    const row = Array.isArray(data)
+      ? (data as Array<{ login_streak: number; longest_login_streak: number; freeze_used_at: string | null }>)[0]
+      : null;
+    if (row) {
+      setLoginStreak(row.login_streak ?? 0);
+      setLongestStreak(row.longest_login_streak ?? 0);
+      setFreezeUsedAt(row.freeze_used_at ?? null);
+    }
+    setStreakActivated(true);
+    toast.success(`🔥 Serija aktyvuota — ${row?.login_streak ?? loginStreak} d. iš eilės`, {
+      description: "Užsuk ir rytoj, kad nenutrūktų.",
+    });
+    await loadStreakBoard();
+  };
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -313,42 +353,15 @@ function StudentDashboard() {
       {profile.role === "student" && (
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <div className="relative overflow-hidden rounded-3xl border border-warning/30 bg-gradient-to-br from-warning/10 via-background to-primary/5 p-6 shadow-md">
-            <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-warning/20 blur-3xl" />
-            <div className="relative flex items-center gap-4">
-              <motion.div
-                animate={{ scale: [1, 1.08, 1], rotate: [0, -4, 4, 0] }}
-                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                className="grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg"
-              >
-                <Flame className="h-8 w-8" fill="currentColor" />
-              </motion.div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-warning">Prisijungimo serija</p>
-                <p className="mt-0.5 font-display text-4xl font-bold">
-                  {loginStreak} <span className="text-lg font-medium text-muted-foreground">d. iš eilės</span>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Rekordas: <span className="font-semibold text-foreground">{longestStreak} d.</span>
-                  {freezeUsedAt && <> · <span title="1 praleista diena atleista">🧊 „šaldiklis" panaudotas</span></>}
-                </p>
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-4 gap-1.5">
-              {[3, 7, 14, 30].map((milestone) => {
-                const reached = loginStreak >= milestone;
-                return (
-                  <div key={milestone} className={`rounded-xl border p-2 text-center transition ${reached ? "border-warning/50 bg-warning/10" : "border-dashed border-border bg-background/40 opacity-60"}`}>
-                    <p className={`font-display text-lg font-bold ${reached ? "text-warning" : "text-muted-foreground"}`}>{milestone}</p>
-                    <p className="text-[10px] text-muted-foreground">d.</p>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">
-              Švelnios taisyklės: 1 praleista diena per savaitę atleidžiama automatiškai. Užsuk kiekvieną dieną!
-            </p>
-          </div>
+          <StreakCard
+            streak={loginStreak}
+            longest={longestStreak}
+            freezeUsedAt={freezeUsedAt}
+            activated={streakActivated}
+            loading={streakLoading}
+            onActivate={activateStreak}
+          />
+
 
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
             <div className="flex items-center justify-between">
@@ -420,21 +433,8 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-            <h2 className="text-lg font-bold flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Pasiekimai</h2>
-            <p className="text-xs text-muted-foreground">Atrakinta {ACHIEVEMENTS.filter((a) => unlockedKeys.has(a.key)).length} iš {ACHIEVEMENTS.length}</p>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {ACHIEVEMENTS.map((a) => {
-                const got = unlockedKeys.has(a.key);
-                return (
-                  <div key={a.key} title={a.description} className={`rounded-xl border p-3 text-xs transition ${got ? "border-primary/40 bg-primary/5" : "border-dashed border-border bg-background/40 opacity-60"}`}>
-                    <a.icon className={`h-4 w-4 ${got ? "text-primary" : "text-muted-foreground"}`} />
-                    <p className="mt-2 font-semibold leading-tight">{a.label}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <AchievementsGrid unlocked={unlockedKeys} />
+
         </div>
       </section>
 

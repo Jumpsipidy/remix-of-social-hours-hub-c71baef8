@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { AddressPicker, type AddressValue } from "@/components/address-picker";
 import { LeafletMap } from "@/components/leaflet-map";
 import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
+import { listOrganizations } from "@/lib/orgs.functions";
 
 
 type OrgRow = {
@@ -65,16 +66,44 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
+    setOrgsLoading(true);
+    setOrgsError(null);
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, full_name, organization_name, email")
-        .eq("role", "organization")
-        .order("organization_name", { ascending: true });
-      setOrgs((data as OrgRow[]) ?? []);
+      // RLS on `profiles` normally hides other users' rows, so the direct query
+      // can come back empty even though organizations exist. Try it first, then
+      // fall back to the server directory.
+      let rows: OrgRow[] = [];
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name, organization_name, email")
+          .eq("role", "organization")
+          .order("organization_name", { ascending: true });
+        rows = (data as OrgRow[]) ?? [];
+      } catch {
+        rows = [];
+      }
+      if (rows.length === 0) {
+        try {
+          rows = (await listOrganizations()) as OrgRow[];
+        } catch (e) {
+          if (!cancelled) setOrgsError(e instanceof Error ? e.message : "Nepavyko įkelti organizacijų");
+        }
+      }
+      if (!cancelled) {
+        setOrgs(rows);
+        setOrgsLoading(false);
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const filtered = useMemo(() => {
@@ -203,9 +232,17 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                       />
                     </div>
                     <div className="max-h-56 overflow-y-auto">
-                      {filtered.length === 0 && (
+                      {orgsLoading && (
+                        <p className="flex items-center justify-center gap-2 px-3 py-6 text-center text-xs text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Kraunamos organizacijos…
+                        </p>
+                      )}
+                      {!orgsLoading && orgsError && (
+                        <p className="px-3 py-6 text-center text-xs text-destructive">{orgsError}</p>
+                      )}
+                      {!orgsLoading && !orgsError && filtered.length === 0 && (
                         <p className="px-3 py-6 text-center text-xs text-muted-foreground">
-                          Nieko nerasta
+                          {orgs.length === 0 ? "Organizacijų kol kas nėra" : "Nieko nerasta"}
                         </p>
                       )}
                       {filtered.map((o) => (
