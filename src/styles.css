@@ -218,3 +218,16 @@ body { overscroll-behavior-y: none; }
 @media (max-width: 640px) {
   .sv-toaster [data-sonner-toast] { width: calc(100vw - 24px) !important; }
 }
+
+/* ── Motion kit ───────────────────────────────────────────────────────── */
+@keyframes sv-shine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 220% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
