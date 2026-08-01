@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Allow: /tasks
 Allow: /socialiniu-valandu-lapas
+Allow: /savanoryste-seduvoje
 Allow: /blog/
 Allow: /blog/kas-yra-socialines-valandos
 Allow: /blog/kaip-surinkti-socialines-valandas
