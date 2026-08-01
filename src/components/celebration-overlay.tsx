@@ -82,6 +82,8 @@ function Bands({ out }: { out?: boolean }) {
 export function CelebrationStage() {
   const calm = useCalmMotion();
   const [queue, setQueue] = useState<CelebrationEvent[]>([]);
+  const [failed, setFailed] = useState<string | null>(null);
+
   const current = queue[0] ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -90,16 +92,18 @@ export function CelebrationStage() {
     return () => { off(); };
   }, []);
 
+  const clipUrl =
+    current?.kind === "achievement" ? CLIP_URLS[current.iconKey] : current ? clipForStreak(current.days) : undefined;
+  const hasClip = !!clipUrl && failed !== clipUrl;
+
   useEffect(() => {
     if (!current) return;
-    timer.current = setTimeout(() => setQueue((q) => q.slice(1)), calm ? 1800 : HOLD_MS);
+    timer.current = setTimeout(() => setQueue((q) => q.slice(1)), calm ? 1800 : hasClip ? 7000 : HOLD_MS);
     return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [current, calm]);
+  }, [current, calm, hasClip]);
 
   const skip = () => setQueue((q) => q.slice(1));
 
-  const clipUrl =
-    current?.kind === "achievement" ? CLIP_URLS[current.iconKey] : current ? clipForStreak(current.days) : undefined;
 
   const Icon =
     current?.kind === "achievement"
@@ -141,24 +145,36 @@ export function CelebrationStage() {
           {!calm && <Bands />}
           {!calm && <Confetti seed={queue.length} />}
 
-          {clipUrl ? (
+          {clipUrl && failed !== clipUrl ? (
             <motion.div
-              className="relative w-[min(88vw,520px)] overflow-hidden rounded-[2rem] border border-border/50 shadow-2xl"
-              initial={{ scale: 0.7, opacity: 0, y: 20 }}
+              className="relative flex w-full flex-col items-center px-3"
+              initial={{ scale: 0.72, opacity: 0, y: 24 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.92, opacity: 0 }}
               transition={{ type: "spring", stiffness: 220, damping: 20 }}
             >
-              <video
-                src={clipUrl}
-                autoPlay
-                muted
-                playsInline
-                onEnded={skip}
-                className="block h-auto w-full"
-              />
+              <div className="relative w-[min(96vw,min(72vh,560px))] overflow-hidden rounded-[1.75rem] border border-white/10 shadow-2xl sm:rounded-[2rem]">
+                <video
+                  src={clipUrl}
+                  autoPlay
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  onEnded={skip}
+                  onError={() => setFailed(clipUrl)}
+                  className="block aspect-square h-auto w-full object-cover"
+                />
+                <span
+                  className="pointer-events-none absolute inset-0 rounded-[1.75rem] sm:rounded-[2rem]"
+                  style={{ boxShadow: `inset 0 0 0 1px ${LT_YELLOW}33` }}
+                />
+              </div>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                Bakstelėk, kad uždarytum
+              </p>
             </motion.div>
           ) : (
+
           <div className="relative flex flex-col items-center px-6 text-center">
             <div className="relative grid h-40 w-40 place-items-center">
               {!calm && <Rings />}
