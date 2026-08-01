@@ -1,14 +1,53 @@
-import { useState } from "react";
-import { Bug, X, Send } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bug, X, Send, ShieldCheck, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { deviceMeta, sessionId } from "@/lib/device-meta";
+import { getActionBreadcrumbs } from "@/lib/user-breadcrumbs";
+import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
+import { escalateAppError } from "@/lib/error-escalation.functions";
+
+type Severity = "low" | "normal" | "high" | "critical";
+
+/** Everything we attach automatically so a report is actually debuggable. */
+function collectDiagnostics() {
+  const dev = deviceMeta() as Record<string, unknown>;
+  const crumbs = getActionBreadcrumbs(12).map((b) => ({
+    t: b.t,
+    kind: b.kind,
+    label: b.label?.slice(0, 160),
+    path: b.path,
+  }));
+  return {
+    session: sessionId(),
+    url: typeof window !== "undefined" ? window.location.href.slice(0, 500) : null,
+    device: dev,
+    breadcrumbs: crumbs,
+    viewport:
+      typeof window !== "undefined" ? `${window.innerWidth}×${window.innerHeight}` : null,
+    online: typeof navigator !== "undefined" ? navigator.onLine : null,
+    at: new Date().toISOString(),
+  };
+}
 
 export function BugReportWidget() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
-  const [severity, setSeverity] = useState<"low" | "normal" | "high" | "critical">("normal");
+  const [severity, setSeverity] = useState<Severity>("normal");
   const [busy, setBusy] = useState(false);
+  const [showDiag, setShowDiag] = useState(false);
+
+  const diagPreview = useMemo(() => {
+    if (!open) return null;
+    const d = collectDiagnostics();
+    return {
+      device: `${d.device?.["browser"] ?? "?"} · ${d.device?.["os"] ?? "?"} · ${d.device?.["device"] ?? "?"}`,
+      viewport: d.viewport,
+      steps: d.breadcrumbs.length,
+      session: String(d.session).slice(0, 8),
+    };
+  }, [open]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,22 +56,60 @@ export function BugReportWidget() {
       return;
     }
     setBusy(true);
+    const diag = collectDiagnostics();
+    const text = message.trim().slice(0, 4000);
+    let reachedAdmin = false;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("bug_reports").insert({
-        message: message.trim().slice(0, 4000),
-        reporter_email: email.trim() || null,
+
+      // 1) Persist. Extra columns are dropped automatically if the DB is older.
+      const { error } = await insertWithSchemaFallback("bug_reports", {
+        message: text,
+        reporter_email: email.trim() || user?.email || null,
         reporter_user_id: user?.id ?? null,
-        page_url: typeof window !== "undefined" ? window.location.href.slice(0, 500) : null,
+        page_url: diag.url,
         severity,
+        diagnostics: diag,
+        session_id: diag.session,
       });
-      if (error) throw error;
-      toast.success("Ačiū! Pranešimas išsiųstas.");
-      setMessage(""); setEmail(""); setSeverity("normal");
+      if (!error) reachedAdmin = true;
+
+      // 2) Always push to the alert channels (Discord/email) with full context,
+      //    even if the insert failed — a report must never get lost.
+      try {
+        await escalateAppError({
+          data: {
+            level: severity === "critical" || severity === "high" ? "critical" : "warning",
+            message: `[Vartotojo pranešimas · ${severity}] ${text.slice(0, 400)}`,
+            path: diag.url ?? undefined,
+            source: "bug-report",
+            userEmail: (email.trim() || user?.email || undefined)?.slice(0, 200),
+            userAgent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 300) : undefined,
+            browser: String(diag.device?.["browser"] ?? "").slice(0, 60) || undefined,
+            os: String(diag.device?.["os"] ?? "").slice(0, 60) || undefined,
+            device: String(diag.device?.["device"] ?? "").slice(0, 30) || undefined,
+            breadcrumbs: diag.breadcrumbs.slice(0, 15),
+            test: true, // user-submitted: bypass noise filters & dedupe
+          },
+        });
+        reachedAdmin = true;
+      } catch {
+        /* channel failure — insert may still have worked */
+      }
+
+      if (!reachedAdmin) throw new Error(error?.message ?? "Nepavyko išsiųsti");
+
+      toast.success("Ačiū! Pranešimas su diagnostika išsiųstas.");
+      setMessage("");
+      setEmail("");
+      setSeverity("normal");
       setOpen(false);
     } catch (err: any) {
       toast.error(err?.message ?? "Nepavyko išsiųsti");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -45,7 +122,7 @@ export function BugReportWidget() {
           <Bug className="h-4 w-4 text-warning" /> <span className="hidden sm:inline">Pranešti apie klaidą</span>
         </button>
       ) : (
-        <form onSubmit={submit} className="w-[360px] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl">
+        <form onSubmit={submit} className="w-[min(92vw,360px)] overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-warning/10 to-transparent px-4 py-3">
             <div className="flex items-center gap-2">
               <Bug className="h-4 w-4 text-warning" />
@@ -64,12 +141,12 @@ export function BugReportWidget() {
             </div>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tavo el. paštas (nebūtina)</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jei norit atsakymo"
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jei nori atsakymo"
                 className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
             </div>
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Svarbumas</label>
-              <select value={severity} onChange={(e) => setSeverity(e.target.value as any)}
+              <select value={severity} onChange={(e) => setSeverity(e.target.value as Severity)}
                 className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary">
                 <option value="low">Menkas</option>
                 <option value="normal">Įprastas</option>
@@ -77,12 +154,29 @@ export function BugReportWidget() {
                 <option value="critical">Kritinis</option>
               </select>
             </div>
+
+            <button type="button" onClick={() => setShowDiag((v) => !v)}
+              className="flex w-full items-center gap-1.5 rounded-lg border border-border bg-background/60 px-2.5 py-2 text-left text-[11px] font-semibold text-muted-foreground hover:bg-accent">
+              <ShieldCheck className="h-3.5 w-3.5 text-success" />
+              Automatiškai pridedama diagnostika
+              <ChevronDown className={`ml-auto h-3.5 w-3.5 transition ${showDiag ? "rotate-180" : ""}`} />
+            </button>
+            {showDiag && diagPreview && (
+              <ul className="space-y-1 rounded-lg bg-background/60 p-2.5 text-[11px] text-muted-foreground">
+                <li>Įrenginys: {diagPreview.device}</li>
+                <li>Ekranas: {diagPreview.viewport}</li>
+                <li>Paskutiniai veiksmai: {diagPreview.steps}</li>
+                <li>Sesija: {diagPreview.session}…</li>
+                <li>Puslapis, kuriame esi</li>
+              </ul>
+            )}
+
             <button type="submit" disabled={busy}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary py-2 text-xs font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
               <Send className="h-3.5 w-3.5" /> {busy ? "Siunčiama…" : "Išsiųsti"}
             </button>
             <p className="text-[10px] leading-relaxed text-muted-foreground">
-              Bus išsaugotas URL, iš kur pranešei, kad greičiau surasčiau bugą.
+              Pranešimas iškart keliauja į administratoriaus įspėjimus kartu su paskutiniais tavo veiksmais — taip bugą randame greičiau.
             </p>
           </div>
         </form>
