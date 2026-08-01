@@ -74,7 +74,6 @@ function AuthCallbackPage() {
           role === "organization" ? "Organizacija" :
           role === "school_admin" ? "Mokyklos administratorius" :
           role === "admin" ? "Super administratorius" : "Naudotojas";
-        setRoleLabel(label);
 
         await insertActivityLogRow({
           user_id: data.session.user.id,
@@ -85,10 +84,18 @@ function AuthCallbackPage() {
         });
         try { localStorage.setItem("sv_last_role_v1", role); } catch {}
 
-        await new Promise((r) => setTimeout(r, 500));
+        // Role „scanner“ — trumpai persuka visus vaidmenis, tada užsifiksuoja.
+        await new Promise((r) => setTimeout(r, 900));
+        if (cancelled) return;
+        setRoleKey(role);
+        setRoleLabel(label);
+
+        await new Promise((r) => setTimeout(r, 900));
         setStepIdx(3);
-        await new Promise((r) => setTimeout(r, 600));
+        setLaunching(true);
+        await new Promise((r) => setTimeout(r, 750));
         if (!cancelled) navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
+
       } catch (err) {
         const text = err instanceof Error ? err.message : "Nepavyko užbaigti prisijungimo";
         toast.error(text);
