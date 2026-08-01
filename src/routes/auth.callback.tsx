@@ -34,11 +34,28 @@ export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackPage,
 });
 
+const ROLE_CARDS = [
+  { key: "student", label: "Mokinys", icon: UserCheck, color: "#E9B44C" },
+  { key: "organization", label: "Organizacija", icon: Building2, color: "#4CA3E9" },
+  { key: "school_admin", label: "Mokyklos adminas", icon: GraduationCap, color: "#7CE97C" },
+  { key: "admin", label: "Super adminas", icon: ShieldCheck, color: "#C8452A" },
+] as const;
+
 function AuthCallbackPage() {
   const navigate = useNavigate();
   const ensureProfile = useServerFn(ensureSignedInProfile);
   const [stepIdx, setStepIdx] = useState(0);
   const [roleLabel, setRoleLabel] = useState<string | null>(null);
+  const [roleKey, setRoleKey] = useState<string | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [scanIdx, setScanIdx] = useState(0);
+
+  useEffect(() => {
+    if (roleKey || stepIdx < 2) return;
+    const id = setInterval(() => setScanIdx((i) => (i + 1) % ROLE_CARDS.length), 160);
+    return () => clearInterval(id);
+  }, [roleKey, stepIdx]);
+
 
   useEffect(() => {
     let cancelled = false;
