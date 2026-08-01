@@ -513,6 +513,26 @@ function SchoolDashboard() {
         </aside>
 
         <main className="min-w-0 space-y-6">
+          {scope?.unscoped && (
+            <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
+              <p className="font-semibold">Paskyra dar nepriskirta mokyklai</p>
+              <p className="mt-1 text-muted-foreground">
+                Kol super administratorius nepriskirs mokyklos, mokinių duomenys nerodomi.
+              </p>
+            </div>
+          )}
+          {scope && !scope.unscoped && (
+            <div className="rounded-2xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
+              Matomi duomenys:{" "}
+              <b className="text-foreground">
+                {scope.class_restricted
+                  ? `tik priskirtos klasės (${scope.assigned_classes.join(", ")})`
+                  : "visa mokykla"}
+              </b>
+              . Kitų klasių ir mokyklų mokiniai nepasiekiami net per auditą.
+            </div>
+          )}
+
           <header className="overflow-hidden rounded-[2rem] border border-border bg-gradient-card p-5 shadow-elegant backdrop-blur sm:p-7">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div>
