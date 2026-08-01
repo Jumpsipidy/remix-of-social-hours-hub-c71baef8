@@ -124,6 +124,8 @@ function SchoolDashboard() {
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [tab, setTab] = useState<SchoolTab>("overview");
+  const [antiCheatCfg, setAntiCheatCfg] = useState<Record<string, boolean> | undefined>(undefined);
+  useEffect(() => setAntiCheatCfg(loadAntiCheatConfig()), []);
   const [allRes, setAllRes] = useState<Reservation[]>([]);
   const [classFilter, setClassFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
