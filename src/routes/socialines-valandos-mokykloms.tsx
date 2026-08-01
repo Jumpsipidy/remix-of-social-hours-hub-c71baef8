@@ -123,7 +123,7 @@ const FEATURES = [
   {
     icon: Users,
     title: "Partnerių organizacijos",
-    text: "Mokykla pati pridedа patikimas organizacijas ir mato, kur mokiniai savanoriauja.",
+    text: "Mokykla pati prideda patikimas organizacijas ir mato, kur mokiniai savanoriauja.",
   },
   {
     icon: CheckCircle2,
