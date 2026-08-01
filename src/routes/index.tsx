@@ -104,29 +104,13 @@ function Home() {
   const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
 
 
-  const [counts, setCounts] = useState({ students: 0, orgs: 0, hours: 0, schools: 0 });
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const [s, o, h, sc] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "student"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "organization"),
-        supabase.from("profiles").select("hours_earned").eq("role", "student"),
-        supabase.from("schools").select("id", { count: "exact", head: true }),
-      ]);
-      if (!alive) return;
-      const totalHours = (h.data ?? []).reduce(
-        (a: number, r: { hours_earned: number | null }) => a + (r.hours_earned ?? 0), 0,
-      );
-      setCounts({
-        students: s.count ?? 0,
-        orgs: o.count ?? 0,
-        hours: Math.round(totalHours),
-        schools: sc.count ?? 0,
-      });
-    })();
-    return () => { alive = false; };
-  }, []);
+  // Anonymous visitors cannot read `profiles` (RLS), so these totals come from
+  // a server function that aggregates with the service-role client.
+  const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: () => getPublicStats(),
+    staleTime: 60_000,
+  });
 
   const primaryCta = isStudent ? "/student" : "/register";
   const primaryLabel = isStudent ? "Į mano sritį" : "Pradėti savanorystę";
