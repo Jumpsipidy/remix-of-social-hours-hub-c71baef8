@@ -591,6 +591,55 @@ function SchoolDashboard() {
             />
           </div>
 
+          {/* Anti-sukčiavimo / valandų tikrumo juosta */}
+          <div className="rounded-3xl border border-border bg-card/60 p-5 backdrop-blur">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-2xl bg-success/15 text-success">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-display text-lg font-bold">Valandų tikrumo patikra</p>
+                  <p className="text-xs text-muted-foreground">
+                    „QR patvirtinta“ = organizacija vietoje nuskenavo mokinio kodą. Be QR — tik
+                    organizacijos rankinis patvirtinimas, todėl reikia papildomos peržiūros.
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-success">
+                  <ShieldCheck className="h-3.5 w-3.5" /> QR patvirtinta:{" "}
+                  {schoolVerifiedHours.toFixed(1)} val.
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 ${
+                    schoolUnverifiedHours > 0
+                      ? "border-warning/40 bg-warning/10 text-warning-foreground"
+                      : "border-border bg-accent text-muted-foreground"
+                  }`}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" /> Be QR įrodymo:{" "}
+                  {schoolUnverifiedHours.toFixed(1)} val. ({unverifiedRows} įrašai)
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-border bg-accent px-3 py-1">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Įtartinų rezervacijų: {flaggedCount}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-accent">
+                <motion.div
+                  className="h-full rounded-full bg-success"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${verifiedPct}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold tabular-nums">{verifiedPct}% su įrodymu</span>
+            </div>
+          </div>
+
+
+
           {tab === "overview" && (
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
               <Panel title="Klasės progresas" subtitle="Greita priskirtų klasių sveikatos būsena">
