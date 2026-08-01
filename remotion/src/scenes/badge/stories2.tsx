@@ -330,57 +330,111 @@ export const MosaicStory: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
 export const RocketStory: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
   const frame = useCurrentFrame();
   const launch = clampIn(frame, 46, 100);
-  const cd = Math.max(0, 3 - Math.floor(frame / 14));
+  const shake = frame > 30 && frame < 50 ? Math.sin(frame * 2.4) * 6 : 0;
+  const cd = Math.max(1, 3 - Math.floor(frame / 14));
+  const pct = useCount(badge.count ?? 150, 0, 46, 58);
   const Icon = lucide("Rocket");
   return (
     <Story badge={badge} mood="beams">
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+        {/* star streaks accelerating past the camera */}
+        {new Array(46).fill(0).map((_, i) => {
+          const sp = 3 + random("sp" + i) * 10;
+          const y = ((frame * sp * (0.3 + launch * 2.4) + random("sy" + i) * 1200) % 1400) - 200;
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: random("sx" + i) * 1080,
+                top: y,
+                width: 3,
+                height: 20 + launch * 130 * (0.4 + random("sh" + i)),
+                borderRadius: 99,
+                background: i % 5 === 0 ? badge.to : "#FFFFFF",
+                opacity: 0.12 + random("so" + i) * 0.3,
+              }}
+            />
+          );
+        })}
+
         {frame < 44 && (
           <span
             style={{
               position: "absolute",
               fontFamily: display,
-              fontSize: 340,
+              fontSize: 360,
               color: "transparent",
-              WebkitTextStroke: `4px ${badge.to}`,
-              transform: `scale(${1.4 - (frame % 14) / 34})`,
-              opacity: 1 - (frame % 14) / 18,
+              WebkitTextStroke: `5px ${badge.to}`,
+              transform: `scale(${1.45 - (frame % 14) / 30})`,
+              opacity: (1 - (frame % 14) / 16) * 0.9,
             }}
           >
-            {cd + 1}
+            {cd}
           </span>
         )}
+
+        {/* launch pad */}
         <div
           style={{
             position: "absolute",
-            transform: `translateY(${interpolate(launch, [0, 1], [180, -760])}px) rotate(-8deg)`,
-            filter: `drop-shadow(0 0 40px ${badge.to})`,
+            bottom: 190,
+            width: 420,
+            height: 16,
+            borderRadius: 99,
+            background: `linear-gradient(90deg, transparent, ${badge.to}88, transparent)`,
+            opacity: 1 - launch,
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            transform: `translate(${shake}px, ${interpolate(launch, [0, 1], [150, -820])}px) rotate(-8deg) scale(${1 + launch * 0.12})`,
+            filter: `drop-shadow(0 0 60px ${badge.to})`,
           }}
         >
-          <Icon size={220} color={badge.to} strokeWidth={1.8} />
+          <Icon size={230} color={badge.to} strokeWidth={1.8} />
         </div>
-        {launch > 0 &&
-          new Array(40).fill(0).map((_, i) => {
-            const p = ((frame * (4 + random("ex" + i) * 8)) % 500) / 500;
-            return (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  left: 540 + (random("ea" + i) - 0.5) * 200,
-                  top: 620 + p * 420 - launch * 700,
-                  width: 14 + random("es" + i) * 26,
-                  height: 14 + random("es" + i) * 26,
-                  borderRadius: "50%",
-                  background: i % 2 ? LT_YELLOW : LT_RED,
-                  opacity: (1 - p) * 0.7 * launch,
-                  filter: "blur(3px)",
-                }}
-              />
-            );
-          })}
+
+        {/* exhaust plume */}
+        {new Array(44).fill(0).map((_, i) => {
+          const p = ((frame * (4 + random("ex" + i) * 8)) % 500) / 500;
+          const live = frame > 34 ? 1 : 0;
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: 540 + (random("ea" + i) - 0.5) * 220,
+                top: 700 + p * 420 - launch * 820,
+                width: 16 + random("es" + i) * 34,
+                height: 16 + random("es" + i) * 34,
+                borderRadius: "50%",
+                background: i % 2 ? LT_YELLOW : LT_RED,
+                opacity: (1 - p) * 0.55 * Math.max(launch, live * 0.5),
+                filter: "blur(5px)",
+              }}
+            />
+          );
+        })}
+
+        {/* altitude readout */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 250,
+            textAlign: "center",
+            opacity: launch > 0 ? 1 : 0,
+          }}
+        >
+          <span style={{ fontFamily: display, fontSize: 128, color: "#F2F5FA", lineHeight: 1 }}>{pct}</span>
+          <span style={{ fontFamily: body, fontWeight: 700, fontSize: 40, color: badge.to, marginLeft: 8 }}>
+            {badge.unit ?? "%"}
+          </span>
+        </div>
       </AbsoluteFill>
-      <Caption text="Startas" color={badge.to} bottom={110} at={44} />
+      <Caption text="Startas" color={badge.to} bottom={118} at={44} />
     </Story>
   );
 };
