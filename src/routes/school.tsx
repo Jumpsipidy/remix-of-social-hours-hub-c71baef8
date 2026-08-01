@@ -931,6 +931,15 @@ function SchoolDashboard() {
             </Panel>
           )}
 
+          {tab === "verify" && (
+            <Panel
+              title="Mokinio pažymos patikra"
+              subtitle="Mokinys atneša PDF su QR kodu — nuskenuok arba įvesk kodą ir palygink su tikrais duomenimis"
+            >
+              <CertificateVerifyPanel />
+            </Panel>
+          )}
+
           {tab === "events" && (
             <Panel title="Vienkartiniai renginiai" subtitle="Mokyklos admino kuriamos veiklos">
               <CreateEventPanel />
