@@ -6,6 +6,7 @@ import { deviceMeta, sessionId } from "@/lib/device-meta";
 import { getActionBreadcrumbs } from "@/lib/user-breadcrumbs";
 import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
 import { escalateAppError } from "@/lib/error-escalation.functions";
+import { captureScreenshot } from "@/lib/screenshot";
 
 type Severity = "low" | "normal" | "high" | "critical";
 
@@ -37,6 +38,7 @@ export function BugReportWidget() {
   const [severity, setSeverity] = useState<Severity>("normal");
   const [busy, setBusy] = useState(false);
   const [showDiag, setShowDiag] = useState(false);
+  const [shot, setShot] = useState<string | null>(null);
 
   const diagPreview = useMemo(() => {
     if (!open) return null;
@@ -45,9 +47,10 @@ export function BugReportWidget() {
       device: `${d.device?.["browser"] ?? "?"} · ${d.device?.["os"] ?? "?"} · ${d.device?.["device"] ?? "?"}`,
       viewport: d.viewport,
       steps: d.breadcrumbs.length,
+      shot: shot ? "ekrano nuotrauka pridėta" : "be nuotraukos",
       session: String(d.session).slice(0, 8),
     };
-  }, [open]);
+  }, [open, shot]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +59,7 @@ export function BugReportWidget() {
       return;
     }
     setBusy(true);
-    const diag = collectDiagnostics();
+    const diag = { ...collectDiagnostics(), screenshot: shot };
     const text = message.trim().slice(0, 4000);
     let reachedAdmin = false;
 
@@ -104,6 +107,7 @@ export function BugReportWidget() {
       setMessage("");
       setEmail("");
       setSeverity("normal");
+      setShot(null);
       setOpen(false);
     } catch (err: any) {
       toast.error(err?.message ?? "Nepavyko išsiųsti");
@@ -115,7 +119,7 @@ export function BugReportWidget() {
   return (
     <div className="fixed bottom-20 left-4 z-[100] font-sans md:bottom-4" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
       {!open ? (
-        <button onClick={() => setOpen(true)}
+        <button onClick={() => { void captureScreenshot({ force: true }).then(setShot); setOpen(true); }}
           title="Pranešti apie klaidą"
           data-tour="bug"
           className="flex h-11 items-center gap-2 rounded-full border border-border bg-card/95 px-4 text-sm font-semibold shadow-lg backdrop-blur transition hover:scale-105">
