@@ -334,26 +334,30 @@ function Home() {
         <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
           <div className="mx-auto max-w-7xl">
             <div className="mb-10 sm:mb-16 max-w-3xl">
-              <p className="mb-3 sm:mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
-                Nr. 02 · Bendruomenė
-              </p>
-              <h2 className="text-3xl sm:text-4xl md:text-6xl font-display text-white" style={{ fontWeight: 500, letterSpacing: "-0.01em" }}>
-                Platforma skirta{" "}
-                <span className="italic bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(120deg, ${EMBER}, ${GOLD})` }}>
-                  visiems
-                </span>
-              </h2>
+              <Reveal>
+                <p className="mb-3 sm:mb-4 text-[11px] uppercase tracking-[0.32em] text-white/50">
+                  Nr. 02 · Bendruomenė
+                </p>
+              </Reveal>
+              <KineticHeadline
+                as="h2"
+                text="Platforma skirta visiems"
+                accentWords={["visiems"]}
+                className="text-3xl sm:text-4xl md:text-6xl font-display font-medium text-white tracking-[-0.01em]"
+              />
             </div>
 
             <div className="grid gap-5 sm:gap-8 md:grid-cols-3">
               {roles.map((c, i) => (
                 <motion.div
                   key={c.tag}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 34, rotateX: -10 }}
+                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
-                  transition={{ delay: i * 0.1, duration: 0.6 }}
+                  transition={{ delay: i * 0.12, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ perspective: 1000 }}
                 >
+
                   <SpotlightCard accent={c.accent} className="h-full p-6 sm:p-8">
                     <div
                       className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl"
