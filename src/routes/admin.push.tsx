@@ -28,13 +28,24 @@ function PushAdminPage() {
   const [url, setUrl] = useState("/");
   const [targetRole, setTargetRole] = useState<"all" | "student" | "organization" | "school_admin">("all");
   const [busy, setBusy] = useState(false);
+  const [tableMissing, setTableMissing] = useState(false);
 
   async function refresh() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("push_subscriptions")
       .select("user_id, endpoint, created_at")
       .order("created_at", { ascending: false })
       .limit(200);
+    if (error) {
+      // PGRST205 = lentelė dar nesukurta duomenų bazėje. Rodome instrukciją,
+      // o ne verčiame klaidą į globalų klaidų srautą.
+      const missing = error.code === "PGRST205" || /schema cache/i.test(error.message);
+      setTableMissing(missing);
+      if (!missing) toast.error(error.message);
+      setRows([]);
+      return;
+    }
+    setTableMissing(false);
     setRows(data || []);
   }
 
@@ -92,7 +103,15 @@ function PushAdminPage() {
         </div>
       </motion.header>
 
+      {tableMissing && (
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+          Lentelė <code className="font-mono">public.push_subscriptions</code> dar nesukurta tavo Supabase projekte.
+          Paleisk <code className="font-mono">FIX_PUSH_SUBSCRIPTIONS.sql</code> SQL redaktoriuje ir atnaujink puslapį.
+        </div>
+      )}
+
       <PushToggle />
+
 
       <motion.section
         initial={{ opacity: 0, y: 8 }}
