@@ -545,24 +545,28 @@ function SchoolDashboard() {
               label="Mokinių prieigoje"
               value={students.length}
               hint={classRestricted ? "tik priskirtos klasės" : "visa mokykla"}
+              accent={DASH_EMBER}
             />
             <Metric
               icon={Clock}
               label="Surinkta valandų"
               value={totalEarned}
               hint={`${totalNeeded} val. tikslas`}
+              accent={DASH_GREEN}
             />
             <Metric
               icon={TrendingUp}
               label="Vidut. progresas"
               value={`${avgPct}%`}
               hint={`${completedCount} užbaigtų rezervacijų`}
+              accent={DASH_GREEN}
             />
             <Metric
               icon={Activity}
               label="Reikia dėmesio"
               value={riskStudents.length}
               hint={`${pendingCount} laukia patvirtinimo`}
+              accent={DASH_GOLD}
             />
           </div>
 
@@ -902,34 +906,6 @@ function Metric({
   return <StatTile icon={Icon} label={label} value={value} sub={hint} accent={accent} />;
 }
 
-function LegacyMetric({
-  icon: Icon,
-  label,
-  value,
-  hint,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: string | number;
-  hint: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ y: -3 }}
-      className="rounded-[1.65rem] border border-border bg-gradient-card p-5 shadow-md backdrop-blur"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-          <Icon className="h-5 w-5" />
-        </div>
-        <Sparkles className="h-4 w-4 text-primary/60" />
-      </div>
-      <p className="mt-5 font-display text-3xl font-bold">{value}</p>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-2 text-xs text-primary/80">{hint}</p>
-    </motion.div>
-  );
-}
 
 function Panel({
   title,
