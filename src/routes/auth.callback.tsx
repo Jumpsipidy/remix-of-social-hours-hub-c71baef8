@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShieldCheck, Sparkles, UserCheck, KeyRound, Rocket } from "lucide-react";
+import { Heart, ShieldCheck, Sparkles, UserCheck, KeyRound, Rocket, Building2, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
