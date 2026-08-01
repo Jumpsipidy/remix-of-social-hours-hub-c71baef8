@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
 import { useAuth } from "@/hooks/use-auth";
+import { listOrgStudents } from "@/lib/org-students.functions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Users, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
@@ -93,9 +94,19 @@ function OrgDashboard() {
       setTasks((tData as TaskRow[]) ?? []);
       const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
       if (ids.length) {
-        const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
         const map: Record<string, StudentLite> = {};
+        const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
         (ps as StudentLite[] | null)?.forEach((p) => (map[p.id] = p));
+        // RLS often hides student profiles from organizations -> names fall back
+        // to "Mokinys". Fill the gaps through a scoped server function.
+        if (ids.some((id) => !map[id]?.full_name)) {
+          try {
+            const rows = await listOrgStudents();
+            rows.forEach((r) => {
+              if (!map[r.id]?.full_name) map[r.id] = { id: r.id, full_name: r.full_name, email: r.email, hours_earned: Number(r.hours_earned ?? 0) };
+            });
+          } catch { /* keep whatever RLS allowed */ }
+        }
         setStudents(map);
       } else {
         setStudents({});

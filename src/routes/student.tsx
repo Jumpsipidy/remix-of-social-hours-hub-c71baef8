@@ -21,6 +21,8 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/achievements-grid";
 import { StreakCard } from "@/components/streak-card";
+import { CelebrationStage } from "@/components/celebration-overlay";
+import { celebrate } from "@/lib/celebrate";
 import { toast } from "sonner";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
@@ -186,6 +188,7 @@ function StudentDashboard() {
       setFreezeUsedAt(row.freeze_used_at ?? null);
     }
     setStreakActivated(true);
+    celebrate({ kind: "streak", days: row?.login_streak ?? loginStreak, longest: row?.longest_login_streak ?? longestStreak });
     toast.success(`🔥 Serija aktyvuota — ${row?.login_streak ?? loginStreak} d. iš eilės`, {
       description: "Užsuk ir rytoj, kad nenutrūktų.",
     });
@@ -434,6 +437,7 @@ function StudentDashboard() {
           </div>
 
           <AchievementsGrid unlocked={unlockedKeys} />
+          <CelebrationStage />
 
         </div>
       </section>

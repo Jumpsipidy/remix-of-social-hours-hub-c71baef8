@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { celebrate } from "@/lib/celebrate";
 import { Star, Trophy, Rocket, Award, Building2, Flame, Users, Heart, Sparkles, Calendar, Target, Medal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -54,6 +55,7 @@ export async function syncAchievements(userId: string, ctx: AchievementCtx): Pro
       await supabase.from("user_achievements").insert(newly.map((k) => ({ user_id: userId, key: k })) as any);
       newly.forEach((k) => {
         const a = ACHIEVEMENTS.find((x) => x.key === k);
+        if (a) celebrate({ kind: "achievement", label: a.label, description: a.description, iconKey: a.key });
         if (a) toast.success(`🏆 Atrakintas pasiekimas: ${a.label}`, { description: a.description, duration: 5000 });
       });
     }
