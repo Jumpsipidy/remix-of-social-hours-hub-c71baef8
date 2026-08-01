@@ -35,6 +35,8 @@ import {
   Zap,
 } from "lucide-react";
 import { CertificateButton } from "@/components/certificate-button";
+import { CelebrationSimulator } from "@/components/admin/celebration-simulator";
+
 
 const TABLE_META: Record<string, { label: string; icon: typeof Database; tone: string }> = {
   profiles: { label: "Profiliai", icon: Users, tone: "from-blue-500/30 to-blue-500/5" },
