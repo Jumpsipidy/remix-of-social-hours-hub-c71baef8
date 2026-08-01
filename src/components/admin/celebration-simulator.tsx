@@ -1,18 +1,26 @@
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import { celebrate } from "@/lib/celebrate";
 import { CLIP_URLS, STREAK_MILESTONES, clipForStreak } from "@/assets/celebrations";
-import { CelebrationStage } from "@/components/celebration-overlay";
 import { Flame, PartyPopper, Play } from "lucide-react";
 
 /**
  * Super-admin sandbox: fires the real celebration overlay (MP4 clip + fallback)
  * so animations can be reviewed without earning anything.
  */
+/** Preview data used when no real student context is loaded in the admin panel. */
+const DEMO_STATS = {
+  name: "Demo Mokinys",
+  hoursEarned: 14,
+  hoursNeeded: 20,
+  uniqueOrgs: 3,
+  friendsCount: 5,
+  loginStreakDays: 7,
+  classYear: "10a",
+};
+
 export function CelebrationSimulator() {
   return (
     <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-fuchsia-500/5 to-transparent p-5 shadow-md sm:p-6">
-      <CelebrationStage />
-
       <div className="flex items-start gap-3">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-300">
           <PartyPopper className="h-5 w-5" />
@@ -32,7 +40,7 @@ export function CelebrationSimulator() {
           <button
             key={d}
             type="button"
-            onClick={() => celebrate({ kind: "streak", days: d, longest: d })}
+            onClick={() => celebrate({ kind: "streak", days: d, longest: d, stats: DEMO_STATS })}
             className="group flex items-center gap-2 rounded-2xl border border-border bg-background/60 px-3 py-3 text-left transition active:scale-[0.97] hover:border-amber-400/60 hover:shadow-glow"
           >
             <Flame className="h-4 w-4 shrink-0 text-amber-400" />
@@ -56,7 +64,7 @@ export function CelebrationSimulator() {
               key={a.key}
               type="button"
               onClick={() =>
-                celebrate({ kind: "achievement", label: a.label, description: a.description, iconKey: a.key })
+                celebrate({ kind: "achievement", label: a.label, description: a.description, iconKey: a.key, stats: DEMO_STATS })
               }
               className="group flex items-center gap-2.5 rounded-2xl border border-border bg-background/60 px-3 py-3 text-left transition active:scale-[0.97] hover:border-primary/60 hover:shadow-glow"
             >

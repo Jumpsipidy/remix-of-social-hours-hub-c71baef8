@@ -21,7 +21,6 @@ import { LeafletMap } from "@/components/leaflet-map";
 import { ACHIEVEMENTS, syncAchievements, type AchievementCtx } from "@/lib/achievements";
 import { AchievementsGrid } from "@/components/achievements-grid";
 import { StreakCard } from "@/components/streak-card";
-import { CelebrationStage } from "@/components/celebration-overlay";
 import { celebrate, setCelebrationContext } from "@/lib/celebrate";
 import { toast } from "sonner";
 
@@ -449,7 +448,6 @@ function StudentDashboard() {
           </div>
 
           <AchievementsGrid unlocked={unlockedKeys} />
-          <CelebrationStage />
 
         </div>
       </section>

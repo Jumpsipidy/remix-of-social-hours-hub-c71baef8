@@ -21,6 +21,7 @@ import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
 import { AdminErrorHud } from "@/components/admin-error-hud";
 import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
 import { AnalyticsLoader } from "@/components/analytics-loader";
+import { CelebrationStage } from "@/components/celebration-overlay";
 
 
 import { PageViewTracker } from "@/components/page-view-tracker";
