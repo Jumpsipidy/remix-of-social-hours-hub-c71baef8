@@ -33,6 +33,7 @@ import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashbo
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
+import { SchoolClaimPanel } from "@/components/school-claim-panel";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getSchoolSnapshot,
