@@ -181,3 +181,41 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (rs as SchoolReservation[]) ?? [];
   });
+
+/**
+ * Mokyklos administratorius pats prisiriša prie mokyklos su mokyklos kodu –
+ * nereikia laukti super administratoriaus.
+ */
+export const claimSchoolForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { schoolId: string; code: string }) => {
+    if (!input?.schoolId) throw new Error("Pasirink mokyklą.");
+    if (!input?.code) throw new Error("Įvesk mokyklos kodą.");
+    return { schoolId: String(input.schoolId), code: String(input.code).trim().toUpperCase() };
+  })
+  .handler(async ({ context, data }): Promise<{ ok: true; schoolId: string }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const me = await fetchAdminProfile(supabaseAdmin as never, context.userId);
+    if (!me || (me.role !== "school_admin" && me.role !== "admin")) {
+      throw new Error("Prieiga tik mokyklos administratoriams.");
+    }
+    const { data: valid, error: rpcErr } = await supabaseAdmin.rpc("verify_school_signup_code", {
+      _school_id: data.schoolId,
+      _code: data.code,
+    });
+    if (rpcErr) throw new Error(rpcErr.message);
+    if (!valid) throw new Error("Neteisingas mokyklos kodas.");
+
+    let upd = await supabaseAdmin
+      .from("profiles")
+      .update({ school_id: data.schoolId, associated_school_id: data.schoolId })
+      .eq("id", context.userId);
+    if (upd.error) {
+      upd = await supabaseAdmin
+        .from("profiles")
+        .update({ school_id: data.schoolId })
+        .eq("id", context.userId);
+    }
+    if (upd.error) throw new Error(upd.error.message);
+    return { ok: true, schoolId: data.schoolId };
+  });
