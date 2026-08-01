@@ -532,7 +532,7 @@ export const ScoreboardStory: React.FC<{ badge: BadgeSpec }> = ({ badge }) => {
                   boxShadow: "0 20px 50px #0009",
                 }}
               >
-                <span style={{ fontFamily: display, fontSize: 56, color: t >= 1 ? badge.to : "#79melts" }}>
+                <span style={{ fontFamily: display, fontSize: 56, color: t >= 1 ? badge.to : "#79839B" }}>
                   {t >= 1 ? ch : roll}
                 </span>
               </div>
