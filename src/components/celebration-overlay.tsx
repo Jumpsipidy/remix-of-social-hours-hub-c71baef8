@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Flame, Trophy } from "lucide-react";
 import { ACHIEVEMENTS } from "@/lib/achievements";
 import { onCelebrate, type CelebrationEvent } from "@/lib/celebrate";
+import { CLIP_URLS, clipForStreak } from "@/assets/celebrations";
 import { LT_YELLOW, LT_GREEN, LT_RED, useCalmMotion } from "@/components/motion-kit";
 
 const HOLD_MS = 4200;
@@ -97,6 +98,9 @@ export function CelebrationStage() {
 
   const skip = () => setQueue((q) => q.slice(1));
 
+  const clipUrl =
+    current?.kind === "achievement" ? CLIP_URLS[current.iconKey] : current ? clipForStreak(current.days) : undefined;
+
   const Icon =
     current?.kind === "achievement"
       ? (ACHIEVEMENTS.find((a) => a.key === current.iconKey)?.icon ?? Trophy)
@@ -137,6 +141,24 @@ export function CelebrationStage() {
           {!calm && <Bands />}
           {!calm && <Confetti seed={queue.length} />}
 
+          {clipUrl ? (
+            <motion.div
+              className="relative w-[min(88vw,520px)] overflow-hidden rounded-[2rem] border border-border/50 shadow-2xl"
+              initial={{ scale: 0.7, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 220, damping: 20 }}
+            >
+              <video
+                src={clipUrl}
+                autoPlay
+                muted
+                playsInline
+                onEnded={skip}
+                className="block h-auto w-full"
+              />
+            </motion.div>
+          ) : (
           <div className="relative flex flex-col items-center px-6 text-center">
             <div className="relative grid h-40 w-40 place-items-center">
               {!calm && <Rings />}
@@ -242,6 +264,7 @@ export function CelebrationStage() {
               Bakstelėk, kad uždarytum
             </motion.p>
           </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
