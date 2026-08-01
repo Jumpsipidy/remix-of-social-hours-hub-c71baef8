@@ -148,26 +148,12 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
   })
   .handler(async ({ context, data }): Promise<SchoolReservation[]> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let meRes = await supabaseAdmin
-      .from("profiles")
-      .select("role, school_id, assigned_classes")
-      .eq("id", context.userId)
-      .maybeSingle();
-    if (meRes.error && isMissingAssignedClasses(meRes.error.message)) {
-      meRes = (await supabaseAdmin
-        .from("profiles")
-        .select("role, school_id")
-        .eq("id", context.userId)
-        .maybeSingle()) as typeof meRes;
-    }
-    const { data: me } = meRes;
-    const meRow = me as
-      | { role?: string | null; school_id?: string | null; assigned_classes?: string[] | null }
-      | null;
+    const meRow = await fetchAdminProfile(supabaseAdmin as never, context.userId);
     const role = meRow?.role;
     if (role !== "school_admin" && role !== "admin") {
       throw new Error("Prieiga tik mokyklos administratoriams.");
     }
+    const mySchoolId = effectiveSchoolId(meRow);
 
     // Auditą galima matyti tik savo mokyklos (ir priskirtos klasės) mokinio.
     if (role === "school_admin") {
@@ -179,9 +165,10 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
       const s = stu as
         | { role?: string | null; school_id?: string | null; class_year?: string | null }
         | null;
-      const assigned = (meRow?.assigned_classes ?? []).map(String).map((c) => c.trim()).filter(Boolean);
-      const sameSchool = !!meRow?.school_id && s?.school_id === meRow.school_id;
+      const assigned = (meRow?.assigned_classes ?? []).map(String).map((c: string) => c.trim()).filter(Boolean);
+      const sameSchool = !!mySchoolId && s?.school_id === mySchoolId;
       const inClass = !assigned.length || (!!s?.class_year && assigned.includes(String(s.class_year)));
+
       if (!s || s.role !== "student" || !sameSchool || !inClass) {
         throw new Error("Šis mokinys nepriklauso jūsų klasei ar mokyklai.");
       }
