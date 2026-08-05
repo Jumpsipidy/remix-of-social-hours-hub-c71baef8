@@ -22,6 +22,9 @@ function isTelemetryRow(row: NonNullable<Item["row"]>): boolean {
     row.action === "client.telemetry" ||
     message.startsWith("telemetry:") ||
     /\[UI užšalo|pagrindinė gija užblokuota|\[lėtas API|\[ryšys dingo/i.test(message) ||
+    /Minified React error #(418|419|421|422|423|425|520)|react\.dev\/errors\/(418|419|421|422|423|425|520)|Hydration failed|server rendered HTML didn't match|There was an error while hydrating|Text content does not match server-rendered HTML/i.test(
+      message,
+    ) ||
     source === "ui.freeze" ||
     source === "fetch.slow" ||
     source === "net.offline"
