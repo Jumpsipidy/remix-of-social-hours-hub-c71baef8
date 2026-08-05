@@ -33,6 +33,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
+import { Route as OrganizationWelcomeRouteImport } from './routes/organization.welcome'
 import { Route as OrgIdRouteImport } from './routes/org.$id'
 import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
 import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
@@ -182,6 +183,11 @@ const VerifyCodeRoute = VerifyCodeRouteImport.update({
   id: '/verify/$code',
   path: '/verify/$code',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationWelcomeRoute = OrganizationWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => OrganizationRoute,
 } as any)
 const OrgIdRoute = OrgIdRouteImport.update({
   id: '/org/$id',
@@ -338,7 +344,7 @@ export interface FileRoutesByFullPath {
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/organization': typeof OrganizationRoute
+  '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
@@ -379,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
+  '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
@@ -391,7 +398,7 @@ export interface FileRoutesByTo {
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/organization': typeof OrganizationRoute
+  '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByTo {
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
+  '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
@@ -447,7 +455,7 @@ export interface FileRoutesById {
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/organization': typeof OrganizationRoute
+  '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
@@ -488,6 +496,7 @@ export interface FileRoutesById {
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
   '/org/$id': typeof OrgIdRoute
+  '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
@@ -544,6 +553,7 @@ export interface FileRouteTypes {
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
+    | '/organization/welcome'
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
+    | '/organization/welcome'
     | '/verify/$code'
     | '/admin'
     | '/verify'
@@ -652,6 +663,7 @@ export interface FileRouteTypes {
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
     | '/org/$id'
+    | '/organization/welcome'
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
@@ -667,7 +679,7 @@ export interface RootRouteChildren {
   CookiesRoute: typeof CookiesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
-  OrganizationRoute: typeof OrganizationRoute
+  OrganizationRoute: typeof OrganizationRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
@@ -861,6 +873,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/verify/$code'
       preLoaderRoute: typeof VerifyCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/organization/welcome': {
+      id: '/organization/welcome'
+      path: '/welcome'
+      fullPath: '/organization/welcome'
+      preLoaderRoute: typeof OrganizationWelcomeRouteImport
+      parentRoute: typeof OrganizationRoute
     }
     '/org/$id': {
       id: '/org/$id'
@@ -1133,6 +1152,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface OrganizationRouteChildren {
+  OrganizationWelcomeRoute: typeof OrganizationWelcomeRoute
+}
+
+const OrganizationRouteChildren: OrganizationRouteChildren = {
+  OrganizationWelcomeRoute: OrganizationWelcomeRoute,
+}
+
+const OrganizationRouteWithChildren = OrganizationRoute._addFileChildren(
+  OrganizationRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1140,7 +1171,7 @@ const rootRouteChildren: RootRouteChildren = {
   CookiesRoute: CookiesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
-  OrganizationRoute: OrganizationRoute,
+  OrganizationRoute: OrganizationRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
