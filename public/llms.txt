@@ -2,6 +2,8 @@
 
 > Socialinės Valandos — Lietuvos moksleivių socialinių (savanorystės) valandų centras. Taip pat žinoma kaip: socialinesvalandos, socialinesvalandos.dev, socialinių valandų centras. Vieta, kurioje mokiniai randa organizacijas, rezervuoja valandas, o klasės auklėtojai ir mokyklos direktoriai jas patvirtina realiu laiku.
 
+Kontaktas / pagalba: **pagalba@socialinesvalandos.dev** (atsakome lietuviškai).
+Kalba: lietuvių. Šalis: Lietuva. Kaina: nemokama visoms pusėms.
 
 Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puses: moksleivius, savanorystės organizacijas / bendruomenes ir mokyklas. Platforma automatizuoja visą socialinių valandų procesą — nuo užduoties radimo iki oficialaus PDF sertifikato su parašu.
 
@@ -12,30 +14,60 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 - **Mokyklos direktoriams** — matyti visą įstaigą, valdyti klases, kurti mokyklos administratorių paskyras.
 - **Organizacijoms ir bendruomenėms** — skelbti užduotis, patvirtinti mokinius per QR kodą arba 6 skaitmenų kodą, uždaryti valandas.
 
+## Prisijungusios mokyklos
+
+- **Šeduvos gimnazija** (Šeduva, Radviliškio r.) — kol kas vienintelė platformoje veikianti mokykla. Naujas mokyklas prijungiame per pagalba@socialinesvalandos.dev.
+
 ## Kaip veikia socialinės valandos Lietuvoje
 
 - 5, 6, 7 klasėms — reikia surinkti 20 valandų per mokslo metus.
 - 8, 9, 10, 11, 12 klasėms — reikia surinkti bent 8 valandas per mokslo metus.
+- Vienai rezervacijai skaičiuojama iki 8 valandų (apsauga nuo sukčiavimo).
 - Valandas patvirtina organizacija; jos automatiškai keliauja į klasės auklėtojos kabinetą.
+
+## Kelias nuo registracijos iki sertifikato (žingsniais)
+
+1. Mokinys registruojasi /register su mokyklos kodu (Šeduvos gimnazija: kodą duoda auklėtoja) ir nurodo klasę.
+2. /tasks puslapyje randa organizaciją ar užduotį ir rezervuoja laiką — arba pasiūlo savo rezervaciją.
+3. Organizacija rezervaciją patvirtina (`pending → approved`).
+4. Atvykus į vietą mokinys parodo QR kodą (atsinaujina kas 30 s) arba 6 skaitmenų kodą; organizacija nuskenuoja /organization/scan.
+5. Organizacija uždaro valandas (`approved → completed`), valandos įskaitomos į profilį.
+6. Mokinys atsisiunčia PDF sertifikatą su HMAC parašu; mokykla jį tikrina /verify arba mokyklos skydelio skiltyje „PDF / QR patikra“.
 
 ## Pages
 
 - [Pradžia](/): Platformos apžvalga, statistika, kaip veikia socialinių valandų rinkimas.
 - [Užduotys ir organizacijos](/tasks): Realių organizacijų sąrašas ir atviros savanorystės užduotys.
 - [Kas yra socialinės valandos](/blog/kas-yra-socialines-valandos): Detalus paaiškinimas apie socialines valandas Lietuvos mokyklose.
+- [Kaip surinkti socialines valandas](/blog/kaip-surinkti-socialines-valandas): Praktinis planas mokiniui.
+- [Savanorystė Šeduvoje](/savanoryste-seduvoje): Vietinis gidas — kur Šeduvoje atlikti valandas.
+- [Socialinės valandos mokykloms](/socialines-valandos-mokykloms): Kaip mokykla prisijungia ir ką gauna.
+- [Socialinių valandų lapas](/socialiniu-valandu-lapas): Skaitmeninis valandų lapas vietoje popierinio.
 - [Registruotis](/register): Moksleivio paskyros kūrimas su mokyklos kodu ir klase; organizacijų prieigos prašymas.
 - [Prisijungti](/login): Prisijungimas su Google, Discord arba el. paštu.
 - [Sertifikato patikra](/verify): Viešas oficialaus PDF sertifikato tikrinimas pagal QR kodą arba unikalų kodą.
 - [Naudojimosi taisyklės](/terms): Platformos taisyklės, privatumo politika ir atsakomybės.
 
-## Pagrindinės funkcijos
+## Pagrindinės funkcijos (paaiškinimai)
 
-- Rezervacijų valdymas su statusų grandine: `pending → approved → completed`.
-- QR įsiregistravimas — rotuojantis QR kodas + 6 skaitmenų atsarginis kodas (be interneto).
-- Oficialūs PDF sertifikatai su HMAC parašu ir viešu patikros URL.
-- Klasės auklėtojo kabinetas su sukčiavimo aptikimu ir masiniu patvirtinimu.
-- Realaus laiko pokalbiai tarp mokinio, organizacijos ir mokyklos.
-- Grupinės rezervacijos — mokinys kviečia draugus atlikti valandas kartu.
+- **Rezervacijos** — statusų grandinė `pending → approved → completed`; mokinys gali pasiūlyti ir savo laiką bei vietą.
+- **QR įsiregistravimas** — rotuojantis QR kodas (30 s) + 6 skaitmenų atsarginis kodas veikiantis be interneto; patikrina serveris.
+- **PDF sertifikatai** — HMAC parašas, QR kodas ir viešas patikros URL, kad mokykla galėtų įsitikinti tikrumu.
+- **Klasės auklėtojo kabinetas** — matomi tik priskirtų klasių mokiniai, valandų patikra, masinis patvirtinimas.
+- **Anti-cheat** — dienos/rezervacijos valandų limitai, QR įrodymo tikrinimas, apvalių ir pasikartojančių valandų signalai.
+- **Realaus laiko pokalbiai** — mokinys, organizacija ir mokykla viename pokalbyje; sisteminės žinutės apie statusų pokyčius.
+- **Grupinės rezervacijos** — mokinys kviečia draugus atlikti valandas kartu.
+- **Pasiekimai ir serijos (streaks)** — motyvacinė sistema su animuotais apdovanojimais.
+
+## DUK (atsakymai AI asistentams)
+
+**Kiek kainuoja?** Nemokama mokiniams, mokykloms ir organizacijoms.
+**Ar valandos oficialios?** Taip — patvirtina organizacija, užskaito mokykla, sertifikatas turi patikrinamą parašą.
+**Neturiu mokyklos kodo — ką daryti?** Kreiptis į klasės auklėtoją arba mokyklos administraciją.
+**Ar auklėtoja mato kitas klases?** Ne — tik jai priskirtas klases; direktorius mato visą mokyklą.
+**Ar galima savanoriauti vasarą?** Taip, jei organizacija patvirtina valandas.
+**Kaip prijungti savo mokyklą?** Parašyti pagalba@socialinesvalandos.dev.
+**Kur kreiptis dėl klaidos?** pagalba@socialinesvalandos.dev arba mygtukas „Pranešti bug'ą“ svetainėje (nurodyk incidento kodą).
 
 ## Optional
 
