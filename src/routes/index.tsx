@@ -36,6 +36,44 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: HOME_FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Mokyklos, naudojančios Socialines Valandas",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              item: {
+                "@type": "HighSchool",
+                name: "Šeduvos gimnazija",
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: "Šeduva",
+                  addressRegion: "Radviliškio r.",
+                  addressCountry: "LT",
+                },
+              },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   component: Home,
 });
