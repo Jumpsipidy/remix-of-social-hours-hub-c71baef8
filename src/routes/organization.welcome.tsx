@@ -217,7 +217,7 @@ function OrgWelcomePage() {
                     <input ref={logoRef} type="file" accept="image/*" className="hidden" onChange={(e) => { void handleUploadLogo(e.target.files?.[0]); e.currentTarget.value = ""; }} />
                   </div>
 
-                  <Field label="Pavadinimas" value={name} onChange={setName} placeholder="VšĮ „Šeduvos pagalba"" required />
+                  <Field label="Pavadinimas" value={name} onChange={setName} placeholder="VšĮ Šeduvos pagalba" required />
                   <Field label="Trumpas aprašymas" value={bio} onChange={setBio} placeholder="Kuo užsiima organizacija?" />
                   <Field label="El. paštas kontaktams" type="email" value={email} onChange={setEmail} placeholder="info@organizacija.lt" />
                   <div className="grid gap-4 sm:grid-cols-2">
