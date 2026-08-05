@@ -30,6 +30,22 @@ const ACTIVITY_SUGGESTIONS = [
 
 const MAX_LOGO_SIZE = 2 * 1024 * 1024;
 
+type OrgProfile = {
+  id: string;
+  role: "organization";
+  organization_name?: string | null;
+  bio?: string | null;
+  public_email?: string | null;
+  phone?: string | null;
+  website_url?: string | null;
+  logo_url?: string | null;
+  activity_tags?: string[];
+  address?: string | null;
+  city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
