@@ -58,12 +58,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-recharts": ["recharts"],
-          "vendor-motion": ["framer-motion"],
-          "vendor-map": ["leaflet", "react-leaflet"],
-          "vendor-pdf": ["pdf-lib", "qrcode"],
-          "vendor-icons": ["lucide-react"],
+        manualChunks(id) {
+          if (id.includes("recharts")) return "vendor-recharts";
+          if (id.includes("framer-motion")) return "vendor-motion";
+          if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-map";
+          if (id.includes("pdf-lib") || id.includes("qrcode")) return "vendor-pdf";
+          if (id.includes("lucide-react")) return "vendor-icons";
+          return null;
         },
       },
     },
