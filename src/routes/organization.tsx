@@ -122,7 +122,21 @@ function OrgDashboard() {
     }
   }, []);
 
+  const navigate = useNavigate();
+
+  // Onboarding: redirect if org profile is incomplete
+  useEffect(() => {
+    if (loading || !profile) return;
+    if (profile.role !== "organization") return;
+    const org = profile as unknown as Record<string, unknown>;
+    const missing = !org.organization_name || !org.address || !org.latitude || !org.longitude;
+    if (missing) {
+      navigate({ to: "/organization/welcome" });
+    }
+  }, [loading, profile, navigate]);
+
   useEffect(() => { if (user) refresh(user.id); }, [user, refresh]);
+
 
   // Realaus laiko atnaujinimas — naujos užklausos matomos iškart
   useEffect(() => {
