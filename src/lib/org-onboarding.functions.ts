@@ -53,7 +53,7 @@ export const completeOrgOnboarding = createServerFn({ method: "POST" })
       longitude: data.longitude ?? null,
       logo_url: data.logo_url ?? null,
       activity_tags: data.activity_tags ?? [],
-      onboarding_completed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const { error: profileError } = await supabase.from("profiles").update(profilePatch).eq("id", userId);
