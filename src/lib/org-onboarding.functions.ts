@@ -81,10 +81,12 @@ export const completeOrgOnboarding = createServerFn({ method: "POST" })
       let payload: Record<string, unknown> = { ...task };
       let error: { message: string; code?: string } | null = null;
       for (let attempt = 0; attempt < 4; attempt += 1) {
-        const res = await supabase.from("tasks").insert(payload as any);
+        const res = await supabase.from("tasks").insert(payload as any).select("id");
         error = res.error as { message: string; code?: string } | null;
         if (!error) {
-          if (Array.isArray(res.data) && res.data[0]?.id) taskId = res.data[0].id;
+          if (Array.isArray(res.data) && res.data.length > 0 && res.data[0] && typeof res.data[0] === "object" && "id" in res.data[0]) {
+            taskId = (res.data[0] as { id: string }).id;
+          }
           break;
         }
         const missing = /Could not find the '([^']+)' column/.exec(error.message)?.[1];
