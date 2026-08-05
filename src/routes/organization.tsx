@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
 import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +16,9 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { Button } from "@/components/ui/button";
-import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
+
+const OrgAnalytics = lazy(() => import("@/components/org-analytics").then((m) => ({ default: m.OrgAnalytics })));
+
 import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
 
 export const Route = createFileRoute("/organization")({
@@ -120,7 +122,21 @@ function OrgDashboard() {
     }
   }, []);
 
+  const navigate = useNavigate();
+
+  // Onboarding: redirect if org profile is incomplete
+  useEffect(() => {
+    if (loading || !profile) return;
+    if (profile.role !== "organization") return;
+    const org = profile as unknown as Record<string, unknown>;
+    const missing = !org.organization_name || !org.address || !org.latitude || !org.longitude;
+    if (missing) {
+      navigate({ to: "/organization/welcome" });
+    }
+  }, [loading, profile, navigate]);
+
   useEffect(() => { if (user) refresh(user.id); }, [user, refresh]);
+
 
   // Realaus laiko atnaujinimas — naujos užklausos matomos iškart
   useEffect(() => {
@@ -422,54 +438,14 @@ function OrgDashboard() {
 
       {/* Analytics */}
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" /> Valandų srautas (30 d.)</h2>
-                <p className="text-xs text-muted-foreground">Užbaigtos savanorystės valandos pagal dieną.</p>
-              </div>
-              <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
-                {chartData.reduce((a, d) => a + d.hrs, 0)} val. per 30 d.
-              </span>
-            </div>
-            <div className="mt-4 h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="ohrs" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} interval={4} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
-                  <Area type="monotone" dataKey="hrs" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#ohrs)" name="Valandos" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+        <Suspense fallback={
+          <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+            <div className="h-72 animate-pulse rounded-3xl bg-muted/50" />
+            <div className="h-72 animate-pulse rounded-3xl bg-muted/50" />
           </div>
-
-          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-            <h2 className="text-lg font-bold">Rezervacijų būsenos</h2>
-            <p className="text-xs text-muted-foreground">Visos gautos užklausos.</p>
-            {pieData.length > 0 ? (
-              <div className="mt-2 h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} dataKey="value" innerRadius={38} outerRadius={70} paddingAngle={3} stroke="none">
-                      {pieData.map((e) => <Cell key={e.name} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">Nėra duomenų</div>
-            )}
-          </div>
-        </div>
+        }>
+          <OrgAnalytics chartData={chartData} pieData={pieData} totalHours={chartData.reduce((a, d) => a + d.hrs, 0)} />
+        </Suspense>
 
         {/* KPI row */}
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -498,10 +474,6 @@ function OrgDashboard() {
             })}
           </div>
         </div>
-      </section>
-
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <CreateTaskPanel organizationId={user.id} />
       </section>
 
       {/* Published tasks */}

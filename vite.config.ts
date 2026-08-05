@@ -55,6 +55,20 @@ export default defineConfig({
     "import.meta.env.VITE_COMMIT_SHA": JSON.stringify(COMMIT_SHA),
     "import.meta.env.VITE_BUILD_TIME": JSON.stringify(BUILD_TIME),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("recharts")) return "vendor-recharts";
+          if (id.includes("framer-motion")) return "vendor-motion";
+          if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-map";
+          if (id.includes("pdf-lib") || id.includes("qrcode")) return "vendor-pdf";
+          if (id.includes("lucide-react")) return "vendor-icons";
+          return null;
+        },
+      },
+    },
+  },
   plugins: [
     tanstackStart({
       server: { entry: "server" },

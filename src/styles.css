@@ -164,6 +164,11 @@
 }
 .animate-shake { animation: shake 0.4s ease-in-out; }
 
+@utility touch-manipulation { touch-action: manipulation; }
+@utility pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
+@utility max-h-screen-safe { max-height: 100dvh; }
+@utility h-screen-safe { height: 100dvh; }
+
 /* Mobile polish */
 html { -webkit-tap-highlight-color: transparent; }
 body { overscroll-behavior-y: none; }

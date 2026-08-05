@@ -344,12 +344,12 @@ export function CelebrationStage() {
                   autoPlay
                   muted
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   disablePictureInPicture
                   onEnded={skip}
                   onError={() => setFailed(clipUrl)}
                   className="block aspect-square h-auto w-full object-cover"
-                  style={{ contain: "paint" }}
+                  style={{ contain: "paint", willChange: "transform" }}
                 />
 
                 {/* real-data caption burned over the clip */}
