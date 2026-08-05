@@ -55,6 +55,19 @@ export default defineConfig({
     "import.meta.env.VITE_COMMIT_SHA": JSON.stringify(COMMIT_SHA),
     "import.meta.env.VITE_BUILD_TIME": JSON.stringify(BUILD_TIME),
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-recharts": ["recharts"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-map": ["leaflet", "react-leaflet"],
+          "vendor-pdf": ["pdf-lib", "qrcode"],
+          "vendor-icons": ["lucide-react"],
+        },
+      },
+    },
+  },
   plugins: [
     tanstackStart({
       server: { entry: "server" },
