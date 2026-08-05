@@ -96,7 +96,7 @@ function OrgWelcomePage() {
     if (user.logo_url) setLogoUrl(user.logo_url);
     if (user.activity_tags) setTags(user.activity_tags);
     if (user.address && user.latitude && user.longitude) {
-      setAddress({ address: user.address, city: user.city, latitude: user.latitude, longitude: user.longitude });
+      setAddress({ address: user.address, city: user.city ?? null, latitude: user.latitude, longitude: user.longitude });
     }
   }, [user, isAuthenticated]);
 
@@ -240,7 +240,7 @@ function OrgWelcomePage() {
                     <Field label="Telefonas" value={phone} onChange={setPhone} placeholder="+370 6XX XXXXX" />
                     <Field label="Svetainė" value={website} onChange={setWebsite} placeholder="https://..." />
                   </div>
-                  <TagsInput value={tags} onChange={setTags} suggestions={ACTIVITY_SUGGESTIONS} hint="Pasirink veiklos sritis, kad mokiniai tave rastų" />
+                  <TagsInput value={tags} onChange={setTags} label="Veiklos sritys" hint="Pvz.: senjorai, vaikai, aplinkosauga, renginiai." />
                   <div className="space-y-2">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Būstinės / pagrindinė vieta</p>
                     <AddressPicker
@@ -282,7 +282,7 @@ function OrgWelcomePage() {
                       <LabeledInput label="Data" type="date" value={taskDate} min={todayISO()} onChange={setTaskDate} />
                       <LabeledInput label="Pradžia" type="time" value={taskStart} onChange={setTaskStart} />
                       <LabeledInput label="Pabaiga" type="time" value={taskEnd} onChange={setTaskEnd} />
-                      <LabeledInput label="Valandos" type="number" min={1} max={8} value={String(taskHours)} onChange={(v) => setTaskHours(Math.min(8, Math.max(1, Number(v) || 1)))} />
+                      <LabeledInput label="Valandos" type="number" min={String(1)} max={String(8)} value={String(taskHours)} onChange={(v) => setTaskHours(Math.min(8, Math.max(1, Number(v) || 1)))} />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                       <input
