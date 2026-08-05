@@ -52,7 +52,7 @@ function todayISO() {
 
 function OrgWelcomePage() {
   const { profile, isAuthenticated } = useAuth();
-  const user = profile;
+  const user = profile as OrgProfile | null;
   const navigate = useNavigate();
   const submit = useServerFn(completeOrgOnboarding);
 
