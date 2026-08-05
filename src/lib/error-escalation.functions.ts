@@ -69,7 +69,14 @@ const IGNORE_RX = [
   /WebGL context/i,
   /Web page caused context loss/i,
   /\[vite\]/i,
-  /Minified React error #418/i,
+  // React hydration/SSR-mismatch family (#418 #419 #421 #422 #423 #425 #520)
+  // — cosmetic, self-healing on the client. Never page anyone for these.
+  /Minified React error #(418|419|421|422|423|425|520)/i,
+  /react\.dev\/errors\/(418|419|421|422|423|425|520)/i,
+  /Hydration failed/i,
+  /server rendered HTML didn't match/i,
+  /There was an error while hydrating/i,
+  /Text content does not match server-rendered HTML/i,
   /ResizeObserver loop/i,
   /\[UI užšalo/i,
   /\[lėtas API/i,

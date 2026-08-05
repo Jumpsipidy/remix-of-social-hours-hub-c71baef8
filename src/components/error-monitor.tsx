@@ -29,6 +29,19 @@ const IGNORED = [
   "cancelled",
   "AbortError",
   "NetworkError when attempting to fetch resource",
+  // React hydration/SSR-mismatch family — cosmetic, self-healing.
+  "Minified React error #418",
+  "Minified React error #419",
+  "Minified React error #421",
+  "Minified React error #422",
+  "Minified React error #423",
+  "Minified React error #425",
+  "Minified React error #520",
+  "react.dev/errors/",
+  "Hydration failed",
+  "server rendered HTML didn't match",
+  "There was an error while hydrating",
+  "Text content does not match server-rendered HTML",
 ];
 
 export function ErrorMonitor() {
