@@ -21,6 +21,24 @@ import {
 import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lucide-react";
 
 
+/**
+ * Shared FAQ source — rendered on the page AND emitted as FAQPage JSON-LD so
+ * AI assistants (ChatGPT, Perplexity, Gemini) can answer these questions with
+ * our own wording, including the support contact.
+ */
+const HOME_FAQ: { q: string; a: string }[] = [
+  { q: "Kas yra socialinės valandos?", a: "Socialinės (savanorystės) valandos — neatlyginama veikla bendruomenei, kurią mokinys atlieka per mokslo metus. 5–7 klasėms reikia 20 valandų, 8–12 klasėms — bent 8 valandas." },
+  { q: "Kiek kainuoja Socialinės Valandos?", a: "Mokiniams, mokykloms ir organizacijoms platforma yra visiškai nemokama." },
+  { q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą HMAC parašą ir viešą patikros nuorodą socialinesvalandos.dev/verify." },
+  { q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys atėjęs į vietą parodo savo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Jei nėra interneto, veikia atsarginis 6 skaitmenų kodas." },
+  { q: "Kaip gauti PDF sertifikatą?", a: "Kai valandos patvirtintos, mokinys savo skydelyje spaudžia „Atsisiųsti sertifikatą“ — PDF su QR kodu ir parašu sugeneruojamas iškart, o mokykla gali jį patikrinti per „PDF / QR patikra“." },
+  { q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje. Šeduvos gimnazijos mokiniams kodą duoda auklėtoja." },
+  { q: "Ar klasės auklėtoja mato tik savo klasę?", a: "Taip. Auklėtoja mato tik jai priskirtas klases, direktorius — visą mokyklą. Duomenys tarp mokyklų niekada nesimaišo." },
+  { q: "Kaip apsisaugoma nuo sukčiavimo?", a: "Sistema tikrina QR įrodymą, dienos valandų limitą (iki 8 val. per rezervaciją), įtartinai apvalias valandas ir pasikartojančius įrašus. Mokykla mato „Valandų patikros“ skydelį su ženkleliais." },
+  { q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
+  { q: "Kaip susisiekti su pagalba?", a: "Rašyk el. paštu pagalba@socialinesvalandos.dev — atsakome lietuviškai. Klaidą taip pat gali pranešti mygtuku „Pranešti bug'ą“ svetainės apačioje; prisegk incidento kodą." },
+];
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -36,6 +54,44 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: HOME_FAQ.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Mokyklos, naudojančios Socialines Valandas",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              item: {
+                "@type": "HighSchool",
+                name: "Šeduvos gimnazija",
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: "Šeduva",
+                  addressRegion: "Radviliškio r.",
+                  addressCountry: "LT",
+                },
+              },
+            },
+          ],
+        }),
+      },
+    ],
   }),
   component: Home,
 });
@@ -319,6 +375,48 @@ function Home() {
           </div>
         </section>
 
+        {/* MOKYKLOS ─────────────────────────────────────────────────────── */}
+        <section className="relative px-4 py-14 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <Reveal>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">
+                Nr. 01½ · Mokyklos
+              </p>
+            </Reveal>
+            <KineticHeadline
+              as="h2"
+              text="Kas jau naudoja platformą"
+              accentWords={["naudoja"]}
+              className="mb-8 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
+            />
+            <SpotlightCard accent={LT_GREEN} className="mx-auto max-w-md p-7 text-left">
+              <div className="flex items-start gap-4">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5">
+                  <GraduationCap className="h-6 w-6" style={{ color: LT_YELLOW }} />
+                </span>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Šeduvos gimnazija</h3>
+                  <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-white/45">
+                    Šeduva · Radviliškio r.
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">
+                    Pirmoji mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai —
+                    nuo rezervacijos iki auklėtojos patvirtinimo.
+                  </p>
+                </div>
+              </div>
+            </SpotlightCard>
+            <p className="mt-6 text-sm text-white/50">
+              Norite prijungti savo mokyklą? Rašykite{" "}
+              <a href="mailto:pagalba@socialinesvalandos.dev" className="text-white/80 underline underline-offset-4">
+                pagalba@socialinesvalandos.dev
+              </a>
+            </p>
+          </div>
+        </section>
+
+
+
         {/* ROLES ─────────────────────────────────────────────────────────── */}
         <section className="relative px-4 py-16 sm:px-6 sm:py-24 md:py-32">
           <div className="mx-auto max-w-7xl">
@@ -448,12 +546,7 @@ function Home() {
               className="mb-8 sm:mb-12 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
             />
             <div className="space-y-3">
-              {[
-                { q: "Kiek kainuoja?", a: "Mokiniams, mokykloms ir organizacijoms platforma nemokama." },
-                { q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą parašą." },
-                { q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje." },
-                { q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
-              ].map((f, i) => (
+              {HOME_FAQ.map((f, i) => (
                 <motion.details
                   key={f.q}
                   initial={{ opacity: 0, y: 16 }}
