@@ -504,12 +504,7 @@ function Home() {
               className="mb-8 sm:mb-12 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
             />
             <div className="space-y-3">
-              {[
-                { q: "Kiek kainuoja?", a: "Mokiniams, mokykloms ir organizacijoms platforma nemokama." },
-                { q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą parašą." },
-                { q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje." },
-                { q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
-              ].map((f, i) => (
+              {HOME_FAQ.map((f, i) => (
                 <motion.details
                   key={f.q}
                   initial={{ opacity: 0, y: 16 }}
