@@ -6,39 +6,40 @@ import { motion } from "framer-motion";
 type TabItem = {
   to: string;
   label: string;
+  short: string;
   icon: typeof Home;
   match?: (path: string) => boolean;
 };
 
 const PUBLIC_TABS: TabItem[] = [
-  { to: "/", label: "Pradžia", icon: Home, match: (p) => p === "/" },
-  { to: "/tasks", label: "Užduotys", icon: ListChecks },
-  { to: "/login", label: "Prisijungti", icon: User },
+  { to: "/", label: "Pradžia", short: "Pradžia", icon: Home, match: (p) => p === "/" },
+  { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
+  { to: "/login", label: "Prisijungti", short: "Prisijungti", icon: User },
 ];
 
 const TABS_BY_ROLE: Record<AppRole, TabItem[]> = {
   student: [
-    { to: "/student", label: "Pradžia", icon: Home },
-    { to: "/tasks", label: "Užduotys", icon: ListChecks },
-    { to: "/checkin", label: "QR", icon: QrCode },
-    { to: "/student", label: "Skelbimai", icon: Bell, match: (p) => p.startsWith("/student") },
+    { to: "/student", label: "Pradžia", short: "Pradžia", icon: Home },
+    { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
+    { to: "/checkin", label: "QR kodas", short: "QR", icon: QrCode },
+    { to: "/student", label: "Skelbimai", short: "Skelbimai", icon: Bell, match: (p) => p.startsWith("/student") },
   ],
   organization: [
-    { to: "/organization", label: "Pultas", icon: LayoutDashboard },
-    { to: "/tasks", label: "Užduotys", icon: ListChecks },
-    { to: "/organization/scan", label: "Skanuoti", icon: QrCode },
-    { to: "/organization", label: "Org", icon: Building2, match: (p) => p.startsWith("/organization") },
+    { to: "/organization", label: "Pultas", short: "Pultas", icon: LayoutDashboard },
+    { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
+    { to: "/organization/scan", label: "Skenuoti", short: "QR", icon: QrCode },
+    { to: "/organization", label: "Organizacija", short: "Org", icon: Building2, match: (p) => p.startsWith("/organization") },
   ],
   school_admin: [
-    { to: "/school", label: "Mokykla", icon: School },
-    { to: "/tasks", label: "Užduotys", icon: ListChecks },
-    { to: "/school", label: "Auditas", icon: LayoutDashboard, match: (p) => p.startsWith("/school") },
+    { to: "/school", label: "Mokykla", short: "Mokykla", icon: School },
+    { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
+    { to: "/school", label: "Auditas", short: "Auditas", icon: LayoutDashboard, match: (p) => p.startsWith("/school") },
   ],
   admin: [
-    { to: "/admin", label: "Admin", icon: LayoutDashboard },
-    { to: "/admin/errors", label: "Klaidos", icon: Bell },
-    { to: "/admin/analytics", label: "Analitika", icon: LayoutDashboard, match: (p) => p.startsWith("/admin/analytics") },
-    { to: "/", label: "Svetainė", icon: Home, match: (p) => p === "/" },
+    { to: "/admin", label: "Admin", short: "Admin", icon: LayoutDashboard },
+    { to: "/admin/errors", label: "Klaidos", short: "Klaidos", icon: Bell },
+    { to: "/admin/analytics", label: "Analitika", short: "Analitika", icon: LayoutDashboard, match: (p) => p.startsWith("/admin/analytics") },
+    { to: "/", label: "Svetainė", short: "Svetainė", icon: Home, match: (p) => p === "/" },
   ],
 };
 
@@ -79,7 +80,8 @@ export function MobileTabBar() {
               <Link
                 key={`${t.to}-${t.label}`}
                 to={t.to}
-                className="relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition active:scale-95"
+                className="relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition active:scale-95 touch-manipulation"
+                aria-current={active ? "page" : undefined}
               >
                 {active && (
                   <motion.span
@@ -94,8 +96,9 @@ export function MobileTabBar() {
                 />
                 <span
                   className={`relative truncate leading-none ${active ? "text-primary" : "text-muted-foreground"}`}
+                  title={t.label}
                 >
-                  {t.label}
+                  {t.short}
                 </span>
               </Link>
             );
