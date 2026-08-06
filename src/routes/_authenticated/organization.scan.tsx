@@ -216,16 +216,39 @@ function ScanPage() {
                 className="overflow-hidden rounded-3xl border border-border bg-card shadow-elegant"
               >
                 <div className="relative aspect-square bg-black">
-                  <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
+                  <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted autoPlay />
                   <div className="pointer-events-none absolute inset-0 grid place-items-center">
                     <div className="h-2/3 w-2/3 rounded-3xl border-4 border-primary/70 shadow-[0_0_60px_hsl(var(--primary)/0.5)]" />
                   </div>
+                  {camError && (
+                    <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
+                      <div>
+                        <CameraOff className="mx-auto h-8 w-8 text-destructive" />
+                        <p className="mt-3 text-sm text-white/85">{camError}</p>
+                        <div className="mt-4 flex flex-wrap justify-center gap-2">
+                          <button
+                            onClick={() => { setMode("code"); setMode("camera"); }}
+                            className="min-h-11 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+                          >
+                            Bandyti dar kartą
+                          </button>
+                          <button
+                            onClick={() => setMode("code")}
+                            className="min-h-11 rounded-full border border-white/20 px-5 text-sm font-semibold text-white"
+                          >
+                            Įvesti 6 skaitmenų kodą
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {busy && (
                     <div className="absolute inset-0 grid place-items-center bg-black/60">
                       <div className="rounded-full bg-primary/20 px-4 py-2 text-sm text-primary">Tikrinama…</div>
                     </div>
                   )}
                 </div>
+
                 <div className="flex items-center justify-between gap-3 p-4">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CameraOff className="h-3.5 w-3.5" /> Kamerai reikia leidimo naršyklėje
