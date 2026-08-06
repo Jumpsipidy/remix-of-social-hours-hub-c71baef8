@@ -233,8 +233,9 @@ export function Footer() {
             <li><Link to="/saugumas" className="hover:text-foreground">🛡️ Kaip saugome mokinių duomenis</Link></li>
             <li><Link to="/versijos" className="hover:text-foreground">🚀 Versijų istorija</Link></li>
           </ul>
-
+        </div>
       </div>
+
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
           <span>© 2026 Socialinės Valandos. Visos teisės saugomos.</span>
