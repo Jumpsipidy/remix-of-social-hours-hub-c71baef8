@@ -20,6 +20,7 @@ import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/social
 import { Route as SchoolsRouteImport } from './routes/schools'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
+import { Route as SaugumasRouteImport } from './routes/saugumas'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivatumasRouteImport } from './routes/privatumas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -118,6 +119,11 @@ const SchoolRoute = SchoolRouteImport.update({
 const SavanorysteSeduvojeRoute = SavanorysteSeduvojeRouteImport.update({
   id: '/savanoryste-seduvoje',
   path: '/savanoryste-seduvoje',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaugumasRoute = SaugumasRouteImport.update({
+  id: '/saugumas',
+  path: '/saugumas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -402,6 +409,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -570,6 +580,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -626,6 +637,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -683,6 +695,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
+  SaugumasRoute: typeof SaugumasRoute
   SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
   SchoolsRoute: typeof SchoolsRoute
@@ -781,6 +794,13 @@ declare module '@tanstack/react-router' {
       path: '/savanoryste-seduvoje'
       fullPath: '/savanoryste-seduvoje'
       preLoaderRoute: typeof SavanorysteSeduvojeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saugumas': {
+      id: '/saugumas'
+      path: '/saugumas'
+      fullPath: '/saugumas'
+      preLoaderRoute: typeof SaugumasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -1175,6 +1195,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
+  SaugumasRoute: SaugumasRoute,
   SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,
   SchoolsRoute: SchoolsRoute,
