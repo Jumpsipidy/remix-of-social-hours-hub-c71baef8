@@ -56,6 +56,7 @@ function ScanPage() {
   };
 
   // Camera scanner
+  const [camError, setCamError] = useState<string | null>(null);
   useEffect(() => {
     if (mode !== "camera") {
       controlsRef.current?.stop();
@@ -63,28 +64,80 @@ function ScanPage() {
       return;
     }
     let cancelled = false;
+    let warmup: MediaStream | null = null;
     const reader = new BrowserMultiFormatReader();
     (async () => {
+      setCamError(null);
       try {
-        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-        const back = devices.find((d) => /back|rear|environment/i.test(d.label)) ?? devices[0];
-        if (!back || !videoRef.current || cancelled) return;
-        const controls = await reader.decodeFromVideoDevice(back.deviceId, videoRef.current, (result) => {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+          setCamError("Ši naršyklė nepalaiko kameros. Naudok 6 skaitmenų kodą.");
+          return;
+        }
+        if (typeof window !== "undefined" && !window.isSecureContext) {
+          setCamError("Kamera veikia tik per HTTPS. Atidaryk svetainę adresu https://socialinesvalandos.dev");
+          return;
+        }
+        // 1) Ask for permission FIRST. On iOS Safari and Android Chrome the
+        //    device list is empty/unlabeled until the user grants access.
+        warmup = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+        if (cancelled) { warmup.getTracks().forEach((t) => t.stop()); return; }
+
+        // 2) Prefer a real back camera when we can now read the labels.
+        let deviceId: string | undefined;
+        try {
+          const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+          deviceId = (devices.find((d) => /back|rear|environment|galinė/i.test(d.label)) ?? devices[devices.length - 1])?.deviceId;
+        } catch { /* labels unavailable — fall back to constraints */ }
+
+        // 3) Release the warm-up stream so zxing can open its own.
+        warmup.getTracks().forEach((t) => t.stop());
+        warmup = null;
+        if (!videoRef.current || cancelled) return;
+
+        const onResult = (result: { getText(): string } | undefined) => {
           if (!result) return;
           const raw = result.getText();
           const now = Date.now();
           if (lastScanRef.current && lastScanRef.current.raw === raw && now - lastScanRef.current.ts < 3000) return;
           lastScanRef.current = { raw, ts: now };
           handleSubmit(raw);
-        });
+        };
+
+        const controls = deviceId
+          ? await reader.decodeFromVideoDevice(deviceId, videoRef.current, onResult)
+          : await reader.decodeFromConstraints(
+              { video: { facingMode: { ideal: "environment" } }, audio: false },
+              videoRef.current,
+              onResult,
+            );
+        if (cancelled) { controls.stop(); return; }
         controlsRef.current = controls;
       } catch (e) {
-        toast.error("Nepavyko atidaryti kameros");
+        const name = (e as { name?: string })?.name ?? "";
+        const msg =
+          name === "NotAllowedError" || name === "SecurityError"
+            ? "Kameros leidimas atmestas. Naršyklės adreso juostoje paspausk spynelę → „Kamera“ → Leisti, tada bandyk dar kartą."
+            : name === "NotFoundError" || name === "OverconstrainedError"
+              ? "Kameros nerasta. Naudok 6 skaitmenų kodą."
+              : name === "NotReadableError"
+                ? "Kamerą naudoja kita programa. Uždaryk ją ir bandyk dar kartą."
+                : "Nepavyko atidaryti kameros. Naudok 6 skaitmenų kodą.";
+        setCamError(msg);
+        toast.error(msg);
       }
     })();
-    return () => { cancelled = true; controlsRef.current?.stop(); };
+    return () => {
+      cancelled = true;
+      warmup?.getTracks().forEach((t) => t.stop());
+      controlsRef.current?.stop();
+      controlsRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
 
   return (
     <PageShell>
