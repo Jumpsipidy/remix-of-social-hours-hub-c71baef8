@@ -10,10 +10,36 @@ export const LT_YELLOW = "#F5C542";
 export const LT_GREEN = "#1E9E63";
 export const LT_RED = "#C8452A";
 
-/** Respect the OS "reduce motion" setting everywhere. */
-export function useCalmMotion() {
-  return useReducedMotion() === true;
+/**
+ * True when the device is a phone / low-power machine.
+ * Detected after hydration so SSR markup stays stable.
+ */
+export function useLowPowerDevice() {
+  const [low, setLow] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const small = window.matchMedia("(max-width: 900px)").matches;
+    const weak =
+      (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
+      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
+    setLow((coarse && small) || (small && weak));
+  }, []);
+  return low;
 }
+
+/**
+ * Respect the OS "reduce motion" setting everywhere — and treat phones the
+ * same way. Continuous transforms, blurs and marquees are the main source of
+ * jank on mobile, so every consumer of this hook goes static there.
+ */
+export function useCalmMotion() {
+  const reduced = useReducedMotion() === true;
+  const low = useLowPowerDevice();
+  return reduced || low;
+}
+
 
 /* ── Kinetic headline ─────────────────────────────────────────────────── */
 
