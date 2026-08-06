@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VersijosRouteImport } from './routes/versijos'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -20,6 +21,7 @@ import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/social
 import { Route as SchoolsRouteImport } from './routes/schools'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
+import { Route as SaugumasRouteImport } from './routes/saugumas'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PrivatumasRouteImport } from './routes/privatumas'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -64,6 +66,11 @@ import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
+const VersijosRoute = VersijosRouteImport.update({
+  id: '/versijos',
+  path: '/versijos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
@@ -118,6 +125,11 @@ const SchoolRoute = SchoolRouteImport.update({
 const SavanorysteSeduvojeRoute = SavanorysteSeduvojeRouteImport.update({
   id: '/savanoryste-seduvoje',
   path: '/savanoryste-seduvoje',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaugumasRoute = SaugumasRouteImport.update({
+  id: '/saugumas',
+  path: '/saugumas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -348,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -359,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -402,6 +416,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -413,6 +428,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -459,6 +475,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
   '/register': typeof RegisterRoute
+  '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
@@ -470,6 +487,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -516,6 +534,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -527,6 +546,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -570,6 +590,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -581,6 +602,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -626,6 +648,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privatumas'
     | '/register'
+    | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
@@ -637,6 +660,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/_authenticated/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -683,6 +707,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PrivatumasRoute: typeof PrivatumasRoute
   RegisterRoute: typeof RegisterRoute
+  SaugumasRoute: typeof SaugumasRoute
   SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
   SchoolsRoute: typeof SchoolsRoute
@@ -694,6 +719,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  VersijosRoute: typeof VersijosRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKaipSurinktiSocialinesValandasRoute: typeof BlogKaipSurinktiSocialinesValandasRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
@@ -706,6 +732,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/versijos': {
+      id: '/versijos'
+      path: '/versijos'
+      fullPath: '/versijos'
+      preLoaderRoute: typeof VersijosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify-email': {
       id: '/verify-email'
       path: '/verify-email'
@@ -781,6 +814,13 @@ declare module '@tanstack/react-router' {
       path: '/savanoryste-seduvoje'
       fullPath: '/savanoryste-seduvoje'
       preLoaderRoute: typeof SavanorysteSeduvojeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saugumas': {
+      id: '/saugumas'
+      path: '/saugumas'
+      fullPath: '/saugumas'
+      preLoaderRoute: typeof SaugumasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -1175,6 +1215,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PrivatumasRoute: PrivatumasRoute,
   RegisterRoute: RegisterRoute,
+  SaugumasRoute: SaugumasRoute,
   SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,
   SchoolsRoute: SchoolsRoute,
@@ -1186,6 +1227,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  VersijosRoute: VersijosRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogKaipSurinktiSocialinesValandasRoute:
     BlogKaipSurinktiSocialinesValandasRoute,

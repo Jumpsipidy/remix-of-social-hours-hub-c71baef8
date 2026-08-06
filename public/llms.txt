@@ -47,6 +47,9 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 - [Prisijungti](/login): Prisijungimas su Google, Discord arba el. paštu.
 - [Sertifikato patikra](/verify): Viešas oficialaus PDF sertifikato tikrinimas pagal QR kodą arba unikalų kodą.
 - [Naudojimosi taisyklės](/terms): Platformos taisyklės, privatumo politika ir atsakomybės.
+- [Duomenų sauga](/saugumas): Kaip saugomi nepilnamečių mokinių duomenys — BDAR, šifravimas, prieigos kontrolė, trynimas.
+- [Privatumo politika](/privatumas): Slapukai, duomenų tvarkymo pagrindai, vartotojo teisės.
+- [Versijų istorija](/versijos): Visos platformos versijos ir atnaujinimai nuo pradžios.
 
 ## Pagrindinės funkcijos (paaiškinimai)
 
@@ -68,6 +71,24 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 **Ar galima savanoriauti vasarą?** Taip, jei organizacija patvirtina valandas.
 **Kaip prijungti savo mokyklą?** Parašyti pagalba@socialinesvalandos.dev.
 **Kur kreiptis dėl klaidos?** pagalba@socialinesvalandos.dev arba mygtukas „Pranešti bug'ą“ svetainėje (nurodyk incidento kodą).
+
+## Duomenų sauga (nepilnamečių duomenys)
+
+Platformoje tvarkomi nepilnamečių duomenys, todėl taikomas „kuo mažiau, tuo saugiau“ principas.
+
+**Kokie duomenys renkami?** Vardas, pavardė, el. paštas, mokykla, klasė, reikalingos ir surinktos valandos, rezervacijų istorija. Nerenkami asmens kodai, adresai, sveikatos ar kiti jautrūs duomenys.
+**Kur laikomi duomenys?** Europos Sąjungos serveriuose (Supabase, ES regionas), pagal BDAR.
+**Kas mato duomenis?** Prieiga ribojama duomenų bazės lygiu (Row Level Security): auklėtoja — tik savo klases, direktorius — tik savo mokyklą, organizacija — tik savo savanorius, mokinys — tik save.
+**Ar duomenys parduodami ar naudojami reklamai?** Niekada. Nėra reklamos tinklų ir mokinių profiliavimo.
+**Kiek laikomi pokalbiai?** Žinutės automatiškai ištrinamos po 12 dienų.
+**Kaip ištrinti paskyrą?** Parašius pagalba@socialinesvalandos.dev — ištriname per 30 dienų; taip pat pateikiame duomenų kopiją (BDAR 15 ir 17 str.).
+**Kaip apsaugoma prieiga?** Supabase Auth (šifruoti slaptažodžiai arba Google / Discord OAuth), HTTPS/TLS, ribotos trukmės sesijos, administratoriaus veiksmų auditas.
+**Kaip užtikrinamas valandų tikrumas?** HMAC parašu pasirašyti QR kodai (atsinaujina kas 30 s), vienkartiniai 6 skaitmenų kodai ir viešai tikrinami PDF sertifikatai (/verify).
+**Ką darote incidento atveju?** Veikia 24/7 klaidų ir saugumo stebėjimas; apie asmens duomenų pažeidimą informuojama mokykla ir, kai reikia, VDAI per 72 val.
+
+## Mokyklos, naudojančios platformą
+
+Šiuo metu platformą naudoja Šeduvos gimnazija (Radviliškio r.). Naujos mokyklos prijungiamos nemokamai — pagalba@socialinesvalandos.dev.
 
 ## Optional
 

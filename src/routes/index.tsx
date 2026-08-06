@@ -566,44 +566,81 @@ function Home() {
           </div>
         </section>
 
-        {/* MARQUEE — school band ─────────────────────────────────────────── */}
+        {/* SAUGUMAS — nepilnamečių duomenų apsauga ───────────────────────── */}
+        <section className="relative px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-5xl">
+            <Reveal>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">Nr. 05 · Saugumas</p>
+            </Reveal>
+            <KineticHeadline
+              as="h2"
+              text="Kaip saugome mokinių duomenis"
+              accentWords={["duomenis"]}
+              className="mb-4 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
+            />
+            <Reveal delay={0.05}>
+              <p className="mb-8 max-w-2xl text-sm sm:text-base leading-relaxed text-white/65">
+                Platformoje tvarkomi nepilnamečių duomenys, todėl saugumas nėra papildoma savybė — tai pagrindas.
+                Renkame tik tai, ko būtinai reikia valandoms užskaityti, ir niekada neparduodame duomenų.
+              </p>
+            </Reveal>
 
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { t: "Minimalūs duomenys", b: "Vardas, mokykla, klasė ir valandos. Jokių asmens kodų, adresų ar sveikatos duomenų.", c: LT_GREEN },
+                { t: "Šifruotas ryšys ir saugykla", b: "Visas srautas eina per HTTPS/TLS, duomenų bazė laikoma ES serveriuose su šifravimu.", c: LT_YELLOW },
+                { t: "Griežta prieigos kontrolė", b: "Row Level Security: auklėtoja mato tik savo klases, direktorius – tik savo mokyklą, organizacija – tik savo savanorius.", c: LT_RED },
+                { t: "Pokalbiai automatiškai trinami", b: "Žinutės sunaikinamos po 12 dienų — susirašinėjimas nekaupiamas amžinai.", c: LT_GREEN },
+                { t: "Tėvų ir mokyklos kontrolė", b: "Mokinys registruojasi tik su mokyklos kodu. Tėvai ar mokykla bet kada gali paprašyti duomenų kopijos arba ištrynimo.", c: LT_YELLOW },
+                { t: "Patikrinamos valandos", b: "QR įsiregistravimai ir HMAC parašu pasirašyti PDF sertifikatai — duomenų negalima suklastoti.", c: LT_RED },
+              ].map((s) => (
+                <SpotlightCard key={s.t} accent={s.c} className="p-5 sm:p-6">
+                  <h3 className="text-base font-display font-semibold text-white">{s.t}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/65">{s.b}</p>
+                </SpotlightCard>
+              ))}
+            </div>
+
+            <Reveal delay={0.1}>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/saugumas"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-5 text-sm font-semibold text-white transition-colors hover:border-white/35"
+                >
+                  Visas saugumo aprašas <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  to="/privatumas"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-5 text-sm font-semibold text-white/70 transition-colors hover:text-white"
+                >
+                  Privatumo politika
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* MOKYKLA — vienintelė šiuo metu prisijungusi ────────────────────── */}
         <section className="relative overflow-hidden border-y border-white/10 py-14">
           <Reveal>
-            <p className="mb-8 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
+            <p className="mb-6 text-center text-[11px] uppercase tracking-[0.32em] text-white/50">
               Mūsų bendruomenėje jau dalyvauja
             </p>
           </Reveal>
-          {[
-            { dir: ["0%", "-50%"], dur: 42, dot: LT_YELLOW, cls: "text-white/60" },
-            { dir: ["-50%", "0%"], dur: 55, dot: LT_GREEN, cls: "text-white/35" },
-          ].map((row, r) => (
-            <div
-              key={r}
-              className="mt-3 flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
-            >
-              <motion.div
-                className={`flex shrink-0 items-center gap-6 sm:gap-12 pr-6 sm:pr-12 font-display italic font-normal text-base sm:text-xl md:text-2xl whitespace-nowrap ${row.cls}`}
-                animate={calm ? undefined : { x: row.dir }}
-                transition={{ duration: row.dur, ease: "linear", repeat: Infinity }}
-              >
-                {Array.from({ length: 2 }).flatMap((_, k) => [
-                  "Šeduvos gimnazija",
-                  "Vilniaus licėjus",
-                  "Kauno KTU gimnazija",
-                  "Klaipėdos Ąžuolyno gimnazija",
-                  "Panevėžio J. Balčikonio gimnazija",
-                  "Šiaulių Didždvario gimnazija",
-                ].map((name, j) => (
-                  <span key={`${r}-${k}-${j}`} className="flex items-center gap-6 sm:gap-12">
-                    <span>{name}</span>
-                    <span aria-hidden style={{ color: r === 0 ? row.dot : LT_RED }}>◆</span>
-                  </span>
-                )))}
-              </motion.div>
-            </div>
-          ))}
+          <div className="mx-auto max-w-xl px-4">
+            <SpotlightCard accent={LT_GREEN} className="p-6 text-center sm:p-8">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+                <GraduationCap className="h-3.5 w-3.5" style={{ color: LT_YELLOW }} /> Mokykla
+              </span>
+              <p className="mt-4 font-display text-2xl italic sm:text-3xl text-white">Šeduvos gimnazija</p>
+              <p className="mt-2 text-sm text-white/60">Radviliškio r. · pirmoji platformą naudojanti mokykla</p>
+              <p className="mt-5 text-xs text-white/45">
+                Nauja mokykla? Parašyk <span className="text-white/70">pagalba@socialinesvalandos.dev</span> — prijungiame nemokamai.
+              </p>
+            </SpotlightCard>
+          </div>
         </section>
+
 
 
         {/* CLOSING CTA ─────────────────────────────────────────────────── */}
