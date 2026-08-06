@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VersijosRouteImport } from './routes/versijos'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -65,6 +66,11 @@ import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 
+const VersijosRoute = VersijosRouteImport.update({
+  id: '/versijos',
+  path: '/versijos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -479,6 +487,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/versijos': typeof VersijosRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -537,6 +546,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -649,6 +660,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/update-password'
     | '/verify-email'
+    | '/versijos'
     | '/_authenticated/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -707,6 +719,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  VersijosRoute: typeof VersijosRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKaipSurinktiSocialinesValandasRoute: typeof BlogKaipSurinktiSocialinesValandasRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
@@ -719,6 +732,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/versijos': {
+      id: '/versijos'
+      path: '/versijos'
+      fullPath: '/versijos'
+      preLoaderRoute: typeof VersijosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/verify-email': {
       id: '/verify-email'
       path: '/verify-email'
@@ -1207,6 +1227,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  VersijosRoute: VersijosRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogKaipSurinktiSocialinesValandasRoute:
     BlogKaipSurinktiSocialinesValandasRoute,
