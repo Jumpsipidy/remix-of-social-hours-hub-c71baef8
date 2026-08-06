@@ -15,8 +15,18 @@ export function BackgroundFX() {
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) { setFallback(true); return; }
+    // Phones and low-power machines get the static CSS gradient instead of a
+    // full-time WebGL render loop — this is the single biggest mobile win.
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const smallScreen = window.matchMedia("(max-width: 900px)").matches;
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const weak =
+      (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
+      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
+    if ((smallScreen && coarse) || (smallScreen && weak)) { setFallback(true); return; }
     const mount = mountRef.current;
     if (!mount) return;
+
 
     let renderer: THREE.WebGLRenderer;
     try {
