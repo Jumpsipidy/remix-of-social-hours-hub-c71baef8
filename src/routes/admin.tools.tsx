@@ -292,7 +292,6 @@ function AdminToolsPage() {
 
         <div className="space-y-6">
           <StatTile 
-            title="Apsaugos riba" 
             label="Klaidų slenkstis"
             value="3" 
             icon={Zap}
