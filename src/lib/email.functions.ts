@@ -47,7 +47,10 @@ async function sendResend(payload: SendPayload) {
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    headers: { 
+      "Content-Type": "application/json", 
+      "Authorization": `Bearer ${key.trim()}` 
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
