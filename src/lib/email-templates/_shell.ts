@@ -166,10 +166,15 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <!-- Stronger 3D interactive button -->
-                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 15px 35px ${theme.primary}66, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -4px 10px rgba(0,0,0,0.3); text-transform:uppercase; letter-spacing:1px; border: 1px solid rgba(255,255,255,0.2); color: #ffffff;">
-                      ${escape(opts.ctaLabel)}
-                    </a>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" style="background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:24px; padding: 22px 64px;">
+                          <a href="${escape(opts.ctaHref)}" style="display:block; color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
+                            ${escape(opts.ctaLabel)}
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -178,7 +183,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                 <tr>
                   <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
-                    <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b>atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
+                    <b style="color: #94a3b8;">Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b style="color: #94a3b8;">atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
                     Šis pranešimas yra teisiškai saistantis ir apsaugotas autorinių teisių.
                   </td>
                 </tr>
