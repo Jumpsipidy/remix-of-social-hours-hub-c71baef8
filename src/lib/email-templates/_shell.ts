@@ -85,14 +85,15 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block; padding:8px 16px; background-color:#1e293b; border-radius:12px;">
-                      <span style="font-weight:900; font-size:18px; color:#fff; letter-spacing:-0.5px; text-transform:uppercase;">Socialinės<span style="color:${theme.primary};">Valandos</span></span>
+                    <div style="display:inline-block; padding:12px; background-color:#1e293b; border-radius:16px; border: 1px solid #334155;">
+                      <img src="${APP_URL}/logo.png" alt="Socialinės Valandos" width="180" style="display:block; border:0;" />
                     </div>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
 
           <!-- Main Card (SaaS Glassmorphism Remake) -->
           <tr>
