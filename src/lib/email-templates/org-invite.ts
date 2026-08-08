@@ -25,12 +25,16 @@ export function renderOrgInviteEmail(p: Props): string {
       • <b style="color:#0f172a;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
       • <b style="color:#0f172a;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
       
-      <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:24px; padding:24px; margin-top:32px; text-align:left;">
+      <div style="background-color:#ffffff; border:1px solid #e2e8f0; border-radius:24px; padding:24px; margin-top:32px; text-align:left;">
+        <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px;">Svarbu žinoti:</h4>
+        <p style="margin:0 0 16px 0; color:#475569; font-size:14px; line-height:1.5;">
+          Oficialus platformos startas — <b>netrukus</b>. Šiuo metu atliekame paruošiamuosius darbus, kad Jūsų patirtis būtų nepriekaištinga. Aktyvavę paskyrą dabar, Jūs būsite pirmieji, kurie galės skelbti užduotis.
+        </p>
         <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px;">Tolesni žingsniai:</h4>
         <ol style="margin:0; padding-left:20px; color:#475569; font-size:15px; line-height:1.6;">
           <li><b>Paskyros aktyvavimas:</b> Spauskite mygtuką žemiau.</li>
-          <li><b>Profilio užpildymas:</b> Nurodykite savo veiklos sritis.</li>
-          <li><b>Užduočių skelbimas:</b> Pradėkite kviesti savanorius per 2 minutes.</li>
+          <li><b>Profilio užpildymas:</b> Nurodykite savo veiklos sritis ir gaukite „Verified“ ženklelį.</li>
+          <li><b>Pasiruošimas:</b> Kai startuosime, moksleiviai Jus matys sąrašo viršuje.</li>
         </ol>
       </div>
       <br/>
