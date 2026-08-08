@@ -81,72 +81,82 @@ export function renderShell(opts: ShellOptions): string {
           
           <!-- Header -->
           <tr>
-            <td style="padding-bottom:32px; text-align:center;">
+            <td style="padding-bottom:40px; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td align="left">
-                    <span style="font-weight:900; font-size:20px; color:#fff; letter-spacing:-0.5px;">Socialinės<span style="color:${theme.primary};">Valandos</span></span>
-                  </td>
-                  <td align="right" class="hide-mobile">
-                    <span style="font-size:12px; color:#64748b; font-weight:500;">${new Date().toLocaleDateString("lt-LT")}</span>
+                  <td align="center">
+                    <div style="display:inline-block; padding:8px 16px; background-color:#1e293b; border-radius:12px;">
+                      <span style="font-weight:900; font-size:18px; color:#fff; letter-spacing:-0.5px; text-transform:uppercase;">Socialinės<span style="color:${theme.primary};">Valandos</span></span>
+                    </div>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Main Card -->
+          <!-- Main Card (SaaS Glassmorphism Remake) -->
           <tr>
-            <td class="content-card" style="background-color:#0f172a; border:1px solid #1e293b; border-radius:32px; padding:60px 48px; position:relative; overflow:hidden;">
+            <td class="content-card" style="background-color:#0f172a; border:2px solid ${theme.primary}33; border-radius:40px; padding:60px 48px; position:relative; overflow:hidden; box-shadow: 0 40px 100px -20px ${theme.primary}22;">
               
-              <!-- Decorative Accent -->
-              <div style="position:absolute; top:0; right:0; width:150px; height:150px; background:radial-gradient(circle at 100% 0%, ${theme.primary}22, transparent 70%);"></div>
+              <!-- Top Glow Gradient -->
+              <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
 
-              <!-- Medallion -->
+              <!-- Medallion Floating Aesthetic -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
                 <tr>
                   <td align="center">
-                    <div style="width:80px; height:80px; background-color:${theme.bg}; border:1px solid ${theme.primary}44; border-radius:24px; text-align:center; line-height:80px; font-size:40px; box-shadow:0 0 40px ${theme.primary}22;">
+                    <div style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; text-align:center; line-height:100px; font-size:50px; box-shadow: 0 20px 50px ${theme.primary}66; transform: rotate(-5deg);">
                       ${opts.medallionEmoji}
                     </div>
                   </td>
                 </tr>
               </table>
 
-              <!-- Eyebrow -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:12px;">
+              <!-- Eyebrow Pill -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
-                    <span style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:${theme.primary};">${escape(opts.eyebrow)}</span>
+                    <div style="display:inline-block; padding:4px 12px; background-color:${theme.primary}22; border:1px solid ${theme.primary}44; border-radius:100px;">
+                      <span style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:2.5px; color:${theme.primary};">${escape(opts.eyebrow)}</span>
+                    </div>
                   </td>
                 </tr>
               </table>
 
-              <!-- Heading -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
+              <!-- Heading (Remade with tighter kerning) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <h1 class="heading" style="margin:0; font-size:36px; font-weight:800; color:#fff; line-height:1.2; letter-spacing:-1px;">${opts.heading}</h1>
+                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#fff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
                   </td>
                 </tr>
               </table>
 
-              <!-- Body -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:40px;">
+              <!-- Body (Remade for better contrast) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:48px;">
                 <tr>
-                  <td align="center" style="font-size:16px; line-height:1.7; color:#94a3b8;">
+                  <td align="center" style="font-size:18px; line-height:1.6; color:#cbd5e1; font-weight:400;">
                     ${opts.bodyHtml}
                   </td>
                 </tr>
               </table>
 
-              <!-- CTA -->
+              <!-- CTA (Interactive 3D Look) -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:20px 48px; background-color:${theme.primary}; color:#fff; font-weight:800; font-size:16px; text-decoration:none; border-radius:100px; box-shadow:0 20px 40px ${theme.primary}33; transition:transform 0.2s ease;">
+                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(to right, ${theme.primary}, ${theme.secondary}); color:#fff; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 20px 40px ${theme.primary}44; text-transform:uppercase; letter-spacing:1px;">
                       ${escape(opts.ctaLabel)}
                     </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Footer Note inside Card -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px;">
+                <tr>
+                  <td align="center" style="font-size:12px; color:#475569; font-style:italic;">
+                    * Šis veiksmas reikalauja jūsų patvirtinimo platformoje.
                   </td>
                 </tr>
               </table>
@@ -157,20 +167,22 @@ export function renderShell(opts: ShellOptions): string {
           <!-- Extra Blocks -->
           ${opts.extraBlocksHtml ?? ""}
 
-          <!-- Footer -->
+          <!-- Footer (Minimalist Remake) -->
           <tr>
-            <td style="padding-top:48px; text-align:center;">
-              <p style="font-size:14px; color:#475569; line-height:1.6; margin:0 0 24px 0;">
-                Mokinių savanorystės ateitis Lietuvoje.<br/>
-                Klausimai? Rašyk mums <a href="mailto:${SUPPORT_EMAIL}" style="color:${theme.primary}; text-decoration:none;">${SUPPORT_EMAIL}</a>
-              </p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
+            <td style="padding-top:60px; text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
                 <tr>
-                  <td align="center" style="height:1px; background:linear-gradient(90deg, transparent, #1e293b, transparent);"></td>
+                  <td align="center">
+                    <div style="width:40px; height:2px; background-color:#334155;"></div>
+                  </td>
                 </tr>
               </table>
-              <p style="font-size:12px; color:#334155; margin:0;">
-                &copy; ${new Date().getFullYear()} Socialinės Valandos &bull; <a href="${APP_URL}" style="color:#475569; text-decoration:none;">socialinesvalandos.dev</a>
+              <p style="font-size:14px; color:#64748b; font-weight:500; margin-bottom:12px;">
+                socialinesvalandos.dev &bull; ${new Date().getFullYear()}
+              </p>
+              <p style="font-size:12px; color:#475569;">
+                Jei gavote šį laišką per klaidą, tiesiog jį ignoruokite.<br/>
+                Pagalba: <a href="mailto:${SUPPORT_EMAIL}" style="color:${theme.primary}; text-decoration:none;">${SUPPORT_EMAIL}</a>
               </p>
             </td>
           </tr>

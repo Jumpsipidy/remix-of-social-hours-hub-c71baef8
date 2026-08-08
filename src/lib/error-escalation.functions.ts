@@ -11,7 +11,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { clientFingerprint } from "@/lib/security-crypto.server";
 
-const CRITICAL_THRESHOLD = 3;
+const CRITICAL_THRESHOLD = 5;
 const CRITICAL_WINDOW_MIN = 10;
 const EMAIL_DEDUPE_MIN = 24 * 60;
 // Burst detection: if ≥ BURST_MIN_USERS distinct users hit any error in the last
@@ -22,7 +22,7 @@ const BURST_WINDOW_S = 90;
 const BURST_MIN_USERS = 2;
 // Flood: many client errors of any severity in a short window = outage.
 const FLOOD_WINDOW_MIN = 5;
-const FLOOD_THRESHOLD = 15;
+const FLOOD_THRESHOLD = 25;
 
 type InlineAiAnalysis = {
   suspected_cause?: string | null;
