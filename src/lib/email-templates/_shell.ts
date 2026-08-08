@@ -71,21 +71,24 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#1e293b; text-align: center;">
+<body style="margin:0;padding:0;background-color:#0a0819;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#0a0819;">
     <tr>
       <td align="center" style="padding:40px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #ffffff; border-radius: 48px; box-shadow: 0 30px 60px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; overflow: hidden;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #111122; border-radius: 48px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
           
-          <!-- Header (Official Logo) -->
+          <!-- Header (Official Brand) -->
           <tr>
-            <td style="padding: 40px 0; text-align:center; background-color: #ffffff;">
+            <td style="padding: 40px 0; text-align:center; background-color: #111122;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td align="center" style="background-color: #ffffff;">
-                    <img src="https://socialinesvalandos.dev/favicon.png" alt="Socialinės Valandos" width="140" style="display:block; border:0; width: 140px; height: auto; max-width: 90%; margin: 0 auto; background-color: #ffffff;" />
+                  <td align="center">
+                    <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 10px;">
+                      <span style="background: linear-gradient(135deg, #C8452A, #E9B44C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px;">❤</span>
+                      SOCIALINĖS VALANDOS
+                    </div>
                   </td>
                 </tr>
               </table>
@@ -95,9 +98,9 @@ export function renderShell(opts: ShellOptions): string {
 
 
 
-          <!-- Main Card (SaaS Glassmorphism Remake) -->
+          <!-- Main Card (Modern Dark Theme) -->
           <tr>
-            <td class="content-card" style="background-color:#ffffff; padding:60px 48px; position:relative; overflow:hidden;">
+            <td class="content-card" style="background-color:#111122; padding:60px 48px; position:relative; overflow:hidden;">
               
               <!-- Top Glow Gradient -->
               <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
@@ -124,19 +127,19 @@ export function renderShell(opts: ShellOptions): string {
                 </tr>
               </table>
 
-              <!-- Heading (Remade with tighter kerning) -->
+              <!-- Heading -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#0f172a; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
+                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#ffffff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
                   </td>
                 </tr>
               </table>
 
-              <!-- Body (Remade for better contrast) -->
+              <!-- Body -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:48px;">
                 <tr>
-                  <td align="center" style="font-size:18px; line-height:1.6; color:#475569; font-weight:400;">
+                  <td align="center" style="font-size:18px; line-height:1.6; color:#94a3b8; font-weight:400;">
                     ${opts.bodyHtml}
                   </td>
                 </tr>
@@ -155,9 +158,9 @@ export function renderShell(opts: ShellOptions): string {
               </table>
 
               <!-- Official Footnote -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid #ffffff11; padding-top: 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                 <tr>
-                  <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
+                  <td align="left" style="font-size:11px; color:#475569; line-height: 1.4;">
                     <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b>atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
                     Šis pranešimas yra teisiškai saistantis ir apsaugotas autorinių teisių.
                   </td>
@@ -171,20 +174,20 @@ export function renderShell(opts: ShellOptions): string {
           <!-- Extra Blocks -->
           ${opts.extraBlocksHtml ?? ""}
 
-          <!-- Footer (Minimalist Remake) -->
+          <!-- Footer -->
           <tr>
-            <td style="padding-top:60px; text-align:center;">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
+            <td style="padding: 40px 0; text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:24px;">
                 <tr>
                   <td align="center">
-                    <div style="width:40px; height:2px; background-color:#334155;"></div>
+                    <div style="width:40px; height:2px; background-color:rgba(255,255,255,0.1);"></div>
                   </td>
                 </tr>
               </table>
-              <p style="font-size:14px; color:#64748b; font-weight:500; margin-bottom:12px;">
+              <p style="font-size:14px; color:#475569; font-weight:500; margin-bottom:12px;">
                 socialinesvalandos.dev &bull; Oficialus Šeduvos gimnazijos partneris &bull; ${new Date().getFullYear()}
               </p>
-              <p style="font-size:12px; color:#475569;">
+              <p style="font-size:12px; color:#334155;">
                 Jei gavote šį laišką per klaidą, tiesiog jį ignoruokite.<br/>
                 Pagalba: <a href="mailto:${SUPPORT_EMAIL}" style="color:${theme.primary}; text-decoration:none;">${SUPPORT_EMAIL}</a>
               </p>
@@ -206,9 +209,9 @@ export function metaGrid(items: Array<{ label: string; value: string }>): string
         <tr>
           ${items.map((it, i) => `
             <td width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
-              <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:16px; text-align:center;">
-                <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
-                <div style="font-size:16px; font-weight:700; color:#0f172a;">${escape(it.value)}</div>
+              <div style="background-color:#1e1b4b; border:1px solid rgba(255,255,255,0.05); border-radius:20px; padding:16px; text-align:center;">
+                <div style="font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
+                <div style="font-size:16px; font-weight:700; color:#ffffff;">${escape(it.value)}</div>
               </div>
             </td>
           `).join("")}

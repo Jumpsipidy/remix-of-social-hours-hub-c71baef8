@@ -242,7 +242,7 @@ function OrgWelcomePage() {
                   </div>
                   <TagsInput value={tags} onChange={setTags} label="Veiklos sritys" hint="Pvz.: senjorai, vaikai, aplinkosauga, renginiai." />
                   <div className="space-y-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Būstinės / pagrindinė vieta</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Būstinės vieta · Spauskite žemėlapyje, kad patikslintumėte</p>
                     <AddressPicker
                       initial={{ address: address?.address, latitude: address?.latitude, longitude: address?.longitude }}
                       onChange={(v) => setAddress(v)}
