@@ -96,6 +96,8 @@ const IGNORE_RX = [
   /styles\.css/i,
   /_serverFn/i,
   /Failed to fetch/i,
+  /a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff/i,
+  /versijos/i,
   /streak-7\.mp4/i,
   /assets-v1/i,
   /push_subscriptions/i,
