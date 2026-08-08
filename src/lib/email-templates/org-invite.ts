@@ -19,11 +19,11 @@ export function renderOrgInviteEmail(p: Props): string {
   if (variant === 1) {
     heading = `Gerbiama ${orgName} komanda`;
     body = `
-      Oficialiai kviečiame Jūsų organizaciją prisijungti prie <b style="color:#fff;">Socialinės Valandos</b> tinklo. Tai valstybinį standartą atitinkanti skaitmeninė platforma moksleivių savanorystės apskaitai.<br/><br/>
+      Oficialiai kviečiame Jūsų organizaciją prisijungti prie <b style="color:#0f172a;">Socialinės Valandos</b> tinklo. Tai valstybinį standartą atitinkanti skaitmeninė platforma moksleivių savanorystės apskaitai.<br/><br/>
       <b>Jūsų laukiantys privalumai:</b><br/>
-      • <b style="color:#fff;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
-      • <b style="color:#fff;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
-      • <b style="color:#fff;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
+      • <b style="color:#0f172a;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
+      • <b style="color:#0f172a;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
+      • <b style="color:#0f172a;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
       <i style="color:#94a3b8; font-size:14px;">Turite klausimų? Spauskite mygtuką ir atsakykite į šį laišką – susisieksime per 1 valandą.</i>
     `;
   } else if (variant === 2) {
@@ -32,7 +32,7 @@ export function renderOrgInviteEmail(p: Props): string {
     heading = "Kurkime vertę kartu";
     medallion = "🤝";
     body = `
-      Gerbiama <b style="color:#fff;">${orgName}</b> vadovybė,<br/><br/>
+      Gerbiama <b style="color:#0f172a;">${orgName}</b> vadovybė,<br/><br/>
       Kviečiame tapti inovatyvios savanorystės ekosistemos dalimi. Mūsų tikslas — užtikrinti, kad kiekviena jauno žmogaus pastanga būtų tinkamai įvertinta ir saugiai dokumentuota.<br/><br/>
       <b>Prisijungimo procesas:</b><br/>
       1. Aktyvuokite savo paskyrą paspaudę žemiau esantį mygtuką.<br/>
@@ -46,7 +46,7 @@ export function renderOrgInviteEmail(p: Props): string {
     medallion = "📜";
     body = `
       Sveiki, ${orgName}!<br/><br/>
-      Lietuva žengia į pilną skaitmenizaciją, ir socialinės valandos nėra išimtis. <b style="color:#fff;">Socialinės Valandos</b> pakeičia nepatikimą popierinę apskaitą saugiu, skaitmeniniu formatu.<br/><br/>
+      Lietuva žengia į pilną skaitmenizaciją, ir socialinės valandos nėra išimtis. <b style="color:#0f172a;">Socialinės Valandos</b> pakeičia nepatikimą popierinę apskaitą saugiu, skaitmeniniu formatu.<br/><br/>
       Prisijungdami Jūs ne tik palengvinate savo darbą, bet ir prisidedate prie skaidrios savanorystės kultūros kūrimo Lietuvoje.
     `;
   } else if (variant === 4) {
@@ -64,7 +64,7 @@ export function renderOrgInviteEmail(p: Props): string {
     heading = "Garantuotas patikimumas";
     medallion = "🛡️";
     body = `
-      Saugumas yra mūsų prioritetas. <b style="color:#fff;">Socialinės Valandos</b> naudoja QR verifikaciją ir 60-ties sekundžių kintamus kodus, kad užkirstų kelią bet kokiam piktnaudžiavimui.<br/><br/>
+      Saugumas yra mūsų prioritetas. <b style="color:#0f172a;">Socialinės Valandos</b> naudoja QR verifikaciją ir 60-ties sekundžių kintamus kodus, kad užkirstų kelią bet kokiam piktnaudžiavimui.<br/><br/>
       Suteikite savo savanoriams patikimiausią įrankį rinkoje. Prisijunkite prie oficialaus partnerių tinklo šiandien.
     `;
   }

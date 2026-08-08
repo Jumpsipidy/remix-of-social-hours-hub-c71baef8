@@ -71,22 +71,22 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#020617;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f8fafc; text-align: center;">
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#1e293b; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#020617;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
     <tr>
-      <td align="center" style="padding:40px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left;">
+      <td align="center" style="padding:60px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #ffffff; border-radius: 48px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden;">
           
           <!-- Header (Official Logo - Optimized for Transparent PNG) -->
           <tr>
-            <td style="padding-bottom:40px; text-align:center;">
+            <td style="padding-bottom:50px; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <!-- Removing black background container for clean official look -->
-                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="180" style="display:block; border:0; width: 180px; height: auto; max-width: 80%; margin: 0 auto; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));" />
+                    <!-- Increased size and removed all background containers/shadows that might interfere -->
+                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="320" style="display:block; border:0; width: 320px; height: auto; max-width: 90%; margin: 0 auto;" />
                   </td>
                 </tr>
               </table>
@@ -98,7 +98,7 @@ export function renderShell(opts: ShellOptions): string {
 
           <!-- Main Card (SaaS Glassmorphism Remake) -->
           <tr>
-            <td class="content-card" style="background-color:#0f172a; border:2px solid ${theme.primary}33; border-radius:40px; padding:60px 48px; position:relative; overflow:hidden; box-shadow: 0 40px 100px -20px ${theme.primary}22;">
+            <td class="content-card" style="background-color:#ffffff; padding:60px 48px; position:relative; overflow:hidden;">
               
               <!-- Top Glow Gradient -->
               <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
@@ -129,7 +129,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#fff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
+                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#0f172a; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
                   </td>
                 </tr>
               </table>
@@ -137,7 +137,7 @@ export function renderShell(opts: ShellOptions): string {
               <!-- Body (Remade for better contrast) -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:48px;">
                 <tr>
-                  <td align="center" style="font-size:18px; line-height:1.6; color:#cbd5e1; font-weight:400;">
+                  <td align="center" style="font-size:18px; line-height:1.6; color:#475569; font-weight:400;">
                     ${opts.bodyHtml}
                   </td>
                 </tr>
@@ -207,9 +207,9 @@ export function metaGrid(items: Array<{ label: string; value: string }>): string
         <tr>
           ${items.map((it, i) => `
             <td width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
-              <div style="background-color:#0f172a; border:1px solid #1e293b; border-radius:20px; padding:16px; text-align:center;">
+              <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:16px; text-align:center;">
                 <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
-                <div style="font-size:16px; font-weight:700; color:#fff;">${escape(it.value)}</div>
+                <div style="font-size:16px; font-weight:700; color:#0f172a;">${escape(it.value)}</div>
               </div>
             </td>
           `).join("")}
