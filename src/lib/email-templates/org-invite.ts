@@ -19,26 +19,26 @@ export function renderOrgInviteEmail(p: Props): string {
   if (variant === 1) {
     heading = `Gerbiama ${orgName} komanda`;
     body = `
-      Oficialiai kviečiame Jūsų organizaciją prisijungti prie <b style="color:#0f172a;">Socialinės Valandos</b> tinklo. Tai valstybinį standartą atitinkanti skaitmeninė platforma moksleivių savanorystės apskaitai.<br/><br/>
+      Oficialiai kviečiame Jūsų organizaciją prisijungti prie <b style="color:#ffffff;">Socialinės Valandos</b> tinklo. Tai valstybinį standartą atitinkanti skaitmeninė platforma moksleivių savanorystės apskaitai.<br/><br/>
       <b>Jūsų laukiantys privalumai:</b><br/>
-      • <b style="color:#0f172a;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
-      • <b style="color:#0f172a;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
-      • <b style="color:#0f172a;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
+      • <b style="color:#ffffff;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
+      • <b style="color:#ffffff;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
+      • <b style="color:#ffffff;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
       
-      <div style="background-color:#ffffff; border:1px solid #e2e8f0; border-radius:24px; padding:24px; margin-top:32px; text-align:left;">
-        <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px;">Svarbu žinoti:</h4>
-        <p style="margin:0 0 16px 0; color:#475569; font-size:14px; line-height:1.5;">
+      <div style="background-color:#111122; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px; margin-top:32px; text-align:left;">
+        <h4 style="margin:0 0 12px 0; color:#ffffff; font-size:16px;">Svarbu žinoti:</h4>
+        <p style="margin:0 0 16px 0; color:#94a3b8; font-size:14px; line-height:1.5;">
           Oficialus platformos startas — <b>netrukus</b>. Šiuo metu atliekame paruošiamuosius darbus, kad Jūsų patirtis būtų nepriekaištinga. Aktyvavę paskyrą dabar, Jūs būsite pirmieji, kurie galės skelbti užduotis.
         </p>
-        <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px;">Tolesni žingsniai:</h4>
-        <ol style="margin:0; padding-left:20px; color:#475569; font-size:15px; line-height:1.6;">
-          <li><b>Paskyros aktyvavimas:</b> Spauskite mygtuką žemiau.</li>
-          <li><b>Profilio užpildymas:</b> Nurodykite savo veiklos sritis ir gaukite „Verified“ ženklelį.</li>
-          <li><b>Pasiruošimas:</b> Kai startuosime, moksleiviai Jus matys sąrašo viršuje.</li>
+        <h4 style="margin:0 0 12px 0; color:#ffffff; font-size:16px;">Tolesni žingsniai:</h4>
+        <ol style="margin:0; padding-left:20px; color:#94a3b8; font-size:15px; line-height:1.6;">
+          <li><b style="color:#ffffff;">Paskyros aktyvavimas:</b> Spauskite mygtuką žemiau.</li>
+          <li><b style="color:#ffffff;">Profilio užpildymas:</b> Nurodykite savo veiklos sritis ir gaukite „Verified“ ženklelį.</li>
+          <li><b style="color:#ffffff;">Pasiruošimas:</b> Kai startuosime, moksleiviai Jus matys sąrašo viršuje.</li>
         </ol>
-        <div style="margin-top:20px; padding:16px; background-color:#f0f9ff; border-radius:16px; border:1px solid #bae6fd;">
-          <p style="margin:0; font-size:13px; color:#0369a1; font-weight:600;">
-            💡 Norite sužinoti daugiau? <a href="${APP_URL}/about-orgs" style="color:#0284c7; text-decoration:underline;">Spauskite čia</a> ir sužinokite, kaip platforma padeda organizacijoms.
+        <div style="margin-top:20px; padding:16px; background-color:rgba(16,185,129,0.1); border-radius:16px; border:1px solid rgba(16,185,129,0.2);">
+          <p style="margin:0; font-size:13px; color:#10b981; font-weight:600;">
+            💡 Norite sužinoti daugiau? <a href="${APP_URL}/about-orgs" style="color:#34d399; text-decoration:underline;">Spauskite čia</a> ir sužinokite, kaip platforma padeda organizacijoms.
           </p>
         </div>
       </div>
@@ -51,7 +51,7 @@ export function renderOrgInviteEmail(p: Props): string {
     heading = "Kurkime vertę kartu";
     medallion = "🤝";
     body = `
-      Gerbiama <b style="color:#0f172a;">${orgName}</b> vadovybė,<br/><br/>
+      Gerbiama <b style="color:#ffffff;">${orgName}</b> vadovybė,<br/><br/>
       Kviečiame tapti inovatyvios savanorystės ekosistemos dalimi. Mūsų tikslas — užtikrinti, kad kiekviena jauno žmogaus pastanga būtų tinkamai įvertinta ir saugiai dokumentuota.<br/><br/>
       <b>Prisijungimo procesas:</b><br/>
       1. Aktyvuokite savo paskyrą paspaudę žemiau esantį mygtuką.<br/>
@@ -65,7 +65,7 @@ export function renderOrgInviteEmail(p: Props): string {
     medallion = "📜";
     body = `
       Sveiki, ${orgName}!<br/><br/>
-      Lietuva žengia į pilną skaitmenizaciją, ir socialinės valandos nėra išimtis. <b style="color:#0f172a;">Socialinės Valandos</b> pakeičia nepatikimą popierinę apskaitą saugiu, skaitmeniniu formatu.<br/><br/>
+      Lietuva žengia į pilną skaitmenizaciją, ir socialinės valandos nėra išimtis. <b style="color:#ffffff;">Socialinės Valandos</b> pakeičia nepatikimą popierinę apskaitą saugiu, skaitmeniniu formatu.<br/><br/>
       Prisijungdami Jūs ne tik palengvinate savo darbą, bet ir prisidedate prie skaidrios savanorystės kultūros kūrimo Lietuvoje.
     `;
   } else if (variant === 4) {
@@ -83,7 +83,7 @@ export function renderOrgInviteEmail(p: Props): string {
     heading = "Garantuotas patikimumas";
     medallion = "🛡️";
     body = `
-      Saugumas yra mūsų prioritetas. <b style="color:#0f172a;">Socialinės Valandos</b> naudoja QR verifikaciją ir 60-ties sekundžių kintamus kodus, kad užkirstų kelią bet kokiam piktnaudžiavimui.<br/><br/>
+      Saugumas yra mūsų prioritetas. <b style="color:#ffffff;">Socialinės Valandos</b> naudoja QR verifikaciją ir 60-ties sekundžių kintamus kodus, kad užkirstų kelią bet kokiam piktnaudžiavimui.<br/><br/>
       Suteikite savo savanoriams patikimiausią įrankį rinkoje. Prisijunkite prie oficialaus partnerių tinklo šiandien.
     `;
   }
