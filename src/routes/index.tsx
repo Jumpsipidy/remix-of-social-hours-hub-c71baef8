@@ -43,10 +43,10 @@ const HOME_FAQ: { q: string; a: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės Valandos — oficialus socialinių valandų centras mokiniams | socialinesvalandos.dev" },
-      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — moderni moksleivių savanorystės platforma. Rezervuok valandas, gauk sertifikatą ir stebėk progresą skaitmeniniu būdu." },
-      { property: "og:title", content: "Socialinės Valandos — socialinių valandų apskaitos sistema" },
-      { property: "og:description", content: "Lietuvos moksleivių savanorystės centras. Oficialūs sertifikatai, patogus valdymas ir realaus laiko statistika mokykloms." },
+      { title: "Socialinės Valandos — oficialus socialinių valandų centras mokiniams" },
+      { name: "description", content: "Lietuvos moksleivių savanorystės centras. Oficialūs sertifikatai su HMAC parašu, skaitmeninė apskaita ir realaus laiko statistika mokykloms. Prisijunkite prie ateities savanorystės." },
+      { property: "og:title", content: "Socialinės Valandos — oficialus savanorystės centras" },
+      { property: "og:description", content: "Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis savanorystės galimybėmis. Skaitmeniniai sertifikatai ir saugi apskaita." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
 
       { property: "og:type", content: "website" },
