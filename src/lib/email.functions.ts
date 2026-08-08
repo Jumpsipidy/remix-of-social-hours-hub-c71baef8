@@ -27,8 +27,8 @@ export async function sendResendEmail(to: string, subject: string, html: string,
 async function sendResend(payload: SendPayload) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.warn("[email] RESEND_API_KEY not set — skipping send");
-    return { skipped: true as const };
+    console.warn("[email] RESEND_API_KEY missing. If you are in local dev, set it. If on Lovable preview, check secrets.");
+    return { skipped: true as const, reason: "missing_api_key" };
   }
   const body: Record<string, unknown> = {
     from: FROM,
@@ -52,7 +52,7 @@ async function sendResend(payload: SendPayload) {
   });
   if (!res.ok) {
     const text = await res.text();
-    console.error("[email] Resend error", res.status, text);
+    console.error(`[email] Resend API failure: ${res.status} ${text} | To: ${payload.to} | Subject: ${payload.subject}`);
     throw new Error(`Resend ${res.status}: ${text}`);
   }
   let id: string | null = null;
@@ -200,14 +200,16 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
 
 export const sendOrgInviteEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((v) => z.object({ to: z.string().email(), orgName: z.string().optional() }).parse(v))
+  .validator((v) => z.object({ to: z.string().email(), orgName: z.string().optional(), variant: z.number().int().min(1).max(5).optional() }).parse(v))
   .handler(async ({ data, context }) => {
-    // Check if admin
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
 
-    const html = renderOrgInviteEmail({ orgName: data.orgName || "Organizacija" });
-    const text = `Sveiki!\n\nKviečiame prisijungti prie Socialinės Valandos platformos — vieningos sistemos moksleivių savanorystei Lietuvoje.\n\nPrisijunkite: ${APP_URL}/register`;
+    const html = renderOrgInviteEmail({ 
+      orgName: data.orgName || "Organizacija",
+      variant: (data.variant as 1 | 2 | 3 | 4 | 5) || 1
+    });
+    const text = `Sveiki!\n\nKviečiame prisijungti prie Socialinės Valandos platformos — vieningos sistemos moksleivių savanorystei Lietuvoje.\n\nPrisijunkite: ${APP_URL}/register?role=organization&invite=true`;
     
     return sendResend({ 
       to: data.to, 
