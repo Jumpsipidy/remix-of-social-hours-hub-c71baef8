@@ -85,7 +85,7 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       if (!isAdmin) throw new Error("Neturi teisės siųsti šio pranešimo");
     }
     const [{ data: student }, { data: org }] = await Promise.all([
-      context.supabase.from("profiles").select("full_name, email, hours_earned, hours_needed, avatar_url").eq("id", r.student_id).single(),
+      context.supabase.from("profiles").select("*").eq("id", r.student_id).single(),
       context.supabase.from("profiles").select("organization_name, full_name").eq("id", r.organization_id).single(),
     ]);
     if (!student?.email) return { skipped: true as const, reason: "no_email" };
@@ -183,7 +183,7 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: me } = await context.supabase
       .from("profiles")
-      .select("full_name, email, role, hours_needed, avatar_url")
+      .select("*")
       .eq("id", context.userId).single();
     if (!me?.email) return { skipped: true as const, reason: "no_email" };
     const role = (me.role as "student" | "organization" | "school_admin" | "admin") || "student";
