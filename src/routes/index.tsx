@@ -44,10 +44,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
-      { name: "description", content: "Oficiali Šeduvos gimnazijos (socialinesvalandos.dev) savanorystės platforma. Rezervuok užduotis, rink socialines valandas ir gauk verifikuotus sertifikatus Šeduvoje ir visoje Lietuvoje." },
+      { name: "description", content: "Oficiali Šeduvos gimnazijos (socialinesvalandos.dev) ir visos Lietuvos moksleivių savanorystės platforma. Rezervuok užduotis, rink socialines valandas ir gauk verifikuotus sertifikatus Šeduvoje ir visoje Lietuvoje." },
       { property: "og:title", content: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
-      { property: "og:description", content: "Oficiali Šeduvos gimnazijos moksleivių savanorystės platforma. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus." },
+      { property: "og:description", content: "Oficiali Šeduvos gimnazijos ir visos Lietuvos moksleivių savanorystės platforma. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
+
 
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },

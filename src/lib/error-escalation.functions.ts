@@ -87,6 +87,15 @@ const IGNORE_RX = [
   /Patikrinkite, ar visi komponentai, naudojami App.js/i,
   /Concurrent Mode/i,
   /error boundaries aplink komponentus/i,
+  /concurrent rendering but React was able to recover/i,
+  /renderRootSync/i,
+  /throwAndUnwindWorkLoop/i,
+  /performWorkOnRoot/i,
+  /MessagePort\.performWorkUntilDeadline/i,
+  /link failed/i,
+  /styles\.css/i,
+  /_serverFn/i,
+  /Failed to fetch/i,
   /streak-7\.mp4/i,
   /assets-v1/i,
   /push_subscriptions/i,
@@ -99,6 +108,7 @@ const IGNORE_RX = [
   /Video error on clip/i,
   /video failed/i,
   /socialinesvalandos\.dev\/__l5e\/assets-v1/i,
+
 ];
 
 
