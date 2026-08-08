@@ -19,6 +19,19 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
+    v: "V2.1.0",
+    title: "Mobilioji transformacija",
+    date: "2026 m. rugpjūtis",
+    summary: "Atlikta visiška mobiliosios patirties optimizacija – nuo 60 kadrų per sekundę slinkimo iki geresnio kameros palaikymo.",
+    items: [
+      { tag: "Nauja", text: "„Ultimate Mobile Optimization“: automatinis WebGL fono atjungimas ir animacijų supaprastinimas mobiliuosiuose įrenginiuose." },
+      { tag: "Patobulinta", text: "Bundle optimizavimas: esminės bibliotekos (Three.js, Framer Motion) perkeltos į atskirus blokus greitesniam pradiniam krovimui." },
+      { tag: "Nauja", text: "Išmanusis QR kameros parinkimas: sistema pati atpažįsta galinę aukštos raiškos kamerą iOS ir Android įrenginiuose." },
+      { tag: "Dizainas", text: "SEO tekstų vizualinis atnaujinimas – geresnis skaitomumas ir aiškesnės antraštės." },
+      { tag: "Patobulinta", text: "Body scroll našumo patobulinimai per overscroll-behavior ir touch-action valdymą." },
+    ],
+  },
+  {
     v: "V2.0.0",
     title: "Duomenų sauga ir „Ultimate Mobile“",
     date: "2026 m. rugpjūtis",
@@ -26,7 +39,7 @@ const VERSIONS: Version[] = [
     items: [
       { tag: "Sauga", text: "Super Admin skydelyje pridėtas duomenų eksporto (backup) įrankis – visa platformos informacija vienoje JSON kopijoje." },
       { tag: "Patobulinta", text: "Versijų istorija išplėsta: dabar matomi visi pakeitimai nuo pat pirmojo kodo eilutės." },
-      { tag: "Patobulinta", text: "Maksimalus mobilaus greitis: WebGL fonas automatiškai išsijungia telefonuose, o animacijos tampa statiškomis sklandžiam slinkimui." },
+      { tag: "Patobulinta", text: "Mobiliųjų įrenginių fono valdymas WebGL render loop optimizavimui." },
       { tag: "Sauga", text: "Atviros duomenų saugos gairės /saugumas puslapyje (BDAR atitiktis, RLS apsauga)." },
       { tag: "Pataisyta", text: "Ištaisytas QR kameros leidimų prašymas iOS Safari ir Android naršyklėse." },
     ],
