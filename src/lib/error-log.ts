@@ -77,6 +77,10 @@ const IGNORE_SUBSTRINGS = [
   "telemetry:ui-freeze",
   "telemetry:slow-api",
   "telemetry:offline-drop",
+  // Specific recurring video/path error from the user's report
+  "streak-7.mp4",
+  "assets-v1",
+  "vaizdo įrašo įkėlimu",
 ];
 
 const IGNORED_NETWORK_URLS = [

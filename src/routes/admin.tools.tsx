@@ -63,12 +63,21 @@ export const sendOrgInvite = createServerFn({ method: "POST" })
     const { sendResendEmail } = await import("@/lib/email.functions");
     const html = renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
     
-    // We cast to any because of the transient build error where sendResendEmail isn't yet visible as exported
-    return await (sendResendEmail as any)(
+    const res = await (sendResendEmail as any)(
       data.email, 
       "Kvietimas prisijungti prie Socialinės Valandos platformos", 
-      html
+      html,
+      { tag: "org-invite" }
     );
+
+    // Track the invitation in the database so it appears in the logs
+    await context.supabase.from("activity_log").insert({
+      user_id: context.userId,
+      action: "admin.org_invite_sent",
+      meta: { email: data.email, orgName: data.orgName, variant: data.variant, res_id: res.id }
+    });
+
+    return res;
   });
 
 export const getOrgInvitePreview = createServerFn({ method: "POST" })
