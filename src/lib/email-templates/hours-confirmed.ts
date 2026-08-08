@@ -1,6 +1,4 @@
-// Modern, gradient-heavy, "3D-feeling" transactional email.
-// Uses inline styles only (email-client safe). Layered gradients + soft
-// shadows produce depth on Apple Mail / Gmail web; falls back gracefully.
+import { renderShell, metaGrid, APP_URL, escape } from "./_shell";
 
 type Props = {
   studentName: string;
@@ -10,6 +8,8 @@ type Props = {
   totalHours: number;
   neededHours: number;
   location?: string;
+  avatarUrl?: string | null;
+  initial?: string;
 };
 
 const APP_URL = "https://socialinesvalandos.lt";
