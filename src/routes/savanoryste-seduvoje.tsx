@@ -96,7 +96,7 @@ function SeduvaPage() {
             <MapPin className="h-3 w-3" /> Šeduva · Radviliškio r.
           </div>
           <h1 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">
-            Savanorystė Šeduvoje: kur surinkti socialines valandas
+            Savanorystė Šeduvoje
           </h1>
           <p className="mt-3 text-sm text-muted-foreground sm:text-base">
             Trumpas vietinis gidas moksleiviams — realios vietos Šeduvoje, kiek valandų jos duoda ir kaip

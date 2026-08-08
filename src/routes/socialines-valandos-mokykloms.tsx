@@ -148,10 +148,7 @@ function Page() {
             ← Į pradžią
           </Link>
           <h1 className="mt-4 text-4xl font-black tracking-tight md:text-5xl">
-            Socialinės valandos{" "}
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              mokykloms
-            </span>
+            Socialinės valandos <span className="text-primary">mokykloms</span>
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Popierinius lapelius pakeičia viena sistema: mokinių progresas realiu laiku, QR
