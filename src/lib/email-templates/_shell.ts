@@ -85,9 +85,14 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 10px;">
-                      <span style="background: linear-gradient(135deg, #C8452A, #E9B44C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px;">❤</span>
-                      SOCIALINĖS VALANDOS
+                    <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 14px;">
+                      <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);">
+                        <span style="color: #0d0c1d; font-size: 24px; line-height: 1;">❤</span>
+                      </div>
+                      <div style="text-align: left;">
+                        <span style="display: block; font-size: 20px; line-height: 1.1;">SOCIALINĖS</span>
+                        <span style="display: block; font-size: 20px; color: #7DD3FC; line-height: 1.1;">VALANDOS</span>
+                      </div>
                     </div>
                   </td>
                 </tr>
