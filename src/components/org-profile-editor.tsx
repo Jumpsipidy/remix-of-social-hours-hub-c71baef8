@@ -257,7 +257,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
         {p.latitude != null && p.longitude != null && (
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Žemėlapis · spausk žemėlapyje, kad tiksliai nustatytum tašką</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tiksli vieta · Vilkite žymeklį arba spauskite žemėlapyje</p>
               <LeafletMap
                 lat={Number(p.latitude)}
                 lng={Number(p.longitude)}
