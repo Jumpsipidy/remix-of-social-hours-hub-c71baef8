@@ -129,11 +129,11 @@ async function sendResendEmail(to: string, subject: string, html: string, opts: 
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({
-        from: "Socialinės Valandos Alerts <alerts@jumpsipidy.online>",
+        from: `Socialinės Valandos Alerts <alerts@socialinesvalandos.dev>`,
         to,
         subject,
         html,
-        reply_to: "noreply@jumpsipidy.online",
+        reply_to: "noreply@socialinesvalandos.dev",
         headers,
         tags: [{ name: "kind", value: opts.urgent ? "alert-urgent" : "alert" }],
       }),

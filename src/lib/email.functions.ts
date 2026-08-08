@@ -8,7 +8,7 @@ import { renderWelcomeEmail, welcomeText } from "./email-templates/welcome";
 import { renderOrgInviteEmail } from "./email-templates/org-invite";
 import { APP_URL, SUPPORT_EMAIL } from "./email-templates/_shell";
 
-const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
+const FROM = `Socialinės Valandos <${SUPPORT_EMAIL}>`;
 const REPLY_TO = SUPPORT_EMAIL;
 
 type SendPayload = {
