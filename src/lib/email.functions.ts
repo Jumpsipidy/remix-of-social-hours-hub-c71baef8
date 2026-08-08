@@ -52,7 +52,7 @@ async function sendResend(payload: SendPayload) {
   });
   if (!res.ok) {
     const text = await res.text();
-    console.error("[email] Resend error", res.status, text);
+    console.error(`[email] Resend API failure: ${res.status} ${text} | To: ${payload.to} | Subject: ${payload.subject}`);
     throw new Error(`Resend ${res.status}: ${text}`);
   }
   let id: string | null = null;
