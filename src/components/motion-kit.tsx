@@ -23,8 +23,9 @@ export function useLowPowerDevice() {
     const small = window.matchMedia("(max-width: 900px)").matches;
     const weak =
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
-      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
-    setLow((coarse && small) || (small && weak));
+      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4) ||
+      coarse; // Always assume low power if touch-based (phone/tablet) to maximize scroll performance
+    setLow(weak || (small && coarse));
   }, []);
   return low;
 }
