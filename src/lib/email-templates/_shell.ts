@@ -71,7 +71,7 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#02010a;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
+<body style="margin:0;padding:0;background-color:#02010a;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#f5f3ff; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#02010a;">
@@ -81,19 +81,26 @@ export function renderShell(opts: ShellOptions): string {
           
           <!-- Header (Official Brand) -->
           <tr>
-            <td style="padding: 40px 0; text-align:center; background-color: #0d0c1d;">
+            <td style="padding: 40px 0; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 14px;">
-                      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); border: 2px solid rgba(255,255,255,0.1);">
-                        <span style="color: #0d0c1d; font-size: 26px; line-height: 1;">❤</span>
-                      </div>
-                      <div style="text-align: left;">
-                        <span style="display: block; font-size: 22px; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">SOCIALINĖS</span>
-                        <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">VALANDOS</span>
-                      </div>
-                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" valign="middle" style="padding-right: 14px;">
+                          <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; text-align: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); border: 2px solid rgba(255,255,255,0.1);">
+                            <!-- Using a simple, high-contrast text heart for bulletproof rendering -->
+                            <div style="color: #0d0c1d; font-size: 30px; line-height: 52px; font-family: sans-serif; font-weight: bold;">❤</div>
+                          </div>
+                        </td>
+                        <td align="left" valign="middle">
+                          <div style="font-family: 'Inter', sans-serif; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
+                            <span style="display: block; font-size: 22px; line-height: 1.1; margin: 0; padding: 0;">SOCIALINĖS</span>
+                            <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; margin: 0; padding: 0;">VALANDOS</span>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -105,18 +112,22 @@ export function renderShell(opts: ShellOptions): string {
 
           <!-- Main Card (Modern Dark Theme) -->
           <tr>
-            <td class="content-card" style="background-color:#0d0c1d; padding:60px 48px; position:relative; overflow:hidden;">
+            <td class="content-card" style="background-color:#0d0c1d; padding:60px 48px;">
               
-              <!-- Top Glow Gradient -->
-              <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
+              <!-- Top Glow Gradient (Simplified for email clients) -->
+              <div style="font-size: 0; line-height: 0; height: 1px; width: 100%; background: linear-gradient(to right, transparent, ${theme.primary}33, transparent); margin-bottom: 40px;"></div>
 
               <!-- Medallion Floating Aesthetic -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
                 <tr>
                   <td align="center">
-                    <div style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; text-align:center; line-height:100px; font-size:50px; box-shadow: 0 20px 50px ${theme.primary}66; transform: rotate(-5deg);">
-                      ${opts.medallionEmoji}
-                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; font-size:50px; line-height: 100px; text-align: center;">
+                          ${opts.medallionEmoji}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -125,9 +136,13 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block; padding:4px 12px; background-color:${theme.primary}22; border:1px solid ${theme.primary}44; border-radius:100px;">
-                      <span style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:2.5px; color:${theme.primary};">${escape(opts.eyebrow)}</span>
-                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto; background-color:${theme.primary}22; border:1px solid ${theme.primary}44; border-radius:100px;">
+                      <tr>
+                        <td style="padding:4px 12px; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:2.5px; color:${theme.primary};">
+                          ${escape(opts.eyebrow)}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -136,7 +151,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#ffffff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
+                    <h1 class="heading" style="margin:0; font-family: 'Inter', sans-serif; font-size:42px; font-weight:900; color:#ffffff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
                   </td>
                 </tr>
               </table>
@@ -154,10 +169,15 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <!-- Stronger 3D interactive button -->
-                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 15px 35px ${theme.primary}66, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -4px 10px rgba(0,0,0,0.3); text-transform:uppercase; letter-spacing:1px; border: 1px solid rgba(255,255,255,0.2); color: #ffffff;">
-                      ${escape(opts.ctaLabel)}
-                    </a>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" style="background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:24px; padding: 22px 64px;">
+                          <a href="${escape(opts.ctaHref)}" style="display:block; color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
+                            ${escape(opts.ctaLabel)}
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -166,7 +186,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                 <tr>
                   <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
-                    <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b>atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
+                    <b style="color: #94a3b8;">Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b style="color: #94a3b8;">atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
                     Šis pranešimas yra teisiškai saistantis ir apsaugotas autorinių teisių.
                   </td>
                 </tr>
