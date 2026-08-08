@@ -14,6 +14,7 @@ import {
   TricolorRail,
   TricolorRibbons,
   useCalmMotion,
+  useLowPowerDevice,
   LT_GREEN,
   LT_RED,
   LT_YELLOW,
