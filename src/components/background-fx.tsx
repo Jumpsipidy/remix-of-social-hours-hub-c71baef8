@@ -38,7 +38,7 @@ export function BackgroundFX() {
     } catch { setFallback(true); return; }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.1 : 1.5);
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.0 : 1.25); // Lower DPR for better perf
     const width = () => mount.clientWidth;
     const height = () => mount.clientHeight;
 

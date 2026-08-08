@@ -64,6 +64,8 @@ export default defineConfig({
           if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-map";
           if (id.includes("pdf-lib") || id.includes("qrcode")) return "vendor-pdf";
           if (id.includes("lucide-react")) return "vendor-icons";
+          if (id.includes("three")) return "vendor-three";
+          if (id.includes("@tanstack")) return "vendor-tanstack";
           return null;
         },
       },
