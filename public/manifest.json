@@ -1,0 +1,21 @@
+{
+  "name": "Socialinės Valandos",
+  "short_name": "Soc. Valandos",
+  "description": "Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0819",
+  "theme_color": "#0a0819",
+  "icons": [
+    {
+      "src": "/favicon.png?v=7",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png?v=7",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

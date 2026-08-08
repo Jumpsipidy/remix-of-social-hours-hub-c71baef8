@@ -48,8 +48,6 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
       { property: "og:description", content: "Oficiali Šeduvos gimnazijos ir visos Lietuvos moksleivių savanorystės platforma. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
-
-
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -58,6 +56,22 @@ export const Route = createFileRoute("/")({
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
     scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Socialinės Valandos",
+          alternateName: ["Soc. Valandos", "Socialinesvalandos.dev", "Savanorystės Centras"],
+          url: "https://socialinesvalandos.dev/",
+          description: "Oficiali Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma. Atvira visoms Lietuvos mokykloms.",
+          potentialAction: {
+            "@type": "SearchAction",
+            target: "https://socialinesvalandos.dev/tasks?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }),
+      },
       {
         type: "application/ld+json",
         children: JSON.stringify({
@@ -74,24 +88,21 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "ItemList",
-          name: "Mokyklos, naudojančios Socialines Valandas",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              item: {
-                "@type": "HighSchool",
-                name: "Šeduvos gimnazija",
-                address: {
-                  "@type": "PostalAddress",
-                  addressLocality: "Šeduva",
-                  addressRegion: "Radviliškio r.",
-                  addressCountry: "LT",
-                },
-              },
+          "@type": "EducationalOrganization",
+          name: "Socialinės Valandos",
+          url: "https://socialinesvalandos.dev/",
+          logo: "https://socialinesvalandos.dev/favicon.png?v=7",
+          sameAs: ["https://www.seduvosgimnazija.lt"],
+          parentOrganization: {
+            "@type": "HighSchool",
+            name: "Šeduvos gimnazija",
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: "Šeduva",
+              addressRegion: "Radviliškio r.",
+              addressCountry: "LT",
             },
-          ],
+          },
         }),
       },
     ],
