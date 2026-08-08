@@ -143,7 +143,7 @@ function SpotlightCard({
       {/* diagonal sheen that sweeps across on hover */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[900ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
+        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[600ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
       />
       {children}
     </motion.div>
@@ -247,7 +247,7 @@ function Home() {
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
               <motion.span

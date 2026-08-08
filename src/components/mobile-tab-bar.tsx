@@ -80,7 +80,7 @@ export function MobileTabBar() {
               <Link
                 key={`${t.to}-${t.label}`}
                 to={t.to}
-                className="relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition active:scale-95 touch-manipulation"
+                className="relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition active:scale-95 touch-manipulation motion-safe"
                 aria-current={active ? "page" : undefined}
               >
                 {active && (

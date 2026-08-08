@@ -59,7 +59,7 @@ const wordVariants: Variants = {
     y: "0%",
     rotateX: 0,
     opacity: 1,
-    transition: { delay: i * 0.055, duration: 0.85, ease: [0.16, 1, 0.3, 1] },
+    transition: { delay: i * 0.04, duration: 0.65, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
@@ -157,8 +157,8 @@ export function Reveal({
       className={className}
       initial={{ opacity: 0, y, filter: "blur(6px)" }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-70px" }}
-      transition={{ duration: 0.75, delay, ease: [0.16, 1, 0.3, 1] }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>
