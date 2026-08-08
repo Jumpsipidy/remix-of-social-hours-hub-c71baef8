@@ -27,8 +27,8 @@ export async function sendResendEmail(to: string, subject: string, html: string,
 async function sendResend(payload: SendPayload) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.warn("[email] RESEND_API_KEY not set — skipping send");
-    return { skipped: true as const };
+    console.warn("[email] RESEND_API_KEY missing. If you are in local dev, set it. If on Lovable preview, check secrets.");
+    return { skipped: true as const, reason: "missing_api_key" };
   }
   const body: Record<string, unknown> = {
     from: FROM,
