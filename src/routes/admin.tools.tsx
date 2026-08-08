@@ -349,18 +349,18 @@ function AdminToolsPage() {
         {previewHtml && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
             <motion.div 
-              className="relative h-[85vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c1e] shadow-2xl"
+              className="relative h-[85vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#f8fafc] shadow-2xl"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
             >
-              <div className="flex items-center justify-between border-b border-white/5 p-4">
-                <span className="text-xs font-bold uppercase tracking-widest text-white/50">Kvietimo laiško peržiūra</span>
-                <button onClick={() => setPreviewHtml(null)} className="rounded-lg bg-white/5 p-2 text-white hover:bg-white/10">
+              <div className="flex items-center justify-between border-b border-black/5 bg-white p-4">
+                <span className="text-xs font-bold uppercase tracking-widest text-black/50">Kvietimo laiško peržiūra</span>
+                <button onClick={() => setPreviewHtml(null)} className="rounded-lg bg-black/5 p-2 text-black hover:bg-black/10">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="h-full overflow-auto bg-white">
+              <div className="h-full overflow-auto">
                 <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </div>
             </motion.div>
