@@ -23,7 +23,8 @@ export function renderOrgInviteEmail(p: Props): string {
       <b>Jūsų laukiantys privalumai:</b><br/>
       • <b style="color:#fff;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
       • <b style="color:#fff;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
-      • <b style="color:#fff;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.
+      • <b style="color:#fff;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
+      <i style="color:#94a3b8; font-size:14px;">Turite klausimų? Spauskite mygtuką ir atsakykite į šį laišką – susisieksime per 1 valandą.</i>
     `;
   } else if (variant === 2) {
     accent = "emerald";

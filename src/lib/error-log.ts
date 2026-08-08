@@ -88,9 +88,12 @@ const IGNORE_SUBSTRINGS = [
   "PGRST205",
   "login_streak_30.mp4",
   "five_hours.mp4",
+  "ten_hours.mp4",
+  "goal_reached.mp4",
   "send was called before connect",
   "Video error on clip",
   "video failed",
+  "socialinesvalandos.dev/__l5e/assets-v1",
 
 
 ];

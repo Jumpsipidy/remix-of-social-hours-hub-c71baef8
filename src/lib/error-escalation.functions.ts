@@ -93,9 +93,12 @@ const IGNORE_RX = [
   /PGRST205/i,
   /login_streak_30\.mp4/i,
   /five_hours\.mp4/i,
+  /ten_hours\.mp4/i,
+  /goal_reached\.mp4/i,
   /send was called before connect/i,
   /Video error on clip/i,
   /video failed/i,
+  /socialinesvalandos\.dev\/__l5e\/assets-v1/i,
 ];
 
 

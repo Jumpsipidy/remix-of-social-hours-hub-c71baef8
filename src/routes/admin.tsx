@@ -37,30 +37,54 @@ export const Route = createFileRoute("/admin")({
 });
 
 type NavItem = { to: string; label: string; short?: string; icon: typeof Shield; exact?: boolean };
-const NAV: NavItem[] = [
-  { to: "/admin", label: "Apžvalga", short: "Apžv.", icon: LayoutDashboard, exact: true },
-  { to: "/admin/analytics", label: "Analitika", short: "Analitika", icon: BarChart3 },
-  { to: "/admin/reservations", label: "Rezervacijos", short: "Rez.", icon: CalendarClock },
-  { to: "/admin/leaderboard", label: "Reitingas", short: "Reit.", icon: Trophy },
-  { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
-  { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
-  { to: "/admin/audit", label: "Auditas (log)", icon: Activity },
-  { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },
-  { to: "/admin/manage", label: "Valdyti paskyras", icon: Users },
-  { to: "/admin/schools", label: "Mokyklos & kodai", icon: GraduationCap },
-  { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
-  { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
-  { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
-  { to: "/admin/autofix", label: "⚡ Auto-Fix Feed", icon: Sparkles },
-  { to: "/admin/notfound", label: "404 diagnostika", icon: AlertTriangle },
-  { to: "/admin/performance", label: "Performance", icon: Gauge },
-  { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
-  { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
-  { to: "/admin/emails", label: "El. laiškai", icon: Mail },
-  { to: "/admin/push", label: "Push pranešimai", icon: Send },
-  { to: "/admin/anticheat", label: "🛡 Anti-cheat", icon: Lock },
-  { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
+const NAV_GROUPS = [
+  {
+    label: "Pagrindinis",
+    items: [
+      { to: "/admin", label: "Apžvalga", short: "Apžv.", icon: LayoutDashboard, exact: true },
+      { to: "/admin/analytics", label: "Analitika", icon: BarChart3 },
+      { to: "/admin/leaderboard", label: "Reitingas", icon: Trophy },
+    ],
+  },
+  {
+    label: "Operacijos",
+    items: [
+      { to: "/admin/reservations", label: "Rezervacijos", icon: CalendarClock },
+      { to: "/admin/organizations", label: "Organizacijos", icon: Building2 },
+      { to: "/admin/schools", label: "Mokyklos & kodai", icon: GraduationCap },
+      { to: "/admin/checkin", label: "QR įsiregistravimai", icon: ScanLine },
+    ],
+  },
+  {
+    label: "Vartotojai",
+    items: [
+      { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },
+      { to: "/admin/manage", label: "Valdyti paskyras", icon: Users },
+      { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
+    ],
+  },
+  {
+    label: "Saugumas & Klaidos",
+    items: [
+      { to: "/admin/anticheat", label: "🛡 Anti-cheat", icon: Lock },
+      { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
+      { to: "/admin/autofix", label: "⚡ Auto-Fix Feed", icon: Sparkles },
+      { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
+      { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { to: "/admin/activity", label: "Aktyvumas", icon: Activity },
+      { to: "/admin/performance", label: "Performance", icon: Gauge },
+      { to: "/admin/emails", label: "El. laiškai", icon: Mail },
+      { to: "/admin/tools", label: "Įrankiai", icon: Wrench },
+    ],
+  },
 ];
+
+const NAV = NAV_GROUPS.flatMap(g => g.items);
 
 // primary bottom-nav items on mobile (5 max)
 const MOBILE_PRIMARY = ["/admin", "/admin/analytics", "/admin/reservations", "/admin/leaderboard"];
@@ -111,49 +135,53 @@ function AdminLayout() {
   const currentLabel = NAV.find((n) => isActive(n.to, n.exact))?.label ?? "Valdymo skydas";
 
   const NavList = ({ onClick, compact = false }: { onClick?: () => void; compact?: boolean }) => (
-    <nav className="flex flex-col gap-1">
-      {NAV.map((item, i) => {
-        const active = isActive(item.to, item.exact);
-        const Icon = item.icon;
-        return (
-          <motion.div
-            key={item.to}
-            initial={compact ? { opacity: 0, x: -12 } : false}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: compact ? i * 0.022 : 0, type: "spring", stiffness: 380, damping: 32 }}
-          >
-            <Link
-              to={item.to}
-              onClick={onClick}
-              resetScroll={false}
-              className={`group relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 text-sm font-medium transition-colors will-change-transform ${
-                active
-                  ? "text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-              }`}
-            >
-              {active && (
-                <motion.span
-                  layoutId="admin-nav-active"
-                  className="absolute inset-0 -z-10 rounded-xl bg-gradient-primary shadow-glow"
-                  transition={{ type: "spring", stiffness: 500, damping: 38, mass: 0.6 }}
-                />
-              )}
-              {!active && (
-                <span className="pointer-events-none absolute inset-y-0 left-0 w-0.5 origin-center scale-y-0 rounded-r-full bg-primary/70 transition-transform duration-300 group-hover:scale-y-100" />
-              )}
-              <Icon className={`h-4 w-4 shrink-0 transition-transform duration-300 ${active ? "" : "group-hover:scale-110 group-hover:text-primary"}`} />
-              <span className="truncate">{item.label}</span>
-              {active && (
-                <motion.span
-                  layoutId="admin-nav-dot"
-                  className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/90 shadow-[0_0_8px_hsl(var(--primary-foreground))]"
-                />
-              )}
-            </Link>
-          </motion.div>
-        );
-      })}
+    <nav className="flex flex-col gap-6">
+      {NAV_GROUPS.map((group, groupIdx) => (
+        <div key={group.label} className="flex flex-col gap-1">
+          <p className="px-3 text-[10px] font-extrabold uppercase tracking-[0.2em] text-muted-foreground/50">
+            {group.label}
+          </p>
+          {group.items.map((item, i) => {
+            const active = isActive(item.to, item.exact);
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.to}
+                initial={compact ? { opacity: 0, x: -12 } : false}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: compact ? (groupIdx * 3 + i) * 0.022 : 0, type: "spring", stiffness: 380, damping: 32 }}
+              >
+                <Link
+                  to={item.to}
+                  onClick={onClick}
+                  resetScroll={false}
+                  className={`group relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2 text-sm font-medium transition-colors will-change-transform ${
+                    active
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="admin-nav-active"
+                      className="absolute inset-0 -z-10 rounded-xl bg-gradient-primary shadow-glow"
+                      transition={{ type: "spring", stiffness: 500, damping: 38, mass: 0.6 }}
+                    />
+                  )}
+                  <Icon className={`h-4 w-4 shrink-0 transition-transform duration-300 ${active ? "" : "group-hover:scale-110 group-hover:text-primary"}`} />
+                  <span className="truncate">{item.label}</span>
+                  {active && (
+                    <motion.span
+                      layoutId="admin-nav-dot"
+                      className="ml-auto h-1.5 w-1.5 rounded-full bg-primary-foreground/90 shadow-[0_0_8px_hsl(var(--primary-foreground))]"
+                    />
+                  )}
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 

@@ -43,16 +43,17 @@ const HOME_FAQ: { q: string; a: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės Valandos — socialinių valandų centras mokiniams | socialinesvalandos.dev" },
-      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — Lietuvos mokinių socialinių valandų centras. Rezervuok savanorystės valandas, sekk pažangą ir gauk automatinę apskaitą vienoje vietoje." },
-      { property: "og:title", content: "Socialinės Valandos — socialinių valandų centras | socialinesvalandos.dev" },
-      { property: "og:description", content: "Socialinesvalandos.dev — Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma. Rezervuok, sekk ir surink savo valandas." },
+      { title: "Socialinės Valandos — oficialus socialinių valandų centras mokiniams | socialinesvalandos.dev" },
+      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — moderni moksleivių savanorystės platforma. Rezervuok valandas, gauk sertifikatą ir stebėk progresą skaitmeniniu būdu." },
+      { property: "og:title", content: "Socialinės Valandos — socialinių valandų apskaitos sistema" },
+      { property: "og:description", content: "Lietuvos moksleivių savanorystės centras. Oficialūs sertifikatai, patogus valdymas ir realaus laiko statistika mokykloms." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
 
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
+      { name: "keywords", content: "socialines valandos, savanoryste lietuvoje, mokiniu valandos, seduvos gimnazija, savanorystes centras, socialinesvalandos.dev" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
     scripts: [
