@@ -254,6 +254,7 @@ export const previewAllEmails = createServerFn({ method: "POST" })
         reason: "Šiuo metu neturime laisvų vietų.",
       }),
       welcome: renderWelcomeEmail({ fullName: "Jonas Jonaitis", role: "student", hoursNeeded: 20 }),
+      orgInvite: renderOrgInviteEmail({ orgName: "Testinė Organizacija" }),
     };
   });
 
