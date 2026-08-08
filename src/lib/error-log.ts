@@ -53,6 +53,8 @@ const IGNORE_SUBSTRINGS = [
   "Failed to fetch",
   "a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff",
   "versijos",
+  "a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff",
+  "versijos",
   // WebGL context creation/loss — decorative background only, we already fall back
 
   "THREE.WebGLRenderer",
