@@ -30,6 +30,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutOrgsRouteImport } from './routes/about-orgs'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
@@ -170,6 +171,11 @@ const CookiesRoute = CookiesRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutOrgsRoute = AboutOrgsRouteImport.update({
+  id: '/about-orgs',
+  path: '/about-orgs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -352,6 +358,7 @@ const AuthenticatedOrganizationScanRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about-orgs': typeof AboutOrgsRoute
   '/admin': typeof AdminRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -409,6 +416,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about-orgs': typeof AboutOrgsRoute
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -467,6 +475,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/about-orgs': typeof AboutOrgsRoute
   '/admin': typeof AdminRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -526,6 +535,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about-orgs'
     | '/admin'
     | '/cookies'
     | '/forgot-password'
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about-orgs'
     | '/cookies'
     | '/forgot-password'
     | '/login'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/about-orgs'
     | '/admin'
     | '/cookies'
     | '/forgot-password'
@@ -699,6 +711,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AboutOrgsRoute: typeof AboutOrgsRoute
   AdminRoute: typeof AdminRouteWithChildren
   CookiesRoute: typeof CookiesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -877,6 +890,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about-orgs': {
+      id: '/about-orgs'
+      path: '/about-orgs'
+      fullPath: '/about-orgs'
+      preLoaderRoute: typeof AboutOrgsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -1207,6 +1227,7 @@ const OrganizationRouteWithChildren = OrganizationRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AboutOrgsRoute: AboutOrgsRoute,
   AdminRoute: AdminRouteWithChildren,
   CookiesRoute: CookiesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
