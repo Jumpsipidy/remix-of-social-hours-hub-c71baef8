@@ -11,72 +11,72 @@ export function renderOrgInviteEmail(p: Props): string {
   const orgName = escape(p.orgName);
   
   let body = "";
-  let eyebrow = "KVIETIMAS";
+  let eyebrow = "OFICIALUS KVIETIMAS";
   let heading = "";
-  let medallion = "🤝";
+  let medallion = "🏛️";
   let accent: "indigo" | "emerald" | "rose" | "amber" = "indigo";
 
   if (variant === 1) {
-    heading = `Sveiki, ${orgName}`;
+    heading = `Gerbiama ${orgName} komanda`;
     body = `
-      Kviečiame tapti <b style="color:#fff;">Socialinės Valandos</b> partneriu. Mes kuriame skaidrią, saugią ir modernią ekosistemą moksleivių savanorystei Lietuvoje.<br/><br/>
-      <b>Kodėl verta prisijungti?</b><br/>
-      • <b style="color:#fff;">Saugumas:</b> Kriptografiškai pasirašyti sertifikatai užkerta kelią klastojimui.<br/>
-      • <b style="color:#fff;">Efektyvumas:</b> Patvirtinkite valandas vienu nuskaitymu (QR kodas).<br/>
-      • <b style="color:#fff;">Matomumas:</b> Jūsų organizacija bus matoma šimtams aktyvių Šeduvos gimnazijos moksleivių.
+      Oficialiai kviečiame Jūsų organizaciją prisijungti prie <b style="color:#fff;">Socialinės Valandos</b> tinklo. Tai valstybinį standartą atitinkanti skaitmeninė platforma moksleivių savanorystės apskaitai.<br/><br/>
+      <b>Jūsų laukiantys privalumai:</b><br/>
+      • <b style="color:#fff;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
+      • <b style="color:#fff;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
+      • <b style="color:#fff;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.
     `;
   } else if (variant === 2) {
     accent = "emerald";
-    eyebrow = "BENDRADARBIAVIMAS";
-    heading = "Kurkime ateitį kartu";
-    medallion = "✨";
+    eyebrow = "STRATEGINĖ PARTNERYSTĖ";
+    heading = "Kurkime vertę kartu";
+    medallion = "🤝";
     body = `
-      Gerbiama <b style="color:#fff;">${orgName}</b> komanda,<br/><br/>
-      Jaunoji karta ieško prasmingos veiklos, o Jūs turite ką pasiūlyti. Mūsų platforma padeda sujungti socialiai atsakingas organizacijas su aktyviu jaunimu.<br/><br/>
-      <b>Jūsų žingsniai:</b><br/>
-      1. Užsiregistruokite per žemiau esantį mygtuką.<br/>
-      2. Paskelbkite pirmąją savanorystės užduotį.<br/>
-      3. Priimkite moksleivius ir patvirtinkite jų valandas programėlėje.
+      Gerbiama <b style="color:#fff;">${orgName}</b> vadovybė,<br/><br/>
+      Kviečiame tapti inovatyvios savanorystės ekosistemos dalimi. Mūsų tikslas — užtikrinti, kad kiekviena jauno žmogaus pastanga būtų tinkamai įvertinta ir saugiai dokumentuota.<br/><br/>
+      <b>Prisijungimo procesas:</b><br/>
+      1. Aktyvuokite savo paskyrą paspaudę žemiau esantį mygtuką.<br/>
+      2. Užpildykite organizacijos profilį.<br/>
+      3. Pradėkite skelbti savanorystės užduotis.
     `;
   } else if (variant === 3) {
     accent = "amber";
-    eyebrow = "SKAITMENIZACIJA";
-    heading = "Pamirškite popierius";
-    medallion = "⚡";
+    eyebrow = "SKAITMENINIS STANDARTAS";
+    heading = "Ateities dokumentacija";
+    medallion = "📜";
     body = `
       Sveiki, ${orgName}!<br/><br/>
-      Socialinių valandų lapų pildymas ranka yra praeitis. Prisijunkite prie <b style="color:#fff;">Socialinės Valandos</b> ir valdykite viską išmaniai.<br/><br/>
-      Tai ne tik patogiau Jums, bet ir saugiau moksleiviams. Jokių pamestų lapų, jokių neįskaitomų parašų — tik gryna, skaitmenizuota savanorystė.
+      Lietuva žengia į pilną skaitmenizaciją, ir socialinės valandos nėra išimtis. <b style="color:#fff;">Socialinės Valandos</b> pakeičia nepatikimą popierinę apskaitą saugiu, skaitmeniniu formatu.<br/><br/>
+      Prisijungdami Jūs ne tik palengvinate savo darbą, bet ir prisidedate prie skaidrios savanorystės kultūros kūrimo Lietuvoje.
     `;
   } else if (variant === 4) {
     accent = "indigo";
-    eyebrow = "BENDRUOMENĖ";
-    heading = "Moksleiviai laukia Jūsų";
-    medallion = "🏫";
+    eyebrow = "REGIONO PLĖTRA";
+    heading = "Jūsų indėlis svarbus";
+    medallion = "📍";
     body = `
-      Šeduvos gimnazijos moksleiviai aktyviai ieško galimybių prisidėti prie <b>${orgName}</b> veiklos.<br/><br/>
-      Sukūrėme šią platformą, kad padėtume jaunimui lengviau rasti Jūsų iniciatyvas. Prisijunkite nemokamai ir padėkite mums auginti pilietišką bendruomenę kartu.
+      Mūsų regiono moksleiviai aktyviai ieško būdų prisidėti prie <b>${orgName}</b> veiklos. Mes suteikiame įrankius, kurie padaro šį procesą sklandų ir saugų abiems pusėms.<br/><br/>
+      Šeduvos gimnazija jau naudoja šią sistemą. Prisijunkite prie mūsų ir tapkite matomiems aktyviausiam vietos jaunimui.
     `;
   } else {
     accent = "rose";
-    eyebrow = "SKAIDRUMAS";
-    heading = "Patikimas standartas";
+    eyebrow = "SAUGUMAS IR PATIKRA";
+    heading = "Garantuotas patikimumas";
     medallion = "🛡️";
     body = `
-      Mokinių savanorystė tampa skaidresnė. <b style="color:#fff;">Socialinės Valandos</b> užtikrina, kad kiekviena valanda būtų teisingai įskaityta ir verifikuota.<br/><br/>
-      Tapkite <b style="color:#fff;">${orgName}</b> sistemos dalimi ir užtikrinkite, kad Jūsų savanoriai gautų oficialų, saugų patvirtinimą už savo indėlį į visuomenę.
+      Saugumas yra mūsų prioritetas. <b style="color:#fff;">Socialinės Valandos</b> naudoja QR verifikaciją ir 60-ties sekundžių kintamus kodus, kad užkirstų kelią bet kokiam piktnaudžiavimui.<br/><br/>
+      Suteikite savo savanoriams patikimiausią įrankį rinkoje. Prisijunkite prie oficialaus partnerių tinklo šiandien.
     `;
   }
 
   return renderShell({
-    title: "Kvietimas prisijungti",
-    preview: "Kviečiame prisijungti prie Socialinės Valandos platformos.",
+    title: "Oficialus Kvietimas",
+    preview: "Oficialus kvietimas prisijungti prie Socialinės Valandos partnerių tinklo.",
     accent,
     eyebrow,
     medallionEmoji: medallion,
     heading,
     bodyHtml: body,
-    ctaLabel: "Pradėti dabar",
+    ctaLabel: "Aktyvuoti paskyrą",
     ctaHref: `${APP_URL}/register?role=organization&invite=true`,
   });
 }
