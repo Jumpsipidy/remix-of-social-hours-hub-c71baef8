@@ -79,20 +79,19 @@ export function renderShell(opts: ShellOptions): string {
       <td align="center" style="padding:40px 0;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px;">
           
-          <!-- Header (Official Logo) -->
+          <!-- Header (Official Logo - Optimized for Transparent PNG) -->
           <tr>
             <td style="padding-bottom:40px; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block; padding:12px; background-color:#1e293b; border-radius:16px; border: 1px solid #334155;">
-                      <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="220" style="display:block; border:0; width: 220px; height: auto;" />
-                    </div>
+                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="240" style="display:block; border:0; width: 240px; height: auto; max-width: 80%;" />
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
 
 
 
