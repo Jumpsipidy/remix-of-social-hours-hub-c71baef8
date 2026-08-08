@@ -101,29 +101,39 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const colDate = M;
   const colHours = M + 90;
   const colOrg = M + 150;
-  let y = tableTop - 22;
-  page.drawText(ascii("Data"),  { x: colDate, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Val."),  { x: colHours, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Organizacija"),  { x: colOrg, y, size: 8, font: bold, color: muted });
-  y -= 6;
-  page.drawLine({ start: { x: M, y }, end: { x: width - M, y }, thickness: 0.3, color: hair });
-  y -= 12;
+  let currentY = tableTop - 22;
+  page.drawText(ascii("Data"),  { x: colDate, y: currentY, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Val."),  { x: colHours, y: currentY, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Organizacija"),  { x: colOrg, y: currentY, size: 8, font: bold, color: muted });
+  currentY -= 6;
+  page.drawLine({ start: { x: M, y: currentY }, end: { x: width - M, y: currentY }, thickness: 0.3, color: hair });
+  currentY -= 12;
 
-  const rows = cert.reservations.slice(0, 18);
-  for (const r of rows) {
-    if (y < 260) break;
-    page.drawText(ascii(String(r.date ?? "")),  { x: colDate, y, size: 9, font, color: ink });
-    page.drawText(ascii(String(r.hours ?? "")),  { x: colHours, y, size: 9, font, color: ink });
-    page.drawText(ascii((r.organization || "").slice(0, 62)),  { x: colOrg, y, size: 9, font, color: ink });
-    y -= 14;
+  const rows = cert.reservations;
+  const rowHeight = 18;
+  const maxRowsPerPage = 24;
+
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    if (currentY < 160) {
+      page.drawText(ascii(`... ir dar ${rows.length - i} rezervacijos (-u)`), {
+        x: colDate,
+        y: currentY,
+        size: 8,
+        font: serifItalic,
+        color: muted,
+      });
+      break;
+    }
+    page.drawText(ascii(String(r.date ?? "")), { x: colDate, y: currentY, size: 9, font, color: ink });
+    page.drawText(ascii(String(r.hours ?? "")), { x: colHours, y: currentY, size: 9, font, color: ink });
+    page.drawText(ascii((r.organization || "").slice(0, 62)), { x: colOrg, y: currentY, size: 9, font, color: ink });
+    currentY -= 14;
   }
-  if (cert.reservations.length > rows.length) {
-    page.drawText(ascii(`... ir dar ${cert.reservations.length - rows.length}`), 
-      { x: colDate, y, size: 8, font: serifItalic, color: muted,
-    });
-    y -= 14;
-  }
-  page.drawLine({ start: { x: M, y: y + 4 }, end: { x: width - M, y: y + 4 }, thickness: 0.6, color: ink });
+
+  page.drawLine({ start: { x: M, y: currentY + 4 }, end: { x: width - M, y: currentY + 4 }, thickness: 0.6, color: ink });
+
 
   // === Verification footer ===
   // QR block (right)

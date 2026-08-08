@@ -24,6 +24,8 @@ export function Navbar() {
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = (to: string, exact: boolean) => 
+    exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -69,75 +71,102 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 md:py-4">
-        <Link to="/" className="flex min-w-0 items-center gap-2">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-            <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/85 backdrop-blur-2xl transition-all duration-300">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
+        <Link 
+          to="/" 
+          className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
+        >
+          <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow">
+            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
+            <motion.div 
+              className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
           </div>
-          <span className="font-display truncate whitespace-nowrap text-base font-bold tracking-tight sm:text-lg">
+          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
           </span>
         </Link>
-        <nav className="hidden items-center gap-1 md:flex">
+
+        <nav className="hidden flex-1 items-center justify-center gap-2 md:flex">
           {links.map((l) => {
-            const tag =
-              l.to === "/tasks" ? "tasks" :
-              l.to === "/" ? "home" :
-              "dashboard";
+            const active = isActive(l.to, l.to === "/");
             return (
               <Link
                 key={l.to}
                 to={l.to}
-                data-tour={tag}
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                activeProps={{ className: "rounded-full px-4 py-2 text-sm font-medium bg-accent text-accent-foreground" }}
-                activeOptions={{ exact: l.to === "/" }}
+                className={`relative px-5 py-2.5 text-sm font-bold tracking-tight transition-all active:scale-95 ${
+                  active 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-full"
+                }`}
               >
                 {l.label}
+                {active && (
+                  <motion.div 
+                    layoutId="nav-glow"
+                    className="absolute inset-x-2 -bottom-1 h-[2px] rounded-full bg-gradient-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
-        <div className="flex items-center gap-2">
-          <div data-tour="notifications" className="contents"><NotificationBell /></div>
 
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block">
+            <NotificationBell />
+          </div>
 
           {isAuthenticated ? (
-            <button
-              onClick={handleSignOut}
-              className="hidden items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent hover:text-foreground sm:inline-flex"
-            >
-              <LogOut className="h-4 w-4" /> Atsijungti
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSignOut}
+                className="hidden items-center gap-2 rounded-2xl border border-border/60 bg-card/50 px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all sm:inline-flex"
+              >
+                <LogOut className="h-4 w-4" /> Atsijungti
+              </button>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:inline-flex"
+                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 active:scale-95 transition-all sm:inline-flex"
               >
                 Prisijungti
               </Link>
               <Link
                 to="/register"
-                className="hidden rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 sm:inline-flex"
+                className="hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow hover:brightness-110 active:scale-95 transition-all sm:inline-flex"
               >
                 Registruotis
               </Link>
-            </>
+            </div>
           )}
-          <button
-            className="grid h-11 w-11 place-items-center rounded-full border border-border/80 bg-background/60 backdrop-blur active:scale-95 transition md:hidden"
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            className="grid h-11 w-11 place-items-center rounded-2xl border border-border/80 bg-background/60 backdrop-blur-md active:scale-95 transition-all md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Meniu"
             aria-expanded={open}
           >
-            <motion.span key={open ? "x" : "m"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </motion.span>
-          </button>
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={open ? "x" : "m"} 
+                initial={{ rotate: -90, opacity: 0 }} 
+                animate={{ rotate: 0, opacity: 1 }} 
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </motion.div>
+            </AnimatePresence>
+          </motion.button>
         </div>
       </div>
+
       <AnimatePresence>
         {open && (
           <>
