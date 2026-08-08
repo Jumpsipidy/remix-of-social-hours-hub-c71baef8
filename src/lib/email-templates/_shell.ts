@@ -112,10 +112,10 @@ export function renderShell(opts: ShellOptions): string {
 
           <!-- Main Card (Modern Dark Theme) -->
           <tr>
-            <td class="content-card" style="background-color:#0d0c1d; padding:60px 48px; position:relative; overflow:hidden;">
+            <td class="content-card" style="background-color:#0d0c1d; padding:60px 48px;">
               
-              <!-- Top Glow Gradient -->
-              <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
+              <!-- Top Glow Gradient (Simplified for email clients) -->
+              <div style="font-size: 0; line-height: 0; height: 1px; width: 100%; background: linear-gradient(to right, transparent, ${theme.primary}33, transparent); margin-bottom: 40px;"></div>
 
               <!-- Medallion Floating Aesthetic -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
