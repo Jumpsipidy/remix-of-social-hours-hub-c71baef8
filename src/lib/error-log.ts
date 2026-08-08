@@ -89,6 +89,9 @@ const IGNORE_SUBSTRINGS = [
   "login_streak_30.mp4",
   "five_hours.mp4",
   "send was called before connect",
+  "Video error on clip",
+  "video failed",
+
 
 ];
 
