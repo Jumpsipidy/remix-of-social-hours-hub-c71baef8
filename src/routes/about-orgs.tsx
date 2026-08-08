@@ -4,6 +4,16 @@ import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/dashboard-kit';
 
 export const Route = createFileRoute('/about-orgs')({
+  head: () => ({
+    meta: [
+      { title: "Socialinės Valandos — Organizacijoms ir partneriams" },
+      { name: "description", content: "Prisijunkite prie Socialinės Valandos platformos kaip organizacija. Skelbkite savanorystės užduotis, skenuokite moksleivių QR kodus ir automatizuokite valandų patvirtinimą be jokio popierizmo." },
+      { property: "og:title", content: "Socialinės Valandos — Organizacijoms ir partneriams" },
+      { property: "og:description", content: "Efektyvus savanorystės valdymas be popierizmo. Skelbkite užduotis, raskite motyvuotus moksleivius ir patvirtinkite valandas vienu nuskenavimu." },
+      { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: AboutOrgsPage,
 });
 
