@@ -57,14 +57,8 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    minify: "terser",
+    minify: "esbuild",
     cssMinify: true,
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
     rollupOptions: {
       output: {
         manualChunks(id) {
