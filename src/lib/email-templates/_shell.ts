@@ -71,7 +71,7 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#02010a;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
+<body style="margin:0;padding:0;background-color:#02010a;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#f5f3ff; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#02010a;">
