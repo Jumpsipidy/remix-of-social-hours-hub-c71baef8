@@ -98,6 +98,8 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       orgName, hours, date: r.reservation_date,
       totalHours, neededHours,
       location: r.address || undefined,
+      avatarUrl: student.avatar_url || null,
+      initial: (student.full_name || "S").charAt(0).toUpperCase(),
     });
     const text = `Sveikas!\n\n${orgName} patvirtino tavo darbą (${hours} val., ${r.reservation_date}).\nDabar tavo suma: ${totalHours}/${neededHours} val.\n\n${APP_URL}/student`;
     return sendResend({ to: student.email, subject: `✓ ${hours} val. patvirtinta — ${orgName}`, html, text, tag: "hours-confirmed" });
