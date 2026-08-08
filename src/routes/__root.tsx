@@ -115,9 +115,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preload", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap", as: "style" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" },
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
       { rel: "alternate", hrefLang: "lt", href: "https://socialinesvalandos.dev/" },
       { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.dev/" },
     ],
+
     scripts: [
       {
         type: "application/ld+json",
@@ -172,7 +174,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           name: "Socialinės Valandos",
           alternateName: ["Socialinesvalandos", "Soc. Valandos", "Socialinių valandų centras"],
           url: "https://socialinesvalandos.dev/",
-          logo: "https://socialinesvalandos.dev/favicon.ico",
+          logo: "https://socialinesvalandos.dev/favicon.png",
           image: "https://socialinesvalandos.dev/og-preview.png",
           foundingDate: "2025",
           areaServed: { "@type": "Country", name: "Lithuania" },
