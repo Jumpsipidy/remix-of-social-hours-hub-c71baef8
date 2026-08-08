@@ -18,8 +18,8 @@ import { listOrganizations } from "@/lib/orgs.functions";
 export const Route = createFileRoute("/tasks")({
   head: () => ({
     meta: [
-      { title: "Užduotys ir organizacijos — Socialinės Valandos" },
-      { name: "description", content: "Naršyk realias savanorystės užduotis ir organizacijų profilius: filtruok pagal kategoriją bei valandas ir rezervuok socialines valandas." },
+      { title: "Savanorystės užduotys ir organizacijos — Socialinės Valandos" },
+      { name: "description", content: "Raskite geriausias savanorystės galimybes Lietuvos moksleiviams. Filtruokite užduotis pagal kategoriją, miestą ir valandas. Pradėkite rinkti socialines valandas dabar." },
       { property: "og:title", content: "Savanorystės užduotys ir organizacijos" },
       { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
       { property: "og:url", content: "https://socialinesvalandos.dev/tasks" },
