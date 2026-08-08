@@ -4,6 +4,8 @@ type Props = {
   fullName: string;
   role: "student" | "organization" | "school_admin" | "admin";
   hoursNeeded?: number;
+  avatarUrl?: string | null;
+  initial?: string;
 };
 
 const ROLE_COPY: Record<Props["role"], { eyebrow: string; heading: (n: string) => string; body: (n: number) => string; cta: string; href: string }> = {
@@ -58,6 +60,8 @@ export function renderWelcomeEmail(p: Props): string {
     accent: "emerald",
     eyebrow: c.eyebrow,
     medallionEmoji: "✦",
+    userAvatar: p.avatarUrl,
+    userInitial: p.initial,
     heading: c.heading(escape(p.fullName)),
     bodyHtml: c.body(p.hoursNeeded ?? 20),
     extraBlocksHtml: meta,

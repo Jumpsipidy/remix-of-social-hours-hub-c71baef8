@@ -85,7 +85,7 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       if (!isAdmin) throw new Error("Neturi teisės siųsti šio pranešimo");
     }
     const [{ data: student }, { data: org }] = await Promise.all([
-      context.supabase.from("profiles").select("full_name, email, hours_earned, hours_needed").eq("id", r.student_id).single(),
+      context.supabase.from("profiles").select("*").eq("id", r.student_id).single(),
       context.supabase.from("profiles").select("organization_name, full_name").eq("id", r.organization_id).single(),
     ]);
     if (!student?.email) return { skipped: true as const, reason: "no_email" };
@@ -98,6 +98,8 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       orgName, hours, date: r.reservation_date,
       totalHours, neededHours,
       location: r.address || undefined,
+      avatarUrl: student.logo_url || null,
+      initial: (student.full_name || "S").charAt(0).toUpperCase(),
     });
     const text = `Sveikas!\n\n${orgName} patvirtino tavo darbą (${hours} val., ${r.reservation_date}).\nDabar tavo suma: ${totalHours}/${neededHours} val.\n\n${APP_URL}/student`;
     return sendResend({ to: student.email, subject: `✓ ${hours} val. patvirtinta — ${orgName}`, html, text, tag: "hours-confirmed" });
@@ -181,7 +183,7 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { data: me } = await context.supabase
       .from("profiles")
-      .select("full_name, email, role, hours_needed")
+      .select("*")
       .eq("id", context.userId).single();
     if (!me?.email) return { skipped: true as const, reason: "no_email" };
     const role = (me.role as "student" | "organization" | "school_admin" | "admin") || "student";
@@ -189,6 +191,8 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
       fullName: me.full_name || "Savanoriau",
       role,
       hoursNeeded: role === "student" ? Number(me.hours_needed) || 20 : undefined,
+      avatarUrl: me.logo_url || null,
+      initial: (me.full_name || "S").charAt(0).toUpperCase(),
     };
     return sendResend({
       to: me.email,

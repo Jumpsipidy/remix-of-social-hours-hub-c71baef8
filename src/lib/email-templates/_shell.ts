@@ -24,6 +24,8 @@ type ShellOptions = {
   ctaLabel: string;
   ctaHref: string;
   extraBlocksHtml?: string;
+  userAvatar?: string | null;
+  userInitial?: string;
 };
 
 const THEMES: Record<ShellOptions["accent"], { primary: string; secondary: string; light: string; bg: string }> = {
@@ -65,11 +67,12 @@ export function renderShell(opts: ShellOptions): string {
   <style>
     @media only screen and (max-width: 600px) {
       .container { width: 100% !important; border-radius: 0 !important; }
-      .content-card { padding: 40px 20px !important; }
-      .heading { font-size: 32px !important; }
+      .content-card { padding: 40px 24px !important; }
+      .heading { font-size: 32px !important; line-height: 1.1 !important; }
       .logo-text { font-size: 18px !important; }
-      .cta-button { padding: 18px 32px !important; width: 100% !important; box-sizing: border-box !important; }
-      .meta-grid-cell { width: 100% !important; display: block !important; padding-right: 0 !important; margin-bottom: 12px !important; }
+      .cta-button { padding: 18px 32px !important; width: 100% !important; box-sizing: border-box !important; text-align: center !important; }
+      .meta-grid-cell { width: 100% !important; display: block !important; padding-right: 0 !important; padding-left: 0 !important; margin-bottom: 12px !important; }
+      .avatar-wrap { width: 70px !important; height: 70px !important; }
     }
   </style>
 </head>
@@ -119,14 +122,19 @@ export function renderShell(opts: ShellOptions): string {
               <!-- Top Glow Gradient (Simplified for email clients) -->
               <div style="font-size: 0; line-height: 0; height: 1px; width: 100%; background: linear-gradient(to right, transparent, ${theme.primary}33, transparent); margin-bottom: 40px;"></div>
 
-              <!-- Medallion Floating Aesthetic -->
+              <!-- Medallion / User Avatar -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
                 <tr>
                   <td align="center">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                       <tr>
-                        <td align="center" style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; font-size:50px; line-height: 100px; text-align: center;">
-                          ${opts.medallionEmoji}
+                        <td align="center">
+                          <div class="avatar-wrap" style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; overflow:hidden; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px ${theme.primary}44;">
+                            ${opts.userAvatar 
+                              ? `<img src="${opts.userAvatar}" width="100" height="100" style="display:block; width:100%; height:100%; object-fit:cover;" />`
+                              : `<div style="font-size:40px; font-weight:900; line-height:100px; color:#ffffff; text-align:center;">${opts.userInitial || opts.medallionEmoji}</div>`
+                            }
+                          </div>
                         </td>
                       </tr>
                     </table>
