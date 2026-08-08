@@ -152,8 +152,8 @@ async function maybeEscalate(
 
 // Ring buffer + dedupe to avoid flooding the DB
 const seen = new Map<string, number>();
-const DEDUPE_MS = 30_000;
-const TELEMETRY_DEDUPE_MS = 10 * 60_000;
+const DEDUPE_MS = 60_000 * 5;
+const TELEMETRY_DEDUPE_MS = 30 * 60_000;
 
 type ErrPayload = {
   message: string;

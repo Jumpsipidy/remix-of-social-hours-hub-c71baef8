@@ -11,9 +11,9 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { clientFingerprint } from "@/lib/security-crypto.server";
 
-const CRITICAL_THRESHOLD = 2;
-const CRITICAL_WINDOW_MIN = 5;
-const EMAIL_DEDUPE_MIN = 12 * 60;
+const CRITICAL_THRESHOLD = 5;
+const CRITICAL_WINDOW_MIN = 10;
+const EMAIL_DEDUPE_MIN = 24 * 60;
 // Burst detection: if ≥ BURST_MIN_USERS distinct users hit any error in the last
 // BURST_WINDOW_S seconds, we treat the whole site as unstable and lockdown
 // immediately, regardless of severity classification. This catches broken

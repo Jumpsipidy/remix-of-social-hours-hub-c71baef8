@@ -111,6 +111,7 @@ function SpotlightCard({
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
   const calm = useCalmMotion();
+  const isMobile = useLowPowerDevice();
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(50);
   const my = useMotionValue(50);
