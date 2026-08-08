@@ -19,16 +19,24 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
-    v: "V1.9.0",
-    title: "Mobile ultimate + saugumo skaidrumas",
+    v: "V2.0.0",
+    title: "Duomenų sauga ir „Ultimate Mobile“",
     date: "2026 m. rugpjūtis",
-    summary: "Didysis mobilaus greičio atnaujinimas, viešas duomenų saugos puslapis ir ši versijų istorija.",
+    summary: "Svarbus etapas: duomenų atsarginės kopijos, maksimalus mobilaus našumas ir pilnas versijų istorijos atkūrimas.",
     items: [
-      { tag: "Patobulinta", text: "Telefonuose ir silpnuose įrenginiuose išjungtos sunkios WebGL bei nuolatinės animacijos — sklandus slinkimas be trūkčiojimo." },
-      { tag: "Patobulinta", text: "Pagrindinis puslapis pertvarkytas mobiliesiems: lengvesnės sekcijos, mažiau blur efektų." },
-      { tag: "Sauga", text: "Naujas puslapis /saugumas — paaiškinta, kaip saugomi nepilnamečių duomenys (BDAR, RLS, ES serveriai, trynimas)." },
-      { tag: "Nauja", text: "Pagrindiniame puslapyje – saugumo sekcija su 6 apsaugos principais." },
-      { tag: "Pataisyta", text: "QR skenerio kamera dabar prašo leidimo teisingai ir veikia iOS Safari bei Android naršyklėse." },
+      { tag: "Sauga", text: "Super Admin skydelyje pridėtas duomenų eksporto (backup) įrankis – visa platformos informacija vienoje JSON kopijoje." },
+      { tag: "Patobulinta", text: "Versijų istorija išplėsta: dabar matomi visi pakeitimai nuo pat pirmojo kodo eilutės." },
+      { tag: "Patobulinta", text: "Maksimalus mobilaus greitis: WebGL fonas automatiškai išsijungia telefonuose, o animacijos tampa statiškomis sklandžiam slinkimui." },
+      { tag: "Sauga", text: "Atviros duomenų saugos gairės /saugumas puslapyje (BDAR atitiktis, RLS apsauga)." },
+      { tag: "Pataisyta", text: "Ištaisytas QR kameros leidimų prašymas iOS Safari ir Android naršyklėse." },
+    ],
+  },
+  {
+    v: "V1.9.0",
+    title: "Skaidrumas ir bendruomenė",
+    date: "2026 m. rugpjūtis",
+    summary: "Viešas duomenų saugos puslapis ir ši versijų istorija.",
+    items: [
       { tag: "Nauja", text: "Versijų istorijos puslapis /versijos." },
       { tag: "Patobulinta", text: "„Mūsų bendruomenėje“ rodoma tik reali mokykla — Šeduvos gimnazija." },
       { tag: "Patobulinta", text: "Papildytas llms.txt ir struktūriniai duomenys, kad DI asistentai tiksliau atsakytų apie platformą." },

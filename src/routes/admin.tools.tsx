@@ -9,6 +9,7 @@ import {
   adminPlatformHealth,
   adminTableSample,
   adminDeepHealth,
+  adminExportAllData,
 } from "@/lib/admin-delete.functions";
 import { toast } from "sonner";
 import {
@@ -33,6 +34,7 @@ import {
   Search,
   Eye,
   Zap,
+  Download,
 } from "lucide-react";
 import { CertificateButton } from "@/components/certificate-button";
 import { CelebrationSimulator } from "@/components/admin/celebration-simulator";
@@ -61,6 +63,7 @@ function ToolsPage() {
   const wipeTasks = useServerFn(adminWipeAllTasks);
   const health = useServerFn(adminPlatformHealth);
   const deepHealth = useServerFn(adminDeepHealth);
+  const exportAll = useServerFn(adminExportAllData);
   const sample = useServerFn(adminTableSample);
   const [busy, setBusy] = useState<string | null>(null);
   const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
@@ -99,6 +102,25 @@ function ToolsPage() {
       setBusy(null);
     }
   };
+  
+  const handleExport = async () => {
+    setBusy("export");
+    try {
+      const data = await exportAll();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `socialines-valandos-backup-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Atsarginė kopija paruošta ir atsiųsta");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko eksportuoti");
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const actions = [
     {
@@ -108,6 +130,14 @@ function ToolsPage() {
       icon: Activity,
       variant: "default" as const,
       run: () => run("health", () => health()),
+    },
+    {
+      key: "export",
+      label: "Eksportuoti VISUS duomenis",
+      desc: "Sugeneruoja pilną JSON kopiją su visais mokiniais, rezervacijomis, mokyklomis ir žinutėmis.",
+      icon: Download,
+      variant: "default" as const,
+      run: handleExport,
     },
     {
       key: "deep",
