@@ -47,7 +47,10 @@ async function sendResend(payload: SendPayload) {
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    headers: { 
+      "Content-Type": "application/json", 
+      "Authorization": `Bearer ${key.trim()}` 
+    },
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -307,21 +310,29 @@ export const getEmailHealth = createServerFn({ method: "GET" })
 
     if (configured) {
       try {
+        console.log("[email-health] Checking Resend domains...");
         const res = await fetch("https://api.resend.com/domains", {
-          headers: { Authorization: `Bearer ${key}` },
+          headers: { 
+            "Authorization": `Bearer ${key.trim()}`,
+            "Content-Type": "application/json"
+          },
         });
+        
         if (res.ok) {
           const json = (await res.json()) as { data?: { name: string; status: string; region?: string }[] };
           domains = json?.data ?? [];
           domainStatus = "ok";
-          domainDetail = domains.length ? `${domains.length} domenas (-ai) rasta` : "Domenų nėra";
+          domainDetail = domains.length ? `${domains.length} domenas (-ai) rasta` : "Domenų nėra (Resend paskyroje)";
         } else {
+          const errText = await res.text();
+          console.error(`[email-health] Resend API error: ${res.status} ${errText}`);
           domainStatus = "error";
-          domainDetail = `Resend ${res.status}`;
+          domainDetail = `Resend klaida: ${res.status} ${errText.slice(0, 50)}`;
         }
       } catch (e: any) {
+        console.error("[email-health] Network error checking Resend:", e);
         domainStatus = "error";
-        domainDetail = e?.message ?? "Tinklo klaida";
+        domainDetail = `Tinklo klaida: ${e?.message ?? "Nežinoma"}`;
       }
     }
 
