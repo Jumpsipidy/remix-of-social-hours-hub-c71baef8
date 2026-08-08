@@ -1,255 +1,174 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { GlassCard } from "@/components/dashboard-kit";
 import { toast } from "sonner";
-import {
-  Mail,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Send,
-  Monitor,
-  Smartphone,
-  Sparkles,
-  ShieldCheck,
-} from "lucide-react";
-import { getEmailHealth, previewAllEmails, sendTestHoursConfirmedEmail } from "@/lib/email.functions";
+import { getEmailHealth, sendTestHoursConfirmedEmail } from "@/lib/email.functions";
+import { CheckCircle2, AlertCircle, RefreshCw, Send, Mail } from "lucide-react";
 
 export const Route = createFileRoute("/admin/emails")({
-  head: () => ({ meta: [{ title: "El. laiškai — Super admin" }] }),
-  component: AdminEmailsPage,
+  component: EmailStatusPage,
 });
 
-type TemplateKey = "welcome" | "reservationApproved" | "reservationDeclined" | "hoursConfirmed";
-type Health = Awaited<ReturnType<typeof getEmailHealth>>;
-type Previews = Record<TemplateKey, string>;
+function EmailStatusPage() {
+  const [health, setHealth] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testVariant, setTestVariant] = useState<any>("hours");
+  const [sending, setSending] = useState(false);
 
-const VARIANT_BY_KEY: Record<TemplateKey, "welcome" | "approved" | "declined" | "hours"> = {
-  welcome: "welcome",
-  reservationApproved: "approved",
-  reservationDeclined: "declined",
-  hoursConfirmed: "hours",
-};
-
-function AdminEmailsPage() {
-  const loadHealth = useServerFn(getEmailHealth);
-  const loadPreviews = useServerFn(previewAllEmails);
+  const fetchHealth = useServerFn(getEmailHealth);
   const sendTest = useServerFn(sendTestHoursConfirmedEmail);
 
-  const [health, setHealth] = useState<Health | null>(null);
-  const [previews, setPreviews] = useState<Previews | null>(null);
-  const [active, setActive] = useState<TemplateKey>("welcome");
-  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
-  const [to, setTo] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
-  const [lastSend, setLastSend] = useState<{ id: string | null; to: string; at: string } | null>(null);
-
-  async function refresh() {
-    setBusy("load");
+  const load = async () => {
+    setLoading(true);
     try {
-      const [h, p] = await Promise.all([loadHealth(), loadPreviews()]);
-      setHealth(h as Health);
-      setPreviews(p as Previews);
+      const data = await fetchHealth();
+      setHealth(data);
     } catch (e: any) {
-      toast.error(e?.message ?? "Nepavyko užkrauti");
+      toast.error(e.message);
     } finally {
-      setBusy(null);
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function handleSend() {
-    if (!to) return;
-    setBusy("send");
+  const handleSendTest = async () => {
+    if (!testEmail) return toast.error("Įveskite el. paštą");
+    setSending(true);
     try {
-      const r: any = await sendTest({ data: { to, variant: VARIANT_BY_KEY[active] } });
-      if (r?.skipped) {
-        toast.error("RESEND_API_KEY nenustatytas — laiškas nebuvo išsiųstas");
-      } else {
-        setLastSend({ id: r?.id ?? null, to, at: new Date().toLocaleTimeString("lt-LT") });
-        toast.success(`Išsiųsta į ${to}`);
-      }
+      const res = await sendTest({ data: { to: testEmail, variant: testVariant } });
+      if (res.ok) toast.success("Testinis laiškas išsiųstas!");
+      else toast.error("Klaida siunčiant");
     } catch (e: any) {
-      toast.error(e?.message ?? "Siuntimas nepavyko");
+      toast.error(e.message);
     } finally {
-      setBusy(null);
+      setSending(false);
     }
-  }
-
-  const meta = health?.templates ?? [];
-  const activeMeta = meta.find((t) => t.key === active);
+  };
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-6 p-4 sm:p-8">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Mail className="h-6 w-6 text-primary" /> El. laiškai
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Gyva visų sistemos laiškų peržiūra + testinis siuntimas realiu laiku.
+          <h1 className="text-3xl font-black">El. Pašto Būsena</h1>
+          <p className="text-muted-foreground">Diagnostika ir Resend integracijos stebėjimas.</p>
+        </div>
+        <Button onClick={load} disabled={loading} variant="outline" className="rounded-xl">
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Atnaujinti
+        </Button>
+      </div>
+
+      {!health && !loading && (
+        <GlassCard className="flex flex-col items-center p-12 text-center">
+          <Mail className="mb-4 h-12 w-12 text-primary/40" />
+          <h3 className="text-xl font-bold">Nėra duomenų</h3>
+          <p className="mb-6 text-muted-foreground text-sm max-w-sm">
+            Paspauskite mygtuką viršuje, kad patikrintumėte Resend API ir domeno būseną.
           </p>
-        </div>
-        <button
-          onClick={refresh}
-          disabled={busy === "load"}
-          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-accent disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${busy === "load" ? "animate-spin" : ""}`} /> Atnaujinti
-        </button>
-      </motion.div>
+          <Button onClick={load}>Tikrinti būseną</Button>
+        </GlassCard>
+      )}
 
-      {/* Health strip */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <HealthCard
-          ok={!!health?.configured}
-          title="Siuntimo tiekėjas"
-          value={health?.configured ? "Resend prijungtas" : "RESEND_API_KEY trūksta"}
-        />
-        <HealthCard
-          ok={health?.domainStatus === "ok"}
-          title="Domeno būsena"
-          value={health?.domainDetail ?? "—"}
-        />
-        <HealthCard ok title="Siuntėjas" value={health?.from ?? "—"} mono />
-        <HealthCard ok title="Atsakymo adresas" value={health?.replyTo ?? "—"} mono />
-      </div>
-
-      {health?.domains?.length ? (
-        <div className="flex flex-wrap gap-2">
-          {health.domains.map((d) => (
-            <span
-              key={d.name}
-              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs"
-            >
-              <ShieldCheck className={`h-3.5 w-3.5 ${d.status === "verified" ? "text-emerald-500" : "text-amber-500"}`} />
-              <code>{d.name}</code>
-              <span className="text-muted-foreground">{d.status}</span>
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-        {/* Template list */}
-        <div className="space-y-2">
-          <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Šablonai ({meta.length})
-          </p>
-          {meta.map((t) => {
-            const isActive = t.key === active;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setActive(t.key as TemplateKey)}
-                className={`w-full rounded-xl border px-3 py-3 text-left transition ${
-                  isActive
-                    ? "border-primary/50 bg-primary/10 shadow-glow"
-                    : "border-border bg-card hover:bg-accent"
-                }`}
-              >
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <Sparkles className={`h-3.5 w-3.5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-                  {t.label}
+      {health && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="space-y-6">
+            <GlassCard className="p-6">
+              <h3 className="mb-4 text-lg font-bold">Konfigūracija</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-2 border-b border-white/5">
+                  <span className="text-sm text-muted-foreground">API Raktas (RESEND_API_KEY)</span>
+                  {health.configured ? (
+                    <span className="flex items-center text-emerald-500 text-sm font-bold">
+                      <CheckCircle2 className="mr-1.5 h-4 w-4" /> Sukonfigūruota
+                    </span>
+                  ) : (
+                    <span className="flex items-center text-rose-500 text-sm font-bold">
+                      <AlertCircle className="mr-1.5 h-4 w-4" /> Trūksta
+                    </span>
+                  )}
                 </div>
-                <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.trigger}</p>
-              </button>
-            );
-          })}
-
-          {/* Test send */}
-          <div className="mt-4 space-y-2 rounded-xl border border-border bg-card p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Testinis siuntimas
-            </p>
-            <input
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              placeholder="tavo@pastas.lt"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs"
-            />
-            <button
-              onClick={handleSend}
-              disabled={busy === "send" || !to}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-3 py-2 text-xs font-semibold text-primary-foreground shadow-glow disabled:opacity-50"
-            >
-              <Send className="h-3.5 w-3.5" />
-              {busy === "send" ? "Siunčiama…" : `Siųsti: ${activeMeta?.label ?? ""}`}
-            </button>
-            {lastSend && (
-              <div className="rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-2 text-[11px]">
-                <div className="flex items-center gap-1 font-semibold text-emerald-500">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Pristatyta į Resend {lastSend.at}
+                <div className="flex items-center justify-between py-2 border-b border-white/5">
+                  <span className="text-sm text-muted-foreground">Siuntėjas</span>
+                  <span className="text-sm font-medium">{health.from}</span>
                 </div>
-                <div className="mt-1 truncate text-muted-foreground">{lastSend.to}</div>
-                {lastSend.id && <code className="block truncate text-[10px] text-muted-foreground">ID: {lastSend.id}</code>}
+                <div className="flex items-center justify-between py-2 border-b border-white/5">
+                  <span className="text-sm text-muted-foreground">Domeno būsena</span>
+                  <span className={`text-sm font-bold ${health.domainStatus === 'ok' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {health.domainDetail}
+                  </span>
+                </div>
               </div>
-            )}
+            </GlassCard>
+
+            <GlassCard className="p-6">
+              <h3 className="mb-4 text-lg font-bold">Siųsti testinį laišką</h3>
+              <div className="space-y-4">
+                <Input 
+                  placeholder="Gavėjo el. paštas" 
+                  value={testEmail} 
+                  onChange={e => setTestEmail(e.target.value)}
+                  className="rounded-xl"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  {['hours', 'approved', 'declined', 'welcome'].map(v => (
+                    <Button 
+                      key={v}
+                      variant={testVariant === v ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setTestVariant(v)}
+                      className="rounded-lg text-[10px] uppercase tracking-wider"
+                    >
+                      {v}
+                    </Button>
+                  ))}
+                </div>
+                <Button onClick={handleSendTest} disabled={sending} className="w-full rounded-xl">
+                  {sending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  Siųsti dabar
+                </Button>
+              </div>
+            </GlassCard>
+          </div>
+
+          <div className="space-y-6">
+            <GlassCard className="p-6">
+              <h3 className="mb-4 text-lg font-bold">Verifikuoti domenai (Resend)</h3>
+              <div className="space-y-2">
+                {health.domains.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">Domenų nerasta.</p>
+                ) : (
+                  health.domains.map((d: any) => (
+                    <div key={d.name} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div>
+                        <p className="text-sm font-bold">{d.name}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase">{d.region || 'us-east-1'}</p>
+                      </div>
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${d.status === 'verified' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>
+                        {d.status.toUpperCase()}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-6">
+              <h3 className="mb-4 text-lg font-bold">Aktyvūs šablonai</h3>
+              <div className="space-y-3">
+                {health.templates.map((t: any) => (
+                  <div key={t.key} className="space-y-1">
+                    <p className="text-sm font-bold">{t.label}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t.trigger}</p>
+                  </div>
+                ))}
+              </div>
+            </GlassCard>
           </div>
         </div>
-
-        {/* Preview */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">{activeMeta?.label ?? "Peržiūra"}</div>
-              <div className="truncate text-[11px] text-muted-foreground">
-                Nuo: {health?.from ?? "—"}
-              </div>
-            </div>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setDevice("desktop")}
-                className={`grid h-8 w-8 place-items-center rounded-lg ${device === "desktop" ? "bg-primary/15 text-primary" : "hover:bg-accent"}`}
-                title="Kompiuteris"
-              >
-                <Monitor className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setDevice("mobile")}
-                className={`grid h-8 w-8 place-items-center rounded-lg ${device === "mobile" ? "bg-primary/15 text-primary" : "hover:bg-accent"}`}
-                title="Telefonas"
-              >
-                <Smartphone className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-center bg-muted/30 p-4">
-            {previews ? (
-              <iframe
-                key={active + device}
-                title="El. laiško peržiūra"
-                srcDoc={previews[active]}
-                sandbox=""
-                className="h-[640px] w-full rounded-lg border border-border bg-white transition-all"
-                style={{ maxWidth: device === "mobile" ? 380 : "100%" }}
-              />
-            ) : (
-              <div className="grid h-[640px] w-full place-items-center text-sm text-muted-foreground">
-                Kraunama peržiūra…
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HealthCard({ ok, title, value, mono }: { ok: boolean; title: string; value: string; mono?: boolean }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-3">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {ok ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <XCircle className="h-3.5 w-3.5 text-destructive" />}
-        {title}
-      </div>
-      <div className={`mt-1 truncate text-sm font-semibold ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
+      )}
     </div>
   );
 }
