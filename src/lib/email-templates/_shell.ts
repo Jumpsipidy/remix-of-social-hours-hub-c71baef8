@@ -85,7 +85,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="360" style="display:block; border:0; width: 360px; height: auto; max-width: 90%; margin: 0 auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));" />
+                    <img src="https://socialinesvalandos.dev/favicon.png" alt="Socialinės Valandos" width="120" style="display:block; border:0; width: 120px; height: auto; max-width: 90%; margin: 0 auto;" />
                   </td>
                 </tr>
               </table>
@@ -147,7 +147,7 @@ export function renderShell(opts: ShellOptions): string {
                 <tr>
                   <td align="center">
                     <!-- Stronger 3D interactive button -->
-                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); color:#fff; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 15px 35px ${theme.primary}66, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -4px 10px rgba(0,0,0,0.3); text-transform:uppercase; letter-spacing:1px; border: 1px solid rgba(255,255,255,0.2);">
+                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 15px 35px ${theme.primary}66, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -4px 10px rgba(0,0,0,0.3); text-transform:uppercase; letter-spacing:1px; border: 1px solid rgba(255,255,255,0.2);">
                       ${escape(opts.ctaLabel)}
                     </a>
                   </td>

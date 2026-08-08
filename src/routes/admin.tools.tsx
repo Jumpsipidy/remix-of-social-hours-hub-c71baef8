@@ -349,7 +349,7 @@ function AdminToolsPage() {
         {previewHtml && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
             <motion.div 
-              className="relative h-[85vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#f8fafc] shadow-2xl"
+              className="relative h-[85vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#f8fafc] shadow-2xl dark:bg-[#f8fafc]"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
