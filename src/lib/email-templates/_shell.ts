@@ -64,10 +64,12 @@ export function renderShell(opts: ShellOptions): string {
   <title>${escape(opts.title)}</title>
   <style>
     @media only screen and (max-width: 600px) {
-      .container { width: 100% !important; padding: 20px 10px !important; }
-      .content-card { padding: 32px 20px !important; }
-      .heading { font-size: 28px !important; }
-      .hide-mobile { display: none !important; }
+      .container { width: 100% !important; border-radius: 0 !important; }
+      .content-card { padding: 40px 20px !important; }
+      .heading { font-size: 32px !important; }
+      .logo-text { font-size: 18px !important; }
+      .cta-button { padding: 18px 32px !important; width: 100% !important; box-sizing: border-box !important; }
+      .meta-grid-cell { width: 100% !important; display: block !important; padding-right: 0 !important; margin-bottom: 12px !important; }
     }
   </style>
 </head>
@@ -95,8 +97,8 @@ export function renderShell(opts: ShellOptions): string {
                         </td>
                         <td align="left" valign="middle">
                           <div style="font-family: 'Inter', sans-serif; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
-                            <span style="display: block; font-size: 22px; line-height: 1.1; margin: 0; padding: 0;">SOCIALINĖS</span>
-                            <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; margin: 0; padding: 0;">VALANDOS</span>
+                            <span class="logo-text" style="display: block; font-size: 22px; line-height: 1.1; margin: 0; padding: 0;">SOCIALINĖS</span>
+                            <span class="logo-text" style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; margin: 0; padding: 0;">VALANDOS</span>
                           </div>
                         </td>
                       </tr>
@@ -171,8 +173,8 @@ export function renderShell(opts: ShellOptions): string {
                   <td align="center">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                       <tr>
-                        <td align="center" style="background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:24px; padding: 22px 64px;">
-                          <a href="${escape(opts.ctaHref)}" style="display:block; color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
+                        <td align="center" style="background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:24px;">
+                          <a href="${escape(opts.ctaHref)}" class="cta-button" style="display:inline-block; padding: 22px 64px; color:#ffffff !important; font-weight:900; font-size:18px; text-decoration:none; text-transform:uppercase; letter-spacing:1px;">
                             ${escape(opts.ctaLabel)}
                           </a>
                         </td>
@@ -233,7 +235,7 @@ export function metaGrid(items: Array<{ label: string; value: string }>): string
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
           ${items.map((it, i) => `
-            <td width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
+            <td class="meta-grid-cell" width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
               <div style="background-color:#0a0819; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:16px; text-align:center;">
                 <div style="font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
                 <div style="font-size:16px; font-weight:700; color:#ffffff;">${escape(it.value)}</div>
