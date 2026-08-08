@@ -81,11 +81,11 @@ export function renderShell(opts: ShellOptions): string {
           
           <!-- Header (Official Logo) -->
           <tr>
-            <td style="padding: 40px 0; text-align:center;">
+            <td style="padding: 40px 0; text-align:center; background-color: #ffffff;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
-                  <td align="center">
-                    <img src="https://socialinesvalandos.dev/favicon.png" alt="Socialinės Valandos" width="120" style="display:block; border:0; width: 120px; height: auto; max-width: 90%; margin: 0 auto;" />
+                  <td align="center" style="background-color: #ffffff;">
+                    <img src="https://socialinesvalandos.dev/favicon.png" alt="Socialinės Valandos" width="140" style="display:block; border:0; width: 140px; height: auto; max-width: 90%; margin: 0 auto; background-color: #ffffff;" />
                   </td>
                 </tr>
               </table>
