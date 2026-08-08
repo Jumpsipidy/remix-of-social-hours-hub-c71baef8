@@ -122,7 +122,6 @@ function SpotlightCard({
     ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
   );
 
-  const isMobile = useLowPowerDevice();
 
   return (
     <motion.div
