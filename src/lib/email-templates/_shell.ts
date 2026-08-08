@@ -79,20 +79,21 @@ export function renderShell(opts: ShellOptions): string {
       <td align="center" style="padding:40px 0;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px;">
           
-          <!-- Header -->
+          <!-- Header (Official Logo) -->
           <tr>
             <td style="padding-bottom:40px; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
                     <div style="display:inline-block; padding:12px; background-color:#1e293b; border-radius:16px; border: 1px solid #334155;">
-                      <img src="${APP_URL}/logo.png" alt="Socialinės Valandos" width="180" style="display:block; border:0;" />
+                      <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="220" style="display:block; border:0; width: 220px; height: auto;" />
                     </div>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
 
 
           <!-- Main Card (SaaS Glassmorphism Remake) -->
@@ -153,14 +154,15 @@ export function renderShell(opts: ShellOptions): string {
                 </tr>
               </table>
 
-              <!-- Footer Note inside Card -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px;">
+              <!-- Official Footnote -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid #ffffff11; padding-top: 20px;">
                 <tr>
-                  <td align="center" style="font-size:12px; color:#475569; font-style:italic;">
-                    * Šis veiksmas reikalauja jūsų patvirtinimo platformoje.
+                  <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
+                    <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties, kreipkitės nurodytais kontaktais.
                   </td>
                 </tr>
               </table>
+
 
             </td>
           </tr>
