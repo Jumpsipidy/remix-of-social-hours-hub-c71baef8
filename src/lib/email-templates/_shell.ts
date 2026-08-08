@@ -182,7 +182,7 @@ export function renderShell(opts: ShellOptions): string {
                 </tr>
               </table>
               <p style="font-size:14px; color:#64748b; font-weight:500; margin-bottom:12px;">
-                socialinesvalandos.dev &bull; ${new Date().getFullYear()}
+                socialinesvalandos.dev &bull; Oficialus Šeduvos gimnazijos partneris &bull; ${new Date().getFullYear()}
               </p>
               <p style="font-size:12px; color:#475569;">
                 Jei gavote šį laišką per klaidą, tiesiog jį ignoruokite.<br/>
