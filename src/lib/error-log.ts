@@ -42,7 +42,17 @@ const IGNORE_SUBSTRINGS = [
   "Patikrinkite, ar visi komponentai, naudojami App.js",
   "Concurrent Mode",
   "error boundaries aplink komponentus",
+  "concurrent rendering but React was able to recover",
+  "renderRootSync",
+  "throwAndUnwindWorkLoop",
+  "performWorkOnRoot",
+  "MessagePort.performWorkUntilDeadline",
+  "link failed",
+  "styles.css",
+  "_serverFn",
+  "Failed to fetch",
   // WebGL context creation/loss — decorative background only, we already fall back
+
   "THREE.WebGLRenderer",
   "WebGL context",
   "Web page caused context loss",

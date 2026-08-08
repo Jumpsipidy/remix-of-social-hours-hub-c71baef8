@@ -86,9 +86,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "theme-color", content: "#15102a" },
       { name: "application-name", content: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
-      { name: "apple-mobile-web-app-title", content: "Soc. Valandos (Šeduva)" },
+      { name: "apple-mobile-web-app-title", content: "Soc. Valandos" },
       { name: "author", content: "Socialinės Valandos (VšĮ Savanorystės Inovacijos)" },
       { name: "publisher", content: "Socialinės Valandos (Šeduvos gimnazija)" },
+
       { name: "language", content: "Lithuanian" },
       { httpEquiv: "content-language", content: "lt" },
       {
@@ -115,8 +116,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preload", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap", as: "style" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" },
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png?v=5" },
-      { rel: "apple-touch-icon", href: "/favicon.png?v=5" },
+      { rel: "icon", type: "image/png", href: "/favicon.png?v=6" },
+      { rel: "apple-touch-icon", href: "/favicon.png?v=6" },
+
       { rel: "alternate", hrefLang: "lt", href: "https://socialinesvalandos.dev/" },
       { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.dev/" },
     ],
@@ -182,7 +184,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           knowsLanguage: "lt",
           slogan: "Moksleivių savanorystės valandų platforma",
           description:
-            "Lietuvos moksleiviams skirta oficiali socialinių (savanorystės) valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas. Naudojama Šeduvos gimnazijoje.",
+            "Lietuvos moksleiviams skirta oficiali socialinių (savanorystės) valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas. Naudojama Šeduvos gimnazijoje ir atvira visai Lietuvai.",
+
           contactPoint: {
             "@type": "ContactPoint",
             contactType: "customer support",
