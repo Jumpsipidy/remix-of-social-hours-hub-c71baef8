@@ -71,17 +71,17 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#0a0819;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
+<body style="margin:0;padding:0;background-color:#02010a;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#0a0819;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#02010a;">
     <tr>
       <td align="center" style="padding:40px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #111122; border-radius: 48px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #0d0c1d; border-radius: 40px; box-shadow: 0 40px 100px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.08); overflow: hidden;">
           
           <!-- Header (Official Brand) -->
           <tr>
-            <td style="padding: 40px 0; text-align:center; background-color: #111122;">
+            <td style="padding: 40px 0; text-align:center; background-color: #0d0c1d;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
@@ -100,7 +100,7 @@ export function renderShell(opts: ShellOptions): string {
 
           <!-- Main Card (Modern Dark Theme) -->
           <tr>
-            <td class="content-card" style="background-color:#111122; padding:60px 48px; position:relative; overflow:hidden;">
+            <td class="content-card" style="background-color:#0d0c1d; padding:60px 48px; position:relative; overflow:hidden;">
               
               <!-- Top Glow Gradient -->
               <div style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, ${theme.primary}33 0%, transparent 70%);"></div>
@@ -139,7 +139,7 @@ export function renderShell(opts: ShellOptions): string {
               <!-- Body -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:48px;">
                 <tr>
-                  <td align="center" style="font-size:18px; line-height:1.6; color:#94a3b8; font-weight:400;">
+                  <td align="center" style="font-size:18px; line-height:1.6; color:#cbd5e1; font-weight:400;">
                     ${opts.bodyHtml}
                   </td>
                 </tr>
@@ -160,7 +160,7 @@ export function renderShell(opts: ShellOptions): string {
               <!-- Official Footnote -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
                 <tr>
-                  <td align="left" style="font-size:11px; color:#475569; line-height: 1.4;">
+                  <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
                     <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b>atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
                     Šis pranešimas yra teisiškai saistantis ir apsaugotas autorinių teisių.
                   </td>
@@ -209,7 +209,7 @@ export function metaGrid(items: Array<{ label: string; value: string }>): string
         <tr>
           ${items.map((it, i) => `
             <td width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
-              <div style="background-color:#1e1b4b; border:1px solid rgba(255,255,255,0.05); border-radius:20px; padding:16px; text-align:center;">
+              <div style="background-color:#0a0819; border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:16px; text-align:center;">
                 <div style="font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
                 <div style="font-size:16px; font-weight:700; color:#ffffff;">${escape(it.value)}</div>
               </div>
