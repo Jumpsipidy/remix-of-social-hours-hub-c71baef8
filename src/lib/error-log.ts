@@ -114,6 +114,12 @@ const IGNORE_SUBSTRINGS = [
   "Video error on clip",
   "video failed",
   "socialinesvalandos.dev/__l5e/assets-v1",
+  "net::ERR_INTERNET_DISCONNECTED",
+  "net::ERR_NETWORK_CHANGED",
+  "net::ERR_NAME_NOT_RESOLVED",
+  "TypeError: Failed to fetch",
+  "Failed to load resource",
+  "status 500",
 
 
 ];
