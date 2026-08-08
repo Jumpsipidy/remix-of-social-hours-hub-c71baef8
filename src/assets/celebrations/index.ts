@@ -38,7 +38,7 @@ export const CLIP_URLS: Record<string, string> = {
   "streak-14": c12.url,
   "streak-3": c13.url,
   "streak-30": c14.url,
-  "streak-7": c15.url,
+  "streak-7": c15.url + "?v=2",
   "streak_2": c16.url,
   "streak_4": c17.url,
   "team_player": c18.url,

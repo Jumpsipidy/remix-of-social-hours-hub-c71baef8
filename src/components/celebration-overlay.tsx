@@ -340,16 +340,23 @@ export function CelebrationStage() {
             {hasClip && clipUrl ? (
               <div className="relative w-[min(94vw,min(64vh,520px))] overflow-hidden rounded-[1.5rem] border border-white/10 shadow-2xl sm:rounded-[2rem]">
                 <video
+                  key={clipUrl}
                   src={clipUrl}
                   autoPlay
                   muted
                   playsInline
-                  preload="metadata"
+                  preload="auto"
                   disablePictureInPicture
                   onEnded={skip}
-                  onError={() => setFailed(clipUrl)}
+                  onError={(e) => {
+                    console.error("Video error on clip:", clipUrl, e);
+                    setFailed(clipUrl);
+                  }}
                   className="block aspect-square h-auto w-full object-cover"
-                  style={{ contain: "paint", willChange: "transform" }}
+                  style={{ contain: "paint", willChange: "transform", opacity: 0 }}
+                  onCanPlayThrough={(e) => {
+                    (e.target as HTMLVideoElement).style.opacity = "1";
+                  }}
                 />
 
                 {/* real-data caption burned over the clip */}
