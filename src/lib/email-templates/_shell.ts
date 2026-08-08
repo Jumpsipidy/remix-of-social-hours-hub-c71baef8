@@ -209,9 +209,9 @@ export function metaGrid(items: Array<{ label: string; value: string }>): string
         <tr>
           ${items.map((it, i) => `
             <td width="${Math.floor(100 / items.length)}%" style="padding-right:${i < items.length - 1 ? "12px" : "0"};">
-              <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:16px; text-align:center;">
-                <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
-                <div style="font-size:16px; font-weight:700; color:#0f172a;">${escape(it.value)}</div>
+              <div style="background-color:#1e1b4b; border:1px solid rgba(255,255,255,0.05); border-radius:20px; padding:16px; text-align:center;">
+                <div style="font-size:10px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">${escape(it.label)}</div>
+                <div style="font-size:16px; font-weight:700; color:#ffffff;">${escape(it.value)}</div>
               </div>
             </td>
           `).join("")}
