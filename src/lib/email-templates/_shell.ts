@@ -143,12 +143,15 @@ export function renderShell(opts: ShellOptions): string {
                         </td>
                       </tr>
                     </table>
+                  </td>
+                </tr>
+              </table>
 
               <!-- Heading -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <h1 class="heading" style="margin:0; font-size:42px; font-weight:900; color:#ffffff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
+                    <h1 class="heading" style="margin:0; font-family: 'Inter', sans-serif; font-size:42px; font-weight:900; color:#ffffff; line-height:1.1; letter-spacing:-1.5px;">${opts.heading}</h1>
                   </td>
                 </tr>
               </table>
