@@ -35,6 +35,7 @@ import {
   Eye,
   Zap,
   Download,
+  Mail,
 } from "lucide-react";
 import { CertificateButton } from "@/components/certificate-button";
 import { CelebrationSimulator } from "@/components/admin/celebration-simulator";
@@ -275,11 +276,22 @@ function ToolsPage() {
               />
               <button 
                 onClick={async () => {
-                  const email = (document.getElementById('invite-org-email') as HTMLInputElement).value;
+                  const input = document.getElementById('invite-org-email') as HTMLInputElement;
+                  const email = input.value;
                   if (!email) return toast.error("Įveskite el. paštą");
-                  // Placeholder for the actual server fn
-                  toast.success(`Kvietimas išsiųstas į ${email}`);
+                  setBusy("invite");
+                  try {
+                    const { sendOrgInviteEmail } = await import("@/lib/email.functions");
+                    await (sendOrgInviteEmail as any)({ data: { to: email } });
+                    toast.success(`Kvietimas išsiųstas į ${email}`);
+                    input.value = "";
+                  } catch (e: any) {
+                    toast.error(e?.message ?? "Nepavyko išsiųsti");
+                  } finally {
+                    setBusy(null);
+                  }
                 }}
+                disabled={busy === "invite"}
                 className="rounded-xl bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
               >
                 Siųsti kvietimą
