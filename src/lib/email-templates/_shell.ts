@@ -2,7 +2,7 @@
 // Inline-styles only. Layered gradients + soft shadow rings = depth on Apple Mail / Gmail Web.
 
 export const APP_URL = "https://socialinesvalandos.dev";
-export const SUPPORT_EMAIL = "pagalba@socialinesvalandos.dev";
+export const SUPPORT_EMAIL = "pagalba@socialinesvalandos.lt";
 
 export function escape(s: string): string {
   return String(s)

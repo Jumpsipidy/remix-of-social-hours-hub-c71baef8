@@ -68,12 +68,15 @@ function ToolsPage() {
   const sample = useServerFn(adminTableSample);
   const [busy, setBusy] = useState<string | null>(null);
   const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
+  const [showInvitePreview, setShowInvitePreview] = useState(false);
+  const [inviteHtml, setInviteHtml] = useState("");
   const [deep, setDeep] = useState<null | {
     tables: { table: string; count: number; ms: number; ok: boolean; error: string | null }[];
     recent_critical_24h: number;
     generated_at: string;
   }>(null);
   const [inspect, setInspect] = useState<null | { table: string; rows: any[]; total: number; loading: boolean }>(null);
+
 
   const openInspector = async (table: string) => {
     setInspect({ table, rows: [], total: 0, loading: true });
@@ -263,10 +266,32 @@ function ToolsPage() {
             <Mail className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <h3 className="font-display text-xl font-bold">Kviesti organizacijas</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Rask organizacijų el. paštus ir siųsk jiems kvietimą prisijungti prie Socialinės Valandos platformos.
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-xl font-bold">Kviesti organizacijas</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Rask organizacijų el. paštus ir siųsk jiems kvietimą prisijungti prie Socialinės Valandos platformos.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  setBusy("preview-invite");
+                  try {
+                    const { previewAllEmails } = await import("@/lib/email.functions");
+                    const all = await (previewAllEmails as any)({});
+                    setInviteHtml(all.orgInvite);
+                    setShowInvitePreview(true);
+                  } catch (e: any) {
+                    toast.error("Nepavyko įkelti peržiūros");
+                  } finally {
+                    setBusy(null);
+                  }
+                }}
+                className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20"
+              >
+                <Eye className="h-3.5 w-3.5" /> Peržiūrėti HTML
+              </button>
+            </div>
             <div className="mt-4 flex max-w-md gap-2">
               <input 
                 type="email" 
@@ -300,6 +325,44 @@ function ToolsPage() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showInvitePreview && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-border px-6 py-4">
+                <div>
+                  <h4 className="font-bold">El. pašto peržiūra</h4>
+                  <p className="text-xs text-muted-foreground">Organizacijos kvietimo šablonas</p>
+                </div>
+                <button 
+                  onClick={() => setShowInvitePreview(false)}
+                  className="rounded-full p-2 hover:bg-white/10"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="h-[calc(90vh-72px)] overflow-auto bg-[#0a0f1e] p-4">
+                <div 
+                  className="mx-auto max-w-[600px] shadow-2xl"
+                  dangerouslySetInnerHTML={{ __html: inviteHtml }} 
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* PDF Certificate Testing */}
       <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">

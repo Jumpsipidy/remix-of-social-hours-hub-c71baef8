@@ -8,7 +8,7 @@ import { renderWelcomeEmail, welcomeText } from "./email-templates/welcome";
 import { renderOrgInviteEmail } from "./email-templates/org-invite";
 import { APP_URL, SUPPORT_EMAIL } from "./email-templates/_shell";
 
-const FROM = `Socialinės Valandos <${SUPPORT_EMAIL}>`;
+const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
 const REPLY_TO = SUPPORT_EMAIL;
 
 type SendPayload = {
@@ -254,6 +254,7 @@ export const previewAllEmails = createServerFn({ method: "POST" })
         reason: "Šiuo metu neturime laisvų vietų.",
       }),
       welcome: renderWelcomeEmail({ fullName: "Jonas Jonaitis", role: "student", hoursNeeded: 20 }),
+      orgInvite: renderOrgInviteEmail({ orgName: "Testinė Organizacija" }),
     };
   });
 
