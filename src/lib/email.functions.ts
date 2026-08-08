@@ -98,7 +98,7 @@ export const sendHoursConfirmedEmail = createServerFn({ method: "POST" })
       orgName, hours, date: r.reservation_date,
       totalHours, neededHours,
       location: r.address || undefined,
-      avatarUrl: student.avatar_url || null,
+      avatarUrl: student.logo_url || null,
       initial: (student.full_name || "S").charAt(0).toUpperCase(),
     });
     const text = `Sveikas!\n\n${orgName} patvirtino tavo darbą (${hours} val., ${r.reservation_date}).\nDabar tavo suma: ${totalHours}/${neededHours} val.\n\n${APP_URL}/student`;
@@ -191,7 +191,7 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
       fullName: me.full_name || "Savanoriau",
       role,
       hoursNeeded: role === "student" ? Number(me.hours_needed) || 20 : undefined,
-      avatarUrl: me.avatar_url || null,
+      avatarUrl: me.logo_url || null,
       initial: (me.full_name || "S").charAt(0).toUpperCase(),
     };
     return sendResend({
