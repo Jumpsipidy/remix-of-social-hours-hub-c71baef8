@@ -5,6 +5,7 @@ import { renderHoursConfirmedEmail } from "./email-templates/hours-confirmed";
 import { renderReservationApprovedEmail, reservationApprovedText } from "./email-templates/reservation-approved";
 import { renderReservationDeclinedEmail, reservationDeclinedText } from "./email-templates/reservation-declined";
 import { renderWelcomeEmail, welcomeText } from "./email-templates/welcome";
+import { renderOrgInviteEmail } from "./email-templates/org-invite";
 import { APP_URL, SUPPORT_EMAIL } from "./email-templates/_shell";
 
 const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
@@ -188,6 +189,28 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
       html: renderWelcomeEmail(props),
       text: welcomeText(props),
       tag: "welcome",
+    });
+  });
+
+// -------------------- 5. Organization Invite (Admin triggered) --------------------
+
+export const sendOrgInviteEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((v) => z.object({ to: z.string().email(), orgName: z.string().optional() }).parse(v))
+  .handler(async ({ data, context }) => {
+    // Check if admin
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
+
+    const html = renderOrgInviteEmail({ orgName: data.orgName || "Organizacija" });
+    const text = `Sveiki!\n\nKviečiame prisijungti prie Socialinės Valandos platformos — vieningos sistemos moksleivių savanorystei Lietuvoje.\n\nPrisijunkite: ${APP_URL}/register`;
+    
+    return sendResend({ 
+      to: data.to, 
+      subject: `Kviečiame prisijungti prie Socialinės Valandos 🤝`, 
+      html, 
+      text, 
+      tag: "org-invite" 
     });
   });
 

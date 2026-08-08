@@ -24,6 +24,8 @@ export function Navbar() {
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isActive = (to: string, exact: boolean) => 
+    exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -128,33 +130,43 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground sm:inline-flex"
+                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 active:scale-95 transition-all sm:inline-flex"
               >
                 Prisijungti
               </Link>
               <Link
                 to="/register"
-                className="hidden rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 sm:inline-flex"
+                className="hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow hover:brightness-110 active:scale-95 transition-all sm:inline-flex"
               >
                 Registruotis
               </Link>
-            </>
+            </div>
           )}
-          <button
-            className="grid h-11 w-11 place-items-center rounded-full border border-border/80 bg-background/60 backdrop-blur active:scale-95 transition md:hidden"
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            className="grid h-11 w-11 place-items-center rounded-2xl border border-border/80 bg-background/60 backdrop-blur-md active:scale-95 transition-all md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Meniu"
             aria-expanded={open}
           >
-            <motion.span key={open ? "x" : "m"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} transition={{ duration: 0.18 }}>
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </motion.span>
-          </button>
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={open ? "x" : "m"} 
+                initial={{ rotate: -90, opacity: 0 }} 
+                animate={{ rotate: 0, opacity: 1 }} 
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </motion.div>
+            </AnimatePresence>
+          </motion.button>
         </div>
       </div>
+
       <AnimatePresence>
         {open && (
           <>

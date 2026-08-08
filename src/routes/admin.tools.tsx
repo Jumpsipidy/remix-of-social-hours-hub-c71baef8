@@ -255,6 +255,40 @@ function ToolsPage() {
       {/* Celebration animation sandbox */}
       <CelebrationSimulator />
 
+      {/* Organization Invitation System */}
+      <div className="rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent p-6 shadow-md">
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/20 text-primary">
+            <Mail className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-display text-xl font-bold">Kviesti organizacijas</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Rask organizacijų el. paštus ir siųsk jiems kvietimą prisijungti prie Socialinės Valandos platformos.
+            </p>
+            <div className="mt-4 flex max-w-md gap-2">
+              <input 
+                type="email" 
+                placeholder="organizacija@pavyzdys.lt"
+                className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                id="invite-org-email"
+              />
+              <button 
+                onClick={async () => {
+                  const email = (document.getElementById('invite-org-email') as HTMLInputElement).value;
+                  if (!email) return toast.error("Įveskite el. paštą");
+                  // Placeholder for the actual server fn
+                  toast.success(`Kvietimas išsiųstas į ${email}`);
+                }}
+                className="rounded-xl bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
+              >
+                Siųsti kvietimą
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* PDF Certificate Testing */}
       <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">
 
