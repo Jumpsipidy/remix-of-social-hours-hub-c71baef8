@@ -193,7 +193,7 @@ async function sendDiscordAlert(opts: {
   // "Kodėl klaida atėjo iki čia" — plain-Lithuanian reason
   const whyLine = (() => {
     if (isBurst) return `Burst: ${opts.burstUsers ?? "?"} vartotojai gavo klaidų per ${BURST_WINDOW_S}s → auto-lockdown.`;
-    if (isLock) return `Pasiekta ${opts.criticalCount ?? "?"} kritinių per ${CRITICAL_WINDOW_MIN}min → auto-lockdown.`;
+    if (isLock) return `Pasiekta ${opts.criticalCount ?? "?"} kritinių per ${CRITICAL_WINDOW_MIN}min → auto-lockdown (${CRITICAL_THRESHOLD}).`;
     if (opts.level === "critical") return `Klaida atitinka kritinį šabloną (chunk/undefined/is not a function/OOM).`;
     return `Įspėjimas: nekritinė runtime klaida iš \`${opts.source ?? "?"}\`.`;
   })();
