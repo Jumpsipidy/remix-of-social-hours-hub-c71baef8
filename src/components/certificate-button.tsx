@@ -101,25 +101,18 @@ async function buildPdf(cert: Awaited<ReturnType<typeof generateCertificate>>, v
   const colDate = M;
   const colHours = M + 90;
   const colOrg = M + 150;
-  let y = tableTop - 22;
-  page.drawText(ascii("Data"),  { x: colDate, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Val."),  { x: colHours, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Organizacija"),  { x: colOrg, y, size: 8, font: bold, color: muted });
-  y -= 6;
-  page.drawLine({ start: { x: M, y }, end: { x: width - M, y }, thickness: 0.3, color: hair });
-  y -= 12;
+  let currentY = tableTop - 22;
+  page.drawText(ascii("Data"),  { x: colDate, y: currentY, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Val."),  { x: colHours, y: currentY, size: 8, font: bold, color: muted });
+  page.drawText(ascii("Organizacija"),  { x: colOrg, y: currentY, size: 8, font: bold, color: muted });
+  currentY -= 6;
+  page.drawLine({ start: { x: M, y: currentY }, end: { x: width - M, y: currentY }, thickness: 0.3, color: hair });
+  currentY -= 12;
 
   const rows = cert.reservations;
   const rowHeight = 18;
   const maxRowsPerPage = 24;
 
-  let y = tableTop - 22;
-  page.drawText(ascii("Data"), { x: colDate, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Val."), { x: colHours, y, size: 8, font: bold, color: muted });
-  page.drawText(ascii("Organizacija"), { x: colOrg, y, size: 8, font: bold, color: muted });
-  y -= 6;
-  page.drawLine({ start: { x: M, y }, end: { x: width - M, y }, thickness: 0.3, color: hair });
-  y -= 12;
 
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
