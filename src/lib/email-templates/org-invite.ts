@@ -36,6 +36,11 @@ export function renderOrgInviteEmail(p: Props): string {
           <li><b>Profilio užpildymas:</b> Nurodykite savo veiklos sritis ir gaukite „Verified“ ženklelį.</li>
           <li><b>Pasiruošimas:</b> Kai startuosime, moksleiviai Jus matys sąrašo viršuje.</li>
         </ol>
+        <div style="margin-top:20px; padding:16px; background-color:#f0f9ff; border-radius:16px; border:1px solid #bae6fd;">
+          <p style="margin:0; font-size:13px; color:#0369a1; font-weight:600;">
+            💡 Norite sužinoti daugiau? <a href="${APP_URL}/about-orgs" style="color:#0284c7; text-decoration:underline;">Spauskite čia</a> ir sužinokite, kaip platforma padeda organizacijoms.
+          </p>
+        </div>
       </div>
       <br/>
       <i style="color:#94a3b8; font-size:14px;">Turite klausimų? Spauskite mygtuką ir atsakykite į šį laišką – mūsų komanda pasirengusi padėti tiesiogiai.</i>
