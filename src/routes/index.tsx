@@ -14,6 +14,7 @@ import {
   TricolorRail,
   TricolorRibbons,
   useCalmMotion,
+  useLowPowerDevice,
   LT_GREEN,
   LT_RED,
   LT_YELLOW,
@@ -120,25 +121,27 @@ function SpotlightCard({
     ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
   );
 
+  const isMobile = useLowPowerDevice();
+
   return (
     <motion.div
       ref={ref}
       onPointerMove={(e) => {
-        if (calm || e.pointerType !== "mouse" || !ref.current) return;
+        if (calm || isMobile || e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
         mx.set(((e.clientX - r.left) / r.width) * 100);
         my.set(((e.clientY - r.top) / r.height) * 100);
       }}
       onPointerLeave={() => { mx.set(50); my.set(50); }}
-      whileHover={calm ? undefined : { y: -6 }}
+      whileHover={calm || isMobile ? undefined : { y: -6 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      style={calm ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
+      style={calm || isMobile ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
       className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/25 ${className}`}
     >
       <motion.div
         aria-hidden
         className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: glow }}
+        style={{ background: isMobile ? undefined : glow }}
       />
       {/* diagonal sheen that sweeps across on hover */}
       <span
@@ -241,7 +244,7 @@ function Home() {
           </motion.div>
 
           <motion.div
-            style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+            style={calm ? undefined : { y: heroY, opacity: heroOpacity, scale: heroScale }}
             className="relative mx-auto max-w-4xl text-center"
           >
             <motion.div

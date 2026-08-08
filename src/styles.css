@@ -117,18 +117,23 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { font-family: var(--font-sans); }
+  html { 
+    font-family: var(--font-sans);
+    height: -webkit-fill-available;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    text-rendering: optimizeSpeed; /* Switch to speed for better mobile scroll */
     transition: background-color 220ms ease, color 220ms ease;
     overflow-x: hidden;
     width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; text-wrap: balance; }
 }
 
 @utility bg-gradient-hero { background-image: var(--gradient-hero); }
@@ -179,7 +184,8 @@ html {
 }
 body {
   overscroll-behavior-y: none;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 @media (max-width: 640px) {
   button, a, [role="button"] {

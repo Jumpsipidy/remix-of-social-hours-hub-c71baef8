@@ -80,19 +80,31 @@ function ScanPage() {
         // 1) Ask for permission FIRST. On iOS Safari and Android Chrome the
         //    device list is empty/unlabeled until the user grants access.
         warmup = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
+          video: { 
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
           audio: false,
         });
         if (cancelled) { warmup.getTracks().forEach((t) => t.stop()); return; }
 
-        // 2) Prefer a real back camera when we can now read the labels.
         let deviceId: string | undefined;
         try {
           const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-          deviceId = (devices.find((d) => /back|rear|environment|galinė/i.test(d.label)) ?? devices[devices.length - 1])?.deviceId;
+          // Filter out virtual cameras and focus on actual hardware
+          const backCams = devices.filter((d) => 
+            /back|rear|environment|galinė|apatinė|main|primary/i.test(d.label)
+          );
+          
+          if (backCams.length > 0) {
+            // Pick the one that is most likely the main high-res camera
+            deviceId = backCams[0].deviceId;
+          } else if (devices.length > 0) {
+            deviceId = devices[devices.length - 1].deviceId;
+          }
         } catch { /* labels unavailable — fall back to constraints */ }
 
-        // 3) Release the warm-up stream so zxing can open its own.
         warmup.getTracks().forEach((t) => t.stop());
         warmup = null;
         if (!videoRef.current || cancelled) return;
@@ -106,13 +118,18 @@ function ScanPage() {
           handleSubmit(raw);
         };
 
-        const controls = deviceId
-          ? await reader.decodeFromVideoDevice(deviceId, videoRef.current, onResult)
-          : await reader.decodeFromConstraints(
-              { video: { facingMode: { ideal: "environment" } }, audio: false },
-              videoRef.current,
-              onResult,
-            );
+        const constraints: MediaStreamConstraints = {
+          video: {
+            deviceId: deviceId ? { exact: deviceId } : undefined,
+            facingMode: deviceId ? undefined : { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 }
+          },
+          audio: false
+        };
+
+        const controls = await reader.decodeFromConstraints(constraints, videoRef.current, onResult);
         if (cancelled) { controls.stop(); return; }
         controlsRef.current = controls;
       } catch (e) {

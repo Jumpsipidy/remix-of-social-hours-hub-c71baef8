@@ -18,14 +18,16 @@ export function useLowPowerDevice() {
   const [low, setLow] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const nav = navigator as Navigator & { deviceMemory?: number };
+    const nav = navigator as Navigator & { deviceMemory?: number; connection?: any };
     const coarse = window.matchMedia("(pointer: coarse)").matches;
     const small = window.matchMedia("(max-width: 900px)").matches;
+    const isSaveData = nav.connection?.saveData === true;
     const weak =
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
-      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4) ||
-      coarse; // Always assume low power if touch-based (phone/tablet) to maximize scroll performance
-    setLow(weak || (small && coarse));
+      (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
+
+    // Force low power mode for all mobile devices to ensure 60fps scrolling
+    setLow(weak || small || coarse || isSaveData);
   }, []);
   return low;
 }
