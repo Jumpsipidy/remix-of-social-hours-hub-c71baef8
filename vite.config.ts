@@ -57,21 +57,8 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    minify: false, // Temporarily disable minification to bypass esbuild missing dependency error
+    minify: "esbuild",
     cssMinify: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes("recharts")) return "v-charts";
-          if (id.includes("framer-motion")) return "v-motion";
-          if (id.includes("three")) return "v-3d";
-          if (id.includes("lucide-react")) return "v-icons";
-          if (id.includes("@tanstack")) return "v-router";
-          if (id.includes("supabase")) return "v-db";
-          return null;
-        },
-      },
-    },
   },
   plugins: [
     tanstackStart({
