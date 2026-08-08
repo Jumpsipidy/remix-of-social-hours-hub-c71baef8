@@ -64,15 +64,15 @@ export function MobileTabBar() {
 
   return (
     <motion.nav
-      initial={{ y: 80, opacity: 0 }}
+      initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 320, damping: 30 }}
+      transition={{ type: "spring", stiffness: 280, damping: 32 }}
       className="fixed inset-x-0 bottom-0 z-40 md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Pagrindinė navigacija"
     >
-      <div className="mx-2 mb-2 rounded-2xl border border-border/70 bg-background/85 shadow-2xl backdrop-blur-xl">
-        <div className="grid grid-cols-4 gap-0.5 px-1 py-1">
+      <div className="mx-3 mb-3 overflow-hidden rounded-[24px] border border-white/10 bg-black/60 shadow-2xl backdrop-blur-2xl">
+        <div className="grid grid-cols-4 gap-1 p-1.5">
           {tabs.slice(0, 4).map((t) => {
             const active = t.match ? t.match(pathname) : pathname === t.to;
             const Icon = t.icon;
@@ -80,26 +80,39 @@ export function MobileTabBar() {
               <Link
                 key={`${t.to}-${t.label}`}
                 to={t.to}
-                className="relative flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition active:scale-95 touch-manipulation motion-safe"
+                className="group relative flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-[18px] transition-all active:scale-95 touch-manipulation"
                 aria-current={active ? "page" : undefined}
               >
                 {active && (
                   <motion.span
-                    layoutId="tab-active"
-                    className="absolute inset-0 rounded-xl bg-gradient-primary/15 border border-primary/30"
-                    transition={{ type: "spring", stiffness: 400, damping: 34 }}
+                    layoutId="nav-pill"
+                    className="absolute inset-0 z-0 bg-white/[0.08]"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
                   />
                 )}
-                <Icon
-                  className={`relative h-5 w-5 shrink-0 transition ${active ? "text-primary" : "text-muted-foreground"}`}
-                  strokeWidth={active ? 2.4 : 2}
-                />
-                <span
-                  className={`relative truncate leading-none ${active ? "text-primary" : "text-muted-foreground"}`}
-                  title={t.label}
-                >
-                  {t.short}
-                </span>
+                
+                <div className="relative z-10 flex flex-col items-center gap-1">
+                  <Icon
+                    className={`h-5 w-5 transition-transform duration-300 ${
+                      active ? "scale-110 text-white" : "text-white/40 group-hover:text-white/60"
+                    }`}
+                    strokeWidth={active ? 2.5 : 2}
+                  />
+                  <span
+                    className={`text-[10px] font-bold tracking-tight transition-colors duration-300 ${
+                      active ? "text-white" : "text-white/40"
+                    }`}
+                  >
+                    {t.short}
+                  </span>
+                </div>
+
+                {active && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute bottom-1.5 h-1 w-1 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                  />
+                )}
               </Link>
             );
           })}
