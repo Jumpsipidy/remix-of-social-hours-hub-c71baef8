@@ -71,13 +71,13 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#020617;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f8fafc;">
+<body style="margin:0;padding:0;background-color:#020617;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f8fafc; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#020617;">
     <tr>
       <td align="center" style="padding:40px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left;">
           
           <!-- Header (Official Logo - Optimized for Transparent PNG) -->
           <tr>
@@ -85,7 +85,7 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="240" style="display:block; border:0; width: 240px; height: auto; max-width: 80%;" />
+                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="240" style="display:block; border:0; width: 240px; height: auto; max-width: 80%; margin: 0 auto;" />
                   </td>
                 </tr>
               </table>

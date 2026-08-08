@@ -94,7 +94,10 @@ const IGNORE_RX = [
   /login_streak_30\.mp4/i,
   /five_hours\.mp4/i,
   /send was called before connect/i,
+  /Video error on clip/i,
+  /video failed/i,
 ];
+
 
 
 function isTelemetryNoise(message: string | undefined | null): boolean {
