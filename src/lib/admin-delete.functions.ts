@@ -67,22 +67,43 @@ export const adminDeleteAccount = createServerFn({ method: "POST" })
     if (data.userId === context.userId) throw new Error("Negali ištrinti savo paskyros");
 
     const id = data.userId;
-    // Wipe every reference so nothing lingers in the DB
+    const { data: profile } = await supabaseAdmin.from("profiles").select("role, email").eq("id", id).maybeSingle();
+
+    // 1. If organization: delete their tasks and clean up reservations/chats linked to those tasks
+    if ((profile as any)?.role === "organization") {
+      const { data: tasks } = await supabaseAdmin.from("tasks").select("id").eq("organization_id", id);
+      const taskIds = (tasks ?? []).map(t => t.id);
+      
+      if (taskIds.length > 0) {
+        // Delete reservations for these tasks
+        await supabaseAdmin.from("reservations").delete().in("task_id", taskIds);
+        // Delete tasks
+        await supabaseAdmin.from("tasks").delete().in("id", taskIds);
+      }
+    }
+
+    // 2. Wipe every reference where this user is directly involved
     await supabaseAdmin.from("messages").delete().eq("sender_id", id);
     await supabaseAdmin.from("chat_rooms").delete().or(`student_id.eq.${id},organization_id.eq.${id},school_admin_id.eq.${id}`);
     await supabaseAdmin.from("reservations").delete().or(`student_id.eq.${id},organization_id.eq.${id}`);
     await supabaseAdmin.from("tasks").delete().eq("organization_id", id);
-    // Bug reports & access requests (best-effort; ignore if tables absent)
+    await supabaseAdmin.from("user_achievements").delete().eq("user_id", id);
+    await supabaseAdmin.from("friendships").delete().or(`user_id.eq.${id},friend_id.eq.${id}`);
+    await supabaseAdmin.from("dm_messages").delete().or(`sender_id.eq.${id},receiver_id.eq.${id}`);
+    await supabaseAdmin.from("certificates").delete().eq("student_id", id);
+    
+    // Bug reports & access requests (best-effort)
     try { await supabaseAdmin.from("bug_reports").delete().eq("reporter_user_id", id); } catch {}
-    try { await supabaseAdmin.from("organization_access_requests").delete().eq("contact_email", (await supabaseAdmin.auth.admin.getUserById(id)).data.user?.email ?? ""); } catch {}
+    if ((profile as any)?.email) {
+      try { await supabaseAdmin.from("organization_access_requests").delete().eq("contact_email", (profile as any).email); } catch {}
+    }
 
+    // 3. Delete profile and auth user
     await supabaseAdmin.from("profiles").delete().eq("id", id);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
     if (error && !/not.*found/i.test(error.message)) throw new Error(error.message);
-    // Verify
-    const { data: leftover } = await supabaseAdmin.from("profiles").select("id").eq("id", id).maybeSingle();
-    const { data: authLeft } = await supabaseAdmin.auth.admin.getUserById(id);
-    return { ok: true, fully_deleted: !leftover && !authLeft?.user };
+
+    return { ok: true };
   });
 
 // ---- Admin quick-action helpers ------------------------------------------

@@ -204,6 +204,7 @@ function AdminToolsPage() {
           setBusy(null);
         }
     }},
+    { key: "accounts", label: "Vartotojai", desc: "Paskyrų valdymas", icon: Users, accent: "#3B82F6", run: () => { window.location.href = "/admin/users"; } },
     { key: "purge", label: "Valyti žinutes", desc: "Senesnės nei 12 d.", icon: MessageSquare, accent: "#C8452A", run: () => run("purge", () => purge(), "Ištrinti senas žinutes?") },
   ];
 
