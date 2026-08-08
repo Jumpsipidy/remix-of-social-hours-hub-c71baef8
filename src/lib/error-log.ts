@@ -83,6 +83,13 @@ const IGNORE_SUBSTRINGS = [
   "concurrent mode",
   "error boundaries",
   "app.js",
+  "push_subscriptions",
+  "push_subscription",
+  "PGRST205",
+  "login_streak_30.mp4",
+  "five_hours.mp4",
+  "send was called before connect",
+
 ];
 
 const IGNORED_NETWORK_URLS = [
