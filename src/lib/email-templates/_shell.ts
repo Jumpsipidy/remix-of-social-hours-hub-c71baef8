@@ -71,13 +71,13 @@ export function renderShell(opts: ShellOptions): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#1e293b; text-align: center;">
+<body style="margin:0;padding:0;background-color:#0a0819;font-family:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;color:#f5f3ff; text-align: center;">
   <div style="display:none;visibility:hidden;opacity:0;overflow:hidden;mso-hide:all;height:0;width:0;font-size:1px;color:#020617;">${escape(opts.preview)}</div>
   
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#0a0819;">
     <tr>
       <td align="center" style="padding:40px 0;">
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #ffffff; border-radius: 48px; box-shadow: 0 30px 60px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; overflow: hidden;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #111122; border-radius: 48px; box-shadow: 0 30px 60px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
           
           <!-- Header (Official Brand) -->
           <tr>
