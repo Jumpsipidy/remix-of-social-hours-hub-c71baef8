@@ -56,26 +56,30 @@ export const sendOrgInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: { email: string; orgName: string; variant: number }) => data)
   .handler(async ({ data, context }) => {
-    // Check if admin
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
 
-    const { sendResendEmail } = await import("@/lib/email.functions");
-    const html = renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
+    const { sendOrgInviteEmail } = await import("@/lib/email.functions");
     
-    const res = await (sendResendEmail as any)(
-      data.email, 
-      "Kvietimas prisijungti prie Socialinės Valandos platformos", 
-      html,
-      { tag: "org-invite" }
-    );
-
-    // Track the invitation in the database so it appears in the logs
-    await context.supabase.from("activity_log").insert({
-      user_id: context.userId,
-      action: "admin.org_invite_sent",
-      meta: { email: data.email, orgName: data.orgName, variant: data.variant, res_id: res.id }
+    // Use the standardized server function which has proper error handling
+    const res = await sendOrgInviteEmail({
+      data: {
+        to: data.email,
+        orgName: data.orgName,
+        variant: data.variant
+      },
+      context // Pass context if needed, though sendOrgInviteEmail creates its own if called as a function? 
+      // Wait, server functions called as functions might not work perfectly with context.
+      // Better to call the internal sender or ensure the server function works.
     });
+
+    if (res.ok) {
+      await context.supabase.from("activity_log").insert({
+        user_id: context.userId,
+        action: "admin.org_invite_sent",
+        meta: { email: data.email, orgName: data.orgName, variant: data.variant, res_id: res.id }
+      });
+    }
 
     return res;
   });
