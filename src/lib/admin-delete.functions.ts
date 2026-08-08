@@ -209,3 +209,32 @@ export const adminDeepHealth = createServerFn({ method: "GET" })
       generated_at: new Date().toISOString(),
     };
   });
+
+export const adminExportAllData = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
+    if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
+
+    const tables = [
+      "profiles", "reservations", "tasks", "messages", "chat_rooms",
+      "schools", "bug_reports", "organization_access_requests",
+      "site_settings", "activity_log", "certificates", "dm_messages",
+      "dm_rooms", "friendships", "user_achievements", "user_roles",
+    ];
+
+    const results: Record<string, any[]> = {};
+    for (const t of tables) {
+      // Export all rows (be mindful of memory on huge datasets, but for this scale it's fine)
+      const { data, error } = await (supabaseAdmin as any).from(t).select("*");
+      if (!error) results[t] = data ?? [];
+    }
+
+    return {
+      exported_at: new Date().toISOString(),
+      platform: "Socialinės Valandos",
+      version: "2.0.0",
+      data: results
+    };
+  });
