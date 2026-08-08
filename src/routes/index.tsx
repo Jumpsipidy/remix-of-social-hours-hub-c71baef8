@@ -53,6 +53,7 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
+      { name: "keywords", content: "socialines valandos, savanoryste lietuvoje, mokiniu valandos, seduvos gimnazija, savanorystes centras, socialinesvalandos.dev" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
     scripts: [
