@@ -121,9 +121,13 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
                 <tr>
                   <td align="center">
-                    <div style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; text-align:center; line-height:100px; font-size:50px; box-shadow: 0 20px 50px ${theme.primary}66; transform: rotate(-5deg);">
-                      ${opts.medallionEmoji}
-                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; font-size:50px; line-height: 100px; text-align: center;">
+                          ${opts.medallionEmoji}
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -132,12 +136,13 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
                 <tr>
                   <td align="center">
-                    <div style="display:inline-block; padding:4px 12px; background-color:${theme.primary}22; border:1px solid ${theme.primary}44; border-radius:100px;">
-                      <span style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:2.5px; color:${theme.primary};">${escape(opts.eyebrow)}</span>
-                    </div>
-                  </td>
-                </tr>
-              </table>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto; background-color:${theme.primary}22; border:1px solid ${theme.primary}44; border-radius:100px;">
+                      <tr>
+                        <td style="padding:4px 12px; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:2.5px; color:${theme.primary};">
+                          ${escape(opts.eyebrow)}
+                        </td>
+                      </tr>
+                    </table>
 
               <!-- Heading -->
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:28px;">
