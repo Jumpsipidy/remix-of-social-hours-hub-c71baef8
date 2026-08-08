@@ -99,6 +99,7 @@ const IGNORE_RX = [
   /a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff/i,
   /versijos/i,
   /495365275f0fb4999adf862c3a1e860e285/i,
+  /eyJmaWxlIjoiL3NyYy9saWIvcHVibGljLXN0YXRzLmZ1bmN0aW9ucy50cz90c3Mtc2VydmVyZm4tc3BsaXQiLCJleHBvcnQiOiJnZXRQdWJsaWNTdGF0c19jcmVhdGVTZXJ2ZXJGbl9oYW5kbGVyIn0/i,
   /rage click/i,
   /Rage click detected/i,
   /rage-click/i,

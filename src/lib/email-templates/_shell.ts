@@ -86,12 +86,12 @@ export function renderShell(opts: ShellOptions): string {
                 <tr>
                   <td align="center">
                     <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 14px;">
-                      <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);">
-                        <span style="color: #0d0c1d; font-size: 24px; line-height: 1;">❤</span>
+                      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); border: 2px solid rgba(255,255,255,0.1);">
+                        <span style="color: #0d0c1d; font-size: 26px; line-height: 1;">❤</span>
                       </div>
                       <div style="text-align: left;">
-                        <span style="display: block; font-size: 20px; line-height: 1.1;">SOCIALINĖS</span>
-                        <span style="display: block; font-size: 20px; color: #7DD3FC; line-height: 1.1;">VALANDOS</span>
+                        <span style="display: block; font-size: 22px; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">SOCIALINĖS</span>
+                        <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">VALANDOS</span>
                       </div>
                     </div>
                   </td>

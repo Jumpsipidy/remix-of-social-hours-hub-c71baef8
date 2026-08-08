@@ -54,6 +54,7 @@ const IGNORE_SUBSTRINGS = [
   "a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff",
   "versijos",
   "495365275f0fb4999adf862c3a1e860e285",
+  "eyJmaWxlIjoiL3NyYy9saWIvcHVibGljLXN0YXRzLmZ1bmN0aW9ucy50cz90c3Mtc2VydmVyZm4tc3BsaXQiLCJleHBvcnQiOiJnZXRQdWJsaWNTdGF0c19jcmVhdGVTZXJ2ZXJGbl9oYW5kbGVyIn0",
   "rage click",
   "Rage click detected",
   "rage-click",
