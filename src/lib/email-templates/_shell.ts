@@ -81,19 +81,26 @@ export function renderShell(opts: ShellOptions): string {
           
           <!-- Header (Official Brand) -->
           <tr>
-            <td style="padding: 40px 0; text-align:center; background-color: #0d0c1d;">
+            <td style="padding: 40px 0; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -1px; display: inline-flex; align-items: center; gap: 14px;">
-                      <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); border: 2px solid rgba(255,255,255,0.1);">
-                        <span style="color: #0d0c1d; font-size: 26px; line-height: 1;">❤</span>
-                      </div>
-                      <div style="text-align: left;">
-                        <span style="display: block; font-size: 22px; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">SOCIALINĖS</span>
-                        <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; letter-spacing: -0.5px; font-weight: 900;">VALANDOS</span>
-                      </div>
-                    </div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                      <tr>
+                        <td align="center" valign="middle" style="padding-right: 14px;">
+                          <div style="width: 52px; height: 52px; background: linear-gradient(135deg, #7DD3FC, #38BDF8); border-radius: 50%; text-align: center; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); border: 2px solid rgba(255,255,255,0.1);">
+                            <!-- Using a simple, high-contrast text heart for bulletproof rendering -->
+                            <div style="color: #0d0c1d; font-size: 30px; line-height: 52px; font-family: sans-serif; font-weight: bold;">❤</div>
+                          </div>
+                        </td>
+                        <td align="left" valign="middle">
+                          <div style="font-family: 'Inter', sans-serif; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
+                            <span style="display: block; font-size: 22px; line-height: 1.1; margin: 0; padding: 0;">SOCIALINĖS</span>
+                            <span style="display: block; font-size: 22px; color: #7DD3FC; line-height: 1.1; margin: 0; padding: 0;">VALANDOS</span>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
