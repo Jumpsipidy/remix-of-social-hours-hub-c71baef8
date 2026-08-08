@@ -86,6 +86,8 @@ const IGNORE_RX = [
   /Patikrinkite, ar visi komponentai, naudojami App.js/i,
   /Concurrent Mode/i,
   /error boundaries aplink komponentus/i,
+  /streak-7\.mp4/i,
+  /assets-v1/i,
 ];
 
 function isTelemetryNoise(message: string | undefined | null): boolean {
