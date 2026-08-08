@@ -1,18 +1,15 @@
+import { useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  adminPurgeOldMessages,
-  adminWipeAllReservations,
-  adminWipeAllTasks,
-  adminPlatformHealth,
-  adminTableSample,
-  adminDeepHealth,
-  adminExportAllData,
-} from "@/lib/admin-delete.functions";
-import { toast } from "sonner";
-import {
+import { 
+  Mail, 
+  Eye, 
+  Send, 
+  CheckCircle2, 
+  Search, 
+  ChevronRight,
+  Clock,
+  ShieldCheck,
+  Zap,
   Wrench,
   Activity,
   MessageSquare,
@@ -28,64 +25,118 @@ import {
   Bug,
   MessagesSquare,
   KeyRound,
-  CheckCircle2,
   FileText,
   X,
-  Search,
-  Eye,
-  Zap,
-  Download,
-  Mail,
+  Download
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { DashHero, StatTile, GlassCard } from "@/components/dashboard-kit";
+import { requireAdmin } from "@/lib/auth-guards";
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { renderOrgInviteEmail } from "@/lib/email-templates/org-invite";
+import { 
+  adminPurgeOldMessages, 
+  adminWipeAllReservations, 
+  adminWipeAllTasks, 
+  adminPlatformHealth, 
+  adminTableSample, 
+  adminDeepHealth, 
+  adminExportAllData 
+} from "@/lib/admin-delete.functions";
 import { CertificateButton } from "@/components/certificate-button";
 import { CelebrationSimulator } from "@/components/admin/celebration-simulator";
 
+/* ── server logic ───────────────────────────────────────────────────────── */
 
-const TABLE_META: Record<string, { label: string; icon: typeof Database; tone: string }> = {
-  profiles: { label: "Profiliai", icon: Users, tone: "from-blue-500/30 to-blue-500/5" },
-  reservations: { label: "Rezervacijos", icon: ClipboardList, tone: "from-emerald-500/30 to-emerald-500/5" },
-  tasks: { label: "Užduotys", icon: ListTodo, tone: "from-amber-500/30 to-amber-500/5" },
-  messages: { label: "Žinutės", icon: MessagesSquare, tone: "from-purple-500/30 to-purple-500/5" },
-  chat_rooms: { label: "Pokalbių kambariai", icon: MessageSquare, tone: "from-pink-500/30 to-pink-500/5" },
-  schools: { label: "Mokyklos", icon: School, tone: "from-cyan-500/30 to-cyan-500/5" },
-  bug_reports: { label: "Bug reports", icon: Bug, tone: "from-red-500/30 to-red-500/5" },
-  organization_access_requests: { label: "Org. užklausos", icon: Building2, tone: "from-indigo-500/30 to-indigo-500/5" },
-  user_roles: { label: "Rolės", icon: KeyRound, tone: "from-fuchsia-500/30 to-fuchsia-500/5" },
-  site_settings: { label: "Svetainės nustatymai", icon: Wrench, tone: "from-emerald-500/30 to-emerald-500/5" },
-};
+export const sendOrgInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { email: string; orgName: string; variant: number }) => data)
+  .handler(async ({ data, context }) => {
+    // Check if admin
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
+
+    const { sendResendEmail } = await import("@/lib/email.functions");
+    const html = renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
+    
+    // We cast to any because of the transient build error where sendResendEmail isn't yet visible as exported
+    return await (sendResendEmail as any)(
+      data.email, 
+      "Kvietimas prisijungti prie Socialinės Valandos platformos", 
+      html
+    );
+  });
+
+export const getOrgInvitePreview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: { orgName: string; variant: number }) => data)
+  .handler(async ({ data }) => {
+    return renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
+  });
+
+/* ── page component ─────────────────────────────────────────────────────── */
 
 export const Route = createFileRoute("/admin/tools")({
-  component: ToolsPage,
+  beforeLoad: () => requireAdmin(),
+  component: AdminToolsPage,
 });
 
-function ToolsPage() {
+function AdminToolsPage() {
+  const [email, setEmail] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [variant, setVariant] = useState(1);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+
+  const [busy, setBusy] = useState<string | null>(null);
+  const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
+  const [deep, setDeep] = useState<null | any>(null);
+
+  const sendFn = useServerFn(sendOrgInvite);
+  const previewFn = useServerFn(getOrgInvitePreview);
   const purge = useServerFn(adminPurgeOldMessages);
   const wipeRes = useServerFn(adminWipeAllReservations);
   const wipeTasks = useServerFn(adminWipeAllTasks);
   const health = useServerFn(adminPlatformHealth);
-  const deepHealth = useServerFn(adminDeepHealth);
+  const deepHealthFn = useServerFn(adminDeepHealth);
   const exportAll = useServerFn(adminExportAllData);
-  const sample = useServerFn(adminTableSample);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [snap, setSnap] = useState<Record<string, unknown> | null>(null);
-  const [showInvitePreview, setShowInvitePreview] = useState(false);
-  const [inviteHtml, setInviteHtml] = useState("");
-  const [deep, setDeep] = useState<null | {
-    tables: { table: string; count: number; ms: number; ok: boolean; error: string | null }[];
-    recent_critical_24h: number;
-    generated_at: string;
-  }>(null);
-  const [inspect, setInspect] = useState<null | { table: string; rows: any[]; total: number; loading: boolean }>(null);
 
-
-  const openInspector = async (table: string) => {
-    setInspect({ table, rows: [], total: 0, loading: true });
+  const handleSend = async () => {
+    if (!email || !orgName) {
+      toast.error("Užpildykite visus laukus");
+      return;
+    }
+    setLoading(true);
     try {
-      const r = (await sample({ data: { table, limit: 100 } })) as { rows: any[]; total: number };
-      setInspect({ table, rows: r.rows, total: r.total, loading: false });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepavyko įkelti");
-      setInspect(null);
+      const res = await sendFn({ data: { email, orgName, variant } });
+      if (res.ok) {
+        toast.success(`Kvietimas išsiųstas į ${email}`);
+        setEmail("");
+        setOrgName("");
+      } else {
+        toast.error("Nepavyko išsiųsti el. laiško");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Klaida siunčiant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePreview = async () => {
+    setPreviewLoading(true);
+    try {
+      const html = await previewFn({ data: { orgName: orgName || "Organizacijos Pavadinimas", variant } });
+      setPreviewHtml(html);
+    } catch (err) {
+      toast.error("Nepavyko sugeneruoti peržiūros");
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -93,478 +144,219 @@ function ToolsPage() {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
     setBusy(key);
     try {
-      const r = (await fn()) as Record<string, unknown>;
+      const r = (await fn()) as any;
       if (key === "health") {
         setSnap(r);
         toast.success("Ataskaita paruošta");
       } else {
-        toast.success(`${key}: ${JSON.stringify(r)}`);
+        toast.success("Veiksmas sėkmingas");
       }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Klaida");
-    } finally {
-      setBusy(null);
-    }
-  };
-  
-  const handleExport = async () => {
-    setBusy("export");
-    try {
-      const data = await exportAll();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `socialines-valandos-backup-${new Date().toISOString().split("T")[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Atsarginė kopija paruošta ir atsiųsta");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepavyko eksportuoti");
+    } catch (e: any) {
+      toast.error(e.message || "Klaida");
     } finally {
       setBusy(null);
     }
   };
 
+  const variants = [
+    { id: 1, label: "Profesionalus", desc: "Standartinis, aiškus kvietimas" },
+    { id: 2, label: "Pokyčio Vizija", desc: "Orientuotas į poveikį visuomenei" },
+    { id: 3, label: "Skaitmenizacija", desc: "Pabrėžia popierių atsisakymą" },
+    { id: 4, label: "Šeduvos Kraštas", desc: "Lokalizuotas Šeduvos bendruomenei" },
+    { id: 5, label: "Skaidrumas", desc: "Akcentuoja QR ir saugumą" },
+  ];
+
   const actions = [
-    {
-      key: "health",
-      label: "DB sveikatos patikra",
-      desc: "Suskaičiuoja įrašus visose lentelėse ir parodo momentinį suvestinį vaizdą.",
-      icon: Activity,
-      variant: "default" as const,
-      run: () => run("health", () => health()),
-    },
-    {
-      key: "export",
-      label: "Eksportuoti VISUS duomenis",
-      desc: "Sugeneruoja pilną JSON kopiją su visais mokiniais, rezervacijomis, mokyklomis ir žinutėmis.",
-      icon: Download,
-      variant: "default" as const,
-      run: handleExport,
-    },
-    {
-      key: "deep",
-      label: "Giluminis sveikatos skenavimas",
-      desc: "Patikrina kiekvienos kritinės lentelės pasiekiamumą, delsą (ms) ir 24h kritinių klaidų skaičių.",
-      icon: Zap,
-      variant: "default" as const,
+    { key: "health", label: "DB sveikata", desc: "Momentinė apžvalga", icon: Activity, accent: "#1E9E63", run: () => run("health", () => health()) },
+    { 
+      key: "deep", 
+      label: "Giluminis skenavimas", 
+      desc: "Lentelių delsa ir klaidos", 
+      icon: Zap, 
+      accent: "#E9B44C", 
       run: async () => {
         setBusy("deep");
         try {
-          const r = (await deepHealth()) as any;
+          const r = await deepHealthFn();
           setDeep(r);
-          toast.success(`Skenavimas baigtas · ${r.tables.length} lentelės`);
-        } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Klaida");
+          toast.success("Skenavimas baigtas");
+        } catch (e: any) {
+          toast.error(e.message);
         } finally {
           setBusy(null);
         }
-      },
+      } 
     },
-    {
-      key: "purge",
-      label: "Išvalyti senas žinutes (12 d.)",
-      desc: "Ištrina visas žinutes senesnes nei 12 dienų. Naudinga prieš auditą.",
-      icon: MessageSquare,
-      variant: "default" as const,
-      run: () =>
-        run("purge", () => purge(), "Ištrinti visas žinutes senesnes nei 12 dienų?"),
-    },
-    {
-      key: "res",
-      label: "Trinti VISAS rezervacijas",
-      desc: "Negrįžtama: ištrina absoliučiai visas rezervacijas iš DB.",
-      icon: ClipboardList,
-      variant: "danger" as const,
-      run: () =>
-        run("res", () => wipeRes(), "IŠTRINTI VISAS rezervacijas iš duomenų bazės?"),
-    },
-    {
-      key: "tasks",
-      label: "Trinti VISAS užduotis",
-      desc: "Negrįžtama: ištrina visas organizacijų paskelbtas užduotis.",
-      icon: ListTodo,
-      variant: "danger" as const,
-      run: () => run("tasks", () => wipeTasks(), "IŠTRINTI VISAS užduotis?"),
-    },
-    {
-      key: "reload",
-      label: "Perkrauti visus duomenis",
-      desc: "Perkrauna esamą puslapį, kad pamatytum naujausius įrašus.",
-      icon: RefreshCw,
-      variant: "default" as const,
-      run: () => window.location.reload(),
-    },
+    { key: "export", label: "Backup", desc: "Pilnas JSON eksportas", icon: Download, accent: "#C8452A", run: async () => {
+        setBusy("export");
+        try {
+          const data = await exportAll();
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          toast.success("Backup paruoštas");
+        } catch (e: any) {
+          toast.error(e.message);
+        } finally {
+          setBusy(null);
+        }
+    }},
+    { key: "purge", label: "Valyti žinutes", desc: "Senesnės nei 12 d.", icon: MessageSquare, accent: "#C8452A", run: () => run("purge", () => purge(), "Ištrinti senas žinutes?") },
   ];
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="flex items-center gap-2 font-display text-3xl font-bold tracking-tight">
-          <Wrench className="h-6 w-6 text-primary" /> Įrankiai
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Priežiūros veiksmai. Raudonai pažymėti — negrįžtami.
-        </p>
-      </header>
+    <div className="min-h-screen space-y-8 bg-background p-4 pb-24 sm:p-8">
+      <DashHero 
+        eyebrow="Super Admin"
+        title="Sistemos Įrankiai" 
+        subtitle="Organizacijų kvietimai, duomenų atsarginės kopijos ir platformos sveikatos stebėsena."
+        icon={Wrench}
+        accent="#C8452A"
+      />
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {actions.map((a) => {
-          const isBusy = busy === a.key;
-          const isDanger = a.variant === "danger";
-          const Icon = a.icon;
-          return (
-            <div
-              key={a.key}
-              className={`rounded-2xl border p-5 shadow-md backdrop-blur ${
-                isDanger
-                  ? "border-destructive/40 bg-destructive/5"
-                  : "border-border bg-card/70"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={`grid h-10 w-10 place-items-center rounded-xl ${
-                    isDanger
-                      ? "bg-destructive/15 text-destructive"
-                      : "bg-gradient-primary text-primary-foreground shadow-glow"
-                  }`}
-                >
-                  {isDanger ? <AlertTriangle className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {/* Org Invite Section */}
+          <GlassCard className="p-0">
+            <div className="border-b border-white/5 bg-white/5 px-6 py-4">
+              <h3 className="flex items-center gap-2 font-display text-lg font-bold text-white">
+                <Mail className="h-5 w-5 text-primary" />
+                Kviesti organizaciją
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/50">Pavadinimas</label>
+                    <input 
+                      type="text"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      placeholder="Organizacijos vardas"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/50">El. paštas</label>
+                    <input 
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="info@org.lt"
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-white/50">Stilius</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {variants.map((v) => (
+                        <button
+                          key={v.id}
+                          onClick={() => setVariant(v.id)}
+                          className={`flex flex-col items-start rounded-xl border p-2 text-left transition ${
+                            variant === v.id ? "border-primary bg-primary/10" : "border-white/5 bg-white/5"
+                          }`}
+                        >
+                          <span className="text-[10px] font-bold text-white">{v.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={handlePreview} disabled={previewLoading} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10">
+                      {previewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                      Peržiūra
+                    </button>
+                    <button onClick={handleSend} disabled={loading} className="flex flex-[1.5] items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-white hover:opacity-90">
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      Siųsti
+                    </button>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold">{a.label}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{a.desc}</p>
+                <div className="hidden rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 md:block">
+                  <div className="flex flex-col items-center text-center">
+                    <ShieldCheck className="mb-4 h-12 w-12 text-primary" />
+                    <h4 className="font-bold text-white">Saugus siuntimas</h4>
+                    <p className="mt-2 text-xs text-white/40">Siunčiama iš noreply@jumpsipidy.online su Reply-To į pagalba@socialinesvalandos.dev. Penki unikalūs šablonai maksimaliam pasitikėjimui.</p>
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => void a.run()}
-                disabled={!!busy}
-                className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                  isDanger
-                    ? "bg-destructive text-destructive-foreground hover:opacity-90"
-                    : "bg-gradient-primary text-primary-foreground shadow-glow"
-                }`}
-              >
-                {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
-                Vykdyti
-              </button>
             </div>
-          );
-        })}
-      </div>
+          </GlassCard>
 
+          <CelebrationSimulator />
+        </div>
 
-      {/* Celebration animation sandbox */}
-      <CelebrationSimulator />
+        <div className="space-y-6">
+          <StatTile 
+            label="Klaidų slenkstis"
+            value="3" 
+            icon={Zap}
+            sub="Auto-lockdown aktyvuojamas po 3 kritinių klaidų per 10 min."
+            accent="#C8452A"
+          />
 
-      {/* Organization Invitation System */}
-      <div className="rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent p-6 shadow-md">
-        <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/20 text-primary">
-            <Mail className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-display text-xl font-bold">Kviesti organizacijas</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Rask organizacijų el. paštus ir siųsk jiems kvietimą prisijungti prie Socialinės Valandos platformos.
-                </p>
-              </div>
-              <button
-                onClick={async () => {
-                  setBusy("preview-invite");
-                  try {
-                    const { previewAllEmails } = await import("@/lib/email.functions");
-                    const all = await (previewAllEmails as any)({});
-                    setInviteHtml(all.orgInvite);
-                    setShowInvitePreview(true);
-                  } catch (e: any) {
-                    toast.error("Nepavyko įkelti peržiūros");
-                  } finally {
-                    setBusy(null);
-                  }
-                }}
-                className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20"
-              >
-                <Eye className="h-3.5 w-3.5" /> Peržiūrėti HTML
-              </button>
-            </div>
-            <div className="mt-4 flex max-w-md gap-2">
-              <input 
-                type="email" 
-                placeholder="organizacija@pavyzdys.lt"
-                className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                id="invite-org-email"
-              />
+          <div className="grid gap-3">
+            {actions.map((a, i) => (
               <button 
-                onClick={async () => {
-                  const input = document.getElementById('invite-org-email') as HTMLInputElement;
-                  const email = input.value;
-                  if (!email) return toast.error("Įveskite el. paštą");
-                  setBusy("invite");
-                  try {
-                    const { sendOrgInviteEmail } = await import("@/lib/email.functions");
-                    await (sendOrgInviteEmail as any)({ data: { to: email } });
-                    toast.success(`Kvietimas išsiųstas į ${email}`);
-                    input.value = "";
-                  } catch (e: any) {
-                    toast.error(e?.message ?? "Nepavyko išsiųsti");
-                  } finally {
-                    setBusy(null);
-                  }
-                }}
-                disabled={busy === "invite"}
-                className="rounded-xl bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow"
+                key={a.key}
+                onClick={a.run}
+                disabled={busy === a.key}
+                className="group relative flex w-full items-center gap-4 overflow-hidden rounded-2xl border border-white/5 bg-white/5 p-4 text-left transition hover:bg-white/10"
               >
-                Siųsti kvietimą
+                <div className="rounded-xl bg-white/5 p-2" style={{ color: a.accent }}>
+                  <a.icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-white">{a.label}</p>
+                  <p className="text-[10px] text-white/40">{a.desc}</p>
+                </div>
+                {busy === a.key ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white/20" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-white/20 transition-transform group-hover:translate-x-1" />
+                )}
               </button>
-            </div>
+            ))}
           </div>
+
+          <GlassCard className="p-6">
+            <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/40">
+              <FileText className="h-4 w-4" /> Sertifikatai
+            </h4>
+            <div className="mt-4">
+              <CertificateButton />
+            </div>
+          </GlassCard>
         </div>
       </div>
 
       <AnimatePresence>
-        {showInvitePreview && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          >
+        {previewHtml && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-md">
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative h-[90vh] w-full max-w-4xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+              className="relative h-[85vh] w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c1e] shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
             >
-              <div className="flex items-center justify-between border-b border-border px-6 py-4">
-                <div>
-                  <h4 className="font-bold">El. pašto peržiūra</h4>
-                  <p className="text-xs text-muted-foreground">Organizacijos kvietimo šablonas</p>
-                </div>
-                <button 
-                  onClick={() => setShowInvitePreview(false)}
-                  className="rounded-full p-2 hover:bg-white/10"
-                >
+              <div className="flex items-center justify-between border-b border-white/5 p-4">
+                <span className="text-xs font-bold uppercase tracking-widest text-white/50">Kvietimo laiško peržiūra</span>
+                <button onClick={() => setPreviewHtml(null)} className="rounded-lg bg-white/5 p-2 text-white hover:bg-white/10">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="h-[calc(90vh-72px)] overflow-auto bg-[#0a0f1e] p-4">
-                <div 
-                  className="mx-auto max-w-[600px] shadow-2xl"
-                  dangerouslySetInnerHTML={{ __html: inviteHtml }} 
-                />
+              <div className="h-full overflow-auto bg-white">
+                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
-
-
-      {/* PDF Certificate Testing */}
-      <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent p-6 shadow-md">
-
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-500/20 text-blue-300">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-display text-xl font-bold">PDF sertifikatų testavimas</h3>
-              <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
-                Kaip super admin gali generuoti <b>Debug PDF</b> — QR kodas, HMAC parašas, viskas veikia,
-                bet <b>neįrašoma</b> į <code>certificates</code> lentelę. Puikiai tinka testuoti be tikrų valandų.
-                Vieša paaiškinimo puslapis: <a href="/verify" className="font-semibold text-blue-300 underline">/verify</a>.
-              </p>
-              <div className="mt-4">
-                <CertificateButton />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {snap && (() => {
-        const entries = Object.entries(snap).filter(([, v]) => typeof v === "number");
-        const total = entries.reduce((a, [, v]) => a + Number(v), 0);
-        const max = Math.max(...entries.map(([, v]) => Number(v)), 1);
-        return (
-          <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-                  <Database className="h-5 w-5 text-primary" /> DB sveikatos ataskaita
-                </h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Momentinė nuotrauka · {entries.length} lentelių · {total.toLocaleString("lt-LT")} įrašų
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Sistema veikia
-              </span>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {entries.map(([k, v]) => {
-                const meta = TABLE_META[k] ?? { label: k, icon: Database, tone: "from-primary/20 to-primary/0" };
-                const Icon = meta.icon;
-                const count = Number(v);
-                const pct = (count / max) * 100;
-                const tableName = k === "access_requests" ? "organization_access_requests" : k;
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => openInspector(tableName)}
-                    className="group relative overflow-hidden rounded-2xl border border-border bg-background/60 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-glow"
-                  >
-                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.tone} opacity-60`} />
-                    <div className="relative">
-                      <div className="flex items-center justify-between">
-                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-background/80 shadow-sm">
-                          <Icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary opacity-0 transition group-hover:opacity-100">
-                          <Eye className="h-3 w-3" /> Peržiūrėti
-                        </span>
-                      </div>
-                      <p className="mt-4 font-display text-3xl font-bold tabular-nums">{count.toLocaleString("lt-LT")}</p>
-                      <p className="text-xs font-semibold text-muted-foreground">{meta.label}</p>
-                      <p className="mt-0.5 font-mono text-[10px] text-muted-foreground/70">{tableName}</p>
-                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-border/50">
-                        <div
-                          className="h-full rounded-full bg-gradient-primary transition-[width] duration-700"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
-
-      {deep && (
-        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-                <Zap className="h-5 w-5 text-amber-400" /> Giluminis skenavimas
-              </h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {new Date(deep.generated_at).toLocaleString("lt-LT")} · 24h kritinių: <b className={deep.recent_critical_24h > 0 ? "text-destructive" : "text-success"}>{deep.recent_critical_24h}</b>
-              </p>
-            </div>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${deep.tables.every(t => t.ok) ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-              {deep.tables.every(t => t.ok) ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
-              {deep.tables.filter(t => t.ok).length}/{deep.tables.length} OK
-            </span>
-          </div>
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <th className="px-3 py-2">Lentelė</th>
-                  <th className="px-3 py-2 text-right">Įrašai</th>
-                  <th className="px-3 py-2 text-right">Delsa</th>
-                  <th className="px-3 py-2 text-right">Būklė</th>
-                  <th className="px-3 py-2 text-right"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {deep.tables.map((t) => (
-                  <tr key={t.table} className="border-b border-border/60 hover:bg-accent/30">
-                    <td className="px-3 py-2 font-mono text-xs">{t.table}</td>
-                    <td className="px-3 py-2 text-right font-semibold tabular-nums">{t.count.toLocaleString("lt-LT")}</td>
-                    <td className={`px-3 py-2 text-right tabular-nums text-xs ${t.ms > 500 ? "text-destructive" : t.ms > 200 ? "text-amber-400" : "text-success"}`}>{t.ms}ms</td>
-                    <td className="px-3 py-2 text-right">
-                      {t.ok ? <span className="text-success">✓ OK</span> : <span className="text-destructive" title={t.error ?? ""}>✗ ERR</span>}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <button onClick={() => openInspector(t.table)} className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
-                        Peržiūrėti
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {inspect && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur"
-            onClick={() => setInspect(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 10 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 10 }}
-              className="relative flex max-h-[85vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between border-b border-border p-4">
-                <div>
-                  <h3 className="flex items-center gap-2 font-display text-lg font-bold">
-                    <Database className="h-4 w-4 text-primary" />
-                    <span className="font-mono">{inspect.table}</span>
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {inspect.loading ? "Kraunama…" : `${inspect.rows.length} / ${inspect.total.toLocaleString("lt-LT")} įrašų (naujausi pirmi, max 100)`}
-                  </p>
-                </div>
-                <button onClick={() => setInspect(null)} className="rounded-full p-2 hover:bg-accent">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-auto p-4">
-                {inspect.loading ? (
-                  <div className="flex h-40 items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : inspect.rows.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-muted-foreground">Lentelė tuščia.</p>
-                ) : (
-                  <div className="overflow-x-auto rounded-xl border border-border">
-                    <table className="w-full text-xs">
-                      <thead className="bg-background/60">
-                        <tr className="border-b border-border">
-                          {Object.keys(inspect.rows[0]).map((col) => (
-                            <th key={col} className="px-3 py-2 text-left font-mono font-semibold uppercase tracking-wider text-[10px] text-muted-foreground whitespace-nowrap">{col}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {inspect.rows.map((row, i) => (
-                          <tr key={i} className="border-b border-border/50 hover:bg-accent/30">
-                            {Object.entries(row).map(([col, val]) => (
-                              <td key={col} className="max-w-xs truncate px-3 py-2 font-mono text-[11px]" title={String(val ?? "")}>
-                                {val === null ? <span className="text-muted-foreground/60">null</span>
-                                  : typeof val === "object" ? <span className="text-primary">{JSON.stringify(val).slice(0, 60)}</span>
-                                  : typeof val === "boolean" ? <span className={val ? "text-success" : "text-muted-foreground"}>{String(val)}</span>
-                                  : String(val).length > 80 ? String(val).slice(0, 80) + "…"
-                                  : String(val)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }

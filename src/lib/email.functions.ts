@@ -20,6 +20,10 @@ type SendPayload = {
 };
 
 // Anti-spam best-practice: plaintext fallback, Reply-To, List-Unsubscribe, tag for tracking.
+export async function sendResendEmail(to: string, subject: string, html: string, opts: { text?: string; tag?: string; urgent?: boolean } = {}) {
+  return sendResend({ to, subject, html, text: opts.text || "", tag: opts.tag });
+}
+
 async function sendResend(payload: SendPayload) {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
