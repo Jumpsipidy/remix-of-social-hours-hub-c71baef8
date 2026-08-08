@@ -111,6 +111,7 @@ function SpotlightCard({
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
   const calm = useCalmMotion();
+  const isMobile = useLowPowerDevice();
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(50);
   const my = useMotionValue(50);
@@ -121,7 +122,6 @@ function SpotlightCard({
     ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
   );
 
-  const isMobile = useLowPowerDevice();
 
   return (
     <motion.div

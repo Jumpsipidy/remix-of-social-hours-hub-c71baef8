@@ -141,7 +141,7 @@ function TasksPage() {
       const text = `${x.title} ${x.description} ${x.location} ${orgName} ${tagsStr}`.toLowerCase();
       if (q && !text.includes(q.toLowerCase())) return false;
       if (town && !x.location?.toLowerCase().includes(town.toLowerCase())) return false;
-      if (cat && guessCategory(x) !== cat) return false;
+      if (cat && guessCategory(x).toLowerCase() !== cat.toLowerCase()) return false;
       if (selectedTags.length) {
         const xt = x.tags ?? [];
         const ok = selectedTags.every((s) => xt.includes(s));
