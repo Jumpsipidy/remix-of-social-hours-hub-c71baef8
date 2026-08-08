@@ -53,8 +53,10 @@ const IGNORE_SUBSTRINGS = [
   "Failed to fetch",
   "a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff",
   "versijos",
-  "a61dcb0e74be5570ed929d34edd01512f618516f9681e8085da42be8265ea8ff",
-  "versijos",
+  "495365275f0fb4999adf862c3a1e860e285",
+  "rage click",
+  "Rage click detected",
+  "rage-click",
   // WebGL context creation/loss — decorative background only, we already fall back
 
   "THREE.WebGLRenderer",
