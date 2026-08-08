@@ -57,7 +57,7 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    minify: "esbuild",
+    minify: false, // Temporarily disable minification to bypass esbuild missing dependency error
     cssMinify: true,
     rollupOptions: {
       output: {
