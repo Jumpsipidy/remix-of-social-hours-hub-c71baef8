@@ -56,16 +56,24 @@ export default defineConfig({
     "import.meta.env.VITE_BUILD_TIME": JSON.stringify(BUILD_TIME),
   },
   build: {
+    target: "esnext",
+    minify: "terser",
+    cssMinify: true,
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("recharts")) return "vendor-recharts";
-          if (id.includes("framer-motion")) return "vendor-motion";
-          if (id.includes("leaflet") || id.includes("react-leaflet")) return "vendor-map";
-          if (id.includes("pdf-lib") || id.includes("qrcode")) return "vendor-pdf";
-          if (id.includes("lucide-react")) return "vendor-icons";
-          if (id.includes("three")) return "vendor-three";
-          if (id.includes("@tanstack")) return "vendor-tanstack";
+          if (id.includes("recharts")) return "v-charts";
+          if (id.includes("framer-motion")) return "v-motion";
+          if (id.includes("three")) return "v-3d";
+          if (id.includes("lucide-react")) return "v-icons";
+          if (id.includes("@tanstack")) return "v-router";
+          if (id.includes("supabase")) return "v-db";
           return null;
         },
       },
