@@ -85,7 +85,8 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="240" style="display:block; border:0; width: 240px; height: auto; max-width: 80%; margin: 0 auto;" />
+                    <!-- Removing black background container for clean official look -->
+                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="180" style="display:block; border:0; width: 180px; height: auto; max-width: 80%; margin: 0 auto; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));" />
                   </td>
                 </tr>
               </table>
@@ -146,7 +147,8 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(to right, ${theme.primary}, ${theme.secondary}); color:#fff; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 20px 40px ${theme.primary}44; text-transform:uppercase; letter-spacing:1px;">
+                    <!-- Stronger 3D interactive button -->
+                    <a href="${escape(opts.ctaHref)}" style="display:inline-block; padding:22px 64px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); color:#fff; font-weight:900; font-size:18px; text-decoration:none; border-radius:24px; box-shadow: 0 15px 35px ${theme.primary}66, inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -4px 10px rgba(0,0,0,0.3); text-transform:uppercase; letter-spacing:1px; border: 1px solid rgba(255,255,255,0.2);">
                       ${escape(opts.ctaLabel)}
                     </a>
                   </td>
@@ -157,7 +159,8 @@ export function renderShell(opts: ShellOptions): string {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:40px; border-top: 1px solid #ffffff11; padding-top: 20px;">
                 <tr>
                   <td align="left" style="font-size:11px; color:#64748b; line-height: 1.4;">
-                    <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties, kreipkitės nurodytais kontaktais.
+                    <b>Oficialus pranešimas.</b> Šis laiškas yra Socialinės Valandos sistemos dalis. Duomenų saugumą užtikrina LR įstatymai ir pažangūs šifravimo algoritmai. Jei turite klausimų dėl teisinės atitikties arba norite gauti patikslinimų, <b>atsakykite tiesiai į šį laišką</b> — mūsų komanda pasirengusi padėti.<br/><br/>
+                    Šis pranešimas yra teisiškai saistantis ir apsaugotas autorinių teisių.
                   </td>
                 </tr>
               </table>
