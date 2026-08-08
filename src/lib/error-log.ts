@@ -38,6 +38,10 @@ const IGNORE_SUBSTRINGS = [
   "react.dev/errors/425",
   "react.dev/errors/520",
   "hydrated but some attributes",
+  // The user's specific recurring "App.js" / "Concurrent Mode" generic error spam
+  "Patikrinkite, ar visi komponentai, naudojami App.js",
+  "Concurrent Mode",
+  "error boundaries aplink komponentus",
   // WebGL context creation/loss — decorative background only, we already fall back
   "THREE.WebGLRenderer",
   "WebGL context",

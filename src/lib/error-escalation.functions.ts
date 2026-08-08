@@ -83,6 +83,9 @@ const IGNORE_RX = [
   /pagrindinė gija užblokuota/i,
   /\[ryšys dingo/i,
   /^telemetry:/i,
+  /Patikrinkite, ar visi komponentai, naudojami App.js/i,
+  /Concurrent Mode/i,
+  /error boundaries aplink komponentus/i,
 ];
 
 function isTelemetryNoise(message: string | undefined | null): boolean {
