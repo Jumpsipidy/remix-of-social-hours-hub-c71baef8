@@ -24,7 +24,17 @@ export function renderOrgInviteEmail(p: Props): string {
       • <b style="color:#0f172a;">Teisinis skaidrumas:</b> Visi įrašai yra verifikuoti ir neklastojami.<br/>
       • <b style="color:#0f172a;">Laiko taupymas:</b> Pamirškite popierinius žurnalus — viskas valdoma vienu paspaudimu.<br/>
       • <b style="color:#0f172a;">Bendruomenės augimas:</b> Tiesioginis ryšys su Šeduvos gimnazijos ir regiono moksleiviais.<br/><br/>
-      <i style="color:#94a3b8; font-size:14px;">Turite klausimų? Spauskite mygtuką ir atsakykite į šį laišką – susisieksime per 1 valandą.</i>
+      
+      <div style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:24px; padding:24px; margin-top:32px; text-align:left;">
+        <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:16px;">Tolesni žingsniai:</h4>
+        <ol style="margin:0; padding-left:20px; color:#475569; font-size:15px; line-height:1.6;">
+          <li><b>Paskyros aktyvavimas:</b> Spauskite mygtuką žemiau.</li>
+          <li><b>Profilio užpildymas:</b> Nurodykite savo veiklos sritis.</li>
+          <li><b>Užduočių skelbimas:</b> Pradėkite kviesti savanorius per 2 minutes.</li>
+        </ol>
+      </div>
+      <br/>
+      <i style="color:#94a3b8; font-size:14px;">Turite klausimų? Spauskite mygtuką ir atsakykite į šį laišką – mūsų komanda pasirengusi padėti tiesiogiai.</i>
     `;
   } else if (variant === 2) {
     accent = "emerald";

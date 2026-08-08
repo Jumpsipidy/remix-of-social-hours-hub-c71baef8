@@ -79,14 +79,13 @@ export function renderShell(opts: ShellOptions): string {
       <td align="center" style="padding:60px 0;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="max-width:600px; margin: 0 auto; text-align: left; background-color: #ffffff; border-radius: 48px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden;">
           
-          <!-- Header (Official Logo - Optimized for Transparent PNG) -->
+          <!-- Header (Official Logo) -->
           <tr>
-            <td style="padding-bottom:50px; text-align:center;">
+            <td style="padding: 40px 0; text-align:center;">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                 <tr>
                   <td align="center">
-                    <!-- Increased size and removed all background containers/shadows that might interfere -->
-                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="320" style="display:block; border:0; width: 320px; height: auto; max-width: 90%; margin: 0 auto;" />
+                    <img src="https://socialinesvalandos.dev/logo.png" alt="Socialinės Valandos" width="360" style="display:block; border:0; width: 360px; height: auto; max-width: 90%; margin: 0 auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.05));" />
                   </td>
                 </tr>
               </table>
