@@ -120,7 +120,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { User, Shield, BarChart2, BookOpen, Settings, Layout } from "lucide-react";
 
 function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic: () => void }) {
-  const dash = DASHBOARD_BY_ROLE[role as any] || { to: "/login", label: "Prisijungti" };
+  const dash = (DASHBOARD_BY_ROLE as Record<string, any>)[role] || { to: "/login", label: "Prisijungti" };
   
   return (
     <div className="relative min-h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4">
