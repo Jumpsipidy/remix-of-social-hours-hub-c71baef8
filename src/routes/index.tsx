@@ -320,7 +320,7 @@ function Home() {
           </motion.div>
 
           <div
-            style={calm ? undefined : { transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() }} as any
+            style={calm ? undefined : ({ transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() } as React.CSSProperties)}
             className="relative mx-auto max-w-4xl text-center"
           >
             <div
