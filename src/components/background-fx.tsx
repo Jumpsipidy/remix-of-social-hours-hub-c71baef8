@@ -13,20 +13,18 @@ export function BackgroundFX({ isDashboard }: { isDashboard?: boolean }) {
   const [fallback, setFallback] = useState(false);
 
   useEffect(() => {
+    // Check for performance/hardware limitations
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setFallback(true); return; }
-
     const nav = navigator as Navigator & { deviceMemory?: number; connection?: any };
     const smallScreen = window.matchMedia("(max-width: 900px)").matches;
     const coarse = window.matchMedia("(pointer: coarse)").matches;
-    
-    // Stricter mobile/low-power check
     const isSaveData = nav.connection?.saveData === true;
     const weak =
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
       (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
 
-    if (isDashboard || smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
+    // If on a low-power device or in a dashboard, fall back immediately
+    if (isDashboard || reduce || smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
       setFallback(true);
       return;
     }

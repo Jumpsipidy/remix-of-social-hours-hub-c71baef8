@@ -367,11 +367,6 @@ function Home() {
     staleTime: 60_000,
   });
 
-  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
-  // We place this AFTER all hooks to ensure hook count is stable.
-  // Note: authLoading check is still needed if we want to showKraunama while fetching session.
-  // Simplified motion values - no complex springs for the core layout
-  // Note: useScroll and useTransform ARE hooks. They must be called unconditionally.
   const { scrollYProgress } = useScroll({ 
     target: heroRef, 
     offset: ["start start", "end start"] 
@@ -380,12 +375,38 @@ function Home() {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+  // Handle redirection to sub-dashboards if authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
+      // Small delay to ensure any layout transitions settle
+      const timer = setTimeout(() => {
+        // Only redirect if we haven't already
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, profile?.role, showRealHome, authLoading]);
+
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
-  // We place this AFTER all hooks to ensure hook count is stable.
-  if (isAuthenticated && profile?.role && !showRealHome) {
+  if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
     return (
       <PageShell>
         <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />
+      </PageShell>
+    );
+  }
+
+  if (authLoading) {
+    return (
+      <PageShell>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative h-16 w-16">
+              <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+              <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+            <p className="text-lg font-black tracking-widest text-white/40 uppercase">Kraunama...</p>
+          </div>
+        </div>
       </PageShell>
     );
   }

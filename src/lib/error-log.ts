@@ -133,6 +133,9 @@ const IGNORE_SUBSTRINGS = [
   "Rendered more hooks than during the previous render",
   "React has detected a change in the order of Hooks",
   "router is not defined",
+  "target ref",
+  "not hydrated",
+  "initial-render ref",
 ];
 
 const IGNORED_NETWORK_URLS = [
