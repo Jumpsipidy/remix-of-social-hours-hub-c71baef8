@@ -358,6 +358,7 @@ function Home() {
   const isMobile = useLowPowerDevice();
   const [showRealHome, setShowRealHome] = useState(false);
 
+  // ALWAYS call all hooks, then decide what to return.
   const heroRef = useRef<HTMLDivElement>(null);
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
@@ -367,6 +368,7 @@ function Home() {
   });
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  // We place this AFTER all hooks to ensure hook count is stable.
   if (isAuthenticated && profile?.role && !showRealHome) {
     return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
   }
@@ -383,10 +385,14 @@ function Home() {
   }
 
   // Simplified motion values - no complex springs for the core layout
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  // Note: useScroll and useTransform ARE hooks. They must be called unconditionally.
+  const { scrollYProgress } = useScroll({ 
+    target: heroRef, 
+    offset: ["start start", "end start"] 
+  });
+  
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
