@@ -319,8 +319,8 @@ function Home() {
             />
           </motion.div>
 
-          <motion.div
-            style={calm ? undefined : { y: heroY, opacity: heroOpacity, scale: heroScale }}
+          <div
+            style={calm ? undefined : { transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() }}
             className="relative mx-auto max-w-4xl text-center"
           >
             <div
@@ -335,7 +335,7 @@ function Home() {
               />
               <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
               <span className="relative">Lietuvos moksleiviams · nemokamai</span>
-            </motion.div>
+            </div>
 
             <KineticHeadline
               as="h2"
@@ -349,12 +349,9 @@ function Home() {
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
               savanorystės galimybėmis. <span className="text-primary font-bold">Atvira visai Lietuvai.</span>
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            <div
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
               <Magnetic className="w-full sm:w-auto">
