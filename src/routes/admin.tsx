@@ -150,7 +150,7 @@ function AdminLayout() {
                 key={item.to}
                 initial={compact ? { opacity: 0, x: -12 } : false}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: compact ? (groupIdx * 3 + i) * 0.022 : 0, type: "spring", stiffness: 380, damping: 32 }}
+                transition={{ delay: compact ? (groupIdx * 3 + i) * 0.015 : 0, type: "spring", stiffness: 400, damping: 35 }}
               >
                 <Link
                   to={item.to}
@@ -192,30 +192,29 @@ function AdminLayout() {
       <AdminMobileBoot />
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
 
-        {/* Mobile top bar - only visible on mobile, ensures Admin context is clear since Navbar is hidden */}
-        <div className="sticky top-[72px] md:top-0 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
+        {/* Mobile secondary bar — only visible on mobile, provides context for the current admin page */}
+        <div className="sticky top-[72px] z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setMobileOpen(true)}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border bg-card/80"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border bg-card/80 shadow-sm"
             aria-label="Meniu"
           >
             <Menu className="h-4 w-4" />
           </motion.button>
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-primary">Super Admin</p>
+            <p className="text-[8px] font-black uppercase tracking-[0.22em] text-primary/80">Administravimas</p>
             <motion.p
               key={currentLabel}
-              initial={{ opacity: 0, y: 4 }}
+              initial={{ opacity: 0, y: 2 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className="truncate font-display text-base font-bold tracking-tight"
+              className="truncate font-display text-sm font-bold tracking-tight"
             >
               {currentLabel}
             </motion.p>
           </div>
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
-            <Shield className="h-4 w-4" />
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow">
+            <Shield className="h-3.5 w-3.5" />
           </div>
         </div>
 
@@ -300,7 +299,7 @@ function AdminLayout() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.15, ease: "linear" }}
               >
                 <Outlet />
               </motion.div>
