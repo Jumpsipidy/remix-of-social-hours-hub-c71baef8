@@ -283,11 +283,12 @@ function RootComponent() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={router.state.location.pathname}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: "linear" }}
             className="flex-1 flex flex-col"
+            style={{ willChange: "opacity" }}
           >
             <Outlet />
           </motion.div>
