@@ -304,7 +304,7 @@ function Home() {
               as="h2"
               text="Kiekviena valanda — žingsnis pokyčio link"
               accentWords={["valanda"]}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[88px] font-display font-medium text-white"
+              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[94px] font-display font-black text-white"
             />
 
             <motion.p
@@ -357,7 +357,7 @@ function Home() {
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl"
+              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl shadow-elegant"
             >
               <motion.span
                 animate={calm ? undefined : { rotate: [0, 12, 0, -12, 0] }}

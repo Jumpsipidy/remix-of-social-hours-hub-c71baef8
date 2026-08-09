@@ -294,7 +294,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
       <BackgroundFX />
       <Navbar />
       <motion.main

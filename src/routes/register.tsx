@@ -214,7 +214,7 @@ function RegisterPage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 backdrop-blur">
               <Rocket className="h-3 w-3" /> Pradžia · 60 sekundžių
             </div>
-            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tight">
+            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tighter">
               Pradėk savo<br />
               <span className="bg-[linear-gradient(120deg,#2DD4BF,#FF4D2D,#2DD4BF)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:gradient-shift_6s_ease_infinite]">
                 valandų kelionę
@@ -278,7 +278,7 @@ function RegisterPage() {
             <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black tracking-tight">Sukurk paskyrą</h2>
+                  <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi.</p>
                 </div>
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2DD4BF,hsl(var(--primary)))] shadow-[0_10px_30px_-10px_#2DD4BF/0.7]">
