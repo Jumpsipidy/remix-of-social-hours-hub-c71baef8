@@ -290,7 +290,15 @@ function SpotlightCard({
 function Home() {
   const { profile, isAuthenticated, loading: authLoading } = useAuth();
   const calm = useCalmMotion();
+  const isMobile = useLowPowerDevice();
   const [showRealHome, setShowRealHome] = useState(false);
+
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: pageProgress } = useScroll();
+  const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   if (isAuthenticated && profile?.role && !showRealHome) {
@@ -311,13 +319,6 @@ function Home() {
       </div>
     );
   }
-
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: pageProgress } = useScroll();
-  const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
 
 
