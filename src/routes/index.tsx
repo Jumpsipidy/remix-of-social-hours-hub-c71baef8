@@ -370,6 +370,18 @@ function Home() {
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   // We place this AFTER all hooks to ensure hook count is stable.
   // Note: authLoading check is still needed if we want to showKraunama while fetching session.
+  // Simplified motion values - no complex springs for the core layout
+  // Note: useScroll and useTransform ARE hooks. They must be called unconditionally.
+  const { scrollYProgress } = useScroll({ 
+    target: heroRef, 
+    offset: ["start start", "end start"] 
+  });
+  
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  // We place this AFTER all hooks to ensure hook count is stable.
   if (isAuthenticated && profile?.role && !showRealHome) {
     return (
       <PageShell>
@@ -377,12 +389,6 @@ function Home() {
       </PageShell>
     );
   }
-
-  // Hook count stability check: Hero hooks called AFTER AuthenticatedHome branch would 
-  // cause the error when AuthenticatedHome is returned.
-  // HOWEVER, we moved AuthenticatedHome return to be AFTER the hook calls. 
-  // Wait, I actually put the return BEFORE the motion hooks in the last edit.
-  // Let's re-examine index.tsx.
 
   if (authLoading) {
     return (
@@ -394,16 +400,6 @@ function Home() {
       </div>
     );
   }
-
-  // Simplified motion values - no complex springs for the core layout
-  // Note: useScroll and useTransform ARE hooks. They must be called unconditionally.
-  const { scrollYProgress } = useScroll({ 
-    target: heroRef, 
-    offset: ["start start", "end start"] 
-  });
-  
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
