@@ -466,8 +466,8 @@ function Home() {
           </motion.div>
 
           <div
-            style={calm ? undefined : ({ transform: `translateY(${heroY.get()}px)`, opacity: heroOpacity.get() } as React.CSSProperties)}
-            className="relative mx-auto max-w-4xl text-center"
+            style={calm ? undefined : ({ opacity: heroOpacity.get(), transform: `translate3d(0, ${heroY.get()}px, 0)` } as React.CSSProperties)}
+            className="relative mx-auto max-w-4xl text-center will-change-transform"
           >
             <div
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"

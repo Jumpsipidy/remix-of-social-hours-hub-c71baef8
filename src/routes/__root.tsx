@@ -286,7 +286,7 @@ function RootComponent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "linear" }}
+            transition={{ duration: 0.15, ease: "linear" }}
             className="flex-1 flex flex-col"
             style={{ willChange: "opacity" }}
           >
