@@ -9,7 +9,7 @@ import { CustomReservationDialog } from "@/components/custom-reservation-dialog"
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { TiltCard } from "@/components/tilt-card";
 import { TasksBackgroundFX } from "@/components/tasks-background";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
 import { logActivity } from "@/lib/activity-log";
@@ -231,19 +231,20 @@ function TasksPage() {
           <div className="mt-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
               {[
-                { id: "tasks", label: "Užduotys" },
-                { id: "map", label: "Žemėlapis" },
-                { id: "orgs", label: "Organizacijos" }
+                { id: "tasks", label: "Užduotys", icon: TagIcon },
+                { id: "map", label: "Žemėlapis", icon: Navigation },
+                { id: "orgs", label: "Organizacijos", icon: Building2 }
               ].map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id as any)}
-                  className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold tracking-tight transition-all active:scale-95 ${
+                  className={`flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold tracking-tight transition-all active:scale-95 ${
                     tab === t.id 
                       ? "bg-gradient-primary text-primary-foreground shadow-glow" 
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  <t.icon className={`h-3.5 w-3.5 ${tab === t.id ? "text-white" : "text-muted-foreground"}`} />
                   {t.label}
                 </button>
               ))}
