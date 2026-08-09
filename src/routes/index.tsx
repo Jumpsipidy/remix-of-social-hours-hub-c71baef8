@@ -292,23 +292,11 @@ function Home() {
           <TricolorRibbons />
           
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <motion.div 
-              className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/20 mix-blend-screen"
-              animate={{ 
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-                x: [0, 40, 0]
-              }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            <div 
+              className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/10 mix-blend-screen"
             />
-            <motion.div 
-              className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-emerald-500/10 mix-blend-screen"
-              animate={{ 
-                scale: [1.2, 1, 1.2],
-                opacity: [0.2, 0.4, 0.2],
-                x: [0, -40, 0]
-              }}
-              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            <div 
+              className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-emerald-500/5 mix-blend-screen"
             />
           </div>
           {/* animated halos on top of the shell BackgroundFX */}
@@ -331,14 +319,11 @@ function Home() {
             />
           </motion.div>
 
-          <motion.div
-            style={calm ? undefined : { y: heroY, opacity: heroOpacity, scale: heroScale }}
+          <div
+            style={calm ? undefined : ({ transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() } as React.CSSProperties)}
             className="relative mx-auto max-w-4xl text-center"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            <div
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
               <motion.span
@@ -350,7 +335,7 @@ function Home() {
               />
               <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
               <span className="relative">Lietuvos moksleiviams · nemokamai</span>
-            </motion.div>
+            </div>
 
             <KineticHeadline
               as="h2"
@@ -359,20 +344,14 @@ function Home() {
               className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[104px] font-display font-black text-white"
             />
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            <p
               className="mx-auto mb-8 sm:mb-12 max-w-2xl text-lg sm:text-xl md:text-2xl leading-[1.6] text-white/70 font-medium"
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
               savanorystės galimybėmis. <span className="text-primary font-bold">Atvira visai Lietuvai.</span>
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            <div
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
               <Magnetic className="w-full sm:w-auto">
@@ -402,7 +381,7 @@ function Home() {
                   Naršyti užduotis
                 </Link>
               </Magnetic>
-            </motion.div>
+            </div>
 
             {/* floating stat pill under CTA */}
             <motion.div
@@ -426,12 +405,12 @@ function Home() {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </section>
 
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
-        <section className="relative border-y border-white/10 backdrop-blur-sm">
+        <section className="relative border-y border-white/10 backdrop-blur-sm will-change-transform">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[
               { v: counts.hours, l: "Užregistruota valandų", c: GOLD },

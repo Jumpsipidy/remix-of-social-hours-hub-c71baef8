@@ -40,11 +40,11 @@ export function BackgroundFX() {
       const probe = document.createElement("canvas").getContext("webgl2") ||
         document.createElement("canvas").getContext("webgl");
       if (!probe) { setFallback(true); return; }
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
+      renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false });
     } catch { setFallback(true); return; }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.0 : 1.25); // Lower DPR for better perf
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 0.75 : 1.0); // Lower resolution for better performance
     const width = () => mount.clientWidth;
     const height = () => mount.clientHeight;
 
@@ -82,7 +82,7 @@ export function BackgroundFX() {
       { r: 10.0, tube: 0.06, c: cSlate, rot: new THREE.Euler(0.4, -0.3, -0.15), speed: 0.028 },
     ];
     const rings = ringConfigs.map((cfg) => {
-      const g = new THREE.TorusGeometry(cfg.r, cfg.tube, 20, 220);
+      const g = new THREE.TorusGeometry(cfg.r, cfg.tube, 12, 64);
       const m = new THREE.MeshStandardMaterial({
         color: cfg.c, emissive: cfg.c, emissiveIntensity: 0.35,
         roughness: 0.5, metalness: 0.7, transparent: true, opacity: 0.4,
