@@ -1,4 +1,4 @@
-import { motion, useInView, useMotionValue, useSpring, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
@@ -117,30 +117,35 @@ export function KineticHeadline({ text, className = "", accentWords = [], delay 
 
 /* ── Magnetic button wrapper ──────────────────────────────────────────── */
 
+/**
+ * Cheap "magnetic" feel: a pure CSS transform applied directly to the node on
+ * pointer move (no springs, no React state, no re-renders). Falls back to a
+ * plain span on touch / reduced-motion devices.
+ */
 export function Magnetic({ children, strength = 14, className = "" }: { children: ReactNode; strength?: number; className?: string }) {
   const calm = useCalmMotion();
   const ref = useRef<HTMLSpanElement>(null);
-  const x = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
-  const y = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
 
   if (calm) return <span className={className}>{children}</span>;
 
   return (
-    <motion.span
+    <span
       ref={ref}
-      className={`inline-block ${className}`}
-      style={{ x, y }}
+      className={`inline-block will-change-transform ${className}`}
+      style={{ transition: "transform 220ms cubic-bezier(0.16,1,0.3,1)" }}
       onPointerMove={(e) => {
         if (e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
-        x.set(((e.clientX - r.left) / r.width - 0.5) * strength * 2);
-        y.set(((e.clientY - r.top) / r.height - 0.5) * strength * 2);
+        const dx = ((e.clientX - r.left) / r.width - 0.5) * strength * 2;
+        const dy = ((e.clientY - r.top) / r.height - 0.5) * strength * 2;
+        ref.current.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       }}
-      onPointerLeave={() => { x.set(0); y.set(0); }}
-      whileTap={{ scale: 0.97 }}
+      onPointerLeave={() => {
+        if (ref.current) ref.current.style.transform = "translate3d(0,0,0)";
+      }}
     >
       {children}
-    </motion.span>
+    </span>
   );
 }
 
@@ -210,28 +215,30 @@ export function CountUp({ value, className, duration = 1700 }: { value: number; 
   return <span ref={ref} className={className}>{fmt(n)}</span>;
 }
 
-/* ── Ambient tricolour ribbons (decorative background motion) ─────────── */
+/* ── Ambient tricolour ribbons (static decoration) ────────────────────── */
 
+/**
+ * Static gradient bands. Animating three large `blur-3xl` layers forever meant
+ * the compositor re-blurred a full-screen surface every frame — the main cause
+ * of scroll jank. The look is preserved, the cost is now zero.
+ */
 export function TricolorRibbons({ className = "" }: { className?: string }) {
-  const calm = useCalmMotion();
   const bands = [
-    { c: LT_YELLOW, d: 26, o: 0.16, top: "6%" },
-    { c: LT_GREEN, d: 34, o: 0.13, top: "38%" },
-    { c: LT_RED, d: 30, o: 0.15, top: "68%" },
+    { c: LT_YELLOW, o: 0.16, top: "6%" },
+    { c: LT_GREEN, o: 0.13, top: "38%" },
+    { c: LT_RED, o: 0.15, top: "68%" },
   ];
   return (
     <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}>
-      {bands.map((b, i) => (
-        <motion.div
+      {bands.map((b) => (
+        <div
           key={b.c}
-          className="absolute left-[-25%] h-[38vh] w-[150%] blur-3xl"
+          className="absolute left-[-25%] h-[38vh] w-[150%] blur-2xl"
           style={{
             top: b.top,
             opacity: b.o,
             background: `radial-gradient(60% 60% at 50% 50%, ${b.c}, transparent 70%)`,
           }}
-          animate={calm ? undefined : { x: ["-6%", "6%", "-6%"], y: ["0%", i % 2 ? "4%" : "-4%", "0%"] }}
-          transition={{ duration: b.d, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
     </div>

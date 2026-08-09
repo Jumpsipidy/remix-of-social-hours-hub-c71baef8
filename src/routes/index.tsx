@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, LayoutGroup } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
@@ -116,142 +116,6 @@ const GOLD = "oklch(0.85 0.16 85)";
 const TEAL = "oklch(0.75 0.12 180)";  
 const PURPLE = "oklch(0.65 0.18 280)";
 
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { User, Shield, BarChart2, BookOpen, Settings, Layout } from "lucide-react";
-
-function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic: () => void }) {
-  const dash = (DASHBOARD_BY_ROLE as Record<string, any>)[role] || { to: "/login", label: "Prisijungti" };
-  const [showFaq, setShowFaq] = useState(false);
-  
-  const roleInfo = {
-    admin: {
-      title: "Sveiki, Administratoriau",
-      desc: "Sistemos būklė yra stabili. Galite valdyti vartotojus, incidentus ir globalius nustatymus.",
-      faq: [
-        { q: "Kaip valdyti incidentus?", a: "Eikite į 'Incidentų žurnalas' skiltyje, ten matysite visas sistemos klaidas realiu laiku." },
-        { q: "Kaip pridėti naują mokyklą?", a: "Susisiekite su techniniu skyriumi dėl naujo mokyklos kodo generavimo (BETA)." }
-      ]
-    },
-    organization: {
-      title: "Sveiki, Partneriai",
-      desc: "Jūsų organizacija padeda moksleiviams augti. Peržiūrėkite naujas užklausas ir patvirtinkite valandas.",
-      faq: [
-        { q: "Kaip patvirtinti valandas?", a: "Mokinys turi nuskenuoti jūsų QR kodą arba pateikti 6 skaitmenų patvirtinimo kodą." },
-        { q: "Ką daryti, jei mokinys neatvyko?", a: "Galite tiesiog atmesti rezervaciją su atitinkamu komentaru pokalbių lange." }
-      ]
-    },
-    student: {
-      title: "Sveikas, Savanori",
-      desc: "Tavo kelionė tęsiasi. Rask naujas užduotis ir rink valandas savo ateičiai.",
-      faq: [
-        { q: "Kur rasti savo sertifikatus?", a: "Visi patvirtinti sertifikatai saugomi tavo mokinio skydelyje, skiltyje 'Pasiekimai'." },
-        { q: "Ką daryti jei pamiršau nuskenuoti QR?", a: "Parašyk organizacijai per vidinį pokalbių langą — jie gali patvirtinti valandas rankiniu būdu." }
-      ]
-    },
-    school_admin: {
-      title: "Sveiki, Mokytojau",
-      desc: "Stebėkite savo mokinių progresą ir užtikrinkite sklandų savanorystės procesą.",
-      faq: [
-        { q: "Kaip matyti savo klasę?", a: "Visi jūsų klasės mokiniai rodomi pagrindiniame mokyklos administratoriaus skydelyje." },
-        { q: "Ar galiu koreguoti valandas?", a: "Taip, jei pastebėjote klaidą, galite susisiekti su organizacija arba sistemos administratoriumi." }
-      ]
-    }
-  }[role as 'admin' | 'organization' | 'student' | 'school_admin'] || { title: "Sveiki sugrįžę", desc: "Jūsų paskyra paruošta darbui.", faq: [] };
-
-  return (
-    <div className="relative min-h-[80vh] overflow-hidden flex flex-col items-center justify-center px-4 py-20">
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${
-          role === 'admin' ? 'from-rose-500/20 to-orange-500/20' : 
-          role === 'organization' ? 'from-emerald-500/20 to-teal-500/20' :
-          'from-blue-500/20 to-indigo-500/20'
-        }`} />
-      </div>
-
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 w-full max-w-2xl text-center space-y-10"
-      >
-        <div className="space-y-4">
-          <motion.div
-            initial={{ scale: 0.8, rotate: -10 }}
-            animate={{ scale: 1, rotate: 0 }}
-            className="mx-auto w-24 h-24 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center mb-8 shadow-2xl backdrop-blur-xl"
-          >
-            {role === 'admin' ? <Shield className="w-12 h-12 text-rose-400" /> :
-             role === 'organization' ? <Building2 className="w-12 h-12 text-emerald-400" /> :
-             <GraduationCap className="w-12 h-12 text-blue-400" />}
-          </motion.div>
-          
-          <h2 className="text-5xl font-black text-white tracking-tighter sm:text-6xl">
-            {roleInfo.title}
-          </h2>
-          <p className="text-white/60 text-xl max-w-lg mx-auto leading-relaxed">
-            {roleInfo.desc}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <Link
-            to={dash.to}
-            className="flex items-center justify-center gap-4 bg-primary hover:bg-primary/90 text-white px-8 py-5 rounded-[2rem] font-black text-xl transition-all shadow-glow hover:scale-[1.03] active:scale-95"
-          >
-            <Layout className="w-6 h-6" />
-            Eiti į skydelį
-          </Link>
-          <button
-            onClick={onShowPublic}
-            className="flex items-center justify-center gap-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-5 rounded-[2rem] font-black text-xl transition-all active:scale-95"
-          >
-            <BookOpen className="w-6 h-6" />
-            Naujienos
-          </button>
-        </div>
-
-        <div className="pt-10 border-t border-white/5">
-          <button 
-            onClick={() => setShowFaq(!showFaq)}
-            className="group inline-flex items-center gap-2 text-white/40 hover:text-white/70 transition-colors text-sm font-bold uppercase tracking-widest"
-          >
-            <Sparkles className={`w-4 h-4 transition-transform duration-500 ${showFaq ? 'rotate-180 text-primary' : ''}`} />
-            Jūsų Rolės DUK
-            <ChevronDown className={`w-4 h-4 transition-transform duration-500 ${showFaq ? 'rotate-180' : ''}`} />
-          </button>
-          
-          <AnimatePresence>
-            {showFaq && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden mt-6 text-left space-y-4"
-              >
-                {roleInfo.faq.map((f, i) => (
-                  <div key={i} className="bg-white/[0.03] border border-white/5 p-5 rounded-2xl">
-                    <div className="font-bold text-white mb-2">{f.q}</div>
-                    <div className="text-white/50 text-sm leading-relaxed">{f.a}</div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="flex justify-center gap-12 text-white/30">
-           <div className="flex flex-col items-center group cursor-help">
-             <BarChart2 className="w-6 h-6 mb-2 group-hover:text-primary transition-colors" />
-             <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Analitika</span>
-           </div>
-           <div className="flex flex-col items-center group cursor-help">
-             <Settings className="w-6 h-6 mb-2 group-hover:text-primary transition-colors" />
-             <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Profilis</span>
-           </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -263,7 +127,7 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
       transition={{ delay: i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={`group rounded-2xl border transition-all duration-300 ${
         isOpen ? "border-primary/40 bg-white/[0.05] shadow-glow" : "border-white/10 bg-white/[0.03] hover:border-white/25"
-      } px-5 py-4 backdrop-blur-xl`}
+      } px-5 py-4`}
     >
       <button 
         onClick={() => setIsOpen(!isOpen)}
@@ -302,52 +166,37 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
 
 
 
-/** Cursor-tracking spotlight card with parallax tilt + sheen sweep */
+/**
+ * Card with a cursor-following spotlight — implemented with CSS custom
+ * properties written straight to the node. No motion values, no springs, no
+ * re-renders, and nothing at all on touch devices.
+ */
 function SpotlightCard({
   children,
   className = "",
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
-  const calm = useCalmMotion();
-  const isMobile = useLowPowerDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(50);
-  const my = useMotionValue(50);
-  const rx = useSpring(useTransform(my, [0, 100], [7, -7]), { stiffness: 140, damping: 16 });
-  const ry = useSpring(useTransform(mx, [0, 100], [-7, 7]), { stiffness: 140, damping: 16 });
-  const glow = useTransform(
-    [mx, my] as never,
-    ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
-  );
-
 
   return (
-    <motion.div
+    <div
       ref={ref}
       onPointerMove={(e) => {
-        if (calm || isMobile || e.pointerType !== "mouse" || !ref.current) return;
+        if (e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
-        mx.set(((e.clientX - r.left) / r.width) * 100);
-        my.set(((e.clientY - r.top) / r.height) * 100);
+        ref.current.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        ref.current.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
       }}
-      onPointerLeave={() => { mx.set(50); my.set(50); }}
-      whileHover={calm || isMobile ? undefined : { y: -6 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      style={calm || isMobile ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/25 ${className}`}
+      style={{ "--mx": "50%", "--my": "50%" } as React.CSSProperties}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-[border-color,transform] duration-200 hover:-translate-y-1 hover:border-white/25 ${className}`}
     >
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: isMobile ? undefined : glow }}
-      />
-      {/* diagonal sheen that sweeps across on hover */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[600ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
+        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: `radial-gradient(420px circle at var(--mx) var(--my), ${accent}26, transparent 62%)` }}
       />
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -356,10 +205,6 @@ function Home() {
   const { profile, isAuthenticated, loading: authLoading } = useAuth();
   const calm = useCalmMotion();
   const isMobile = useLowPowerDevice();
-  const [showRealHome, setShowRealHome] = useState(false);
-
-  // ALWAYS call all hooks, then decide what to return.
-  const heroRef = useRef<HTMLDivElement>(null);
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
     queryKey: ["public-stats"],
@@ -367,64 +212,16 @@ function Home() {
     staleTime: 60_000,
   });
 
-  const { scrollYProgress } = useScroll({ 
-    target: heroRef, 
-    offset: ["start start", "end start"] 
-  });
-  
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  // Handle redirection to sub-dashboards if authenticated
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
-      // Small delay to ensure any layout transitions settle
-      const timer = setTimeout(() => {
-        // Only redirect if we haven't already
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, profile?.role, showRealHome, authLoading]);
-
-  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
-  if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
-    return (
-      <PageShell>
-        <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />
-      </PageShell>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <PageShell>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-              <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-            <p className="text-lg font-black tracking-widest text-white/40 uppercase">Kraunama...</p>
-          </div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Kraunama...</p>
-        </div>
-      </div>
-    );
-  }
+  // Everyone — logged in or not — sees the same main homepage. Logged-in users
+  // just get a shortcut strip to their own area at the top.
+  const dash = profile?.role
+    ? (DASHBOARD_BY_ROLE as Record<string, { to: string; label: string } | null>)[profile.role]
+    : null;
 
   const isStudent = isAuthenticated && profile?.role === "student";
-  const primaryCta = isStudent ? "/student" : "/register";
-  const primaryLabel = isStudent ? "Į mano sritį" : "Pradėti savanorystę";
+  const primaryCta = dash?.to ?? "/register";
+  const primaryLabel = dash ? dash.label : "Pradėti savanorystę";
+
 
 
   const roles = [
@@ -467,42 +264,32 @@ function Home() {
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
         <PreLaunchBanner />
 
-        {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
-          <TricolorRibbons />
-          
-          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <div 
-              className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/10 mix-blend-screen"
-            />
-            <div 
-              className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-emerald-500/5 mix-blend-screen"
-            />
+        {/* Quick shortcut for signed-in users */}
+        {isAuthenticated && dash && (
+          <div className="mx-auto mt-4 flex max-w-4xl flex-wrap items-center justify-center gap-3 px-4">
+            <span className="text-sm text-white/60">
+              Sveiki sugrįžę{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}!
+            </span>
+            <Link
+              to={dash.to}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-sm font-bold text-white transition-colors hover:border-white/35"
+            >
+              {dash.label} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          {/* animated halos on top of the shell BackgroundFX */}
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ y: heroY, opacity: heroOpacity }}
-          >
-            <motion.div
-              className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
-              style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 65%)` }}
-              animate={calm ? undefined : { x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
-              transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full blur-3xl"
-              style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 65%)` }}
-              animate={calm ? undefined : { x: [0, -30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
+        )}
 
-          <div
-            style={calm ? undefined : ({ opacity: heroOpacity.get(), transform: `translate3d(0, ${heroY.get()}px, 0)` } as React.CSSProperties)}
-            className="relative mx-auto max-w-4xl text-center will-change-transform"
-          >
+        {/* HERO ─────────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
+          <TricolorRibbons />
+
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-primary/10" />
+            <div className="absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-emerald-500/5" />
+          </div>
+
+          <div className="relative mx-auto max-w-4xl text-center">
+
             <div
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
@@ -510,8 +297,7 @@ function Home() {
                 aria-hidden
                 className="absolute inset-0 motion-reduce:hidden"
                 style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
-                animate={calm ? undefined : { backgroundPosition: ["0% 0%", "220% 0%"] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                
               />
               <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
               <span className="relative">Lietuvos moksleiviams · nemokamai</span>
@@ -568,11 +354,10 @@ function Home() {
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl shadow-elegant"
+              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 shadow-elegant"
             >
               <motion.span
-                animate={calm ? undefined : { rotate: [0, 12, 0, -12, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                
               >
                 <Clock className="h-5 w-5" style={{ color: GOLD }} />
               </motion.span>
@@ -590,7 +375,7 @@ function Home() {
 
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
-        <section className="relative border-y border-white/10 backdrop-blur-sm will-change-transform">
+        <section className="relative border-y border-white/10">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[
               { v: counts.hours, l: "Užregistruota valandų", c: GOLD },
@@ -599,8 +384,8 @@ function Home() {
             ].map((s, i) => (
               <motion.div
                 key={s.l}
-                initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.12, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
                 className="group relative overflow-hidden px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
@@ -703,8 +488,8 @@ function Home() {
               {roles.map((c, i) => (
                 <motion.div
                   key={c.tag}
-                  initial={{ opacity: 0, y: 34, rotateX: -10 }}
-                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ delay: i * 0.12, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   style={{ perspective: 1000 }}
@@ -775,8 +560,8 @@ function Home() {
                 ].map((s, i) => (
                   <motion.li
                     key={s.t}
-                    initial={{ opacity: 0, x: -28, filter: "blur(6px)" }}
-                    whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-70px" }}
                     transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="relative flex gap-4 sm:gap-6 md:pl-0"
@@ -902,10 +687,9 @@ function Home() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <motion.div
-              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-3xl"
+              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-2xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
-              animate={calm ? undefined : { scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              
             />
           </motion.div>
 
