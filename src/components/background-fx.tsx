@@ -8,7 +8,7 @@ import * as THREE from "three";
  * glass rings and a soft grain layer. No neon, no rainbow. Text stays
  * effortlessly legible.
  */
-export function BackgroundFX() {
+export function BackgroundFX({ isDashboard }: { isDashboard?: boolean }) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [fallback, setFallback] = useState(false);
 
@@ -26,7 +26,7 @@ export function BackgroundFX() {
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
       (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
 
-    if (smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
+    if (isDashboard || smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
       setFallback(true);
       return;
     }

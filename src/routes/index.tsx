@@ -159,7 +159,7 @@ function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic:
   }[role as 'admin' | 'organization' | 'student' | 'school_admin'] || { title: "Sveiki sugrįžę", desc: "Jūsų paskyra paruošta darbui.", faq: [] };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4 py-20">
+    <div className="relative min-h-[80vh] overflow-hidden flex flex-col items-center justify-center px-4 py-20">
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${
           role === 'admin' ? 'from-rose-500/20 to-orange-500/20' : 
@@ -358,6 +358,7 @@ function Home() {
   const isMobile = useLowPowerDevice();
   const [showRealHome, setShowRealHome] = useState(false);
 
+  // ALWAYS call all hooks, then decide what to return.
   const heroRef = useRef<HTMLDivElement>(null);
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
@@ -367,8 +368,26 @@ function Home() {
   });
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  // We place this AFTER all hooks to ensure hook count is stable.
+  // Note: authLoading check is still needed if we want to showKraunama while fetching session.
+  // Simplified motion values - no complex springs for the core layout
+  // Note: useScroll and useTransform ARE hooks. They must be called unconditionally.
+  const { scrollYProgress } = useScroll({ 
+    target: heroRef, 
+    offset: ["start start", "end start"] 
+  });
+  
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  // We place this AFTER all hooks to ensure hook count is stable.
   if (isAuthenticated && profile?.role && !showRealHome) {
-    return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
+    return (
+      <PageShell>
+        <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />
+      </PageShell>
+    );
   }
 
   if (authLoading) {
@@ -381,12 +400,6 @@ function Home() {
       </div>
     );
   }
-
-  // Simplified motion values - no complex springs for the core layout
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
