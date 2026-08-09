@@ -190,9 +190,10 @@ function AdminLayout() {
       <AdminAurora />
       <AdminMobileBoot />
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
+        <Navbar />
 
         {/* Mobile top bar */}
-        <div className="sticky top-14 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
+        <div className="sticky top-0 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setMobileOpen(true)}
@@ -277,8 +278,8 @@ function AdminLayout() {
           )}
         </AnimatePresence>
 
-        <div className="grid gap-6 pb-28 pt-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-10 lg:pb-16">
-          <aside className="sticky top-24 hidden h-fit overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur-xl lg:block">
+        <div className="grid gap-6 pb-28 pt-4 lg:grid-cols-[240px_minmax(0,1fr)] lg:py-6 lg:pb-16">
+          <aside className="sticky top-6 hidden h-fit overflow-hidden rounded-2xl border border-border bg-card/70 p-4 shadow-md backdrop-blur-xl lg:block">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
             <div className="mb-4 flex items-center gap-2 px-1">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">

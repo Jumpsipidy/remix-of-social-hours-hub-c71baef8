@@ -82,18 +82,18 @@ export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" 
           </motion.div>
         </div>
 
-        <h1 className="text-2xl font-bold text-white">Kažkas trumpai sulūžo</h1>
-        <p className="mt-2 text-sm text-white/70">
-          Nesijaudink — mūsų sistema jau <strong>automatiškai pranešė adminui</strong> ir taisymas prasidėjo.
-          Tavo duomenys yra saugūs.
+        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Panašu, kad iškilo nesklandumų</h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-white/70">
+          Nenusimink — mūsų sistema jau <strong>automatiškai pranešė administracijai</strong>. 
+          Mes jau skubame viską sutvarkyti, kad galėtum tęsti savanorystę.
         </p>
 
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-200">
+        <div className="mt-6 inline-flex items-center gap-2.5 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-2 text-[13px] font-bold text-emerald-400 backdrop-blur-md">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
           </span>
-          <span>Taisoma{".".repeat(dots)}</span>
+          <span>Sistemos atkūrimas vyksta{".".repeat(dots)}</span>
         </div>
 
         <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-3 text-left">
