@@ -85,6 +85,13 @@ export function Navbar() {
           className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
         >
           <motion.div 
+            onClick={(e) => {
+              (e.currentTarget as any)._clickCount = ((e.currentTarget as any)._clickCount || 0) + 1;
+              if ((e.currentTarget as any)._clickCount === 4) {
+                (e.currentTarget as any)._clickCount = 0;
+                // Trigger 3D Easter Egg
+              }
+            }}
             whileHover={{ 
               rotateY: 360, 
               rotateX: [0, -20, 20, 0],
@@ -94,7 +101,7 @@ export function Navbar() {
               rotateY: { duration: 0.8, ease: "easeInOut" },
               rotateX: { duration: 0.6, repeat: 1 }
             }}
-            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow"
+            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow cursor-pointer"
             style={{ transformStyle: "preserve-3d" }}
           >
             <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
@@ -103,6 +110,7 @@ export function Navbar() {
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
+            {/* Easter Egg Particles */}
             <motion.div
               initial={{ opacity: 0 }}
               whileHover={{ opacity: 1 }}
