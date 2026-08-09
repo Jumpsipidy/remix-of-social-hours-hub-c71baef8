@@ -333,6 +333,7 @@ function TasksPage() {
             tasks={filteredTasks} 
             organizations={allOrgs}
             onSelectTask={handleReserve}
+            onSelectOrg={(org) => navigate({ to: `/org/${org.id}` })}
           />
         ) : tab === "tasks" ? (
           <>
