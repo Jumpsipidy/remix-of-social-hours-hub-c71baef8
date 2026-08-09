@@ -299,26 +299,13 @@ function Home() {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
 
-  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
-  if (isAuthenticated && profile?.role && !showRealHome) {
-    return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
-  }
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Ruošiame jūsų skydelį...</p>
-        </motion.div>
-      </div>
-    );
-  }
+  const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: () => getPublicStats(),
+    staleTime: 60_000,
+  });
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   if (isAuthenticated && profile?.role && !showRealHome) {
