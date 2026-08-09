@@ -70,6 +70,7 @@ const NAV_GROUPS = [
       { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
       { to: "/admin/autofix", label: "⚡ Auto-Fix Feed", icon: Sparkles },
       { to: "/admin/bugs", label: "Bug pranešimai", icon: Bug },
+      { to: "/admin/incidents", label: "⚠️ Incidentai", icon: AlertTriangle },
       { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },
     ],
   },
