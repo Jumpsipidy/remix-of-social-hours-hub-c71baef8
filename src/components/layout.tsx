@@ -79,7 +79,7 @@ export function Navbar() {
   // if (isAdminSection) return null;
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-3xl transition-all duration-500 hover:bg-background/60 group/header">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur-xl group/header">
       {/* Animated gradient top border */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-30" />
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
@@ -115,11 +115,7 @@ export function Navbar() {
             style={{ transformStyle: "preserve-3d" }}
           >
             <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-            <motion.div 
-              className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <div className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
             {/* Easter Egg Particles */}
             <AnimatePresence>
               {(easterEgg || clickCount > 0) && (
@@ -142,7 +138,6 @@ export function Navbar() {
                       }}
                       transition={{
                         duration: easterEgg ? 1.5 : 0.8,
-                        repeat: easterEgg ? 0 : Infinity,
                         delay: i * 0.05
                       }}
                       style={{ left: "50%", top: "50%" }}
