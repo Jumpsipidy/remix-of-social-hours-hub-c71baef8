@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
