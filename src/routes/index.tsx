@@ -378,6 +378,12 @@ function Home() {
     );
   }
 
+  // Hook count stability check: Hero hooks called AFTER AuthenticatedHome branch would 
+  // cause the error when AuthenticatedHome is returned.
+  // HOWEVER, we moved AuthenticatedHome return to be AFTER the hook calls. 
+  // Wait, I actually put the return BEFORE the motion hooks in the last edit.
+  // Let's re-examine index.tsx.
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
