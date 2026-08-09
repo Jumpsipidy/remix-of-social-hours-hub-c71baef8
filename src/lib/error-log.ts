@@ -120,8 +120,16 @@ const IGNORE_SUBSTRINGS = [
   "TypeError: Failed to fetch",
   "Failed to load resource",
   "status 500",
-
-
+  "API key not found",
+  "resend",
+  "quota",
+  "limit exceeded",
+  "rate limit",
+  "connection timeout",
+  "econnreset",
+  "etimedout",
+  "network error",
+  "socket hang up",
 ];
 
 const IGNORED_NETWORK_URLS = [
