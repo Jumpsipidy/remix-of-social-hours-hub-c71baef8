@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashHero, GlassCard } from "@/components/dashboard-kit";
-import { AlertTriangle, Clock, MapPin, User, ShieldAlert, Activity, Search, RefreshCw, XCircle } from "lucide-react";
+import { AlertTriangle, Clock, MapPin, User, Activity, Search, RefreshCw, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { lt } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,10 +32,12 @@ function AdminIncidentsPage() {
     refetchInterval: 10000,
   });
 
-  const filteredLogs = logs?.filter(log => 
-    JSON.stringify(log.meta).toLowerCase().includes(filter.toLowerCase()) ||
-    log.action.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredLogs = logs?.filter(log => {
+    const metaStr = JSON.stringify(log.meta || {}).toLowerCase();
+    const actionStr = (log.action || "").toLowerCase();
+    const search = filter.toLowerCase();
+    return metaStr.includes(search) || actionStr.includes(search);
+  });
 
   return (
     <div className="space-y-6 bg-background p-4 sm:p-8">
@@ -92,7 +94,7 @@ function AdminIncidentsPage() {
 }
 
 function IncidentCard({ log }: { log: any }) {
-  const meta = log.meta as any;
+  const meta = (log.meta || {}) as any;
   const isSupabase = log.action === "supabase.error";
 
   return (
@@ -113,7 +115,7 @@ function IncidentCard({ log }: { log: any }) {
             </span>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
-              {format(new Date(log.created_at), "HH:mm:ss · MMM d", { locale: lt })}
+              {log.created_at ? format(new Date(log.created_at), "HH:mm:ss · MMM d", { locale: lt }) : "---"}
             </div>
             {meta.path && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -145,7 +147,7 @@ function IncidentCard({ log }: { log: any }) {
             {log.user_id && (
               <div className="flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1 text-[10px] text-muted-foreground">
                 <User className="h-3 w-3" />
-                {log.user_id.slice(0, 8)}
+                {String(log.user_id).slice(0, 8)}
               </div>
             )}
           </div>
@@ -173,6 +175,6 @@ function IncidentCard({ log }: { log: any }) {
           </div>
         </details>
       )}
-    </div>
+    </motion.div>
   );
 }
