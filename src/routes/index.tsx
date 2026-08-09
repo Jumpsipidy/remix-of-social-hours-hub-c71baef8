@@ -425,7 +425,6 @@ function Home() {
       </h1>
 
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
-        <TricolorRail progress={railProgress} />
         <PreLaunchBanner />
 
         {/* HERO ─────────────────────────────────────────────────────────── */}
