@@ -158,6 +158,14 @@ function OrgDashboard() {
     toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
     if (user) refresh(user.id);
   };
+
+  const promoteTask = (t: TaskRow) => {
+    toast.success(`Užduotis „${t.title}“ iškelta į sąrašo viršų! (BETA)`, {
+      icon: <Sparkles className="h-4 w-4 text-primary" />,
+      description: "Dabar mokiniai matys šį skelbimą pirmiau už kitus."
+    });
+  };
+
   const deleteTask = async (t: TaskRow) => {
     if (busyId) return;
     if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
@@ -352,6 +360,9 @@ function OrgDashboard() {
                     <ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR
                   </Link>
                 </Button>
+                <Button variant="outline" size="sm" className="rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                  <Sparkles className="mr-1.5 h-4 w-4" /> Reklamuoti skelbimą
+                </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-full">
                   <Link to="/org/$id" params={{ id: user.id }} target="_blank">
                     <Eye className="mr-1.5 h-4 w-4" /> Viešas profilis
@@ -506,6 +517,9 @@ function OrgDashboard() {
                 <div className="mt-3 flex gap-2">
                   <button onClick={() => toggleTask(t)} disabled={busyId === t.id} className="flex-1 disabled:opacity-50 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
+                  </button>
+                  <button onClick={() => promoteTask(t)} disabled={busyId === t.id} aria-label="Reklamuoti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/10">
+                    <Sparkles className="h-3.5 w-3.5" />
                   </button>
                   <button onClick={() => deleteTask(t)} disabled={busyId === t.id} aria-label="Ištrinti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
