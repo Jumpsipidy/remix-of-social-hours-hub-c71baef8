@@ -9,7 +9,8 @@
 // - Shows the stack only in dev
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, Home, RefreshCw, Wrench, Copy, Check, WifiOff, LifeBuoy } from "lucide-react";
+import { AlertTriangle, Home, RefreshCw, Wrench, Copy, Check, WifiOff, LifeBuoy, ShieldAlert, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { logClientError } from "@/lib/error-log";
 import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
 
@@ -82,11 +83,28 @@ export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" 
           </motion.div>
         </div>
 
-        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Panašu, kad iškilo nesklandumų</h1>
+        <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Kažkas nutiko... bet mes jau taisome!</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-white/70">
           Nenusimink — mūsų sistema jau <strong>automatiškai pranešė administracijai</strong>. 
-          Mes jau skubame viską sutvarkyti, kad galėtum tęsti savanorystę.
+          Mes jau skubame viską sutvarkyti. Kol kas gali grįžti į pradžią arba bandyti dar kartą.
         </p>
+        
+        {/* Rapid access for super admin debugging if applicable */}
+        <div className="mt-6 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-left">
+          <div className="flex items-center gap-3 text-primary mb-2">
+            <ShieldAlert className="w-5 h-5" />
+            <span className="text-xs font-bold uppercase tracking-widest">Saugumo modulis</span>
+          </div>
+          <p className="text-[11px] text-white/60 mb-3">
+            Jei esi sistemos kūrėjas, naudok incidento kodą auditui.
+          </p>
+          <Link 
+            to="/admin/incidents" 
+            className="inline-flex items-center gap-2 text-[10px] font-bold text-primary hover:underline"
+          >
+            Atidaryti incidentų žurnalą <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
 
         <div className="mt-6 inline-flex items-center gap-2.5 rounded-2xl border border-emerald-400/20 bg-emerald-500/5 px-4 py-2 text-[13px] font-bold text-emerald-400 backdrop-blur-md">
           <span className="relative flex h-2 w-2">
