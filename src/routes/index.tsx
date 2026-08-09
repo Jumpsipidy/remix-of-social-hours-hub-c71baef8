@@ -319,6 +319,26 @@ function Home() {
       </div>
     );
   }
+
+  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  if (isAuthenticated && profile?.role && !showRealHome) {
+    return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-muted-foreground">Ruošiame jūsų skydelį...</p>
+        </motion.div>
+      </div>
+    );
+  }
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
 
 
