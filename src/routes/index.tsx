@@ -326,16 +326,6 @@ function Home() {
       </div>
     );
   }
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
-
-
-  // Anonymous visitors cannot read `profiles` (RLS), so these totals come from
-  // a server function that aggregates with the service-role client.
-  const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
-    queryKey: ["public-stats"],
-    queryFn: () => getPublicStats(),
-    staleTime: 60_000,
-  });
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
