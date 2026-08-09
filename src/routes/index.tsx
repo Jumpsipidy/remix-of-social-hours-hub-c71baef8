@@ -902,18 +902,6 @@ function Home() {
 
       </div>
       
-      <Reveal delay={0.5}>
-        <div className="fixed bottom-6 left-6 z-[60] max-w-[280px] pointer-events-none sm:max-w-md">
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-2xl shadow-2xl pointer-events-auto">
-            <p className="text-[10px] leading-relaxed text-white/40 italic">
-              &quot;Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.&quot;
-            </p>
-            <div className="mt-2 text-[9px] font-bold uppercase tracking-widest text-primary/60">
-              Sistemos Pranešimas · 2026-08-09
-            </div>
-          </div>
-        </div>
-      </Reveal>
     </PageShell>
   );
 }
