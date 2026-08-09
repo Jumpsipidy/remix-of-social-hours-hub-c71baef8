@@ -103,7 +103,9 @@ export function Navbar() {
               scale: [1, 1.3, 1],
               transition: { duration: 1.2, ease: "easeInOut" }
             } : {
-              scale: clickCount > 0 ? 1 + clickCount * 0.05 : 1
+              scale: clickCount > 0 ? 1 + clickCount * 0.05 : 1,
+              rotateY: 0,
+              rotateX: 0
             }}
             whileHover={{ 
               scale: 1.1 
