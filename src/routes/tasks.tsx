@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
 import { logActivity } from "@/lib/activity-log";
 import { listOrganizations } from "@/lib/orgs.functions";
+import { InteractiveTasksMap } from "@/components/interactive-tasks-map";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -80,7 +81,7 @@ function guessCategory(t: Task): string {
 function TasksPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"tasks" | "orgs">("tasks");
+  const [tab, setTab] = useState<"tasks" | "orgs" | "map">("tasks");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [orgs, setOrgs] = useState<Record<string, OrgProfile>>({});
   const [allOrgs, setAllOrgs] = useState<OrgProfile[]>([]);
@@ -229,14 +230,23 @@ function TasksPage() {
 
           <div className="mt-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
-              <button
-                onClick={() => setTab("tasks")}
-                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "tasks" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
-              >Užduotys</button>
-              <button
-                onClick={() => setTab("orgs")}
-                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "orgs" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
-              >Organizacijos</button>
+              {[
+                { id: "tasks", label: "Užduotys" },
+                { id: "map", label: "Žemėlapis" },
+                { id: "orgs", label: "Organizacijos" }
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id as any)}
+                  className={`whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold tracking-tight transition-all active:scale-95 ${
+                    tab === t.id 
+                      ? "bg-gradient-primary text-primary-foreground shadow-glow" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -317,7 +327,15 @@ function TasksPage() {
 
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        {tab === "tasks" ? (
+        {tab === "map" ? (
+          <Reveal y={20}>
+            <InteractiveTasksMap 
+              tasks={filteredTasks} 
+              organizations={allOrgs}
+              onSelectTask={handleReserve}
+            />
+          </Reveal>
+        ) : tab === "tasks" ? (
           <>
             {filteredTasks.length === 0 && (
               <div className="rounded-3xl border border-dashed border-border p-16 text-center">
