@@ -362,9 +362,17 @@ export function Footer() {
 }
 
 export function PageShell({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboard = pathname !== "/" && (
+    pathname.startsWith("/student") || 
+    pathname.startsWith("/organization") || 
+    pathname.startsWith("/school") || 
+    pathname.startsWith("/admin")
+  );
+
   return (
     <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
-      <BackgroundFX />
+      <BackgroundFX isDashboard={isDashboard} />
       <Navbar />
       <main>
         {children}
