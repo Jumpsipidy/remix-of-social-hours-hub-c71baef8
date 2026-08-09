@@ -110,9 +110,11 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-// Accent palette — sits on top of the site's dark navy BackgroundFX
-const EMBER = "#C8452A";
-const GOLD = "#E9B44C";
+// Vibrant accent palette — sits on top of the site's dark navy BackgroundFX
+const EMBER = "#FF4D2D"; // Brighter orange-red
+const GOLD = "#FFD700";  // Brighter gold
+const TEAL = "#2DD4BF";  // Fresh teal accent
+const PURPLE = "#A855F7"; // Electric purple
 
 
 
@@ -229,13 +231,34 @@ function Home() {
         Socialinės Valandos — socialinių valandų centras mokiniams (socialinesvalandos.dev)
       </h1>
 
-      <div className="relative selection:bg-[#C8452A] selection:text-white">
+      <div className="relative selection:bg-[#FF4D2D] selection:text-white">
         <TricolorRail progress={railProgress} />
         <PreLaunchBanner />
 
         {/* HERO ─────────────────────────────────────────────────────────── */}
         <section ref={heroRef} className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
           <TricolorRibbons />
+          
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <motion.div 
+              className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/20 mix-blend-screen"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+                x: [0, 40, 0]
+              }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div 
+              className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-emerald-500/10 mix-blend-screen"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.2, 0.4, 0.2],
+                x: [0, -40, 0]
+              }}
+              transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </div>
           {/* animated halos on top of the shell BackgroundFX */}
           <motion.div
             aria-hidden
@@ -304,7 +327,7 @@ function Home() {
                 <Link
                   to={primaryCta}
                   className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
-                  style={{ background: `linear-gradient(135deg, ${EMBER}, #A63922)` }}
+                  style={{ background: `linear-gradient(135deg, ${EMBER}, #D43A1F)` }}
                 >
                   <span className="relative z-10">{primaryLabel}</span>
                   <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
