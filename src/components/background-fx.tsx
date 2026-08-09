@@ -26,7 +26,7 @@ export function BackgroundFX() {
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
       (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
 
-    if (smallScreen || coarse || weak || isSaveData) {
+    if (smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
       setFallback(true);
       return;
     }
