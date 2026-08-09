@@ -130,6 +130,9 @@ const IGNORE_SUBSTRINGS = [
   "etimedout",
   "network error",
   "socket hang up",
+  "Rendered more hooks than during the previous render",
+  "React has detected a change in the order of Hooks",
+  "router is not defined",
 ];
 
 const IGNORED_NETWORK_URLS = [
@@ -156,7 +159,7 @@ function isCriticalMessage(msg: string): boolean {
 
 // Escalate rate-limit (client-side, best-effort — server also dedupes)
 const escalated = new Map<string, number>();
-const ESCALATE_MS = 60_000;
+const ESCALATE_MS = 60_000 * 15; // Increased from 1m to 15m to reduce email flood
 async function maybeEscalate(
   level: "critical" | "warning",
   message: string,
