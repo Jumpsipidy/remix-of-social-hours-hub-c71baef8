@@ -215,28 +215,30 @@ export function CountUp({ value, className, duration = 1700 }: { value: number; 
   return <span ref={ref} className={className}>{fmt(n)}</span>;
 }
 
-/* ── Ambient tricolour ribbons (decorative background motion) ─────────── */
+/* ── Ambient tricolour ribbons (static decoration) ────────────────────── */
 
+/**
+ * Static gradient bands. Animating three large `blur-3xl` layers forever meant
+ * the compositor re-blurred a full-screen surface every frame — the main cause
+ * of scroll jank. The look is preserved, the cost is now zero.
+ */
 export function TricolorRibbons({ className = "" }: { className?: string }) {
-  const calm = useCalmMotion();
   const bands = [
-    { c: LT_YELLOW, d: 26, o: 0.16, top: "6%" },
-    { c: LT_GREEN, d: 34, o: 0.13, top: "38%" },
-    { c: LT_RED, d: 30, o: 0.15, top: "68%" },
+    { c: LT_YELLOW, o: 0.16, top: "6%" },
+    { c: LT_GREEN, o: 0.13, top: "38%" },
+    { c: LT_RED, o: 0.15, top: "68%" },
   ];
   return (
     <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}>
-      {bands.map((b, i) => (
-        <motion.div
+      {bands.map((b) => (
+        <div
           key={b.c}
-          className="absolute left-[-25%] h-[38vh] w-[150%] blur-3xl"
+          className="absolute left-[-25%] h-[38vh] w-[150%] blur-2xl"
           style={{
             top: b.top,
             opacity: b.o,
             background: `radial-gradient(60% 60% at 50% 50%, ${b.c}, transparent 70%)`,
           }}
-          animate={calm ? undefined : { x: ["-6%", "6%", "-6%"], y: ["0%", i % 2 ? "4%" : "-4%", "0%"] }}
-          transition={{ duration: b.d, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
     </div>
