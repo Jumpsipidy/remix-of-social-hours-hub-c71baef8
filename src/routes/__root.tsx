@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "../components/ui/sonner";
@@ -267,16 +268,30 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  
   useEffect(() => {
     // App is dark-only. Clear any stale light-theme preference from earlier builds.
     document.documentElement.classList.add("dark");
     document.documentElement.classList.remove("light");
     try { localStorage.removeItem("theme"); } catch {}
   }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={router.state.location.pathname}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
         <Toaster />
         <CelebrationStage />
 

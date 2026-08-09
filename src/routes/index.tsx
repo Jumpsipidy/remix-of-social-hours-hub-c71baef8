@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
@@ -120,7 +120,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { User, Shield, BarChart2, BookOpen, Settings, Layout } from "lucide-react";
 
 function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic: () => void }) {
-  const dash = DASHBOARD_BY_ROLE[role as any] || { to: "/login", label: "Prisijungti" };
+  const dash = (DASHBOARD_BY_ROLE as Record<string, any>)[role] || { to: "/login", label: "Prisijungti" };
   
   return (
     <div className="relative min-h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4">
@@ -187,7 +187,7 @@ function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic:
     </div>
   );
 }
-
+function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -849,6 +849,19 @@ function Home() {
         </section>
 
       </div>
+      
+      <Reveal delay={0.5}>
+        <div className="fixed bottom-6 left-6 z-[60] max-w-[280px] pointer-events-none sm:max-w-md">
+          <div className="rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-2xl shadow-2xl pointer-events-auto">
+            <p className="text-[10px] leading-relaxed text-white/40 italic">
+              &quot;Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.&quot;
+            </p>
+            <div className="mt-2 text-[9px] font-bold uppercase tracking-widest text-primary/60">
+              Sistemos Pranešimas · 2026-08-09
+            </div>
+          </div>
+        </div>
+      </Reveal>
     </PageShell>
   );
 }

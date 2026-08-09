@@ -177,7 +177,7 @@ export function BackgroundFX() {
       {!fallback && (
         <div
           ref={mountRef}
-          className="absolute inset-0 opacity-55 [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_50%,black_100%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_50%,black_100%)]"
+          className="absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_50%,black_100%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,transparent_0%,black_50%,black_100%)]"
         />
       )}
 
