@@ -187,7 +187,7 @@ function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic:
     </div>
   );
 }
-
+function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
