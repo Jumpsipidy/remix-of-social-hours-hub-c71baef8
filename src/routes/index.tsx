@@ -356,17 +356,17 @@ function Home() {
               as="h2"
               text="Kiekviena valanda — žingsnis pokyčio link"
               accentWords={["valanda"]}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[94px] font-display font-black text-white"
+              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[104px] font-display font-black text-white"
             />
 
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mb-8 sm:mb-12 max-w-xl text-base sm:text-lg md:text-xl leading-[1.6] text-white/70"
+              className="mx-auto mb-8 sm:mb-12 max-w-2xl text-lg sm:text-xl md:text-2xl leading-[1.6] text-white/70 font-medium"
             >
               Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
-              savanorystės galimybėmis.
+              savanorystės galimybėmis. <span className="text-primary font-bold">Atvira visai Lietuvai.</span>
             </motion.p>
 
             <motion.div
