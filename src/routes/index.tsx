@@ -178,9 +178,9 @@ function Home() {
   const { scrollYProgress: pageProgress } = useScroll();
   const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
 
 
   // Anonymous visitors cannot read `profiles` (RLS), so these totals come from

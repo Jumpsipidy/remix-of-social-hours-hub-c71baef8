@@ -87,6 +87,13 @@ export function Navbar() {
           </div>
           <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
+            <motion.div 
+              className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              BETA
+            </motion.div>
           </span>
         </Link>
 

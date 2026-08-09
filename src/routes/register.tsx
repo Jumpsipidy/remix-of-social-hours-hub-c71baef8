@@ -306,9 +306,16 @@ function RegisterPage() {
 
               {mode === "org_request" ? (
                 <>
-                  <div className="mt-4 rounded-2xl border border-amber-400/40 bg-amber-400/5 p-3 text-xs text-amber-200">
-                    ⚠️ Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4 text-xs text-amber-200/90 leading-relaxed shadow-lg"
+                  >
+                    <div className="flex items-center gap-2 mb-1 text-amber-300 font-bold uppercase tracking-wider">
+                      <Clock className="h-3 w-3" /> Svarbu
+                    </div>
+                    Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
+                  </motion.div>
                   <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
                     <Field label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={setOrgName} placeholder="VšĮ „Žalioji Karta“" required />
                     <Field label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={setLegalCode} placeholder="123456789" />
