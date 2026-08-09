@@ -19,7 +19,7 @@ import {
   LT_RED,
   LT_YELLOW,
 } from "@/components/motion-kit";
-import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lucide-react";
+import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock, ChevronDown } from "lucide-react";
 
 
 /**
