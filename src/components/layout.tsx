@@ -71,7 +71,13 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-2xl transition-all duration-500 hover:bg-background/80">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-3xl transition-all duration-500 hover:bg-background/60 group/header">
+      {/* Animated gradient top border */}
+      <motion.div 
+        className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-50"
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
         <Link 
           to="/" 
@@ -129,7 +135,7 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="hidden sm:block">
             <NotificationBell />
           </div>
@@ -147,16 +153,23 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 active:scale-95 transition-all sm:inline-flex"
+                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground active:scale-95 transition-all sm:inline-flex"
               >
                 Prisijungti
               </Link>
-              <Link
-                to="/register"
-                className="hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow hover:brightness-110 active:scale-95 transition-all sm:inline-flex"
-              >
-                Registruotis
-              </Link>
+              <Magnetic strength={10}>
+                <Link
+                  to="/register"
+                  className="group/btn relative hidden items-center justify-center overflow-hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow active:scale-95 transition-all sm:inline-flex"
+                >
+                  <span className="relative z-10">Registruotis</span>
+                  <motion.div 
+                    className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity"
+                    initial={false}
+                  />
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                </Link>
+              </Magnetic>
             </div>
           )}
           <motion.button
@@ -294,7 +307,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
       <BackgroundFX />
       <Navbar />
       <motion.main
