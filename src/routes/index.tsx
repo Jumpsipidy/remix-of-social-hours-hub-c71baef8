@@ -2,7 +2,7 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PageShell } from "../components/layout";
+import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { PreLaunchBanner } from "@/components/prelaunch-banner";
@@ -214,11 +214,11 @@ function SpotlightCard({
 
 
 function Home() {
-  const { profile, isAuthenticated, isLoading } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const isStudent = isAuthenticated && profile?.role === "student";
   const calm = useCalmMotion();
 
-  if (!isLoading && isAuthenticated && profile?.role) {
+  if (isAuthenticated && profile?.role) {
     const dash = DASHBOARD_BY_ROLE[profile.role];
     if (dash) return <Navigate to={dash.to} />;
   }
