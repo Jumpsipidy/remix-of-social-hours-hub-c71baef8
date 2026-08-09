@@ -341,10 +341,6 @@ function Home() {
   const { profile, isAuthenticated, loading: authLoading } = useAuth();
   const calm = useCalmMotion();
   const isMobile = useLowPowerDevice();
-  const [showRealHome, setShowRealHome] = useState(false);
-
-  // ALWAYS call all hooks, then decide what to return.
-  const heroRef = useRef<HTMLDivElement>(null);
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
     queryKey: ["public-stats"],
@@ -352,64 +348,16 @@ function Home() {
     staleTime: 60_000,
   });
 
-  const { scrollYProgress } = useScroll({ 
-    target: heroRef, 
-    offset: ["start start", "end start"] 
-  });
-  
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  // Handle redirection to sub-dashboards if authenticated
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
-      // Small delay to ensure any layout transitions settle
-      const timer = setTimeout(() => {
-        // Only redirect if we haven't already
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, profile?.role, showRealHome, authLoading]);
-
-  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
-  if (!authLoading && isAuthenticated && profile?.role && !showRealHome) {
-    return (
-      <PageShell>
-        <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />
-      </PageShell>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <PageShell>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
-              <div className="relative h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            </div>
-            <p className="text-lg font-black tracking-widest text-white/40 uppercase">Kraunama...</p>
-          </div>
-        </div>
-      </PageShell>
-    );
-  }
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Kraunama...</p>
-        </div>
-      </div>
-    );
-  }
+  // Everyone — logged in or not — sees the same main homepage. Logged-in users
+  // just get a shortcut strip to their own area at the top.
+  const dash = profile?.role
+    ? (DASHBOARD_BY_ROLE as Record<string, { to: string; label: string } | null>)[profile.role]
+    : null;
 
   const isStudent = isAuthenticated && profile?.role === "student";
-  const primaryCta = isStudent ? "/student" : "/register";
-  const primaryLabel = isStudent ? "Į mano sritį" : "Pradėti savanorystę";
+  const primaryCta = dash?.to ?? "/register";
+  const primaryLabel = dash ? dash.label : "Pradėti savanorystę";
+
 
 
   const roles = [
