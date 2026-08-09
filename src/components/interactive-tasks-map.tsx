@@ -24,11 +24,13 @@ type OrgMarker = {
 export function InteractiveTasksMap({ 
   tasks = [], 
   organizations = [], 
-  onSelectTask 
+  onSelectTask,
+  onSelectOrg
 }: { 
   tasks: any[]; 
   organizations: any[];
   onSelectTask?: (task: any) => void;
+  onSelectOrg?: (org: any) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [selected, setSelected] = useState<OrgMarker | null>(null);
