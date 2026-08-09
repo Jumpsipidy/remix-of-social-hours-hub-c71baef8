@@ -7,6 +7,7 @@ import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { AnimatePresence, motion } from "framer-motion";
+import { Magnetic } from "@/components/motion-kit";
 
 
 
