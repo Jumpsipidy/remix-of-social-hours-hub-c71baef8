@@ -172,7 +172,7 @@ function RegisterPage() {
     <div className="relative min-h-screen overflow-hidden bg-background">
       {/* Aurora background — emerald/teal tint (unique vibe vs. login) */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(160_80%_45%/0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.22),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(160_80%_45%/0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.22),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))] opacity-90" />
         <motion.div
           className="absolute -left-32 bottom-10 h-[520px] w-[520px] rounded-full bg-emerald-500/25 blur-[140px]"
           animate={{ x: [0, 60, -20, 0], y: [0, -40, 30, 0] }}
@@ -214,9 +214,9 @@ function RegisterPage() {
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 backdrop-blur">
               <Rocket className="h-3 w-3" /> Pradžia · 60 sekundžių
             </div>
-            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tight">
+            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tighter">
               Pradėk savo<br />
-              <span className="bg-[linear-gradient(120deg,hsl(160_80%_55%),hsl(var(--primary)),hsl(160_80%_55%))] bg-[length:200%_100%] bg-clip-text text-transparent [animation:gradient-shift_6s_ease_infinite]">
+              <span className="bg-[linear-gradient(120deg,#2DD4BF,#FF4D2D,#2DD4BF)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:gradient-shift_6s_ease_infinite]">
                 valandų kelionę
               </span><br />
               šiandien.
@@ -274,14 +274,14 @@ function RegisterPage() {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="group relative rounded-[2rem] p-[1.5px]"
           >
-            <div className="absolute inset-0 rounded-[2rem] bg-[conic-gradient(from_0deg,hsl(160_80%_50%),hsl(var(--primary)),hsl(160_80%_50%/0.3),hsl(160_80%_50%))] opacity-70 blur-[1px] [animation:spin_10s_linear_infinite]" aria-hidden />
+            <div className="absolute inset-0 rounded-[2rem] bg-[conic-gradient(from_0deg,#2DD4BF,hsl(var(--primary)),#FF4D2D/0.3,#2DD4BF)] opacity-80 blur-[1px] [animation:spin_10s_linear_infinite]" aria-hidden />
             <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-black tracking-tight">Sukurk paskyrą</h2>
+                  <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi.</p>
                 </div>
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)]">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2DD4BF,hsl(var(--primary)))] shadow-[0_10px_30px_-10px_#2DD4BF/0.7]">
                   <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
               </div>
@@ -295,7 +295,7 @@ function RegisterPage() {
                   const active = mode === opt.k;
                   return (
                     <button key={opt.k} type="button" onClick={() => setMode(opt.k)}
-                      className={`group/mode relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)]" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-emerald-400/50"}`}>
+                      className={`group/mode relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-[linear-gradient(135deg,#2DD4BF,hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_#2DD4BF/0.7]" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-emerald-400/50"}`}>
                       <opt.icon className="h-5 w-5" />
                       <span className="text-sm font-semibold">{opt.label}</span>
                       <span className={`text-[11px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.hint}</span>
@@ -306,9 +306,16 @@ function RegisterPage() {
 
               {mode === "org_request" ? (
                 <>
-                  <div className="mt-4 rounded-2xl border border-amber-400/40 bg-amber-400/5 p-3 text-xs text-amber-200">
-                    ⚠️ Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
-                  </div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4 text-xs text-amber-200/90 leading-relaxed shadow-lg"
+                  >
+                    <div className="flex items-center gap-2 mb-1 text-amber-300 font-bold uppercase tracking-wider">
+                      <Clock className="h-3 w-3" /> Svarbu
+                    </div>
+                    Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
+                  </motion.div>
                   <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
                     <Field label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={setOrgName} placeholder="VšĮ „Žalioji Karta“" required />
                     <Field label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={setLegalCode} placeholder="123456789" />

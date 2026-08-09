@@ -71,7 +71,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/85 backdrop-blur-2xl transition-all duration-300">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-2xl transition-all duration-500 hover:bg-background/80">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
         <Link 
           to="/" 
@@ -87,23 +87,37 @@ export function Navbar() {
           </div>
           <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
+            <motion.div 
+              className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              BETA
+            </motion.div>
           </span>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-2 md:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
           {links.map((l) => {
             const active = isActive(l.to, l.to === "/");
             return (
               <Link
                 key={l.to}
                 to={l.to}
-                className={`relative px-5 py-2.5 text-sm font-bold tracking-tight transition-all active:scale-95 ${
+                className={`relative px-5 py-2.5 text-sm font-bold tracking-tight transition-all active:scale-95 group/nav ${
                   active 
                     ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-full"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {l.label}
+                <span className="relative z-10">{l.label}</span>
+                {!active && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 -z-0 bg-white/5 rounded-full blur-sm"
+                  />
+                )}
                 {active && (
                   <motion.div 
                     layoutId="nav-glow"
@@ -280,7 +294,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
       <BackgroundFX />
       <Navbar />
       <motion.main
