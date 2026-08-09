@@ -381,7 +381,7 @@ function Home() {
                   Naršyti užduotis
                 </Link>
               </Magnetic>
-            </motion.div>
+            </div>
 
             {/* floating stat pill under CTA */}
             <motion.div
@@ -405,7 +405,7 @@ function Home() {
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </section>
 
 
