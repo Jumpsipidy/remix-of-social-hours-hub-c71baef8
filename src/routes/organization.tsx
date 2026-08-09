@@ -518,6 +518,9 @@ function OrgDashboard() {
                   <button onClick={() => toggleTask(t)} disabled={busyId === t.id} className="flex-1 disabled:opacity-50 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
                   </button>
+                  <button onClick={() => promoteTask(t)} disabled={busyId === t.id} aria-label="Reklamuoti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/10">
+                    <Sparkles className="h-3.5 w-3.5" />
+                  </button>
                   <button onClick={() => deleteTask(t)} disabled={busyId === t.id} aria-label="Ištrinti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
