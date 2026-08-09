@@ -192,8 +192,8 @@ function AdminLayout() {
       <AdminMobileBoot />
       <div className="mx-auto max-w-7xl px-3 sm:px-6">
 
-        {/* Mobile top bar */}
-        <div className="sticky top-0 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
+        {/* Mobile top bar - only visible on mobile, ensures Admin context is clear since Navbar is hidden */}
+        <div className="sticky top-[72px] md:top-0 z-40 -mx-3 flex items-center gap-3 border-b border-border/60 bg-background/85 px-3 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
           <motion.button
             whileTap={{ scale: 0.92 }}
             onClick={() => setMobileOpen(true)}
