@@ -159,7 +159,7 @@ function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic:
   }[role as 'admin' | 'organization' | 'student' | 'school_admin'] || { title: "Sveiki sugrįžę", desc: "Jūsų paskyra paruošta darbui.", faq: [] };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4 py-20">
+    <div className="relative min-h-[80vh] overflow-hidden flex flex-col items-center justify-center px-4 py-20">
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${
           role === 'admin' ? 'from-rose-500/20 to-orange-500/20' : 
