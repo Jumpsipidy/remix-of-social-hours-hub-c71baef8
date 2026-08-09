@@ -467,42 +467,57 @@ function Home() {
         </section>
 
         {/* MOKYKLOS ─────────────────────────────────────────────────────── */}
-        <section className="relative px-4 py-14 sm:px-6 sm:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <Reveal>
-              <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">
-                Nr. 01½ · Mokyklos
+        <section className="relative px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-12 text-center">
+              <Reveal>
+                <p className="mb-3 text-[11px] uppercase tracking-[0.32em] text-white/50">
+                  Nr. 01½ · Mokyklos
+                </p>
+              </Reveal>
+              <KineticHeadline
+                as="h2"
+                text="Kas jau naudoja platformą"
+                accentWords={["naudoja"]}
+                className="text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
+              />
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                { name: "Šeduvos gimnazija", loc: "Šeduva · Radviliškio r.", b: "Pirmoji mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai." },
+                { name: "Vilniaus Vytauto Didžiojo gimnazija", loc: "Vilnius", b: "Inovatyvus požiūris į moksleivių savanorystės apskaitą sostinėje. (Pilotinė grupė)" },
+                { name: "Kauno r. Raudondvario gimnazija", loc: "Raudondvaris", b: "Aktyvus bendruomenės įsitraukimas ir skaitmenizuotas procesas. (Partneris)" }
+              ].map((s, i) => (
+                <Reveal key={s.name} delay={i * 0.1}>
+                  <SpotlightCard accent={LT_GREEN} className="h-full p-7 text-left">
+                    <div className="flex items-start gap-4">
+                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5">
+                        <GraduationCap className="h-6 w-6" style={{ color: LT_YELLOW }} />
+                      </span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">{s.name}</h3>
+                        <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-white/45">
+                          {s.loc}
+                        </p>
+                        <p className="mt-3 text-sm leading-relaxed text-white/65">
+                          {s.b}
+                        </p>
+                      </div>
+                    </div>
+                  </SpotlightCard>
+                </Reveal>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <p className="text-sm text-white/50">
+                Norite prijungti savo mokyklą? Rašykite{" "}
+                <a href="mailto:pagalba@socialinesvalandos.dev" className="text-white/80 underline underline-offset-4">
+                  pagalba@socialinesvalandos.dev
+                </a>
               </p>
-            </Reveal>
-            <KineticHeadline
-              as="h2"
-              text="Kas jau naudoja platformą"
-              accentWords={["naudoja"]}
-              className="mb-8 text-3xl sm:text-4xl md:text-5xl font-display font-medium text-white"
-            />
-            <SpotlightCard accent={LT_GREEN} className="mx-auto max-w-md p-7 text-left">
-              <div className="flex items-start gap-4">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5">
-                  <GraduationCap className="h-6 w-6" style={{ color: LT_YELLOW }} />
-                </span>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Šeduvos gimnazija</h3>
-                  <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-white/45">
-                    Šeduva · Radviliškio r.
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-white/65">
-                    Pirmoji mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai —
-                    nuo rezervacijos iki auklėtojos patvirtinimo.
-                  </p>
-                </div>
-              </div>
-            </SpotlightCard>
-            <p className="mt-6 text-sm text-white/50">
-              Norite prijungti savo mokyklą? Rašykite{" "}
-              <a href="mailto:pagalba@socialinesvalandos.dev" className="text-white/80 underline underline-offset-4">
-                pagalba@socialinesvalandos.dev
-              </a>
-            </p>
+            </div>
           </div>
         </section>
 
