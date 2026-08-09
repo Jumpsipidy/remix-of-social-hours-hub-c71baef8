@@ -22,6 +22,8 @@ const ROLE_CACHE_KEY = "sv_last_role_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+  const [easterEgg, setEasterEgg] = useState(false);
   const { isAuthenticated, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -85,21 +87,26 @@ export function Navbar() {
           className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
         >
           <motion.div 
-            onClick={(e) => {
-              (e.currentTarget as any)._clickCount = ((e.currentTarget as any)._clickCount || 0) + 1;
-              if ((e.currentTarget as any)._clickCount === 4) {
-                (e.currentTarget as any)._clickCount = 0;
-                // Trigger 3D Easter Egg
+            onClick={() => {
+              const next = clickCount + 1;
+              if (next >= 4) {
+                setClickCount(0);
+                setEasterEgg(true);
+                setTimeout(() => setEasterEgg(false), 2000);
+              } else {
+                setClickCount(next);
               }
             }}
-            whileHover={{ 
-              rotateY: 360, 
-              rotateX: [0, -20, 20, 0],
-              scale: 1.1 
+            animate={easterEgg ? {
+              rotateY: [0, 360, 720],
+              rotateX: [0, -20, 20, -20, 0],
+              scale: [1, 1.3, 1],
+              transition: { duration: 1.2, ease: "easeInOut" }
+            } : {
+              scale: clickCount > 0 ? 1 + clickCount * 0.05 : 1
             }}
-            transition={{ 
-              rotateY: { duration: 0.8, ease: "easeInOut" },
-              rotateX: { duration: 0.6, repeat: 1 }
+            whileHover={{ 
+              scale: 1.1 
             }}
             className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow cursor-pointer"
             style={{ transformStyle: "preserve-3d" }}
@@ -111,30 +118,36 @@ export function Navbar() {
               transition={{ duration: 2, repeat: Infinity }}
             />
             {/* Easter Egg Particles */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              className="absolute -inset-4 pointer-events-none"
-            >
-              {[...Array(6)].map((_, i) => (
+            <AnimatePresence>
+              {(easterEgg || clickCount > 0) && (
                 <motion.div
-                  key={i}
-                  className="absolute h-1 w-1 bg-primary rounded-full"
-                  animate={{
-                    y: [-10, -30],
-                    x: [Math.random() * 20 - 10, Math.random() * 40 - 20],
-                    opacity: [0, 1, 0],
-                    scale: [0, 1.5, 0]
-                  }}
-                  transition={{
-                    duration: 0.8,
-                    repeat: Infinity,
-                    delay: i * 0.1
-                  }}
-                  style={{ left: "50%", top: "50%" }}
-                />
-              ))}
-            </motion.div>
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute -inset-8 pointer-events-none"
+                >
+                  {[...Array(easterEgg ? 12 : clickCount * 2)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute h-1.5 w-1.5 bg-primary rounded-full"
+                      animate={{
+                        y: [-10, -60],
+                        x: [0, (Math.random() - 0.5) * 80],
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                        rotate: [0, 180]
+                      }}
+                      transition={{
+                        duration: easterEgg ? 1.5 : 0.8,
+                        repeat: easterEgg ? 0 : Infinity,
+                        delay: i * 0.05
+                      }}
+                      style={{ left: "50%", top: "50%" }}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
           <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tighter sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
