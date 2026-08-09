@@ -328,13 +328,11 @@ function TasksPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         {tab === "map" ? (
-          <Reveal y={20}>
-            <InteractiveTasksMap 
-              tasks={filteredTasks} 
-              organizations={allOrgs}
-              onSelectTask={handleReserve}
-            />
-          </Reveal>
+          <InteractiveTasksMap 
+            tasks={filteredTasks} 
+            organizations={allOrgs}
+            onSelectTask={handleReserve}
+          />
         ) : tab === "tasks" ? (
           <>
             {filteredTasks.length === 0 && (
