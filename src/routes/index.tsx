@@ -320,7 +320,7 @@ function Home() {
           </motion.div>
 
           <div
-            style={calm ? undefined : { transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() }}
+            style={calm ? undefined : { transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() }} as any
             className="relative mx-auto max-w-4xl text-center"
           >
             <div
@@ -410,7 +410,7 @@ function Home() {
 
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
-        <section className="relative border-y border-white/10 backdrop-blur-sm">
+        <section className="relative border-y border-white/10 backdrop-blur-sm will-change-transform">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[
               { v: counts.hours, l: "Užregistruota valandų", c: GOLD },
