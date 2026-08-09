@@ -302,52 +302,37 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
 
 
 
-/** Cursor-tracking spotlight card with parallax tilt + sheen sweep */
+/**
+ * Card with a cursor-following spotlight — implemented with CSS custom
+ * properties written straight to the node. No motion values, no springs, no
+ * re-renders, and nothing at all on touch devices.
+ */
 function SpotlightCard({
   children,
   className = "",
   accent = EMBER,
 }: { children: React.ReactNode; className?: string; accent?: string }) {
-  const calm = useCalmMotion();
-  const isMobile = useLowPowerDevice();
   const ref = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(50);
-  const my = useMotionValue(50);
-  const rx = useSpring(useTransform(my, [0, 100], [7, -7]), { stiffness: 140, damping: 16 });
-  const ry = useSpring(useTransform(mx, [0, 100], [-7, 7]), { stiffness: 140, damping: 16 });
-  const glow = useTransform(
-    [mx, my] as never,
-    ([x, y]: number[]) => `radial-gradient(420px circle at ${x}% ${y}%, ${accent}26, transparent 62%)`,
-  );
-
 
   return (
-    <motion.div
+    <div
       ref={ref}
       onPointerMove={(e) => {
-        if (calm || isMobile || e.pointerType !== "mouse" || !ref.current) return;
+        if (e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
-        mx.set(((e.clientX - r.left) / r.width) * 100);
-        my.set(((e.clientY - r.top) / r.height) * 100);
+        ref.current.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        ref.current.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
       }}
-      onPointerLeave={() => { mx.set(50); my.set(50); }}
-      whileHover={calm || isMobile ? undefined : { y: -6 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      style={calm || isMobile ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-colors hover:border-white/25 ${className}`}
+      style={{ "--mx": "50%", "--my": "50%" } as React.CSSProperties}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-[border-color,transform] duration-200 hover:-translate-y-1 hover:border-white/25 ${className}`}
     >
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-        style={{ background: isMobile ? undefined : glow }}
-      />
-      {/* diagonal sheen that sweeps across on hover */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-18deg] bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-[600ms] ease-out group-hover:translate-x-full motion-reduce:hidden"
+        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        style={{ background: `radial-gradient(420px circle at var(--mx) var(--my), ${accent}26, transparent 62%)` }}
       />
       {children}
-    </motion.div>
+    </div>
   );
 }
 
