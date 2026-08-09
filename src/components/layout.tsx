@@ -7,6 +7,7 @@ import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { AnimatePresence, motion } from "framer-motion";
+import { Magnetic } from "@/components/motion-kit";
 
 
 
@@ -71,21 +72,63 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-2xl transition-all duration-500 hover:bg-background/80">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-3xl transition-all duration-500 hover:bg-background/60 group/header">
+      {/* Animated gradient top border */}
+      <motion.div 
+        className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-50"
+        animate={{ opacity: [0.3, 0.7, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
         <Link 
           to="/" 
           className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
         >
-          <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow">
+          <motion.div 
+            whileHover={{ 
+              rotateY: 360, 
+              rotateX: [0, -20, 20, 0],
+              scale: 1.1 
+            }}
+            transition={{ 
+              rotateY: { duration: 0.8, ease: "easeInOut" },
+              rotateX: { duration: 0.6, repeat: 1 }
+            }}
+            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow"
+            style={{ transformStyle: "preserve-3d" }}
+          >
             <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             <motion.div 
               className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-          </div>
-          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 1 }}
+              className="absolute -inset-4 pointer-events-none"
+            >
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute h-1 w-1 bg-primary rounded-full"
+                  animate={{
+                    y: [-10, -30],
+                    x: [Math.random() * 20 - 10, Math.random() * 40 - 20],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1.5, 0]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    delay: i * 0.1
+                  }}
+                  style={{ left: "50%", top: "50%" }}
+                />
+              ))}
+            </motion.div>
+          </motion.div>
+          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tighter sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
             <motion.div 
               className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
@@ -129,7 +172,7 @@ export function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
           <div className="hidden sm:block">
             <NotificationBell />
           </div>
@@ -147,16 +190,23 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 active:scale-95 transition-all sm:inline-flex"
+                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground active:scale-95 transition-all sm:inline-flex"
               >
                 Prisijungti
               </Link>
-              <Link
-                to="/register"
-                className="hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow hover:brightness-110 active:scale-95 transition-all sm:inline-flex"
-              >
-                Registruotis
-              </Link>
+              <Magnetic strength={10}>
+                <Link
+                  to="/register"
+                  className="group/btn relative hidden items-center justify-center overflow-hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow active:scale-95 transition-all sm:inline-flex"
+                >
+                  <span className="relative z-10">Registruotis</span>
+                  <motion.div 
+                    className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity"
+                    initial={false}
+                  />
+                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
+                </Link>
+              </Magnetic>
             </div>
           )}
           <motion.button
@@ -294,7 +344,7 @@ export function Footer() {
 
 export function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
       <BackgroundFX />
       <Navbar />
       <motion.main
