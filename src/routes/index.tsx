@@ -359,12 +359,6 @@ function Home() {
   const [showRealHome, setShowRealHome] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: pageProgress } = useScroll();
-  const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
     queryKey: ["public-stats"],
@@ -380,17 +374,19 @@ function Home() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
+        <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Ruošiame jūsų skydelį...</p>
-        </motion.div>
+          <p className="text-sm font-medium text-muted-foreground">Kraunama...</p>
+        </div>
       </div>
     );
   }
+
+  // Simplified motion values - no complex springs for the core layout
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
@@ -435,7 +431,6 @@ function Home() {
       </h1>
 
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
-        <TricolorRail progress={railProgress} />
         <PreLaunchBanner />
 
         {/* HERO ─────────────────────────────────────────────────────────── */}
@@ -471,8 +466,8 @@ function Home() {
           </motion.div>
 
           <div
-            style={calm ? undefined : ({ transform: `translateY(${heroY.get()}px) scale(${heroScale.get()})`, opacity: heroOpacity.get() } as React.CSSProperties)}
-            className="relative mx-auto max-w-4xl text-center"
+            style={calm ? undefined : ({ opacity: heroOpacity.get(), transform: `translate3d(0, ${heroY.get()}px, 0)` } as React.CSSProperties)}
+            className="relative mx-auto max-w-4xl text-center will-change-transform"
           >
             <div
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
@@ -913,18 +908,6 @@ function Home() {
 
       </div>
       
-      <Reveal delay={0.5}>
-        <div className="fixed bottom-6 left-6 z-[60] max-w-[280px] pointer-events-none sm:max-w-md">
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-2xl shadow-2xl pointer-events-auto">
-            <p className="text-[10px] leading-relaxed text-white/40 italic">
-              &quot;Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.&quot;
-            </p>
-            <div className="mt-2 text-[9px] font-bold uppercase tracking-widest text-primary/60">
-              Sistemos Pranešimas · 2026-08-09
-            </div>
-          </div>
-        </div>
-      </Reveal>
     </PageShell>
   );
 }

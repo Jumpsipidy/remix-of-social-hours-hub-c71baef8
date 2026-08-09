@@ -26,7 +26,7 @@ export function BackgroundFX() {
       (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) ||
       (navigator.hardwareConcurrency !== undefined && navigator.hardwareConcurrency <= 4);
 
-    if (smallScreen || coarse || weak || isSaveData) {
+    if (smallScreen || coarse || weak || isSaveData || !window.WebGLRenderingContext) {
       setFallback(true);
       return;
     }
@@ -44,7 +44,7 @@ export function BackgroundFX() {
     } catch { setFallback(true); return; }
 
     const isMobile = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 0.75 : 1.0); // Lower resolution for better performance
+    const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 0.5 : 0.75); // Aggressive resolution reduction for smoothness
     const width = () => mount.clientWidth;
     const height = () => mount.clientHeight;
 
