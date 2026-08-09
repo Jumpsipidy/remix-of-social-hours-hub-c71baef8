@@ -1,4 +1,4 @@
-import { motion, useInView, useMotionValue, useSpring, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
