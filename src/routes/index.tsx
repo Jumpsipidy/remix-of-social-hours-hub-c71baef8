@@ -369,8 +369,13 @@ function Home() {
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   // We place this AFTER all hooks to ensure hook count is stable.
+  // Note: authLoading check is still needed if we want to showKraunama while fetching session.
   if (isAuthenticated && profile?.role && !showRealHome) {
-    return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
+    return (
+      <PageShell>
+        <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />
+      </PageShell>
+    );
   }
 
   if (authLoading) {
