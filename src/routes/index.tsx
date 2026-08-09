@@ -131,11 +131,14 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
     >
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between gap-4 text-left text-[15px] font-semibold text-white"
+        className="flex w-full items-center justify-between gap-4 text-left text-[15px] font-semibold text-white group-hover:text-primary transition-colors"
       >
         <span>{q}</span>
         <motion.span 
-          animate={{ rotate: isOpen ? 45 : 0 }}
+          animate={{ 
+            rotate: isOpen ? 45 : 0,
+            scale: isOpen ? 1.2 : 1
+          }}
           className="text-primary/60"
         >
           <Sparkles className="h-4 w-4" />
@@ -367,15 +370,15 @@ function Home() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
               <Magnetic className="w-full sm:w-auto">
                 <Link
                   to={primaryCta}
-                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
+                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white overflow-hidden active:scale-95 transition-all"
                   style={{ background: `linear-gradient(135deg, ${EMBER}, #D43A1F)` }}
                 >
                   <span className="relative z-10">{primaryLabel}</span>
@@ -387,14 +390,14 @@ function Home() {
                   />
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/25 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
                   />
                 </Link>
               </Magnetic>
               <Magnetic className="w-full sm:w-auto" strength={10}>
                 <Link
                   to="/tasks"
-                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
+                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-bold border border-white/20 bg-white/5 text-white backdrop-blur-xl transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
                 >
                   Naršyti užduotis
                 </Link>
