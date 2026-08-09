@@ -116,7 +116,78 @@ const GOLD = "oklch(0.85 0.16 85)";
 const TEAL = "oklch(0.75 0.12 180)";  
 const PURPLE = "oklch(0.65 0.18 280)";
 
-function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { User, Shield, BarChart2, BookOpen, Settings, Layout } from "lucide-react";
+
+function AuthenticatedHome({ role, onShowPublic }: { role: string; onShowPublic: () => void }) {
+  const dash = DASHBOARD_BY_ROLE[role as any] || { to: "/login", label: "Prisijungti" };
+  
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background flex flex-col items-center justify-center px-4">
+      {/* Dynamic background based on role */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br ${
+          role === 'admin' ? 'from-rose-500/20 to-orange-500/20' : 
+          role === 'organization' ? 'from-emerald-500/20 to-teal-500/20' :
+          'from-blue-500/20 to-indigo-500/20'
+        }`} />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-2xl text-center space-y-8"
+      >
+        <div className="space-y-2">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className="mx-auto w-20 h-20 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center mb-6"
+          >
+            {role === 'admin' ? <Shield className="w-10 h-10 text-rose-400" /> :
+             role === 'organization' ? <Building2 className="w-10 h-10 text-emerald-400" /> :
+             <GraduationCap className="w-10 h-10 text-blue-400" />}
+          </motion.div>
+          <h2 className="text-4xl font-black text-white tracking-tight">
+            Sveiki sugrįžę
+          </h2>
+          <p className="text-white/60 text-lg">
+            Jūsų {role === 'admin' ? 'administratoriaus' : role === 'organization' ? 'organizacijos' : 'mokinio'} skydelis paruoštas.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link
+            to={dash.to}
+            className="flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all shadow-glow hover:scale-[1.02]"
+          >
+            <Layout className="w-5 h-5" />
+            Eiti į skydelį
+          </Link>
+          <button
+            onClick={onShowPublic}
+            className="flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-8 py-4 rounded-2xl font-bold text-lg transition-all"
+          >
+            <BookOpen className="w-5 h-5" />
+            Pagrindinis puslapis
+          </button>
+        </div>
+
+        <div className="pt-8 flex justify-center gap-8 text-white/40">
+           <div className="flex flex-col items-center">
+             <BarChart2 className="w-5 h-5 mb-1" />
+             <span className="text-[10px] font-bold uppercase tracking-widest">Statistika</span>
+           </div>
+           <div className="flex flex-col items-center">
+             <Settings className="w-5 h-5 mb-1" />
+             <span className="text-[10px] font-bold uppercase tracking-widest">Nustatymai</span>
+           </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
   const [isOpen, setIsOpen] = useState(false);
   
   return (
@@ -217,13 +288,28 @@ function SpotlightCard({
 
 
 function Home() {
-  const { profile, isAuthenticated } = useAuth();
-  const isStudent = isAuthenticated && profile?.role === "student";
+  const { profile, isAuthenticated, loading: authLoading } = useAuth();
   const calm = useCalmMotion();
+  const [showRealHome, setShowRealHome] = useState(false);
 
-  if (isAuthenticated && profile?.role) {
-    const dash = DASHBOARD_BY_ROLE[profile.role];
-    if (dash) return <Navigate to={dash.to} />;
+  // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
+  if (isAuthenticated && profile?.role && !showRealHome) {
+    return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm font-medium text-muted-foreground">Ruošiame jūsų skydelį...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -243,8 +329,10 @@ function Home() {
     staleTime: 60_000,
   });
 
+  const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
   const primaryLabel = isStudent ? "Į mano sritį" : "Pradėti savanorystę";
+
 
   const roles = [
     {
