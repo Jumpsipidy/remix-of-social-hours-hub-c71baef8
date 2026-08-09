@@ -400,42 +400,32 @@ function Home() {
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
         <PreLaunchBanner />
 
-        {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
-          <TricolorRibbons />
-          
-          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <div 
-              className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-primary/10 mix-blend-screen"
-            />
-            <div 
-              className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full blur-[120px] bg-emerald-500/5 mix-blend-screen"
-            />
+        {/* Quick shortcut for signed-in users */}
+        {isAuthenticated && dash && (
+          <div className="mx-auto mt-4 flex max-w-4xl flex-wrap items-center justify-center gap-3 px-4">
+            <span className="text-sm text-white/60">
+              Sveiki sugrįžę{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}!
+            </span>
+            <Link
+              to={dash.to}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-sm font-bold text-white transition-colors hover:border-white/35"
+            >
+              {dash.label} <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          {/* animated halos on top of the shell BackgroundFX */}
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{ y: heroY, opacity: heroOpacity }}
-          >
-            <motion.div
-              className="absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
-              style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 65%)` }}
-              animate={calm ? undefined : { x: [0, 40, 0], y: [0, 20, 0], scale: [1, 1.08, 1] }}
-              transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="absolute -right-40 top-40 h-[460px] w-[460px] rounded-full blur-3xl"
-              style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 65%)` }}
-              animate={calm ? undefined : { x: [0, -30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
-              transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
+        )}
 
-          <div
-            style={calm ? undefined : ({ opacity: heroOpacity.get(), transform: `translate3d(0, ${heroY.get()}px, 0)` } as React.CSSProperties)}
-            className="relative mx-auto max-w-4xl text-center will-change-transform"
-          >
+        {/* HERO ─────────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
+          <TricolorRibbons />
+
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-primary/10" />
+            <div className="absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-emerald-500/5" />
+          </div>
+
+          <div className="relative mx-auto max-w-4xl text-center">
+
             <div
               className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
             >
