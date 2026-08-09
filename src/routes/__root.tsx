@@ -252,11 +252,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="lt" className="dark" style={{ colorScheme: "dark", backgroundColor: "#0a0819" }}>
+    <html lang="lt" className="dark" style={{ colorScheme: "dark", backgroundColor: "oklch(0.13 0.015 250)" }}>
       <head>
         <HeadContent />
       </head>
-      <body style={{ backgroundColor: "#0a0819", color: "#f5f3ff" }}>
+      <body style={{ backgroundColor: "oklch(0.13 0.015 250)", color: "oklch(0.96 0.006 250)" }}>
         {children}
         <Scripts />
       </body>

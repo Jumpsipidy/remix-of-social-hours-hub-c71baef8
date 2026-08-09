@@ -73,6 +73,8 @@ export function Navbar() {
     navigate({ to: "/" });
   };
 
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-3xl transition-all duration-500 hover:bg-background/60 group/header">
       {/* Animated gradient top border */}
