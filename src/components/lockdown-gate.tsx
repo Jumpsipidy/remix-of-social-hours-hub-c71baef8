@@ -156,7 +156,7 @@ export function LockdownGate() {
     return () => window.removeEventListener("keydown", onKey);
   }, [lockdown, bypassed]);
 
-  const visible = lockdown === true && !bypassed;
+  const visible = lockdown === true && !bypassed && !import.meta.env.DEV;
   const errInfo = getLockdownCode(codeId);
   const severity = errInfo?.severity ?? "warn";
   const s = SEVERITY[severity];
