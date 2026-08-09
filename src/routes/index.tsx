@@ -360,6 +360,12 @@ function Home() {
 
   const heroRef = useRef<HTMLDivElement>(null);
 
+  const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
+    queryKey: ["public-stats"],
+    queryFn: () => getPublicStats(),
+    staleTime: 60_000,
+  });
+
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   if (isAuthenticated && profile?.role && !showRealHome) {
     return <AuthenticatedHome role={profile.role} onShowPublic={() => setShowRealHome(true)} />;
