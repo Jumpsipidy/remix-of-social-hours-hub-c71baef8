@@ -268,12 +268,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  
   useEffect(() => {
     // App is dark-only. Clear any stale light-theme preference from earlier builds.
     document.documentElement.classList.add("dark");
     document.documentElement.classList.remove("light");
     try { localStorage.removeItem("theme"); } catch {}
   }, []);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
