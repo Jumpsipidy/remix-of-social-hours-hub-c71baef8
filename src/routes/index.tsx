@@ -1,6 +1,6 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
-import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence, LayoutGroup } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
@@ -433,8 +433,7 @@ function Home() {
                 aria-hidden
                 className="absolute inset-0 motion-reduce:hidden"
                 style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
-                animate={calm ? undefined : { backgroundPosition: ["0% 0%", "220% 0%"] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                
               />
               <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
               <span className="relative">Lietuvos moksleiviams · nemokamai</span>
@@ -494,8 +493,7 @@ function Home() {
               className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl shadow-elegant"
             >
               <motion.span
-                animate={calm ? undefined : { rotate: [0, 12, 0, -12, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                
               >
                 <Clock className="h-5 w-5" style={{ color: GOLD }} />
               </motion.span>
@@ -522,8 +520,8 @@ function Home() {
             ].map((s, i) => (
               <motion.div
                 key={s.l}
-                initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
-                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ delay: i * 0.12, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
                 className="group relative overflow-hidden px-6 py-10 sm:py-14 text-center border-t border-white/5 first:border-t-0 md:border-t-0"
@@ -626,8 +624,8 @@ function Home() {
               {roles.map((c, i) => (
                 <motion.div
                   key={c.tag}
-                  initial={{ opacity: 0, y: 34, rotateX: -10 }}
-                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ delay: i * 0.12, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   style={{ perspective: 1000 }}
@@ -698,8 +696,8 @@ function Home() {
                 ].map((s, i) => (
                   <motion.li
                     key={s.t}
-                    initial={{ opacity: 0, x: -28, filter: "blur(6px)" }}
-                    whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-70px" }}
                     transition={{ delay: i * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="relative flex gap-4 sm:gap-6 md:pl-0"
@@ -827,8 +825,7 @@ function Home() {
             <motion.div
               className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-3xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
-              animate={calm ? undefined : { scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              
             />
           </motion.div>
 
