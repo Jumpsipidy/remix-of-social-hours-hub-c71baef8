@@ -117,30 +117,35 @@ export function KineticHeadline({ text, className = "", accentWords = [], delay 
 
 /* ── Magnetic button wrapper ──────────────────────────────────────────── */
 
+/**
+ * Cheap "magnetic" feel: a pure CSS transform applied directly to the node on
+ * pointer move (no springs, no React state, no re-renders). Falls back to a
+ * plain span on touch / reduced-motion devices.
+ */
 export function Magnetic({ children, strength = 14, className = "" }: { children: ReactNode; strength?: number; className?: string }) {
   const calm = useCalmMotion();
   const ref = useRef<HTMLSpanElement>(null);
-  const x = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
-  const y = useSpring(useMotionValue(0), { stiffness: 220, damping: 18, mass: 0.4 });
 
   if (calm) return <span className={className}>{children}</span>;
 
   return (
-    <motion.span
+    <span
       ref={ref}
-      className={`inline-block ${className}`}
-      style={{ x, y }}
+      className={`inline-block will-change-transform ${className}`}
+      style={{ transition: "transform 220ms cubic-bezier(0.16,1,0.3,1)" }}
       onPointerMove={(e) => {
         if (e.pointerType !== "mouse" || !ref.current) return;
         const r = ref.current.getBoundingClientRect();
-        x.set(((e.clientX - r.left) / r.width - 0.5) * strength * 2);
-        y.set(((e.clientY - r.top) / r.height - 0.5) * strength * 2);
+        const dx = ((e.clientX - r.left) / r.width - 0.5) * strength * 2;
+        const dy = ((e.clientY - r.top) / r.height - 0.5) * strength * 2;
+        ref.current.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       }}
-      onPointerLeave={() => { x.set(0); y.set(0); }}
-      whileTap={{ scale: 0.97 }}
+      onPointerLeave={() => {
+        if (ref.current) ref.current.style.transform = "translate3d(0,0,0)";
+      }}
     >
       {children}
-    </motion.span>
+    </span>
   );
 }
 
