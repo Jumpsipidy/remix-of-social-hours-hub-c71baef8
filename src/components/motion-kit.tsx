@@ -237,7 +237,6 @@ export function TricolorRibbons({ className = "" }: { className?: string }) {
           style={{
             top: b.top,
             opacity: b.o,
-            transform: "translateZ(0)",
             background: `radial-gradient(60% 60% at 50% 50%, ${b.c}, transparent 70%)`,
           }}
         />

@@ -284,8 +284,8 @@ function Home() {
           <TricolorRibbons />
 
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-primary/10 [transform:translateZ(0)]" />
-            <div className="absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-emerald-500/5 [transform:translateZ(0)]" />
+            <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-primary/10" />
+            <div className="absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-emerald-500/5" />
           </div>
 
           <div className="relative mx-auto max-w-4xl text-center">
@@ -687,7 +687,7 @@ function Home() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <motion.div
-              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-2xl [transform:translateZ(0)]"
+              className="h-[600px] w-[600px] max-w-[130vw] rounded-full blur-2xl"
               style={{ background: `radial-gradient(circle, ${EMBER}33, transparent 60%)` }}
               
             />
