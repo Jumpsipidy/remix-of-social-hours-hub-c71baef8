@@ -60,18 +60,18 @@ export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" 
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10"
+    <div className="flex min-h-screen items-center justify-center px-4 py-10 selection:bg-rose-500/30"
       style={{
         background:
-          "radial-gradient(1200px 600px at 50% -10%, rgba(244,63,94,0.18), transparent 60%), radial-gradient(900px 500px at 50% 110%, rgba(139,92,246,0.15), transparent 60%), #0a0819",
+          "radial-gradient(1200px 600px at 50% -10%, rgba(244,63,94,0.18), transparent 60%), radial-gradient(900px 500px at 50% 110%, rgba(139,92,246,0.15), transparent 60%), oklch(0.13 0.015 250)",
       }}
     >
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 22 }}
-        className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-xl"
-        style={{ boxShadow: "0 30px 80px rgba(244,63,94,0.25)" }}
+        className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-2xl"
+        style={{ boxShadow: "0 30px 80px rgba(244,63,94,0.15)" }}
       >
         <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-gradient-to-br from-rose-500/30 to-fuchsia-500/30 ring-1 ring-white/15">
           <motion.div

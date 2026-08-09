@@ -111,10 +111,10 @@ export const Route = createFileRoute("/")({
 });
 
 // Vibrant accent palette — sits on top of the site's dark navy BackgroundFX
-const EMBER = "#FF4D2D"; 
-const GOLD = "#FFD700";  
-const TEAL = "#2DD4BF";  
-const PURPLE = "#A855F7";
+const EMBER = "oklch(0.62 0.22 30)"; 
+const GOLD = "oklch(0.85 0.16 85)";  
+const TEAL = "oklch(0.75 0.12 180)";  
+const PURPLE = "oklch(0.65 0.18 280)";
 
 function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
   const [isOpen, setIsOpen] = useState(false);
