@@ -158,6 +158,14 @@ function OrgDashboard() {
     toast.success(t.is_open ? "Užduotis paslėpta" : "Užduotis vėl atvira");
     if (user) refresh(user.id);
   };
+
+  const promoteTask = (t: TaskRow) => {
+    toast.success(`Užduotis „${t.title}“ iškelta į sąrašo viršų! (BETA)`, {
+      icon: <Sparkles className="h-4 w-4 text-primary" />,
+      description: "Dabar mokiniai matys šį skelbimą pirmiau už kitus."
+    });
+  };
+
   const deleteTask = async (t: TaskRow) => {
     if (busyId) return;
     if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
@@ -351,6 +359,9 @@ function OrgDashboard() {
                   <Link to="/organization/scan">
                     <ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR
                   </Link>
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
+                  <Sparkles className="mr-1.5 h-4 w-4" /> Reklamuoti skelbimą
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-full">
                   <Link to="/org/$id" params={{ id: user.id }} target="_blank">
