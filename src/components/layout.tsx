@@ -84,15 +84,51 @@ export function Navbar() {
           to="/" 
           className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
         >
-          <div className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow">
+          <motion.div 
+            whileHover={{ 
+              rotateY: 360, 
+              rotateX: [0, -20, 20, 0],
+              scale: 1.1 
+            }}
+            transition={{ 
+              rotateY: { duration: 0.8, ease: "easeInOut" },
+              rotateX: { duration: 0.6, repeat: 1 }
+            }}
+            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow"
+            style={{ transformStyle: "preserve-3d" }}
+          >
             <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             <motion.div 
               className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"
-              animate={{ scale: [1, 1.1, 1] }}
+              animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
-          </div>
-          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tight sm:text-xl lg:text-2xl">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 1 }}
+              className="absolute -inset-4 pointer-events-none"
+            >
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute h-1 w-1 bg-primary rounded-full"
+                  animate={{
+                    y: [-10, -30],
+                    x: [Math.random() * 20 - 10, Math.random() * 40 - 20],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1.5, 0]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    delay: i * 0.1
+                  }}
+                  style={{ left: "50%", top: "50%" }}
+                />
+              ))}
+            </motion.div>
+          </motion.div>
+          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tighter sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
             <motion.div 
               className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
