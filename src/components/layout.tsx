@@ -76,11 +76,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/40 backdrop-blur-3xl transition-all duration-500 hover:bg-background/60 group/header">
       {/* Animated gradient top border */}
-      <motion.div 
-        className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-50"
-        animate={{ opacity: [0.3, 0.7, 0.3] }}
-        transition={{ duration: 3, repeat: Infinity }}
-      />
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-30" />
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
         <Link 
           to="/" 
@@ -153,13 +149,11 @@ export function Navbar() {
           </motion.div>
           <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tighter sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
-            <motion.div 
+            <div 
               className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
             >
               BETA
-            </motion.div>
+            </div>
           </span>
         </Link>
 
@@ -370,13 +364,9 @@ export function PageShell({ children }: { children: React.ReactNode }) {
     <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
       <BackgroundFX />
       <Navbar />
-      <motion.main
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-      >
+      <main>
         {children}
-      </motion.main>
+      </main>
       <Footer />
       <OnboardingTour />
       <MobileTabBar />

@@ -126,12 +126,13 @@
     color: var(--color-foreground);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeSpeed; /* Switch to speed for better mobile scroll */
-    transition: background-color 220ms ease, color 220ms ease;
+    text-rendering: optimizeSpeed;
     overflow-x: hidden;
     width: 100%;
     min-height: 100vh;
     min-height: -webkit-fill-available;
+    /* Static background as primary to avoid expensive paints */
+    background-attachment: fixed;
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; text-wrap: balance; }
 }
