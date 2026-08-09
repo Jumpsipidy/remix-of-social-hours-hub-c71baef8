@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { motion, useInView, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PageShell } from "../components/layout";
+import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { PreLaunchBanner } from "@/components/prelaunch-banner";
@@ -27,17 +27,17 @@ import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock } from "lu
  * AI assistants (ChatGPT, Perplexity, Gemini) can answer these questions with
  * our own wording, including the support contact.
  */
-const HOME_FAQ: { q: string; a: string }[] = [
-  { q: "Kas yra socialinės valandos?", a: "Socialinės (savanorystės) valandos — neatlyginama veikla bendruomenei, kurią mokinys atlieka per mokslo metus. 5–7 klasėms reikia 20 valandų, 8–12 klasėms — bent 8 valandas." },
-  { q: "Kiek kainuoja Socialinės Valandos?", a: "Mokiniams, mokykloms ir organizacijoms platforma yra visiškai nemokama." },
-  { q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą HMAC parašą ir viešą patikros nuorodą socialinesvalandos.dev/verify." },
-  { q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys atėjęs į vietą parodo savo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Jei nėra interneto, veikia atsarginis 6 skaitmenų kodas." },
-  { q: "Kaip gauti PDF sertifikatą?", a: "Kai valandos patvirtintos, mokinys savo skydelyje spaudžia „Atsisiųsti sertifikatą“ — PDF su QR kodu ir parašu sugeneruojamas iškart, o mokykla gali jį patikrinti per „PDF / QR patikra“." },
-  { q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje. Šeduvos gimnazijos mokiniams kodą duoda auklėtoja." },
-  { q: "Ar klasės auklėtoja mato tik savo klasę?", a: "Taip. Auklėtoja mato tik jai priskirtas klases, direktorius — visą mokyklą. Duomenys tarp mokyklų niekada nesimaišo." },
-  { q: "Kaip apsisaugoma nuo sukčiavimo?", a: "Sistema tikrina QR įrodymą, dienos valandų limitą (iki 8 val. per rezervaciją), įtartinai apvalias valandas ir pasikartojančius įrašus. Mokykla mato „Valandų patikros“ skydelį su ženkleliais." },
-  { q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
-  { q: "Kaip susisiekti su pagalba?", a: "Rašyk el. paštu pagalba@socialinesvalandos.dev — atsakome lietuviškai. Klaidą taip pat gali pranešti mygtuku „Pranešti bug'ą“ svetainės apačioje; prisegk incidento kodą." },
+const HOME_FAQ: { q: string; a: string; id: string }[] = [
+  { id: "what", q: "Kas yra socialinės valandos?", a: "Socialinės (savanorystės) valandos — neatlyginama veikla bendruomenei, kurią mokinys atlieka per mokslo metus. 5–7 klasėms reikia 20 valandų, 8–12 klasėms — bent 8 valandas." },
+  { id: "price", q: "Kiek kainuoja Socialinės Valandos?", a: "Mokiniams, mokykloms ir organizacijoms platforma yra visiškai nemokama." },
+  { id: "official", q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą HMAC parašą ir viešą patikros nuorodą socialinesvalandos.dev/verify." },
+  { id: "qr", q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys atėjęs į vietą parodo savo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Jei nėra interneto, veikia atsarginis 6 skaitmenų kodas." },
+  { id: "pdf", q: "Kaip gauti PDF sertifikatą?", a: "Kai valandos patvirtintos, mokinys savo skydelyje spaudžia „Atsisiųsti sertifikatą“ — PDF su QR kodu ir parašu sugeneruojamas iškart, o mokykla gali jį patikrinti per „PDF / QR patikra“." },
+  { id: "code", q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje. Šeduvos gimnazijos mokiniams kodą duoda auklėtoja." },
+  { id: "teacher", q: "Ar klasės auklėtoja mato tik savo klasę?", a: "Taip. Auklėtoja mato tik jai priskirtas klases, direktorius — visą mokyklą. Duomenys tarp mokyklų niekada nesimaišo." },
+  { id: "cheat", q: "Kaip apsisaugoma nuo sukčiavimo?", a: "Sistema tikrina QR įrodymą, dienos valandų limitą (iki 8 val. per rezervaciją), įtartinai apvalias valandas ir pasikartojančius įrašus. Mokykla mato „Valandų patikros“ skydelį su ženkleliais." },
+  { id: "summer", q: "Ar galiu savanoriauti vasarą?", a: "Taip. Jei organizacija patvirtina valandas, jos užskaitomos ir per atostogas." },
+  { id: "support", q: "Kaip susisiekti su pagalba?", a: "Rašyk el. paštu pagalba@socialinesvalandos.dev — atsakome lietuviškai. Klaidą taip pat gali pranešti mygtuku „Pranešti bug'ą“ svetainės apačioje; prisegk incidento kodą." },
 ];
 
 export const Route = createFileRoute("/")({
@@ -111,10 +111,57 @@ export const Route = createFileRoute("/")({
 });
 
 // Vibrant accent palette — sits on top of the site's dark navy BackgroundFX
-const EMBER = "#FF4D2D"; // Brighter orange-red
-const GOLD = "#FFD700";  // Brighter gold
-const TEAL = "#2DD4BF";  // Fresh teal accent
-const PURPLE = "#A855F7"; // Electric purple
+const EMBER = "#FF4D2D"; 
+const GOLD = "#FFD700";  
+const TEAL = "#2DD4BF";  
+const PURPLE = "#A855F7";
+
+function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ delay: i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className={`group rounded-2xl border transition-all duration-300 ${
+        isOpen ? "border-primary/40 bg-white/[0.05] shadow-glow" : "border-white/10 bg-white/[0.03] hover:border-white/25"
+      } px-5 py-4 backdrop-blur-xl`}
+    >
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between gap-4 text-left text-[15px] font-semibold text-white group-hover:text-primary transition-colors"
+      >
+        <span>{q}</span>
+        <motion.span 
+          animate={{ 
+            rotate: isOpen ? 45 : 0,
+            scale: isOpen ? 1.2 : 1
+          }}
+          className="text-primary/60"
+        >
+          <Sparkles className="h-4 w-4" />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: "auto", opacity: 1, marginTop: 12 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="text-sm leading-relaxed text-white/65 border-t border-white/5 pt-3">
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
 
 
 
@@ -173,6 +220,11 @@ function Home() {
   const { profile, isAuthenticated } = useAuth();
   const isStudent = isAuthenticated && profile?.role === "student";
   const calm = useCalmMotion();
+
+  if (isAuthenticated && profile?.role) {
+    const dash = DASHBOARD_BY_ROLE[profile.role];
+    if (dash) return <Navigate to={dash.to} />;
+  }
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress: pageProgress } = useScroll();
@@ -318,15 +370,15 @@ function Home() {
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
               <Magnetic className="w-full sm:w-auto">
                 <Link
                   to={primaryCta}
-                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-white overflow-hidden"
+                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white overflow-hidden active:scale-95 transition-all"
                   style={{ background: `linear-gradient(135deg, ${EMBER}, #D43A1F)` }}
                 >
                   <span className="relative z-10">{primaryLabel}</span>
@@ -338,14 +390,14 @@ function Home() {
                   />
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/25 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
+                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
                   />
                 </Link>
               </Magnetic>
               <Magnetic className="w-full sm:w-auto" strength={10}>
                 <Link
                   to="/tasks"
-                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-semibold border border-white/20 bg-white/5 text-white backdrop-blur transition-colors hover:bg-white/10 hover:border-white/40"
+                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-bold border border-white/20 bg-white/5 text-white backdrop-blur-xl transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
                 >
                   Naršyti užduotis
                 </Link>
@@ -586,20 +638,7 @@ function Home() {
             />
             <div className="space-y-3">
               {HOME_FAQ.map((f, i) => (
-                <motion.details
-                  key={f.q}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ delay: i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                  className="group rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 backdrop-blur-xl transition-colors hover:border-white/25"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold text-white marker:hidden">
-                    {f.q}
-                    <span aria-hidden className="text-white/40 transition-transform group-open:rotate-45">+</span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-white/65">{f.a}</p>
-                </motion.details>
+                <FaqItem key={f.id} q={f.q} a={f.a} i={i} />
               ))}
             </div>
           </div>
