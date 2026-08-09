@@ -127,7 +127,7 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
       transition={{ delay: i * 0.07, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className={`group rounded-2xl border transition-all duration-300 ${
         isOpen ? "border-primary/40 bg-white/[0.05] shadow-glow" : "border-white/10 bg-white/[0.03] hover:border-white/25"
-      } px-5 py-4 backdrop-blur-xl`}
+      } px-5 py-4`}
     >
       <button 
         onClick={() => setIsOpen(!isOpen)}
@@ -354,7 +354,7 @@ function Home() {
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 backdrop-blur-xl shadow-elegant"
+              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 shadow-elegant"
             >
               <motion.span
                 
@@ -375,7 +375,7 @@ function Home() {
 
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
-        <section className="relative border-y border-white/10 backdrop-blur-sm will-change-transform">
+        <section className="relative border-y border-white/10">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[
               { v: counts.hours, l: "Užregistruota valandų", c: GOLD },
