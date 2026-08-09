@@ -359,18 +359,6 @@ function Home() {
   const [showRealHome, setShowRealHome] = useState(false);
 
   const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: pageProgress } = useScroll();
-  const railProgress = useSpring(pageProgress, { stiffness: 120, damping: 26, restDelta: 0.001 });
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8, 1], [1, 0.3, 0]);
-
-  const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
-    queryKey: ["public-stats"],
-    queryFn: () => getPublicStats(),
-    staleTime: 60_000,
-  });
 
   // Authenticated users see a custom "Dashboard Home" unless they explicitly ask for the public one
   if (isAuthenticated && profile?.role && !showRealHome) {
@@ -380,17 +368,19 @@ function Home() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
-        >
+        <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-muted-foreground">Ruošiame jūsų skydelį...</p>
-        </motion.div>
+          <p className="text-sm font-medium text-muted-foreground">Kraunama...</p>
+        </div>
       </div>
     );
   }
+
+  // Simplified motion values - no complex springs for the core layout
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
 
   const isStudent = isAuthenticated && profile?.role === "student";
   const primaryCta = isStudent ? "/student" : "/register";
