@@ -20,9 +20,12 @@ const EMAIL_DEDUPE_MIN = 24 * 60;
 // immediately, regardless of severity classification.
 const BURST_WINDOW_S = 60;
 const BURST_MIN_USERS = 3;
-// Flood: many client errors of any severity in a short window = outage.
+// Flood protection must represent a broad outage, not one browser retrying a
+// failed request. Require several signed-in users and several distinct errors.
 const FLOOD_WINDOW_MIN = 5;
 const FLOOD_THRESHOLD = 20;
+const FLOOD_MIN_USERS = 3;
+const FLOOD_MIN_FINGERPRINTS = 3;
 
 type InlineAiAnalysis = {
   suspected_cause?: string | null;
@@ -120,6 +123,10 @@ const IGNORE_RX = [
   /Failed to fetch/i,
   /Failed to load resource/i,
   /status 500/i,
+  // TanStack server-function transport can emit this while a request is
+  // interrupted by navigation, a stale deployment, or a temporary network
+  // failure. It is not evidence of an application-wide outage by itself.
+  /^Invariant failed$/i,
 
 ];
 
@@ -554,15 +561,15 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
-    // Critical threshold — count EVERY critical logged in the window, including
-    // anonymous visitors. Previously only signed-in reports counted, so the UI
-    // could show 7 criticals while the lockdown counter saw far fewer.
+    // Critical threshold — only authenticated reports may take the whole site
+    // offline. One anonymous browser must never be able to trigger lockdown.
     if (data.level === "critical") {
       const since = new Date(Date.now() - CRITICAL_WINDOW_MIN * 60_000).toISOString();
       const { count } = await supabaseAdmin
         .from("activity_log")
         .select("*", { count: "exact", head: true })
         .eq("action", "app.critical")
+        .not("user_id", "is", null)
         .gte("created_at", since);
       criticalCount = count ?? 0;
       if (!lockdownReason && !isTest && criticalCount >= CRITICAL_THRESHOLD) {
@@ -570,18 +577,32 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
-    // FLOOD DETECTION — dozens of non-critical client errors in a few minutes is
-    // itself an outage (this is what "50 klaidų, jokio lockdown" looked like).
+    // FLOOD DETECTION — count only authenticated, independently affected users
+    // and distinct fingerprints. Duplicate rows from one failing fetch, console
+    // interception, or email escalation no longer take the platform offline.
     if (!lockdownReason && !isTest) {
       const floodSince = new Date(Date.now() - FLOOD_WINDOW_MIN * 60_000).toISOString();
-      const { count: floodCount } = await supabaseAdmin
+      const { data: floodRows } = await supabaseAdmin
         .from("activity_log")
-        .select("*", { count: "exact", head: true })
+        .select("user_id, meta")
         .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
-        .gte("created_at", floodSince);
-      if ((floodCount ?? 0) >= FLOOD_THRESHOLD) {
+        .not("user_id", "is", null)
+        .gte("created_at", floodSince)
+        .limit(500);
+      const rows = (floodRows ?? []) as Array<{ user_id: string | null; meta: { fingerprint?: string; message?: string } | null }>;
+      const eligibleRows = rows.filter((row) => !isTelemetryNoise(row.meta?.message));
+      const floodUsers = new Set(eligibleRows.map((row) => row.user_id).filter(Boolean));
+      const floodFingerprints = new Set(
+        eligibleRows.map((row) => row.meta?.fingerprint).filter(Boolean),
+      );
+      const floodCount = eligibleRows.length;
+      if (
+        floodCount >= FLOOD_THRESHOLD &&
+        floodUsers.size >= FLOOD_MIN_USERS &&
+        floodFingerprints.size >= FLOOD_MIN_FINGERPRINTS
+      ) {
         lockdownReason = "flood";
-        criticalCount = Math.max(criticalCount, floodCount ?? 0);
+        criticalCount = Math.max(criticalCount, floodCount);
       }
     }
 

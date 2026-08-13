@@ -136,6 +136,7 @@ const IGNORE_SUBSTRINGS = [
   "target ref",
   "not hydrated",
   "initial-render ref",
+  "Invariant failed",
 ];
 
 const IGNORED_NETWORK_URLS = [
