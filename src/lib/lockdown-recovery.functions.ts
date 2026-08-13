@@ -7,7 +7,7 @@
 // never enable it here.
 import { createServerFn } from "@tanstack/react-start";
 
-const AUTO_CODES = new Set(["E-5001", "E-5002", "E-4002"]);
+const AUTO_CODES = new Set(["E-5001", "E-5002", "E-5003", "E-4002"]);
 const COOLDOWN_MIN = 10; // lockdown must have been set at least this long ago
 const SILENT_MIN = 10;   // no new critical errors in this window
 const THROTTLE_MS = 60_000; // don't re-check more than once per minute per worker
@@ -70,12 +70,15 @@ export const tryLockdownAutoRecovery = createServerFn({ method: "POST" }).handle
     return { ok: true, skipped: "cooldown" as const, ageMin: Math.round(ageMin) };
   }
 
-  // Check for recent critical errors (from any user, incl. anon)
+  // Only escalated critical incidents block recovery. Raw client.error rows
+  // include duplicate console/fetch capture and previously kept E-5003 locked
+  // forever even after the actual incident had ended.
   const silentSince = new Date(now - SILENT_MIN * 60_000).toISOString();
   const { count } = await supabaseAdmin
     .from("activity_log")
     .select("*", { count: "exact", head: true })
-    .in("action", ["app.critical", "client.error"])
+    .eq("action", "app.critical")
+    .not("user_id", "is", null)
     .gte("created_at", silentSince);
 
   if ((count ?? 0) > 0) {

@@ -42,6 +42,7 @@ const IGNORED = [
   "server rendered HTML didn't match",
   "There was an error while hydrating",
   "Text content does not match server-rendered HTML",
+  "Invariant failed",
 ];
 
 export function ErrorMonitor() {
