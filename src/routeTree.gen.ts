@@ -53,6 +53,7 @@ import { Route as AdminManageRouteImport } from './routes/admin.manage'
 import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
 import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
 import { Route as AdminIncidentsRouteImport } from './routes/admin.incidents'
+import { Route as AdminIncidentLookupRouteImport } from './routes/admin.incident-lookup'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminCheckinRouteImport } from './routes/admin.checkin'
@@ -290,6 +291,11 @@ const AdminIncidentsRoute = AdminIncidentsRouteImport.update({
   path: '/incidents',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminIncidentLookupRoute = AdminIncidentLookupRouteImport.update({
+  id: '/incident-lookup',
+  path: '/incident-lookup',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminErrorsRoute = AdminErrorsRouteImport.update({
   id: '/errors',
   path: '/errors',
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/admin/checkin': typeof AdminCheckinRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -455,6 +462,7 @@ export interface FileRoutesByTo {
   '/admin/checkin': typeof AdminCheckinRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/admin/checkin': typeof AdminCheckinRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/errors': typeof AdminErrorsRoute
+  '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
@@ -577,6 +586,7 @@ export interface FileRouteTypes {
     | '/admin/checkin'
     | '/admin/emails'
     | '/admin/errors'
+    | '/admin/incident-lookup'
     | '/admin/incidents'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -635,6 +645,7 @@ export interface FileRouteTypes {
     | '/admin/checkin'
     | '/admin/emails'
     | '/admin/errors'
+    | '/admin/incident-lookup'
     | '/admin/incidents'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -695,6 +706,7 @@ export interface FileRouteTypes {
     | '/admin/checkin'
     | '/admin/emails'
     | '/admin/errors'
+    | '/admin/incident-lookup'
     | '/admin/incidents'
     | '/admin/leaderboard'
     | '/admin/lockdown'
@@ -1065,6 +1077,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncidentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/incident-lookup': {
+      id: '/admin/incident-lookup'
+      path: '/incident-lookup'
+      fullPath: '/admin/incident-lookup'
+      preLoaderRoute: typeof AdminIncidentLookupRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/errors': {
       id: '/admin/errors'
       path: '/errors'
@@ -1190,6 +1209,7 @@ interface AdminRouteChildren {
   AdminCheckinRoute: typeof AdminCheckinRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminErrorsRoute: typeof AdminErrorsRoute
+  AdminIncidentLookupRoute: typeof AdminIncidentLookupRoute
   AdminIncidentsRoute: typeof AdminIncidentsRoute
   AdminLeaderboardRoute: typeof AdminLeaderboardRoute
   AdminLockdownRoute: typeof AdminLockdownRoute
@@ -1216,6 +1236,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCheckinRoute: AdminCheckinRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminErrorsRoute: AdminErrorsRoute,
+  AdminIncidentLookupRoute: AdminIncidentLookupRoute,
   AdminIncidentsRoute: AdminIncidentsRoute,
   AdminLeaderboardRoute: AdminLeaderboardRoute,
   AdminLockdownRoute: AdminLockdownRoute,

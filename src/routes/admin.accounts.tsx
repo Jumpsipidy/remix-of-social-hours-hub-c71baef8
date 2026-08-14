@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { DashHero, GlassCard } from "@/components/dashboard-kit";
 import { requireAdmin } from "@/lib/auth-guards";
 import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { AdminCreateAccountPanel } from "@/components/admin-create-account-panel";
 
 export const Route = createFileRoute("/admin/accounts")({
   beforeLoad: () => requireAdmin(),
@@ -89,6 +90,8 @@ function AdminAccountsPage() {
         icon={Users}
         accent="#3B82F6"
       />
+
+      <AdminCreateAccountPanel />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
