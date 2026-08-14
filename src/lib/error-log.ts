@@ -10,6 +10,7 @@ import { getActionBreadcrumbs, getBreadcrumbs, getSessionReplay } from "@/lib/us
 import { fingerprint as computeFingerprint, isTelemetryFingerprint } from "@/lib/error-fingerprint";
 import { enqueue as enqueueOutbox, startOutbox } from "@/lib/error-outbox";
 import { captureScreenshot } from "@/lib/screenshot";
+import { newIncidentCode } from "@/lib/incident-code";
 
 const IGNORE_SUBSTRINGS = [
   "ResizeObserver loop",
@@ -242,7 +243,8 @@ async function insert(action: "client.error" | "supabase.error" | "client.teleme
   const telemetry = action === "client.telemetry" || isTelemetryFingerprint(payload.message);
   const key = `${action}:${fp.id}`;
   const now = Date.now();
-  const forcedReport = payload.extra?.forceEscalate === true;
+  const forcedReport =
+    payload.extra?.forceEscalate === true || typeof payload.extra?.incident_code === "string";
   const last = seen.get(key);
   if (!forcedReport && last && now - last < (telemetry ? TELEMETRY_DEDUPE_MS : DEDUPE_MS)) return;
   seen.set(key, now);
@@ -267,6 +269,9 @@ async function insert(action: "client.error" | "supabase.error" | "client.teleme
       breadcrumbs: getActionBreadcrumbs(15),
       breadcrumbs_all: getBreadcrumbs().slice(-25),
       replay: getSessionReplay(60_000).slice(-40),
+      incident_code:
+        (typeof payload.extra?.incident_code === "string" && payload.extra.incident_code) ||
+        newIncidentCode(),
       fingerprint: fp.id,
       fingerprint_norm: fp.norm,
       fingerprint_frame: fp.frame,

@@ -29,6 +29,8 @@ import { PageViewTracker } from "@/components/page-view-tracker";
 import { FriendlyErrorScreen } from "@/components/friendly-error";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 
+import { NotFoundScreen } from "@/components/not-found-screen";
+
 function NotFoundComponent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -47,22 +49,7 @@ function NotFoundComponent() {
       }).catch(() => {});
     });
   }, []);
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Puslapis nerastas</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Ieškomas puslapis neegzistuoja arba buvo perkeltas.
-        </p>
-        <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            Į pradžią
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  return <NotFoundScreen path={typeof window !== "undefined" ? window.location.pathname : undefined} />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {

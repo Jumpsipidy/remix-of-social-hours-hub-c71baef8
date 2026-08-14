@@ -427,11 +427,9 @@ function Home() {
               />
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-xl gap-6">
               {[
-                { name: "Šeduvos gimnazija", loc: "Šeduva · Radviliškio r.", b: "Pirmoji mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai." },
-                { name: "Vilniaus Vytauto Didžiojo gimnazija", loc: "Vilnius", b: "Inovatyvus požiūris į moksleivių savanorystės apskaitą sostinėje. (Pilotinė grupė)" },
-                { name: "Kauno r. Raudondvario gimnazija", loc: "Raudondvaris", b: "Aktyvus bendruomenės įsitraukimas ir skaitmenizuotas procesas. (Partneris)" }
+                { name: "Šeduvos gimnazija", loc: "Šeduva · Radviliškio r.", b: "Pirmoji ir kol kas vienintelė mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai." }
               ].map((s, i) => (
                 <Reveal key={s.name} delay={i * 0.1}>
                   <SpotlightCard accent={LT_GREEN} className="h-full p-7 text-left">

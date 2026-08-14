@@ -2,7 +2,7 @@
 // Kept as raw HTML (no React) so it works even if the bundle failed to boot.
 // Copy is Lithuanian and calm: „mes jau žinome, taisom".
 export function renderErrorPage(): string {
-  const incident = Math.random().toString(36).slice(2, 9);
+  const incident = `SC-${Math.floor(Math.random() * 900000) + 100000}`;
   return `<!doctype html>
 <html lang="lt">
   <head>
@@ -62,13 +62,13 @@ export function renderErrorPage(): string {
       <div class="badge"><span class="dot"></span> Taisoma…</div>
       <div class="id">
         <small>Incidento ID</small>
-        <code>#${incident}</code>
+        <code>${incident}</code>
       </div>
       <div class="actions">
         <button class="primary" onclick="location.reload()">Bandyti dar</button>
         <a class="btn secondary" href="/">Į pradžią</a>
       </div>
-      <div class="tiny">Duomenys saugūs. Jei kartojasi — nusiųsk kodą #${incident} adminui.</div>
+      <div class="tiny">Duomenys saugūs. Jei kartojasi — nusiųsk kodą ${incident} adminui.</div>
     </div>
   </body>
 </html>`;
