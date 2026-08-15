@@ -50,6 +50,7 @@ export type Database = {
       ai_error_analyses: {
         Row: {
           confidence: number | null
+          cost_usd: number | null
           created_at: string
           error_message: string | null
           fingerprint: string
@@ -59,12 +60,17 @@ export type Database = {
           severity_estimate: string | null
           suggested_file: string | null
           suggested_fix: string | null
+          summary: string | null
+          super_prompt: string | null
           suspected_cause: string | null
+          tokens_input: number | null
+          tokens_output: number | null
           tokens_used: number | null
           updated_at: string
         }
         Insert: {
           confidence?: number | null
+          cost_usd?: number | null
           created_at?: string
           error_message?: string | null
           fingerprint: string
@@ -74,12 +80,17 @@ export type Database = {
           severity_estimate?: string | null
           suggested_file?: string | null
           suggested_fix?: string | null
+          summary?: string | null
+          super_prompt?: string | null
           suspected_cause?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
           tokens_used?: number | null
           updated_at?: string
         }
         Update: {
           confidence?: number | null
+          cost_usd?: number | null
           created_at?: string
           error_message?: string | null
           fingerprint?: string
@@ -89,7 +100,11 @@ export type Database = {
           severity_estimate?: string | null
           suggested_file?: string | null
           suggested_fix?: string | null
+          summary?: string | null
+          super_prompt?: string | null
           suspected_cause?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
           tokens_used?: number | null
           updated_at?: string
         }
@@ -97,7 +112,6 @@ export type Database = {
       }
       bug_reports: {
         Row: {
-          admin_note: string | null
           created_at: string
           id: string
           message: string
@@ -108,7 +122,6 @@ export type Database = {
           status: string
         }
         Insert: {
-          admin_note?: string | null
           created_at?: string
           id?: string
           message: string
@@ -119,7 +132,6 @@ export type Database = {
           status?: string
         }
         Update: {
-          admin_note?: string | null
           created_at?: string
           id?: string
           message?: string
@@ -191,10 +203,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "certificates_school_id_fkey"
-            columns: ["school_id"]
+            foreignKeyName: "certificates_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "schools"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -323,6 +335,96 @@ export type Database = {
           },
         ]
       }
+      email_outbox: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["email_kind"]
+          last_error: string | null
+          payload: Json
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          to_email: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["email_kind"]
+          last_error?: string | null
+          payload?: Json
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          to_email: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["email_kind"]
+          last_error?: string | null
+          payload?: Json
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          to_email?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_preferences: {
+        Row: {
+          certificate_ready: boolean
+          hours_confirmed: boolean
+          new_message: boolean
+          reservation_status: boolean
+          updated_at: string
+          user_id: string
+          weekly_digest: boolean
+        }
+        Insert: {
+          certificate_ready?: boolean
+          hours_confirmed?: boolean
+          new_message?: boolean
+          reservation_status?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_digest?: boolean
+        }
+        Update: {
+          certificate_ready?: boolean
+          hours_confirmed?: boolean
+          new_message?: boolean
+          reservation_status?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_digest?: boolean
+        }
+        Relationships: []
+      }
+      email_suppressions: {
+        Row: {
+          created_at: string
+          email: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           addressee_id: string
@@ -346,83 +448,6 @@ export type Database = {
           id?: string
           requester_id?: string
           status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      gsc_daily: {
-        Row: {
-          clicks: number
-          created_at: string
-          ctr: number
-          date: string
-          id: string
-          impressions: number
-          position: number
-          property_id: string
-          top_page: string | null
-          top_query: string | null
-        }
-        Insert: {
-          clicks?: number
-          created_at?: string
-          ctr?: number
-          date: string
-          id?: string
-          impressions?: number
-          position?: number
-          property_id: string
-          top_page?: string | null
-          top_query?: string | null
-        }
-        Update: {
-          clicks?: number
-          created_at?: string
-          ctr?: number
-          date?: string
-          id?: string
-          impressions?: number
-          position?: number
-          property_id?: string
-          top_page?: string | null
-          top_query?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gsc_daily_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "gsc_properties"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      gsc_properties: {
-        Row: {
-          connected: boolean
-          created_at: string
-          id: string
-          label: string | null
-          last_sync_at: string | null
-          site_url: string
-          updated_at: string
-        }
-        Insert: {
-          connected?: boolean
-          created_at?: string
-          id?: string
-          label?: string | null
-          last_sync_at?: string | null
-          site_url: string
-          updated_at?: string
-        }
-        Update: {
-          connected?: boolean
-          created_at?: string
-          id?: string
-          label?: string | null
-          last_sync_at?: string | null
-          site_url?: string
           updated_at?: string
         }
         Relationships: []
@@ -517,26 +542,25 @@ export type Database = {
           created_at: string
           email: string | null
           facebook_url: string | null
+          freeze_used_at: string | null
           full_name: string | null
           gallery_urls: string[] | null
           hours_earned: number
           hours_needed: number
           id: string
           instagram_url: string | null
+          last_login_day: string | null
           latitude: number | null
           login_streak: number
           logo_url: string | null
           longest_login_streak: number
           longitude: number | null
-          org_category: Database["public"]["Enums"]["org_category"] | null
           organization_name: string | null
           phone: string | null
           profile_verified: boolean
           public_email: string | null
           role: Database["public"]["Enums"]["app_role"]
           school_id: string | null
-          streak_freeze_used_at: string | null
-          streak_last_date: string | null
           updated_at: string
           website_url: string | null
         }
@@ -552,26 +576,25 @@ export type Database = {
           created_at?: string
           email?: string | null
           facebook_url?: string | null
+          freeze_used_at?: string | null
           full_name?: string | null
           gallery_urls?: string[] | null
           hours_earned?: number
           hours_needed?: number
           id: string
           instagram_url?: string | null
+          last_login_day?: string | null
           latitude?: number | null
           login_streak?: number
           logo_url?: string | null
           longest_login_streak?: number
           longitude?: number | null
-          org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
           phone?: string | null
           profile_verified?: boolean
           public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
-          streak_freeze_used_at?: string | null
-          streak_last_date?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -587,26 +610,25 @@ export type Database = {
           created_at?: string
           email?: string | null
           facebook_url?: string | null
+          freeze_used_at?: string | null
           full_name?: string | null
           gallery_urls?: string[] | null
           hours_earned?: number
           hours_needed?: number
           id?: string
           instagram_url?: string | null
+          last_login_day?: string | null
           latitude?: number | null
           login_streak?: number
           logo_url?: string | null
           longest_login_streak?: number
           longitude?: number | null
-          org_category?: Database["public"]["Enums"]["org_category"] | null
           organization_name?: string | null
           phone?: string | null
           profile_verified?: boolean
           public_email?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           school_id?: string | null
-          streak_freeze_used_at?: string | null
-          streak_last_date?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -730,7 +752,6 @@ export type Database = {
           start_time: string
           status: Database["public"]["Enums"]["reservation_status"]
           student_id: string
-          tags: string[]
           task_id: string | null
           updated_at: string
         }
@@ -753,7 +774,6 @@ export type Database = {
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id: string
-          tags?: string[]
           task_id?: string | null
           updated_at?: string
         }
@@ -776,7 +796,6 @@ export type Database = {
           start_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id?: string
-          tags?: string[]
           task_id?: string | null
           updated_at?: string
         }
@@ -855,7 +874,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
-          signup_code: string
+          signup_code?: string
         }
         Update: {
           city?: string | null
@@ -916,7 +935,6 @@ export type Database = {
           recurrence_weekday: number | null
           spots_total: number
           start_time: string | null
-          tags: string[]
           task_date: string
           template_source_id: string | null
           title: string
@@ -943,7 +961,6 @@ export type Database = {
           recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
-          tags?: string[]
           task_date: string
           template_source_id?: string | null
           title: string
@@ -970,7 +987,6 @@ export type Database = {
           recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
-          tags?: string[]
           task_date?: string
           template_source_id?: string | null
           title?: string
@@ -1091,25 +1107,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      admin_analytics_v2: { Args: { _days?: number }; Returns: Json }
-      admin_recent_activity: {
-        Args: { _limit?: number }
-        Returns: {
-          action: string
-          browser: string
-          created_at: string
-          device: string
-          id: string
-          lang: string
-          os: string
-          path: string
-          ref_host: string
-          user_id: string
-          user_name: string
-          user_role: string
-        }[]
-      }
-      analytics_prune: { Args: { _days?: number }; Returns: number }
       analytics_reset: { Args: never; Returns: number }
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
       auto_lockdown_if_unhealthy: { Args: never; Returns: Json }
@@ -1127,11 +1124,14 @@ export type Database = {
           freeze_used_at: string
           login_streak: number
           longest_login_streak: number
-          streak_last_date: string
         }[]
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       check_in_by_code: { Args: { _code: string }; Returns: Json }
+      ensure_check_in_code: {
+        Args: { _participant_id?: string; _reservation_id?: string }
+        Returns: string
+      }
       generate_check_in_code: { Args: never; Returns: string }
       generate_recurring_tasks: { Args: never; Returns: number }
       get_lockdown_public: {
@@ -1170,33 +1170,13 @@ export type Database = {
       }
       open_dm_room: { Args: { _other: string }; Returns: string }
       purge_dm_messages: { Args: never; Returns: undefined }
-      purge_monitoring_data: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
-      record_uptime_check: {
-        Args: {
-          _error?: string
-          _latency_ms: number
-          _ok: boolean
-          _status_code: number
-        }
-        Returns: undefined
-      }
       revoke_certificate: {
         Args: { _code: string; _reason: string }
         Returns: boolean
       }
       run_deep_health_scan: { Args: never; Returns: Json }
-      search_classmates: {
-        Args: { _q?: string }
-        Returns: {
-          class_year: string
-          full_name: string
-          hours_earned: number
-          id: string
-          public_email: string
-          school_id: string
-        }[]
-      }
+      tick_auto_lockdown: { Args: never; Returns: undefined }
       verify_certificate: { Args: { _code: string }; Returns: Json }
       verify_school_signup_code: {
         Args: { _code: string; _school_id: string }
@@ -1205,7 +1185,14 @@ export type Database = {
     }
     Enums: {
       app_role: "student" | "school_admin" | "organization" | "admin"
-      org_category: "organizacija" | "bendruomene"
+      email_kind:
+        | "hours_confirmed"
+        | "reservation_approved"
+        | "reservation_declined"
+        | "new_message"
+        | "certificate_ready"
+        | "org_access_granted"
+        | "weekly_digest"
       reservation_status:
         | "pending"
         | "confirmed"
@@ -1340,7 +1327,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "school_admin", "organization", "admin"],
-      org_category: ["organizacija", "bendruomene"],
+      email_kind: [
+        "hours_confirmed",
+        "reservation_approved",
+        "reservation_declined",
+        "new_message",
+        "certificate_ready",
+        "org_access_granted",
+        "weekly_digest",
+      ],
       reservation_status: [
         "pending",
         "confirmed",
