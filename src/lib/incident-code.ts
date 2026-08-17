@@ -22,9 +22,14 @@ export function normalizeIncidentCode(raw: string | null | undefined): string | 
   if (clean.startsWith("SC-")) return clean;
   if (clean.startsWith("#")) return clean;
   
-  // Otherwise, if it's just numbers/letters, check if it's 6 digits (legacy)
-  const digits = clean.replace(/\D/g, "");
-  if (digits.length === 6 && /^\d+$/.test(clean)) return `SC-${digits}`;
+  // Otherwise, if it's just numbers/letters
+  const cleanBase = clean.replace(/[^A-Z0-9]/g, "");
   
-  return clean;
+  // If it's exactly 6 digits, it's a legacy SC code
+  if (cleanBase.length === 6 && /^\d+$/.test(cleanBase)) {
+    return `SC-${cleanBase}`;
+  }
+  
+  // Otherwise, it's a new alphanumeric code (ensure it starts with #)
+  return clean.startsWith("#") ? clean : `#${clean}`;
 }
