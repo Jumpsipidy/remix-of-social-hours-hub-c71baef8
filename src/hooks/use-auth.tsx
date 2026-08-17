@@ -38,6 +38,7 @@ type AuthState = {
 
 const MOCK_KEY = "sv_mock_session_v1";
 const ROLE_CACHE_KEY = "sv_last_role_v1";
+const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 const AuthContext = createContext<AuthState | null>(null);
 const PROFILE_COLUMNS = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes";
 const PROFILE_COLUMNS_SAFE = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year";
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const ensured = await ensureProfileRef.current();
         if (mounted && ensured.profile) {
           setProfile(ensured.profile as Profile);
-          try { localStorage.setItem(ROLE_CACHE_KEY, ensured.profile.role); } catch {}
+          try { localStorage.setItem(ROLE_CACHE_KEY, ensured.profile.role); localStorage.setItem(ROLE_CACHE_UID_KEY, uid); } catch {}
           return;
         }
       } catch {
@@ -130,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mounted) {
         setProfile(nextProfile);
         if (nextProfile?.role) {
-          try { localStorage.setItem(ROLE_CACHE_KEY, nextProfile.role); } catch {}
+          try { localStorage.setItem(ROLE_CACHE_KEY, nextProfile.role); localStorage.setItem(ROLE_CACHE_UID_KEY, uid); } catch {}
         }
       }
     };
@@ -201,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await logActivity("auth.signed_out", { meta: deviceMeta() });
         } catch {}
         try { localStorage.removeItem(MOCK_KEY); } catch {}
-        try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
+        try { localStorage.removeItem(ROLE_CACHE_KEY); localStorage.removeItem(ROLE_CACHE_UID_KEY); } catch {}
         setMock(null);
         await supabase.auth.signOut();
       },
@@ -211,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       impersonateReal: async (email: string, password: string) => {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
-        try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
+        try { localStorage.removeItem(ROLE_CACHE_KEY); localStorage.removeItem(ROLE_CACHE_UID_KEY); } catch {}
         setMock(null);
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
