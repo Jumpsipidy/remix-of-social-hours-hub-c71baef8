@@ -72,7 +72,8 @@ export type ActivityAction =
   | "auth.signed_out"
   | "page.view"
   | "client.error"
-  | "supabase.error";
+  | "supabase.error"
+  | "security.sketchy_access";
 
 export type ActivityLogRow = {
   user_id?: string | null;
