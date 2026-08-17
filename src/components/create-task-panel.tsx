@@ -30,6 +30,12 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('sv_open_create_task', handleOpen);
+    return () => window.removeEventListener('sv_open_create_task', handleOpen);
+  }, []);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(todayISO());
