@@ -52,7 +52,7 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
-      { name: "keywords", content: "socialines valandos, socialinės valandos, savanoryste, savanorystė Lietuvoje, socialinių valandų apskaita, moksleivių savanorystė, savanorystės užduotys, Šeduvos gimnazija, socialinesvalandos.dev, socialinės valandos mokiniams" },
+      { name: "keywords", content: "socialines valandos, socialinės valandos, socialinių valandų centras, socialinių valandų centras, savanoryste, savanorystė Lietuvoje, socialinių valandų apskaita, moksleivių savanorystė, savanorystės užduotys, Šeduvos gimnazija, socialinesvalandos.dev, socialinės valandos mokiniams, savanorystės sistema" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
     scripts: [

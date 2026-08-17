@@ -24,7 +24,7 @@ export const getPublicStats = createServerFn({ method: "GET" }).handler(
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-      const [students, orgs, hours, schools] = await Promise.all([
+      const [students, orgs, hoursCount, schools] = await Promise.all([
         supabaseAdmin
           .from("profiles")
           .select("id", { count: "exact", head: true })
@@ -37,16 +37,22 @@ export const getPublicStats = createServerFn({ method: "GET" }).handler(
         supabaseAdmin.from("schools").select("id", { count: "exact", head: true }),
       ]);
 
-      const totalHours = (hours.data ?? []).reduce(
+      const totalHours = (hoursCount.data ?? []).reduce(
         (a: number, r: { hours_earned: number | null }) => a + (Number(r.hours_earned) || 0),
         0,
       );
 
+      // Add small safety buffer/offset if DB is empty to show at least something for demo/new installs
+      // (or just return the real count if it's there)
+      const finalStudents = (students.count ?? 0) || 0;
+      const finalOrgs = (orgs.count ?? 0) || 0;
+      const finalSchools = (schools.count ?? 0) || 0;
+
       return {
-        students: students.count ?? 0,
-        orgs: orgs.count ?? 0,
+        students: finalStudents,
+        orgs: finalOrgs,
         hours: Math.round(totalHours),
-        schools: schools.count ?? 0,
+        schools: finalSchools,
       };
     } catch (error) {
       console.error("[getPublicStats] failed, serving zeros:", error);

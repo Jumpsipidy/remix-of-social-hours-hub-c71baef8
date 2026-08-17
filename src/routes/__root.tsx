@@ -16,6 +16,8 @@ import { MockTesterPanel } from "../components/mock-tester-panel";
 import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
+import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
+import { SecurityGateway } from "@/components/security-gateway";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
@@ -83,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "keywords",
         content:
-          "socialines valandos, socialinės valandos, socialinesvalandos, socialinesvalandos.dev, socialiniu valandu centras, socialinės valandos mokiniams, savanorystė Lietuvoje, savanorystės valandos, mokinių savanorystė, savanorystė mokykloje, socialinių valandų apskaita, socialinių valandų sistema, Šeduvos gimnazija, socialinės valandos internetu, savanorystės platforma, savanoriška veikla, savanoriauk, jauno žmogaus savanorystė",
+          "socialines valandos, socialinės valandos, socialinesvalandos, socialinesvalandos.dev, socialiniu valandu centras, socialinių valandų centras, savanorystės sistema, socialinės valandos mokiniams, savanorystė Lietuvoje, savanorystės valandos, mokinių savanorystė, savanorystė mokykloje, socialinių valandų apskaita, socialinių valandų sistema, Šeduvos gimnazija, socialinės valandos internetu, savanorystės platforma, savanoriška veikla, savanoriauk, jauno žmogaus savanorystė",
       },
 
       { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },
@@ -267,7 +269,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AnimatePresence mode="wait" initial={false}>
+        <SecurityGatewayProvider>
+          <SecurityGateway />
+          <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={router.state.location.pathname}
             initial={{ opacity: 0 }}
@@ -278,26 +282,24 @@ function RootComponent() {
             style={{ willChange: "opacity" }}
           >
             <Outlet />
-          </motion.div>
-        </AnimatePresence>
-        <Toaster />
-        <CelebrationStage />
+            </motion.div>
+          </AnimatePresence>
+          <Toaster />
+          <CelebrationStage />
 
-        <BugReportWidget />
-        <CookieConsent />
-        {import.meta.env.DEV && <MockTesterPanel />}
-        <LockdownGate />
-        <ErrorMonitor />
-        <AdminAlertMonitor />
-        <AdminErrorHud />
-        <LovableOverlayBridge />
+          <BugReportWidget />
+          <CookieConsent />
+          {import.meta.env.DEV && <MockTesterPanel />}
+          <LockdownGate />
+          <ErrorMonitor />
+          <AdminAlertMonitor />
+          <AdminErrorHud />
+          <LovableOverlayBridge />
 
-        <PageViewTracker />
-        <WebVitalsReporter />
-        <AnalyticsLoader />
-
-
-
+          <PageViewTracker />
+          <WebVitalsReporter />
+          <AnalyticsLoader />
+        </SecurityGatewayProvider>
       </AuthProvider>
     </QueryClientProvider>
 
