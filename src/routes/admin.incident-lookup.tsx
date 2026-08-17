@@ -58,8 +58,6 @@ function IncidentLookupPage() {
       setError("Įveskite incidento kodą (pvz. #A1B2C3D arba SC-123456)");
       return;
     }
-
-  async function submit() {
     if (code.length < 4) {
       setError("Kodas per trumpas.");
       return;
