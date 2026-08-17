@@ -229,8 +229,8 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       sb.from("reservations").select("id, status, hours_to_earn, created_at").gte("created_at", since),
       sb.from("profiles").select("id, role, created_at").gte("created_at", since),
       sb.from("messages").select("id, created_at").gte("created_at", since),
-      userSb.rpc("admin_analytics_v2", { _days: days }),
-      userSb.rpc("admin_recent_activity", { _limit: 80 }),
+      (userSb.rpc as any)("admin_analytics_v2", { _days: days }),
+      (userSb.rpc as any)("admin_recent_activity", { _limit: 80 }),
       sb.from("activity_log").select("id, created_at, action, user_id, meta").gte("created_at", since).order("created_at", { ascending: false }).limit(2500),
     ]);
     const fallbackRows = ((rawActivityRes.data ?? []) as Array<{
