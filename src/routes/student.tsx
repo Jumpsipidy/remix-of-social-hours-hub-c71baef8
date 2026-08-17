@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -69,6 +70,16 @@ function StudentDashboard() {
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "completed">("all");
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="mx-auto max-w-7xl px-4 py-12">
+          <DashboardSkeleton />
+        </div>
+      </PageShell>
+    );
+  }
 
   const loadReservations = async (uid: string) => {
     const { data } = await supabase

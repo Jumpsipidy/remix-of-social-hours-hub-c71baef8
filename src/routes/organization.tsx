@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { useAuth } from "@/hooks/use-auth";
 import { listOrgStudents } from "@/lib/org-students.functions";
@@ -16,7 +17,6 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { Button } from "@/components/ui/button";
-
 const OrgAnalytics = lazy(() => import("@/components/org-analytics").then((m) => ({ default: m.OrgAnalytics })));
 
 import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
@@ -35,6 +35,8 @@ export const Route = createFileRoute("/organization")({
   }),
   component: OrgDashboard,
 });
+
+const SV_OPEN_CREATE_TASK = "sv_open_create_task";
 
 type Reservation = {
   id: string;
@@ -83,6 +85,16 @@ function OrgDashboard() {
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
   const [dataLoading, setDataLoading] = useState(true);
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="mx-auto max-w-7xl px-4 py-12">
+          <DashboardSkeleton />
+        </div>
+      </PageShell>
+    );
+  }
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async (uid: string) => {
@@ -731,6 +743,10 @@ function OrgDashboard() {
             })}
           </div>
         </div>
+      </section>
+      
+      <section id="create-task-btn" className="mx-auto mt-6 max-w-7xl px-4 pb-20 sm:px-6">
+        <CreateTaskPanel organizationId={user.id} />
       </section>
       </>}
 

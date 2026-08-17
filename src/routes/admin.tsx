@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
+import { DashboardSkeleton } from "../components/skeleton-loader";
 import { useAuth } from "@/hooks/use-auth";
 import { AdminAurora } from "@/components/admin/admin-ui";
 import { AdminMobileBoot } from "@/components/admin/mobile-boot";
@@ -110,7 +111,9 @@ function AdminLayout() {
   if (loading) {
     return (
       <PageShell>
-        <div className="p-20 text-center text-muted-foreground">Kraunama…</div>
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 py-12">
+          <DashboardSkeleton />
+        </div>
       </PageShell>
     );
   }

@@ -85,7 +85,7 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
     if (captchaRequired && !captchaProof) {
-      toast.error("Prašome įrodyti, kad esate žmogus.");
+      toast.error("Mums reikia patvirtinti ar ne robotas. Paspauskite saugumo patikrą.");
       return;
     }
     setBusy(true);
@@ -122,7 +122,7 @@ function LoginPage() {
       // Log security event for brute-force tracking
       void insertActivityLogRow({
         action: "security.login_failed",
-        meta: { email, attempt: next, path: "/login" }
+        meta: { email, attempt: next, path: "/login", reason: err instanceof Error ? err.message : "Unknown" }
       });
 
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
@@ -218,6 +218,19 @@ function LoginPage() {
             <p className="mt-6 max-w-md text-base text-muted-foreground">
               Vienas prisijungimas — visos rolės. Sistema pati nukreipia tave į teisingą skydą: moksleivio, organizacijos, mokyklos ar administratoriaus.
             </p>
+            {captchaRequired && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8 space-y-3"
+              >
+                <div className="flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-widest text-neutral-500">
+                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  Saugumo patikra
+                </div>
+                <Captcha onVerify={setCaptchaProof} tone="dark" />
+              </motion.div>
+            )}
           </motion.div>
 
           <div className="mt-10 grid max-w-md gap-3">
