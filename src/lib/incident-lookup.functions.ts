@@ -22,12 +22,15 @@ export const lookupIncident = createServerFn({ method: "POST" })
     const code = normalizeIncidentCode(data.code);
     if (!code) throw new Error("Netinkamas formatas. Naudok SC-######");
 
+    // Ensure we are comparing the right meta field.
+    // The activity_log table uses a JSONB column 'meta'.
+    // We look for rows where meta->>'incident_code' matches exactly.
     const { data: rows, error } = await supabaseAdmin
       .from("activity_log")
       .select("id, action, user_id, created_at, meta")
-      .filter("meta->>incident_code", "eq", code)
+      .eq("meta->>incident_code", code)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(20);
     if (error) throw new Error(error.message);
 
     const list = rows ?? [];
