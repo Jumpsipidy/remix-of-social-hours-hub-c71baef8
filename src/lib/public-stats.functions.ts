@@ -35,7 +35,7 @@ export const getPublicStats = createServerFn({ method: "GET" }).handler(
           .eq("role", "organization"),
         supabaseAdmin
           .from("profiles")
-          .select("hours_earned", { count: "exact" })
+          .select("hours_earned")
           .eq("role", "student")
           .not("hours_earned", "is", null),
         supabaseAdmin.from("schools").select("id", { count: "exact", head: true }),
