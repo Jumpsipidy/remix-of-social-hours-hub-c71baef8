@@ -118,6 +118,13 @@ function LoginPage() {
       setFails(next);
       setCaptchaProof(null);
       try { localStorage.setItem(FAIL_KEY, String(next)); } catch {}
+      
+      // Log security event for brute-force tracking
+      void insertActivityLogRow({
+        action: "security.login_failed",
+        meta: { email, attempt: next, path: "/login" }
+      });
+
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
     } finally {
       setBusy(false);
