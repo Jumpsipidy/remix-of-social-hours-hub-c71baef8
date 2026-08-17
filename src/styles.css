@@ -151,7 +151,7 @@
     /* Static background as primary to avoid expensive paints */
     background-attachment: fixed;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; text-wrap: balance; }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.025em; text-wrap: balance; font-weight: 800; }
 }
 
 @utility bg-gradient-hero { background-image: var(--gradient-hero); }
