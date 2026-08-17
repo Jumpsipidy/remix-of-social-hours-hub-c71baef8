@@ -36,31 +36,31 @@ export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] border border-white/10 bg-neutral-900/40 p-8 text-center shadow-2xl backdrop-blur-2xl"
+        className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-neutral-900/40 p-8 text-center shadow-2xl backdrop-blur-2xl"
       >
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-glow shadow-rose-500/20">
-          <Wrench className="h-10 w-10 text-white" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-glow shadow-rose-500/20">
+          <Wrench className="h-8 w-8 text-white" />
         </div>
 
-        <h1 className="text-3xl font-black tracking-tight text-white mb-3">
-          Oi! Kažkas sugedo...
+        <h1 className="text-2xl font-black tracking-tight text-white mb-2">
+          Kažkas sugedo...
         </h1>
-        <p className="text-neutral-400 leading-relaxed mb-8">
-          Mūsų robotukai jau gavo pranešimą ir skuba taisyti. Kol kas pabandyk atnaujinti puslapį arba grįžti į pradžią.
+        <p className="text-sm text-neutral-400 leading-relaxed mb-8">
+          Mūsų robotukai jau skuba taisyti. Kol kas pabandyk atnaujinti puslapį.
         </p>
 
-        <div className="flex flex-col gap-3 mb-8">
+        <div className="grid grid-cols-2 gap-3 mb-8">
           <button
             onClick={() => (onRetry ? onRetry() : window.location.reload())}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-bold text-black transition hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-white py-3 text-xs font-bold text-black transition hover:scale-[1.02] active:scale-[0.98]"
           >
-            <RefreshCw className="h-4 w-4" /> Bandyti dar kartą
+            <RefreshCw className="h-3.5 w-3.5" /> Bandyti dar kartą
           </button>
           <Link
             to="/"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-bold text-white transition hover:bg-white/10"
+            className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-3 text-xs font-bold text-white transition hover:bg-white/10"
           >
-            <Home className="h-4 w-4" /> Į pradžią
+            <Home className="h-3.5 w-3.5" /> Į pradžią
           </Link>
         </div>
 
