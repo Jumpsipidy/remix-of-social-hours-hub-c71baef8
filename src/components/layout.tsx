@@ -25,7 +25,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [easterEgg, setEasterEgg] = useState(false);
-  const { isAuthenticated, profile, signOut } = useAuth();
+  const { isAuthenticated, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (to: string, exact: boolean) => 
@@ -40,21 +40,37 @@ export function Navbar() {
 
   // Cache last known role so the dashboard link stays stable across route
   // changes / hydration while useAuth is still refetching the profile.
+  // SECURITY: the cache is bound to the user id it was written for. Without
+  // that binding a previously signed-in admin left "admin" in localStorage and
+  // the next (student) account briefly saw the "Sistemos administracija" link.
   useEffect(() => {
+    if (!user?.id) { setCachedRole(null); return; }
     try {
       const raw = localStorage.getItem(ROLE_CACHE_KEY);
-      if (raw) setCachedRole(raw as AppRole);
+      const uid = localStorage.getItem(ROLE_CACHE_UID_KEY);
+      if (raw && uid === user.id) setCachedRole(raw as AppRole);
+      else {
+        localStorage.removeItem(ROLE_CACHE_KEY);
+        localStorage.removeItem(ROLE_CACHE_UID_KEY);
+        setCachedRole(null);
+      }
     } catch {}
-  }, []);
+  }, [user?.id]);
   useEffect(() => {
-    if (profile?.role) {
-      try { localStorage.setItem(ROLE_CACHE_KEY, profile.role); } catch {}
+    if (profile?.role && user?.id) {
+      try {
+        localStorage.setItem(ROLE_CACHE_KEY, profile.role);
+        localStorage.setItem(ROLE_CACHE_UID_KEY, user.id);
+      } catch {}
       setCachedRole(profile.role);
     } else if (!isAuthenticated) {
-      try { localStorage.removeItem(ROLE_CACHE_KEY); } catch {}
+      try {
+        localStorage.removeItem(ROLE_CACHE_KEY);
+        localStorage.removeItem(ROLE_CACHE_UID_KEY);
+      } catch {}
       setCachedRole(null);
     }
-  }, [profile?.role, isAuthenticated]);
+  }, [profile?.role, isAuthenticated, user?.id]);
 
   const activeRole: AppRole | null = profile?.role ?? (isAuthenticated ? cachedRole : null);
   const links: { to: string; label: string }[] = [
