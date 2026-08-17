@@ -17,7 +17,15 @@ const GatewayContext = createContext<GatewayState | null>(null);
 const SKETCHY_REFERRERS = [
   "sketchy-site.com",
   "spam-link.net",
-  "bot-factory.org"
+  "bot-factory.org",
+  "dark-web-link.com",
+  "malicious-site.net"
+];
+
+const SENSITIVE_PATHS = [
+  "/admin",
+  "/login",
+  "/register"
 ];
 
 const STORAGE_KEY = "sv_gateway_passed_v1";
@@ -27,6 +35,8 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
   const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     // 1. Check if already passed in this session
     if (sessionStorage.getItem(STORAGE_KEY) === "1") {
       setIsBlocked(false);
@@ -34,13 +44,21 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // 2. Detect high-risk context
-    const referrer = typeof document !== "undefined" ? document.referrer : "";
-    const isSketchy = SKETCHY_REFERRERS.some(r => referrer.includes(referrer));
+    // 2. Heuristic check for "sketchy" activity
+    const referrer = document.referrer.toLowerCase();
+    const currentPath = window.location.pathname.toLowerCase();
     
-    // 3. Optional: block preview envs if desired, but user asked for "sketchy web links"
-    // For now, only trigger if sketchy referrer OR no referrer + direct hit to sensitive paths (hypothetical)
-    if (isSketchy) {
+    const isSketchyReferrer = SKETCHY_REFERRERS.some(r => referrer.includes(r));
+    const isSketchyDeepLink = !referrer && SENSITIVE_PATHS.some(p => currentPath.startsWith(p));
+    
+    // Check for weird query params often used by bots/scanners
+    const queryParams = new URLSearchParams(window.location.search);
+    const hasSketchyParams = ["phpmyadmin", "select+", "union+", "exec", "eval"].some(p => 
+      Array.from(queryParams.values()).some(v => v.toLowerCase().includes(p))
+    );
+
+    if (isSketchyReferrer || isSketchyDeepLink || hasSketchyParams) {
+      console.warn("[security-gateway] Sketchy activity detected:", { isSketchyReferrer, isSketchyDeepLink, hasSketchyParams });
       setIsBlocked(true);
     }
     

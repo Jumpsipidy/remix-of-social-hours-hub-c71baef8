@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "keywords",
         content:
-          "socialines valandos, socialinės valandos, socialinesvalandos, socialinesvalandos.dev, socialiniu valandu centras, socialinių valandų centras, savanorystės sistema, socialinės valandos mokiniams, savanorystė Lietuvoje, savanorystės valandos, mokinių savanorystė, savanorystė mokykloje, socialinių valandų apskaita, socialinių valandų sistema, Šeduvos gimnazija, socialinės valandos internetu, savanorystės platforma, savanoriška veikla, savanoriauk, jauno žmogaus savanorystė",
+          "socialines valandos, socialinės valandos, socialinesvalandos, socialinesvalandos.dev, socialiniu valandu centras, socialinių valandų centras, savanorystės sistema, socialinės valandos mokiniams, savanorystė Lietuvoje, savanorystės valandos, mokinių savanorystė, savanorystė mokykloje, socialinių valandų apskaita, socialinių valandų sistema, Šeduvos gimnazija, socialinės valandos internetu, savanorystės platforma, savanoriška veikla, savanoriauk, jauno žmogaus savanorystė, savanorystė Šeduvoje, savanorystės valandų centras, kur rinkti socialines valandas, socialines valandas seduvos gimnazija, socialinių valandų centras lietuva",
       },
 
       { name: "robots", content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" },

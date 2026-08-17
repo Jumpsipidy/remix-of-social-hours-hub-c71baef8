@@ -43,16 +43,16 @@ const HOME_FAQ: { q: string; a: string; id: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
-      { name: "description", content: "Oficiali Šeduvos gimnazijos (socialinesvalandos.dev) ir visos Lietuvos moksleivių savanorystės platforma. Rezervuok užduotis, rink socialines valandas ir gauk verifikuotus sertifikatus Šeduvoje ir visoje Lietuvoje." },
-      { property: "og:title", content: "Socialinės Valandos — Šeduvos gimnazijos savanorystės centras" },
-      { property: "og:description", content: "Oficiali Šeduvos gimnazijos ir visos Lietuvos moksleivių savanorystės platforma. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus." },
+      { title: "Socialinės Valandos — socialinių valandų centras mokiniams" },
+      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — pagrindinis Lietuvos moksleivių savanorystės ir socialinių valandų centras. Rezervuok užduotis, rink socialines valandas ir gauk verifikuotus sertifikatus. Atvira visoms Lietuvos mokykloms." },
+      { property: "og:title", content: "Socialinės Valandos — socialinių valandų centras mokiniams" },
+      { property: "og:description", content: "Pagrindinis Lietuvos moksleivių savanorystės centras. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus internetu." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
-      { name: "keywords", content: "socialines valandos, socialinės valandos, socialinių valandų centras, socialinių valandų centras, savanoryste, savanorystė Lietuvoje, socialinių valandų apskaita, moksleivių savanorystė, savanorystės užduotys, Šeduvos gimnazija, socialinesvalandos.dev, socialinės valandos mokiniams, savanorystės sistema" },
+      { name: "keywords", content: "socialines valandos, socialinės valandos, socialinių valandų centras, savanoryste, savanorystė Lietuvoje, socialinių valandų apskaita, moksleivių savanorystė, savanorystės užduotys, Šeduvos gimnazija, socialinesvalandos.dev, socialinės valandos mokiniams, savanorystės sistema, socialinių valandų centras mokiniams, kur rinkti socialines valandas" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/" }],
     scripts: [

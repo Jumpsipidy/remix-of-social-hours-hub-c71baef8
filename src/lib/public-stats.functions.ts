@@ -33,13 +33,17 @@ export const getPublicStats = createServerFn({ method: "GET" }).handler(
           .from("profiles")
           .select("id", { count: "exact", head: true })
           .eq("role", "organization"),
-        supabaseAdmin.from("profiles").select("hours_earned").eq("role", "student").not("hours_earned", "is", null),
+        supabaseAdmin
+          .from("profiles")
+          .select("hours_earned", { count: "exact" })
+          .eq("role", "student")
+          .not("hours_earned", "is", null),
         supabaseAdmin.from("schools").select("id", { count: "exact", head: true }),
       ]);
 
       const totalHours = (hoursCount.data ?? []).reduce(
         (a: number, r: { hours_earned: number | null }) => a + (Number(r.hours_earned) || 0),
-        0,
+        0
       );
 
       // Add small safety buffer/offset if DB is empty to show at least something for demo/new installs
