@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Heart, Menu, X, LogOut } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
+import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
