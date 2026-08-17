@@ -23,6 +23,9 @@ const IGNORE_SUBSTRINGS = [
   "/versijos",
   "incident-lookup",
   "admin.incident-lookup",
+  "styles.css",
+  "streak-14.mp4",
+  "streak-7.mp4",
   // React hydration mismatch warnings are noisy; they're not user-facing outages.
   "Hydration failed because the server rendered HTML didn't match the client",
   "server rendered HTML didn't match the client",
