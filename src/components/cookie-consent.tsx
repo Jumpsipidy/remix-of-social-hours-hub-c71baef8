@@ -196,14 +196,14 @@ export function CookieConsent() {
                   <button
                     type="button"
                     onClick={rejectAll}
-                    className="flex-1 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 sm:flex-none"
+                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15 sm:flex-none transition-colors"
                   >
-                    Atmesti
+                    Atmesti visus
                   </button>
                   <button
                     type="button"
                     onClick={acceptAll}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-fuchsia-500/20 hover:brightness-110 sm:flex-none"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/20 hover:brightness-110 sm:flex-none transition-all active:scale-95"
                   >
                     Sutikti su visais
                   </button>

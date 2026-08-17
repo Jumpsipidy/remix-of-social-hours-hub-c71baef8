@@ -366,7 +366,8 @@ function OrgDashboard() {
                   onClick={() => {
                     const el = document.getElementById('create-task-btn');
                     if (el) el.click();
-                    window.scrollTo({ top: el?.offsetTop ? el.offsetTop - 100 : 800, behavior: 'smooth' });
+                    const target = el ? el.getBoundingClientRect().top + window.scrollY - 100 : 800;
+                    window.scrollTo({ top: target, behavior: 'smooth' });
                   }}
                 >
                   <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
