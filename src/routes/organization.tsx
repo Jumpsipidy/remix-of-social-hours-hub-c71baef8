@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Clock, Users, Check, X, Inbox, MessageSquare, AlarmClock, XCircle,
   PlayCircle, ShieldCheck, ListTodo, Trash2, Sparkles, CalendarDays, CheckCircle2,
-  BarChart3, Target, Repeat, Percent, ScanLine, ImageIcon, Eye, MapPin, UserCheck,
+  BarChart3, Target, Repeat, Percent, ScanLine, ImageIcon, Eye, MapPin, UserCheck, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
@@ -359,6 +359,17 @@ function OrgDashboard() {
                   <Link to="/organization/scan">
                     <ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR
                   </Link>
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="rounded-full bg-gradient-primary shadow-glow"
+                  onClick={() => {
+                    const el = document.getElementById('create-task-btn');
+                    if (el) el.click();
+                    window.scrollTo({ top: el?.offsetTop ? el.offsetTop - 100 : 800, behavior: 'smooth' });
+                  }}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
                 </Button>
                 <Button variant="outline" size="sm" className="rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
                   <Sparkles className="mr-1.5 h-4 w-4" /> Reklamuoti skelbimą

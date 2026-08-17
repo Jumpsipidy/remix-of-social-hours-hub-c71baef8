@@ -43,11 +43,11 @@ function BugsPage() {
   async function move(id: string, status: Col) {
     const prev = rows;
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, status } : r)));
-    const { error } = await supabase.from("bug_reports").update({ status }).eq("id", id);
+    const { error } = await supabase.from("bug_reports").update({ status } as any).eq("id", id);
     if (error) { setRows(prev); toast.error(error.message); }
   }
   async function saveNote(id: string, admin_note: string) {
-    const { error } = await supabase.from("bug_reports").update({ admin_note }).eq("id", id);
+    const { error } = await supabase.from("bug_reports").update({ admin_note } as any).eq("id", id);
     if (error) toast.error(error.message);
     else setRows((rs) => rs.map((r) => (r.id === id ? { ...r, admin_note } : r)));
   }
