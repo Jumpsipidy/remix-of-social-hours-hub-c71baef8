@@ -73,14 +73,14 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
 
     if (error || !created.user) throw new Error(error?.message ?? "Nepavyko sukurti paskyros");
 
-    await supabaseAdmin.from("profiles").upsert(
+    await (supabaseAdmin.from("profiles") as any).upsert(
       {
         id: created.user.id,
         email: normalizedEmail,
         full_name: data.full_name,
         role: data.role,
         organization_name: data.role === "organization" ? (data.organization_name ?? data.full_name) : null,
-        org_category: (data.role === "organization" ? (data.org_category ?? "organizacija") : null) as any,
+        org_category: data.role === "organization" ? (data.org_category ?? "organizacija") : null,
         school_id: data.school_id ?? (me as any)?.school_id ?? null,
         // Scope school_admin access to a single school — required for the
         // "School admin can view … in their school" RLS policies to work.
