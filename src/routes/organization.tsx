@@ -17,10 +17,7 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-
 const OrgAnalytics = lazy(() => import("@/components/org-analytics").then((m) => ({ default: m.OrgAnalytics })));
-import { Plus } from "lucide-react";
 
 import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
 
