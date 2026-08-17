@@ -364,9 +364,8 @@ function OrgDashboard() {
                   size="sm" 
                   className="rounded-full bg-gradient-primary shadow-glow"
                   onClick={() => {
-                    const el = document.getElementById('create-task-btn');
-                    if (el) el.click();
-                    const target = el ? el.getBoundingClientRect().top + window.scrollY - 100 : 800;
+                    window.dispatchEvent(new CustomEvent('sv_open_create_task'));
+                    const target = 800; // rough scroll target for the panel
                     window.scrollTo({ top: target, behavior: 'smooth' });
                   }}
                 >

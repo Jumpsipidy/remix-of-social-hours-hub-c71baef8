@@ -136,21 +136,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      // Ignore TOKEN_REFRESHED / INITIAL_SESSION — they fire on tab focus and
-      // would otherwise reset component state (scroll, form inputs).
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      // Ignore TOKEN_REFRESHED — it fires on tab focus and would otherwise
+      // reset component state (scroll, form inputs). INITIAL_SESSION is handled by getSession.
+      if (event === "TOKEN_REFRESHED") return;
+      
       if (event === "SIGNED_IN") {
-        // A real login must always override any previous debug impersonation.
         try { localStorage.removeItem(MOCK_KEY); } catch {}
         setMock(null);
       }
+      
       const u = session?.user ?? null;
-      setUser((prev) => (prev?.id === u?.id ? prev : u));
+      setUser(u);
+      
       if (u) {
-        setTimeout(async () => {
-          await loadProfile(u.id);
+        loadProfile(u.id).finally(() => {
           if (mounted) setLoading(false);
-        }, 0);
+        });
       } else {
         if (event === "SIGNED_OUT") {
           (async () => {
@@ -165,11 +166,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
-      setUser(u);
-      if (u) await loadProfile(u.id);
-      if (mounted) setLoading(false);
+      if (mounted) {
+        setUser(u);
+        if (u) {
+          loadProfile(u.id).finally(() => {
+            if (mounted) setLoading(false);
+          });
+        } else {
+          setLoading(false);
+        }
+      }
     });
 
     return () => {

@@ -72,7 +72,9 @@ export type ActivityAction =
   | "auth.signed_out"
   | "page.view"
   | "client.error"
-  | "supabase.error";
+  | "supabase.error"
+  | "security.sketchy_access"
+  | "security.login_failed";
 
 export type ActivityLogRow = {
   user_id?: string | null;
@@ -113,7 +115,10 @@ export async function logActivity(
   try {
     const { data } = await supabase.auth.getUser();
     const uid = data.user?.id;
-    if (!uid) return;
+    if (!uid) {
+      // Allow logging unauthenticated errors / security events
+      if (action !== "client.error" && action !== "supabase.error" && !action.includes("security")) return;
+    }
     await insertActivityLogRow({
       user_id: uid,
       action,
