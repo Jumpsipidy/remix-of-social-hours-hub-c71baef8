@@ -19,6 +19,7 @@ export const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | 
 };
 
 const ROLE_CACHE_KEY = "sv_last_role_v1";
+const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
