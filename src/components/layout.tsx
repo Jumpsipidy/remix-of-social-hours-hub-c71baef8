@@ -208,6 +208,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <SchoolEyesToggle />
           <div className="hidden sm:block">
             <NotificationBell />
           </div>
