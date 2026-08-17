@@ -19,6 +19,19 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
+    v: "V2.2.0",
+    title: "Saugumas ir modernus klaidų valdymas",
+    date: "2026 m. rugpjūtis",
+    summary: "Atnaujintas klaidų skydelis mokiniams ir patobulintas saugumo gateway valdymas.",
+    items: [
+      { tag: "Dizainas", text: "Remake klaidų puslapio (FriendlyErrorScreen): modernus tamsus dizainas, stiklo efektai ir greiti veiksmai pranešti apie klaidą." },
+      { tag: "Sauga", text: "SecurityGateway konteksto stabilumo pataisymai — užtikrintas teisingas SecurityGatewayProvider veikimas." },
+      { tag: "Patobulinta", text: "Incidentų filtravimas: /versijos ir incident-lookup puslapiai nebetrigina klaidingų klaidų pranešimų log'uose." },
+      { tag: "Dizainas", text: "Paruoštas naujas apskritas logotipas geresniam SEO matomumui Google paieškoje." },
+      { tag: "Nauja", text: "Greitieji klavišai ir tiesioginis susiejimas tarp klaidų puslapio ir Bug Report įrankio." },
+    ],
+  },
+  {
     v: "V2.1.0",
     title: "Mobilioji transformacija",
     date: "2026 m. rugpjūtis",

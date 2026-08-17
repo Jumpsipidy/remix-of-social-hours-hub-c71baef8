@@ -19,6 +19,10 @@ const IGNORE_SUBSTRINGS = [
   "AbortError",
   "cancelled",
   "ERR_BLOCKED_BY_CLIENT",
+  "versijos",
+  "/versijos",
+  "incident-lookup",
+  "admin.incident-lookup",
   // React hydration mismatch warnings are noisy; they're not user-facing outages.
   "Hydration failed because the server rendered HTML didn't match the client",
   "server rendered HTML didn't match the client",
