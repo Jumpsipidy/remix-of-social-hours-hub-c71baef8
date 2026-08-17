@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { useAuth } from "@/hooks/use-auth";
 import { listOrgStudents } from "@/lib/org-students.functions";
@@ -83,6 +84,16 @@ function OrgDashboard() {
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
   const [dataLoading, setDataLoading] = useState(true);
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="mx-auto max-w-7xl px-4 py-12">
+          <DashboardSkeleton />
+        </div>
+      </PageShell>
+    );
+  }
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async (uid: string) => {

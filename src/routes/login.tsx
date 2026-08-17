@@ -122,7 +122,7 @@ function LoginPage() {
       // Log security event for brute-force tracking
       void insertActivityLogRow({
         action: "security.login_failed",
-        meta: { email, attempt: next, path: "/login" }
+        meta: { email, attempt: next, path: "/login", reason: err instanceof Error ? err.message : "Unknown" }
       });
 
       toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
