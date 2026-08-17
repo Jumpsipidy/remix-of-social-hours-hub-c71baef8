@@ -258,7 +258,7 @@ function Home() {
     <PageShell>
       {/* SEO: crawlable brand H1 — visually hidden but present for Google to associate brand keywords with the domain */}
       <h1 className="sr-only">
-        Socialinės Valandos — socialinių valandų centras mokiniams (socialinesvalandos.dev)
+        Socialinės Valandos — oficiali moksleivių savanorystės platforma ir socialinių valandų centras Lietuvoje (socialinesvalandos.dev)
       </h1>
 
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
