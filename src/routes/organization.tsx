@@ -24,9 +24,9 @@ import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationD
 export const Route = createFileRoute("/organization")({
   head: () => ({
     meta: [
-      { title: "Organizacijos sritis — Socialinės Valandos" },
-      { name: "description", content: "Tvarkyk savanorystės užklausas ir stebėk savo organizacijos statistiką." },
-      { property: "og:title", content: "Organizacijos sritis — Socialinės Valandos" },
+      { title: "Organizacijos skydelis — Socialinės Valandos" },
+      { name: "description", content: "Valdykite savanorystės užklausas, skenuokite QR kodus ir stebėkite savo organizacijos statistiką." },
+      { property: "og:title", content: "Organizacijos skydelis — Socialinės Valandos" },
       { property: "og:description", content: "Organizacijos savanorystės užklausų, QR tikrinimo ir statistikos valdymas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
