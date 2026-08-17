@@ -128,7 +128,9 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
         </div>
         <button
           onClick={() => setOpen((v) => !v)}
+          id="create-task-btn"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
+
         >
           <Plus className="h-3.5 w-3.5" />
           {open ? "Uždaryti" : "Nauja užduotis"}
