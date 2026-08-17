@@ -744,6 +744,10 @@ function OrgDashboard() {
           </div>
         </div>
       </section>
+      
+      <section id="create-task-btn" className="mx-auto mt-6 max-w-7xl px-4 pb-20 sm:px-6">
+        <CreateTaskPanel organizationId={user.id} />
+      </section>
       </>}
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
