@@ -85,7 +85,7 @@ function LoginPage() {
     e.preventDefault();
     if (busy) return;
     if (captchaRequired && !captchaProof) {
-      toast.error("Prašome įrodyti, kad esate žmogus.");
+      toast.error("Mums reikia patvirtinti ar ne robotas. Paspauskite saugumo patikrą.");
       return;
     }
     setBusy(true);
