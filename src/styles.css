@@ -278,3 +278,131 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ==========================================================================
+   "Mokyklos akys" — high-contrast, low-effect reading mode.
+   Activated by adding .school-eyes on <html> (and removing .dark).
+   Goal: maximum legibility on old school projectors / cheap monitors.
+   ========================================================================== */
+html.school-eyes {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0b0d12;
+  --card: #ffffff;
+  --card-foreground: #0b0d12;
+  --popover: #ffffff;
+  --popover-foreground: #0b0d12;
+  --primary: #14356b;
+  --primary-foreground: #ffffff;
+  --primary-glow: #14356b;
+  --secondary: #eef2f7;
+  --secondary-foreground: #0b0d12;
+  --muted: #f1f5f9;
+  --muted-foreground: #3c4757;
+  --accent: #eef2f7;
+  --accent-foreground: #0b0d12;
+  --success: #10643c;
+  --success-foreground: #ffffff;
+  --warning: #7a4a05;
+  --warning-foreground: #ffffff;
+  --destructive: #a3161b;
+  --destructive-foreground: #ffffff;
+  --border: #7c8899;
+  --input: #ffffff;
+  --ring: #14356b;
+  --gradient-hero: none;
+  --gradient-primary: none;
+  --gradient-accent: none;
+  --gradient-card: none;
+  --gradient-mesh: none;
+  --shadow-sm: 0 1px 2px rgba(11, 13, 18, 0.12);
+  --shadow-md: 0 2px 6px rgba(11, 13, 18, 0.14);
+  --shadow-lg: 0 4px 12px rgba(11, 13, 18, 0.16);
+  --shadow-glow: none;
+}
+
+html.school-eyes,
+html.school-eyes body {
+  background: #ffffff !important;
+  color: #0b0d12 !important;
+}
+
+/* Kill glass / glow / motion — they are the main readability killers. */
+.school-eyes *,
+.school-eyes *::before,
+.school-eyes *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1;
+}
+
+.school-eyes [class*="blur-"],
+.school-eyes [class*="animate-"] {
+  filter: none !important;
+}
+
+/* Decorative background layers are hidden entirely. */
+.school-eyes [aria-hidden="true"][class*="blur-["],
+.school-eyes [aria-hidden="true"][class*="bg-[radial"],
+.school-eyes canvas[aria-hidden="true"] {
+  display: none !important;
+}
+
+/* Translucent surfaces built from raw white utilities become solid. */
+.school-eyes [class*="bg-white/"] {
+  background-color: #f1f5f9 !important;
+}
+.school-eyes [class*="border-white/"],
+.school-eyes [class*="border-border"] {
+  border-color: #7c8899 !important;
+}
+.school-eyes [class*="text-white"],
+.school-eyes [class*="text-slate-"],
+.school-eyes [class*="text-zinc-"],
+.school-eyes [class*="text-stone-"] {
+  color: #0b0d12 !important;
+}
+.school-eyes .text-muted-foreground {
+  color: #3c4757 !important;
+}
+.school-eyes .text-gradient {
+  background: none !important;
+  -webkit-text-fill-color: #14356b !important;
+  color: #14356b !important;
+}
+
+/* Gradient surfaces (primary buttons, hero panels) become solid navy. */
+.school-eyes [class*="bg-gradient"] {
+  background-image: none !important;
+  background-color: #14356b !important;
+}
+.school-eyes [class*="bg-gradient"],
+.school-eyes [class*="bg-gradient"] * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Bigger, calmer type. */
+.school-eyes body {
+  font-size: 1.03rem;
+  letter-spacing: 0;
+}
+.school-eyes a:focus-visible,
+.school-eyes button:focus-visible,
+.school-eyes input:focus-visible,
+.school-eyes select:focus-visible,
+.school-eyes textarea:focus-visible {
+  outline: 3px solid #14356b !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .school-eyes * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 80ms !important;
+  }
+}
