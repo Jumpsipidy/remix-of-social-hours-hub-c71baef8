@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { isPreviewEnvironment } from "@/lib/activity-log";
+import { isPreviewEnvironment, logActivity } from "@/lib/activity-log";
 
 /**
  * High-risk gateway that triggers a mandatory Captcha if the visitor 
@@ -59,6 +59,13 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
 
     if (isSketchyReferrer || isSketchyDeepLink || hasSketchyParams) {
       console.warn("[security-gateway] Sketchy activity detected:", { isSketchyReferrer, isSketchyDeepLink, hasSketchyParams });
+      void logActivity("security.sketchy_access", { 
+        meta: { 
+          referrer, 
+          path: currentPath, 
+          reason: isSketchyReferrer ? "referrer" : isSketchyDeepLink ? "deeplink" : "params" 
+        } 
+      });
       setIsBlocked(true);
     }
     
