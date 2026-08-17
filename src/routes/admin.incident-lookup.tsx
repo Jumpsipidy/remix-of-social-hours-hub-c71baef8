@@ -29,83 +29,44 @@ export const Route = createFileRoute("/admin/incident-lookup")({
   component: IncidentLookupPage,
 });
 
-const LEN = 6;
+const LEN = 10;
 
 function IncidentLookupPage() {
   const lookup = useServerFn(lookupIncident);
-  const [digits, setDigits] = useState<string[]>(Array(LEN).fill(""));
+  const [inputValue, setInputValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const inputs = useRef<Array<HTMLInputElement | null>>([]);
-
-  const code = digits.join("");
-  const complete = code.length === LEN && digits.every(Boolean);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputs.current[0]?.focus();
+    inputRef.current?.focus();
   }, []);
 
-  function setAt(i: number, v: string) {
+  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setInputValue(e.target.value.toUpperCase());
     setError(null);
-    setDigits((prev) => {
-      const next = [...prev];
-      next[i] = v;
-      return next;
-    });
   }
 
-  function handleChange(i: number, raw: string) {
-    const clean = raw.replace(/\D/g, "");
-    if (!clean) return setAt(i, "");
-    if (clean.length > 1) {
-      // pasted / fast typing
-      setDigits((prev) => {
-        const next = [...prev];
-        for (let k = 0; k < clean.length && i + k < LEN; k++) next[i + k] = clean[k]!;
-        return next;
-      });
-      inputs.current[Math.min(i + clean.length, LEN - 1)]?.focus();
-      return;
-    }
-    setAt(i, clean);
-    if (i < LEN - 1) inputs.current[i + 1]?.focus();
-  }
-
-  function handleKey(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !digits[i] && i > 0) {
-      inputs.current[i - 1]?.focus();
-      setAt(i - 1, "");
-    }
-    if (e.key === "ArrowLeft" && i > 0) inputs.current[i - 1]?.focus();
-    if (e.key === "ArrowRight" && i < LEN - 1) inputs.current[i + 1]?.focus();
+  function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") void submit();
   }
 
-  function press(n: string) {
-    const idx = digits.findIndex((d) => !d);
-    if (idx === -1) return;
-    setAt(idx, n);
-    inputs.current[Math.min(idx + 1, LEN - 1)]?.focus();
-  }
-
-  function backspace() {
-    const filled = digits.filter(Boolean).length;
-    if (filled === 0) return;
-    setAt(filled - 1, "");
-    inputs.current[filled - 1]?.focus();
-  }
-
   async function submit() {
-    if (!complete) {
-      setError("Trūksta skaitmenų — kodas yra SC- ir 6 skaitmenys.");
+    const code = inputValue.trim();
+    if (!code) {
+      setError("Įveskite incidento kodą (pvz. #A1B2C3D arba SC-123456)");
+      return;
+    }
+    if (code.length < 4) {
+      setError("Kodas per trumpas.");
       return;
     }
     setBusy(true);
     setError(null);
     setResult(null);
     try {
-      const res = await lookup({ data: { code: `SC-${code}` } });
+      const res = await lookup({ data: { code: code } });
       setResult(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Nepavyko rasti incidento");
@@ -130,52 +91,27 @@ function IncidentLookupPage() {
 
         {/* Code entry */}
         <section className="mt-8 rounded-sm border-2 border-stone-900/80 bg-white p-6 shadow-[6px_6px_0_0_rgba(28,25,23,0.9)] dark:border-stone-200/30 dark:bg-stone-900 dark:shadow-[6px_6px_0_0_rgba(245,158,11,0.25)]">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <motion.span
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="select-none rounded-sm bg-stone-900 px-3 py-2 font-mono text-2xl font-black tracking-[0.2em] text-amber-400 sm:text-3xl dark:bg-amber-500 dark:text-stone-950"
-            >
-              SC-
-            </motion.span>
-
-            <div className="flex gap-2">
-              {digits.map((d, i) => (
-                <motion.div key={i} animate={d ? { scale: [1, 1.12, 1] } : {}} transition={{ duration: 0.18 }}>
-                  <input
-                    ref={(el) => { inputs.current[i] = el; }}
-                    value={d}
-                    onChange={(e) => handleChange(i, e.target.value.toUpperCase())}
-                    onKeyDown={(e) => handleKey(i, e)}
-                    onFocus={(e) => e.target.select()}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    aria-label={`Skaitmuo ${i + 1}`}
-                    className="h-16 w-11 rounded-sm border-2 border-stone-900/70 bg-[#fffdf7] text-center font-mono text-3xl font-black uppercase caret-amber-600 outline-none transition focus:border-amber-600 focus:bg-amber-50 sm:h-20 sm:w-14 dark:border-stone-200/25 dark:bg-stone-950 dark:focus:bg-stone-800"
-                  />
-                </motion.div>
-              ))}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                ref={inputRef}
+                value={inputValue}
+                onChange={handleInput}
+                onKeyDown={handleKey}
+                placeholder="#A1B2C3D arba SC-123456"
+                className="flex-1 h-14 rounded-sm border-2 border-stone-900/70 bg-[#fffdf7] px-4 font-mono text-xl font-black uppercase caret-amber-600 outline-none transition focus:border-amber-600 focus:bg-amber-50 dark:border-stone-200/25 dark:bg-stone-950 dark:focus:bg-stone-800"
+              />
             </div>
-          </div>
 
-          {/* Keypad */}
-          <div className="mx-auto mt-6 grid max-w-xs grid-cols-3 gap-2">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((n) => (
-              <KeyBtn key={n} onClick={() => press(n)}>{n}</KeyBtn>
-            ))}
-            <KeyBtn onClick={backspace} aria-label="Trinti"><Delete className="mx-auto h-4 w-4" /></KeyBtn>
-            <KeyBtn onClick={() => press("0")}>0</KeyBtn>
-            <KeyBtn onClick={() => void submit()} aria-label="Ieškoti"><CornerDownLeft className="mx-auto h-4 w-4" /></KeyBtn>
+            <button
+              onClick={() => void submit()}
+              disabled={busy || !inputValue.trim()}
+              className="flex w-full items-center justify-center gap-2 rounded-sm border-2 border-stone-900 bg-amber-400 px-6 py-4 font-mono text-sm font-black uppercase tracking-[0.2em] text-stone-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/50"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              Ieškoti bylos
+            </button>
           </div>
-
-          <button
-            onClick={() => void submit()}
-            disabled={busy || !complete}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm border-2 border-stone-900 bg-amber-400 px-6 py-4 font-mono text-sm font-black uppercase tracking-[0.2em] text-stone-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-40 dark:border-amber-500/50"
-          >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            Ieškoti bylos
-          </button>
 
           <AnimatePresence>
             {error && (
@@ -269,18 +205,6 @@ function IncidentLookupPage() {
         </AnimatePresence>
       </div>
     </div>
-  );
-}
-
-function KeyBtn({ children, ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      type="button"
-      {...rest}
-      className="border-2 border-stone-900/70 bg-[#fffdf7] py-3 font-mono text-lg font-bold transition active:translate-y-[2px] hover:bg-amber-100 dark:border-stone-200/25 dark:bg-stone-950 dark:hover:bg-stone-800"
-    >
-      {children}
-    </button>
   );
 }
 

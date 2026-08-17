@@ -1,9 +1,13 @@
 import { motion } from "framer-motion";
-import { ShieldAlert, Lock, Sparkles } from "lucide-react";
+import { ShieldAlert, Lock } from "lucide-react";
 import { Captcha } from "./captcha";
 import { useSecurityGateway } from "./security-gateway-provider";
 
-export function SecurityGateway() {
+/**
+ * Renamed to Internal to avoid confusion during root mounting.
+ * This component handles the actual blocking UI when useSecurityGateway() returns isBlocked.
+ */
+export function SecurityGatewayInternal() {
   const { isBlocked, pass } = useSecurityGateway();
 
   if (!isBlocked) return null;
@@ -38,3 +42,6 @@ export function SecurityGateway() {
     </div>
   );
 }
+
+// Keep the old export for backward compatibility if needed, but the root should use Internal
+export const SecurityGateway = SecurityGatewayInternal;

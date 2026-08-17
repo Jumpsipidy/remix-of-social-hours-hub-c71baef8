@@ -17,7 +17,7 @@ import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
-import { SecurityGateway } from "@/components/security-gateway";
+import { SecurityGatewayInternal } from "@/components/security-gateway";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
@@ -270,7 +270,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SecurityGatewayProvider>
-          <SecurityGateway />
+          <SecurityGatewayInternal />
           <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={router.state.location.pathname}
