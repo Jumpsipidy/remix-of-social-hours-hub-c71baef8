@@ -180,6 +180,10 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+@keyframes skeleton-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
 @utility animate-float { animation: float 6s ease-in-out infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
 
