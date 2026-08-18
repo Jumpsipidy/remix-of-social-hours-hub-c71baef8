@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
@@ -6,57 +5,57 @@ interface SkeletonProps {
   variant?: "rect" | "circle" | "text";
 }
 
+/**
+ * Skeleton — CSS-only shimmer (jokių framer-motion mazgų kiekvienam blokui,
+ * kad kraunantis skydelis nekainuotų dešimčių animacijos ciklų per kadrą).
+ */
 export function SkeletonLoader({ className, variant = "rect" }: SkeletonProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0.5 }}
-      animate={{ opacity: [0.5, 0.8, 0.5] }}
-      transition={{ 
-        duration: 1.5, 
-        repeat: Infinity, 
-        ease: "easeInOut" 
-      }}
+    <div
+      aria-hidden
       className={cn(
-        "bg-white/5 backdrop-blur-sm relative overflow-hidden",
-        variant === "circle" ? "rounded-full" : "rounded-2xl",
-        className
+        "relative overflow-hidden bg-muted/40",
+        "before:absolute before:inset-0 before:-translate-x-full",
+        "before:bg-gradient-to-r before:from-transparent before:via-foreground/[0.07] before:to-transparent",
+        "before:animate-[shimmer_1.6s_infinite]",
+        variant === "circle" ? "rounded-full" : variant === "text" ? "rounded-md" : "rounded-2xl",
+        className,
       )}
-    >
-      <motion.div
-        animate={{ 
-          x: ["-100%", "100%"] 
-        }}
-        transition={{ 
-          duration: 2, 
-          repeat: Infinity, 
-          ease: "linear" 
-        }}
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-      />
-    </motion.div>
+    />
   );
 }
 
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-8 p-6">
-      <div className="flex items-center justify-between">
-        <SkeletonLoader className="h-10 w-48" />
-        <SkeletonLoader className="h-10 w-32" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <SkeletonLoader className="h-32 w-full" />
-        <SkeletonLoader className="h-32 w-full" />
-        <SkeletonLoader className="h-32 w-full" />
-      </div>
-      <div className="space-y-4">
-        <SkeletonLoader className="h-8 w-64" />
-        <div className="grid grid-cols-1 gap-4">
-          <SkeletonLoader className="h-20 w-full" />
-          <SkeletonLoader className="h-20 w-full" />
-          <SkeletonLoader className="h-20 w-full" />
+    <div className="space-y-8" role="status" aria-label="Kraunama">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-2">
+          <SkeletonLoader variant="text" className="h-9 w-56" />
+          <SkeletonLoader variant="text" className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2">
+          <SkeletonLoader className="h-9 w-28 rounded-full" />
+          <SkeletonLoader className="h-9 w-36 rounded-full" />
         </div>
       </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonLoader key={i} className="h-28 w-full" />
+        ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-3">
+          <SkeletonLoader variant="text" className="h-5 w-48" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonLoader key={i} className="h-20 w-full" />
+          ))}
+        </div>
+        <div className="space-y-3">
+          <SkeletonLoader className="h-40 w-full" />
+          <SkeletonLoader className="h-40 w-full" />
+        </div>
+      </div>
+      <span className="sr-only">Kraunama…</span>
     </div>
   );
 }
