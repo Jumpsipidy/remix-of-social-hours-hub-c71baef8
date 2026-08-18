@@ -180,6 +180,10 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+@keyframes skeleton-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
 @utility animate-float { animation: float 6s ease-in-out infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
 
@@ -280,63 +284,63 @@ body {
 }
 
 /* ==========================================================================
-   "Mokyklos akys" — high-contrast, low-effect reading mode.
-   Activated by adding .school-eyes on <html> (and removing .dark).
-   Goal: maximum legibility on old school projectors / cheap monitors.
+   "Mokyklos akys" — perjungia visą sąsają iš futuristinio neon režimo
+   į ramų, profesionalų šviesų režimą (dokumentinis stilius).
+   Įjungiama pridedant .school-eyes ant <html> (ir nuimant .dark).
    ========================================================================== */
 html.school-eyes {
   color-scheme: light;
-  --background: #ffffff;
-  --foreground: #0b0d12;
+  --background: #f6f7f9;
+  --foreground: #10151d;
   --card: #ffffff;
-  --card-foreground: #0b0d12;
+  --card-foreground: #10151d;
   --popover: #ffffff;
-  --popover-foreground: #0b0d12;
-  --primary: #14356b;
+  --popover-foreground: #10151d;
+  --primary: #1c3f6e;
   --primary-foreground: #ffffff;
-  --primary-glow: #14356b;
-  --secondary: #eef2f7;
-  --secondary-foreground: #0b0d12;
-  --muted: #f1f5f9;
-  --muted-foreground: #3c4757;
-  --accent: #eef2f7;
-  --accent-foreground: #0b0d12;
+  --primary-glow: #1c3f6e;
+  --secondary: #eceff4;
+  --secondary-foreground: #10151d;
+  --muted: #eceff4;
+  --muted-foreground: #4a5565;
+  --accent: #e7ecf3;
+  --accent-foreground: #10151d;
   --success: #10643c;
   --success-foreground: #ffffff;
   --warning: #7a4a05;
   --warning-foreground: #ffffff;
   --destructive: #a3161b;
   --destructive-foreground: #ffffff;
-  --border: #7c8899;
+  --border: #d3d9e2;
   --input: #ffffff;
-  --ring: #14356b;
+  --ring: #1c3f6e;
+  --radius: 0.6rem;
   --gradient-hero: none;
   --gradient-primary: none;
   --gradient-accent: none;
   --gradient-card: none;
   --gradient-mesh: none;
-  --shadow-sm: 0 1px 2px rgba(11, 13, 18, 0.12);
-  --shadow-md: 0 2px 6px rgba(11, 13, 18, 0.14);
-  --shadow-lg: 0 4px 12px rgba(11, 13, 18, 0.16);
+  --shadow-sm: 0 1px 2px rgba(16, 21, 29, 0.06);
+  --shadow-md: 0 2px 8px rgba(16, 21, 29, 0.07);
+  --shadow-lg: 0 8px 24px rgba(16, 21, 29, 0.08);
+  --shadow-elegant: 0 8px 24px rgba(16, 21, 29, 0.08);
   --shadow-glow: none;
 }
 
 html.school-eyes,
 html.school-eyes body {
-  background: #ffffff !important;
-  color: #0b0d12 !important;
+  background: #f6f7f9 !important;
+  color: #10151d !important;
 }
 
-/* Kill glass / glow / motion — they are the main readability killers. */
+/* Stiklo / švytėjimo / judesio efektai — pagrindinis „AI slop" šaltinis. */
 .school-eyes *,
 .school-eyes *::before,
 .school-eyes *::after {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   text-shadow: none !important;
-  box-shadow: none !important;
   mix-blend-mode: normal !important;
-  opacity: 1;
 }
 
 .school-eyes [class*="blur-"],
@@ -344,58 +348,88 @@ html.school-eyes body {
   filter: none !important;
 }
 
-/* Decorative background layers are hidden entirely. */
+/* Dekoratyviniai fono sluoksniai, dėmės, tinkleliai — pašalinami. */
 .school-eyes [aria-hidden="true"][class*="blur-["],
 .school-eyes [aria-hidden="true"][class*="bg-[radial"],
+.school-eyes [aria-hidden="true"][class*="bg-gradient"],
+.school-eyes [aria-hidden="true"][class*="rounded-full"][class*="bg-primary/"],
 .school-eyes canvas[aria-hidden="true"] {
   display: none !important;
 }
 
-/* Translucent surfaces built from raw white utilities become solid. */
+/* Permatomi „glass" paviršiai virsta tikromis baltomis kortelėmis. */
 .school-eyes [class*="bg-white/"] {
-  background-color: #f1f5f9 !important;
+  background-color: #ffffff !important;
+  border-color: #d3d9e2 !important;
 }
 .school-eyes [class*="border-white/"],
 .school-eyes [class*="border-border"] {
-  border-color: #7c8899 !important;
+  border-color: #d3d9e2 !important;
 }
 .school-eyes [class*="text-white"],
 .school-eyes [class*="text-slate-"],
 .school-eyes [class*="text-zinc-"],
-.school-eyes [class*="text-stone-"] {
-  color: #0b0d12 !important;
+.school-eyes [class*="text-stone-"],
+.school-eyes [class*="text-neutral-"] {
+  color: #10151d !important;
 }
-.school-eyes .text-muted-foreground {
-  color: #3c4757 !important;
+.school-eyes .text-muted-foreground,
+.school-eyes [class*="text-white/6"],
+.school-eyes [class*="text-white/5"],
+.school-eyes [class*="text-white/7"] {
+  color: #4a5565 !important;
 }
-.school-eyes .text-gradient {
+.school-eyes .text-gradient,
+.school-eyes [class*="bg-clip-text"] {
   background: none !important;
-  -webkit-text-fill-color: #14356b !important;
-  color: #14356b !important;
+  -webkit-text-fill-color: #1c3f6e !important;
+  color: #1c3f6e !important;
 }
 
-/* Gradient surfaces (primary buttons, hero panels) become solid navy. */
-.school-eyes [class*="bg-gradient"] {
+/* Gradientiniai mygtukai / plokštės — vientisa firminė spalva. */
+.school-eyes [class*="bg-gradient"],
+.school-eyes [style*="linear-gradient"] {
   background-image: none !important;
-  background-color: #14356b !important;
+  background-color: #1c3f6e !important;
 }
 .school-eyes [class*="bg-gradient"],
-.school-eyes [class*="bg-gradient"] * {
+.school-eyes [class*="bg-gradient"] *,
+.school-eyes [style*="linear-gradient"],
+.school-eyes [style*="linear-gradient"] * {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+  border-color: transparent !important;
+}
+/* …bet tik jei tai tikrai valdiklis, o ne visas puslapio konteineris. */
+.school-eyes main[class*="bg-gradient"],
+.school-eyes section[class*="bg-gradient"],
+.school-eyes div[class*="bg-gradient-card"] {
+  background-color: #ffffff !important;
+  color: #10151d !important;
+  -webkit-text-fill-color: #10151d !important;
+}
+.school-eyes div[class*="bg-gradient-card"] * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
-/* Bigger, calmer type. */
+/* Ramesnė, dokumentinė tipografija. */
 .school-eyes body {
-  font-size: 1.03rem;
+  font-size: 1.02rem;
   letter-spacing: 0;
+}
+.school-eyes h1,
+.school-eyes h2,
+.school-eyes h3 {
+  letter-spacing: -0.015em;
+  font-weight: 700;
 }
 .school-eyes a:focus-visible,
 .school-eyes button:focus-visible,
 .school-eyes input:focus-visible,
 .school-eyes select:focus-visible,
 .school-eyes textarea:focus-visible {
-  outline: 3px solid #14356b !important;
+  outline: 3px solid #1c3f6e !important;
   outline-offset: 2px !important;
 }
 
@@ -403,6 +437,7 @@ html.school-eyes body {
   .school-eyes * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 80ms !important;
+    transition-duration: 90ms !important;
   }
 }
+
