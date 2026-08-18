@@ -334,6 +334,25 @@ function OrgDashboard() {
     refresh(user.id);
   };
 
+  // „Sukurti užduotį / Rezervaciją“ — pereina į skydelį, atidaro formą ir
+  // nuveda tiksliai iki jos (anksčiau buvo fiksuotas 800px slinkimas „į niekur“).
+  const openCreateTask = () => {
+    setView("dashboard");
+    window.dispatchEvent(new CustomEvent("sv_open_create_task"));
+    let tries = 0;
+    const tick = () => {
+      const el = document.getElementById("create-task-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background");
+        window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2", "ring-offset-background"), 1800);
+        return;
+      }
+      if (tries++ < 30) window.requestAnimationFrame(tick);
+    };
+    window.requestAnimationFrame(tick);
+  };
+
 
   return (
     <PageShell>
