@@ -94,7 +94,20 @@ function LoginPage() {
       try { localStorage.removeItem("sv_last_role_v1"); } catch {}
       const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const ensured = await ensureProfile();
+      // Prisijungimas jau pavyko. Profilio „remontas" serveryje yra tik
+      // pagalbinis — jei jis nulūžta (pvz. tinklo/modulio klaida), nemesk
+      // vartotojo atgal į login formą, o pasiimk rolę tiesiai iš DB.
+      let ensured: { profile?: { role?: string } | null } = {};
+      try {
+        ensured = await ensureProfile();
+      } catch (e) {
+        console.warn("[login] ensureSignedInProfile failed, falling back", e);
+        if (signIn.user?.id) {
+          const { data: fallback } = await supabase
+            .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle();
+          if (fallback) ensured = { profile: fallback as { role?: string } };
+        }
+      }
       if (signIn.user?.id) {
         await insertActivityLogRow({
           user_id: signIn.user.id,
