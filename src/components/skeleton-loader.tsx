@@ -17,7 +17,7 @@ export function SkeletonLoader({ className, variant = "rect" }: SkeletonProps) {
         "relative overflow-hidden bg-muted/40",
         "before:absolute before:inset-0 before:-translate-x-full",
         "before:bg-gradient-to-r before:from-transparent before:via-foreground/[0.07] before:to-transparent",
-        "before:animate-[shimmer_1.6s_infinite]",
+        "before:animate-[skeleton-sweep_1.6s_infinite]",
         variant === "circle" ? "rounded-full" : variant === "text" ? "rounded-md" : "rounded-2xl",
         className,
       )}
