@@ -126,7 +126,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   };
 
   return (
-    <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
+    <div id="create-task-section" className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-bold">Mano užduotys</h2>
