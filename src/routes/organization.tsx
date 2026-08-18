@@ -375,11 +375,7 @@ function OrgDashboard() {
                 <Button 
                   size="sm" 
                   className="rounded-full bg-gradient-primary shadow-glow"
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('sv_open_create_task'));
-                    const target = 800; // rough scroll target for the panel
-                    window.scrollTo({ top: target, behavior: 'smooth' });
-                  }}
+                  onClick={() => openCreateTask()}
                 >
                   <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
                 </Button>
