@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VersijosRouteImport } from './routes/versijos'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as ValoraRouteImport } from './routes/valora'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -77,6 +78,11 @@ const VersijosRoute = VersijosRouteImport.update({
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ValoraRoute = ValoraRouteImport.update({
+  id: '/valora',
+  path: '/valora',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/valora': typeof ValoraRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
@@ -449,6 +456,7 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/valora': typeof ValoraRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
   '/checkin': typeof AuthenticatedCheckinRoute
@@ -511,6 +519,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRoute
   '/terms': typeof TermsRoute
   '/update-password': typeof UpdatePasswordRoute
+  '/valora': typeof ValoraRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
@@ -573,6 +582,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/valora'
     | '/verify-email'
     | '/versijos'
     | '/checkin'
@@ -632,6 +642,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/valora'
     | '/verify-email'
     | '/versijos'
     | '/checkin'
@@ -693,6 +704,7 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/terms'
     | '/update-password'
+    | '/valora'
     | '/verify-email'
     | '/versijos'
     | '/_authenticated/checkin'
@@ -755,6 +767,7 @@ export interface RootRouteChildren {
   TasksRoute: typeof TasksRoute
   TermsRoute: typeof TermsRoute
   UpdatePasswordRoute: typeof UpdatePasswordRoute
+  ValoraRoute: typeof ValoraRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   VersijosRoute: typeof VersijosRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -781,6 +794,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/valora': {
+      id: '/valora'
+      path: '/valora'
+      fullPath: '/valora'
+      preLoaderRoute: typeof ValoraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/update-password': {
@@ -1289,6 +1309,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksRoute: TasksRoute,
   TermsRoute: TermsRoute,
   UpdatePasswordRoute: UpdatePasswordRoute,
+  ValoraRoute: ValoraRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   VersijosRoute: VersijosRoute,
   AuthCallbackRoute: AuthCallbackRoute,

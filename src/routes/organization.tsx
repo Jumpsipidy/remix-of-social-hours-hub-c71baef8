@@ -85,16 +85,6 @@ function OrgDashboard() {
   const [verifyRes, setVerifyRes] = useState<Reservation | null>(null);
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
   const [dataLoading, setDataLoading] = useState(true);
-
-  if (loading) {
-    return (
-      <PageShell>
-        <div className="mx-auto max-w-7xl px-4 py-12">
-          <DashboardSkeleton />
-        </div>
-      </PageShell>
-    );
-  }
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const refresh = useCallback(async (uid: string) => {
@@ -256,7 +246,7 @@ function OrgDashboard() {
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
 
 
-  if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
+  if (loading) return <PageShell><div className="mx-auto max-w-7xl px-4 py-12"><DashboardSkeleton /></div></PageShell>;
   if (!user || profile?.role !== "organization") {
     return (
       <PageShell>
