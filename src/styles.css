@@ -357,6 +357,49 @@ html.school-eyes body {
   display: none !important;
 }
 
+/* Tamsūs „aurora“ sluoksniai dažnai NEturi aria-hidden — naikinam pagal formą:
+   absoliutus, per visą plotą, tik dekoratyvus fonas / švytėjimas. */
+.school-eyes [class*="bg-[linear-gradient"],
+.school-eyes [class*="bg-[radial-gradient"],
+.school-eyes [class*="[background-image:"],
+.school-eyes [class*="absolute"][class*="inset-0"][class*="opacity-["],
+.school-eyes [class*="absolute"][class*="blur-2xl"],
+.school-eyes [class*="absolute"][class*="blur-3xl"],
+.school-eyes [class*="absolute"][class*="blur-["] {
+  display: none !important;
+}
+
+/* Bet kokie likę tamsūs inline gradientai / oklch fonai — nunulinam. */
+.school-eyes [style*="gradient"],
+.school-eyes [style*="oklch"] {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Turinio konteineriai lieka balti, tekstas tamsus. */
+.school-eyes main,
+.school-eyes section,
+.school-eyes header,
+.school-eyes footer,
+.school-eyes nav,
+.school-eyes aside {
+  background-color: transparent !important;
+  color: #10151d !important;
+}
+.school-eyes [class*="bg-background"],
+.school-eyes [class*="bg-card"],
+.school-eyes [class*="bg-muted"],
+.school-eyes [class*="bg-secondary"],
+.school-eyes [class*="bg-popover"] {
+  background-color: #ffffff !important;
+  color: #10151d !important;
+}
+.school-eyes [class*="shadow-glow"],
+.school-eyes [class*="drop-shadow"] {
+  box-shadow: var(--shadow-md) !important;
+  filter: none !important;
+}
+
 /* Permatomi „glass" paviršiai virsta tikromis baltomis kortelėmis. */
 .school-eyes [class*="bg-white/"] {
   background-color: #ffffff !important;
