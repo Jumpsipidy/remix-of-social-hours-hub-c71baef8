@@ -95,6 +95,7 @@ const SECTIONS: { h: string; body: string[] }[] = [
     body: [
       "Platforma dedami pastangas užtikrinti nepertraukiamą veikimą, tačiau negarantuoja 100% prieinamumo. Techninės pertraukos gali įvykti dėl atnaujinimų, priežiūros, trečiųjų šalių infrastruktūros gedimų.",
       "Nustačius klaidą, Naudotojas gali ją pranešti per Platformos „Pranešti apie klaidą“ formą. Kritiniai gedimai sprendžiami prioritetine tvarka.",
+      "KLAIDŲ EKRANO NUOTRAUKOS. Įvykus techninei klaidai arba Naudotojui pateikiant pranešimą apie klaidą, Platforma automatiškai užfiksuoja tuo metu matomo ekrano vaizdą (ekrano nuotrauką), naršyklės ir įrenginio techninius duomenis bei incidento kodą. Šie duomenys naudojami tik gedimui atkurti ir ištaisyti, prieinami tik Platformos administratoriams ir automatiškai pašalinami išsprendus incidentą. Naudodamasis Platforma Naudotojas su tokiu fiksavimu sutinka; jei ekrane tuo metu matomi jautrūs duomenys, Naudotojas gali prašyti nuotrauką ištrinti nurodydamas incidento kodą.",
       "Duomenų bazių atsarginės kopijos daromos reguliariai. Kritinio gedimo atveju bus stengiamasi atkurti iki paskutinio žinomo tinkamo taško, tačiau tam tikras trumpas duomenų praradimas gali įvykti.",
     ],
   },
