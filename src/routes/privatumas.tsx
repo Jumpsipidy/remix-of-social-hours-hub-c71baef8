@@ -49,7 +49,16 @@ function PrivacyPage() {
             <li>Registracijos duomenys: vardas, pavardė, el. paštas, mokykla, klasė, rolė</li>
             <li>Veiklos duomenys: rezervacijos, atliktos valandos, žinutės, QR įsiregistravimai</li>
             <li>Techniniai duomenys: naršyklės tipas, klaidų žurnalai (be asmens tapatybės)</li>
+            <li>
+              Klaidų ekrano nuotraukos: įvykus klaidai arba Naudotojui pateikiant pranešimą apie klaidą,
+              automatiškai užfiksuojame tuo metu matomą ekrano vaizdą kartu su incidento kodu
+            </li>
           </ul>
+          <p className="text-sm text-neutral-400">
+            Ekrano nuotraukos naudojamos tik gedimui atkurti, saugomos ribotą laiką, prieinamos tik
+            administratoriams ir niekada neperduodamos trečiosioms šalims. Norėdami, kad nuotrauka būtų
+            ištrinta, parašykite mums nurodę incidento kodą.
+          </p>
         </section>
 
         <section className="space-y-3">
