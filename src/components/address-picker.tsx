@@ -130,6 +130,12 @@ export function AddressPicker({
           found = await nominatim(q, RADVILISKIS_VIEWBOX, true);
           usedScope = "rajonas";
         }
+        // 4) Paskutinė atsarga — visa Lietuva (neapribota dėžutė), kad
+        //    adresas už Radviliškio r. ribų vis tiek būtų surandamas.
+        if (found.length === 0) {
+          found = await nominatim(q, RADVILISKIS_VIEWBOX, false);
+          usedScope = "rajonas";
+        }
         if (mine !== reqId.current) return;
         setScope(usedScope);
         setHits(rankHits(found));

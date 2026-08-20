@@ -10,6 +10,7 @@ import { deviceMeta } from "@/lib/device-meta";
 import { insertActivityLogRow } from "@/lib/activity-log";
 import { AuthProvidersStatus } from "@/components/auth-providers-status";
 import { Captcha } from "@/components/captcha";
+import { AuthSuccessOverlay } from "@/components/auth-success-overlay";
 import { toast } from "sonner";
 
 const FAIL_KEY = "sv_login_fails_v1";
@@ -21,6 +22,13 @@ const DASH_BY_ROLE: Record<string, string> = {
   organization: "/organization",
   school_admin: "/school",
   admin: "/admin",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  student: "Mokinys",
+  organization: "Organizacija",
+  school_admin: "Mokyklos administratorius",
+  admin: "Super administratorius",
 };
 
 export const Route = createFileRoute("/login")({
@@ -47,6 +55,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [successRole, setSuccessRole] = useState<string | null>(null);
   const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
   const [fails, setFails] = useState<number>(0);
   useEffect(() => {
@@ -123,7 +132,9 @@ function LoginPage() {
       try { localStorage.removeItem(FAIL_KEY); } catch {}
       setFails(0);
       setCaptchaProof(null);
-      toast.success("Sveikas atvykęs!");
+      // Sėkmės perėjimas — kitoks nei OAuth „skeneris“: trumpas patvirtinimas.
+      setSuccessRole(ROLE_LABELS[role] ?? "Naudotojas");
+      await new Promise((r) => setTimeout(r, 1250));
       // Hard nav — avoids router transient state crashes after auth change
       window.location.assign(target);
     } catch (err) {
@@ -166,6 +177,7 @@ function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+      {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
       {/* Animated aurora background */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--accent)/0.2),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))]" />

@@ -2,9 +2,30 @@ User-agent: *
 Allow: /
 Allow: /tasks
 Allow: /about-orgs
+Allow: /valora
+Allow: /socialiniu-valandu-lapas
+Allow: /socialines-valandos-mokykloms
+Allow: /savanoryste-seduvoje
+Allow: /blog/
 Disallow: /admin
 Disallow: /student
 Disallow: /organization
+Disallow: /school
+Disallow: /api
+Disallow: /_serverFn
+Disallow: /auth/callback
+Disallow: /update-password
+Disallow: /verify-email
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /_serverFn
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
 Disallow: /api
 Disallow: /_serverFn
 

@@ -22,10 +22,16 @@ const SKETCHY_REFERRERS = [
   "malicious-site.net"
 ];
 
-const SENSITIVE_PATHS = [
-  "/admin",
-  "/login",
-  "/register"
+/**
+ * Tik tikrai jautrūs keliai. /login ir /register čia NĖRA — normalūs žmonės
+ * juos atsidaro iš žymelės ar įrašę adresą (be referrer'io), ir jiems saugumo
+ * patikra neturi šokti be jokios priežasties.
+ */
+const SENSITIVE_PATHS = ["/admin"];
+
+/** Tipiniai skenerių / injekcijų pėdsakai kelyje. */
+const SCANNER_PATH_HINTS = [
+  "/wp-admin", "/wp-login", "/phpmyadmin", "/.env", "/.git", "/config.php", "/xmlrpc.php",
 ];
 
 const STORAGE_KEY = "sv_gateway_passed_v1";
@@ -49,13 +55,21 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
     const currentPath = window.location.pathname.toLowerCase();
     
     const isSketchyReferrer = SKETCHY_REFERRERS.some(r => referrer.includes(r));
-    const isSketchyDeepLink = !referrer && SENSITIVE_PATHS.some(p => currentPath.startsWith(p));
-    
-    // Check for weird query params often used by bots/scanners
+    const isSketchyDeepLink =
+      !referrer &&
+      (SENSITIVE_PATHS.some(p => currentPath.startsWith(p)) ||
+        SCANNER_PATH_HINTS.some(p => currentPath.startsWith(p)));
+
+    // Bot/skenerio pėdsakai užklausos parametruose (SQL injekcija, XSS, path traversal).
     const queryParams = new URLSearchParams(window.location.search);
-    const hasSketchyParams = ["phpmyadmin", "select+", "union+", "exec", "eval"].some(p => 
-      Array.from(queryParams.values()).some(v => v.toLowerCase().includes(p))
-    );
+    const INJECTION_HINTS = [
+      "phpmyadmin", "select ", "select+", "union ", "union+", "insert ", "drop ",
+      "exec(", "eval(", "<script", "javascript:", "../", "onerror=", "pg_sleep", "information_schema",
+    ];
+    const hasSketchyParams = Array.from(queryParams.values()).some((v) => {
+      const s = decodeURIComponent(v).toLowerCase();
+      return INJECTION_HINTS.some((p) => s.includes(p));
+    });
 
     if (isSketchyReferrer || isSketchyDeepLink || hasSketchyParams) {
       console.warn("[security-gateway] Sketchy activity detected:", { isSketchyReferrer, isSketchyDeepLink, hasSketchyParams });
