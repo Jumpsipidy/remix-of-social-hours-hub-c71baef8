@@ -176,6 +176,7 @@ function LoginPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+      {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
       {/* Animated aurora background */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.25),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--accent)/0.2),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))]" />
