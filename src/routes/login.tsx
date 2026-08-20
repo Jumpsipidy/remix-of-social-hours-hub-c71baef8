@@ -10,6 +10,7 @@ import { deviceMeta } from "@/lib/device-meta";
 import { insertActivityLogRow } from "@/lib/activity-log";
 import { AuthProvidersStatus } from "@/components/auth-providers-status";
 import { Captcha } from "@/components/captcha";
+import { AuthSuccessOverlay } from "@/components/auth-success-overlay";
 import { toast } from "sonner";
 
 const FAIL_KEY = "sv_login_fails_v1";
