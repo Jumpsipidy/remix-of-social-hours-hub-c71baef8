@@ -23,6 +23,13 @@ const DASH_BY_ROLE: Record<string, string> = {
   admin: "/admin",
 };
 
+const ROLE_LABELS: Record<string, string> = {
+  student: "Mokinys",
+  organization: "Organizacija",
+  school_admin: "Mokyklos administratorius",
+  admin: "Super administratorius",
+};
+
 export const Route = createFileRoute("/login")({
   ssr: false,
   head: () => ({
