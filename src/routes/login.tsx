@@ -123,7 +123,9 @@ function LoginPage() {
       try { localStorage.removeItem(FAIL_KEY); } catch {}
       setFails(0);
       setCaptchaProof(null);
-      toast.success("Sveikas atvykęs!");
+      // Sėkmės perėjimas — kitoks nei OAuth „skeneris“: trumpas patvirtinimas.
+      setSuccessRole(ROLE_LABELS[role] ?? "Naudotojas");
+      await new Promise((r) => setTimeout(r, 1250));
       // Hard nav — avoids router transient state crashes after auth change
       window.location.assign(target);
     } catch (err) {
