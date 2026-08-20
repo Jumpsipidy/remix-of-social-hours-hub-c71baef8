@@ -184,6 +184,14 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+@keyframes skeleton-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes skeleton-track {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(320%); }
+}
 @utility animate-float { animation: float 6s ease-in-out infinite; }
 @utility animate-fade-up { animation: fade-up 0.6s ease-out both; }
 
