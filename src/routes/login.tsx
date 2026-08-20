@@ -54,6 +54,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [successRole, setSuccessRole] = useState<string | null>(null);
   const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
   const [fails, setFails] = useState<number>(0);
   useEffect(() => {
