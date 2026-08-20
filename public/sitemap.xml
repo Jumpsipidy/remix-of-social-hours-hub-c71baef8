@@ -44,11 +44,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://socialinesvalandos.dev/schools</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://socialinesvalandos.dev/valora</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
