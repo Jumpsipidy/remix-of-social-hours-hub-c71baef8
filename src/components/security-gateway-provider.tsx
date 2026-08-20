@@ -22,10 +22,16 @@ const SKETCHY_REFERRERS = [
   "malicious-site.net"
 ];
 
-const SENSITIVE_PATHS = [
-  "/admin",
-  "/login",
-  "/register"
+/**
+ * Tik tikrai jautrūs keliai. /login ir /register čia NĖRA — normalūs žmonės
+ * juos atsidaro iš žymelės ar įrašę adresą (be referrer'io), ir jiems saugumo
+ * patikra neturi šokti be jokios priežasties.
+ */
+const SENSITIVE_PATHS = ["/admin"];
+
+/** Tipiniai skenerių / injekcijų pėdsakai kelyje. */
+const SCANNER_PATH_HINTS = [
+  "/wp-admin", "/wp-login", "/phpmyadmin", "/.env", "/.git", "/config.php", "/xmlrpc.php",
 ];
 
 const STORAGE_KEY = "sv_gateway_passed_v1";
