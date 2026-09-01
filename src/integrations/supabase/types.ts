@@ -110,6 +110,98 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_security_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          meta: Json
+          ticket_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auth_security_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "auth_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auth_tickets: {
+        Row: {
+          action: string
+          attempts: number
+          consumed_at: string | null
+          created_at: string
+          decided_at: string | null
+          description: string | null
+          expires_at: string
+          id: string
+          ip: string | null
+          nonce_hash: string | null
+          origin: string | null
+          payload: Json
+          return_url: string | null
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          decided_at?: string | null
+          description?: string | null
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          nonce_hash?: string | null
+          origin?: string | null
+          payload?: Json
+          return_url?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          decided_at?: string | null
+          description?: string | null
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          nonce_hash?: string | null
+          origin?: string | null
+          payload?: Json
+          return_url?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bug_reports: {
         Row: {
           created_at: string
