@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShieldCheck, Sparkles, UserCheck, KeyRound, Rocket, Building2, GraduationCap } from "lucide-react";
+import { Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
@@ -16,12 +16,12 @@ const DASH_BY_ROLE: Record<string, string> = {
   admin: "/admin",
 };
 
-const STEPS = [
-  { key: "verify", icon: KeyRound, label: "Tikrinamas prisijungimas" },
-  { key: "profile", icon: UserCheck, label: "Kraunamas tavo profilis" },
-  { key: "role", icon: ShieldCheck, label: "Nustatomas tavo vaidmuo" },
-  { key: "ready", icon: Rocket, label: "Nukreipiame į tavo skydą" },
-] as const;
+const ROLE_LABELS: Record<string, string> = {
+  student: "Mokinys",
+  organization: "Organizacija",
+  school_admin: "Mokyklos administratorius",
+  admin: "Super administratorius",
+};
 
 export const Route = createFileRoute("/auth/callback")({
   head: () => ({
@@ -34,38 +34,25 @@ export const Route = createFileRoute("/auth/callback")({
   component: AuthCallbackPage,
 });
 
-const ROLE_CARDS = [
-  { key: "student", label: "Mokinys", icon: UserCheck, color: "#E9B44C" },
-  { key: "organization", label: "Organizacija", icon: Building2, color: "#4CA3E9" },
-  { key: "school_admin", label: "Mokyklos adminas", icon: GraduationCap, color: "#7CE97C" },
-  { key: "admin", label: "Super adminas", icon: ShieldCheck, color: "#C8452A" },
-] as const;
-
+/**
+ * Trumpas (~2,2 s) prisijungimo užbaigimas: sukamas žiedas → širdies logotipas
+ * su „Baigta“ → greitas nukreipimas. Jokių ilgų žingsnių sąrašų.
+ */
 function AuthCallbackPage() {
   const navigate = useNavigate();
   const ensureProfile = useServerFn(ensureSignedInProfile);
-  const [stepIdx, setStepIdx] = useState(0);
+  const [done, setDone] = useState(false);
   const [roleLabel, setRoleLabel] = useState<string | null>(null);
-  const [roleKey, setRoleKey] = useState<string | null>(null);
-  const [launching, setLaunching] = useState(false);
-  const [scanIdx, setScanIdx] = useState(0);
-
-  useEffect(() => {
-    if (roleKey || stepIdx < 2) return;
-    const id = setInterval(() => setScanIdx((i) => (i + 1) % ROLE_CARDS.length), 160);
-    return () => clearInterval(id);
-  }, [roleKey, stepIdx]);
-
 
   useEffect(() => {
     let cancelled = false;
+    const startedAt = Date.now();
 
     async function finishLogin() {
       try {
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
 
-        setStepIdx(0);
         if (code) {
           try {
             const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -80,39 +67,41 @@ function AuthCallbackPage() {
         if (error) throw error;
         if (!data.session?.user) throw new Error("Sesija nebuvo sukurta. Bandyk prisijungti dar kartą.");
 
-        setStepIdx(1);
-        await new Promise((r) => setTimeout(r, 350));
-        const ensured = await ensureProfile();
+        let role = "student";
+        try {
+          const ensured = await ensureProfile();
+          role = ensured.profile?.role ?? "student";
+        } catch {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", data.session.user.id)
+            .maybeSingle();
+          role = (prof as { role?: string } | null)?.role ?? "student";
+        }
 
-        setStepIdx(2);
-        const role = ensured.profile?.role ?? "student";
-        const label =
-          role === "student" ? "Mokinys" :
-          role === "organization" ? "Organizacija" :
-          role === "school_admin" ? "Mokyklos administratorius" :
-          role === "admin" ? "Super administratorius" : "Naudotojas";
-
-        await insertActivityLogRow({
+        void insertActivityLogRow({
           user_id: data.session.user.id,
           action: "auth.signed_in",
           entity_type: "user",
           entity_id: data.session.user.id,
           meta: deviceMeta({ method: "oauth", path: "/auth/callback" }),
         });
-        try { localStorage.setItem("sv_last_role_v1", role); } catch {}
+        try {
+          localStorage.setItem("sv_last_role_v1", role);
+          localStorage.setItem("sv_last_role_uid_v1", data.session.user.id);
+        } catch {
+          /* storage gali būti išjungtas */
+        }
 
-        // Role „scanner“ — trumpai persuka visus vaidmenis, tada užsifiksuoja.
-        await new Promise((r) => setTimeout(r, 900));
         if (cancelled) return;
-        setRoleKey(role);
-        setRoleLabel(label);
+        setRoleLabel(ROLE_LABELS[role] ?? "Naudotojas");
+        setDone(true);
 
-        await new Promise((r) => setTimeout(r, 900));
-        setStepIdx(3);
-        setLaunching(true);
-        await new Promise((r) => setTimeout(r, 750));
+        // Visas ekranas trunka bent 1,6 s ir daugiausiai ~2,2 s.
+        const elapsed = Date.now() - startedAt;
+        await new Promise((r) => setTimeout(r, Math.max(650, 1600 - elapsed)));
         if (!cancelled) navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
-
       } catch (err) {
         const text = err instanceof Error ? err.message : "Nepavyko užbaigti prisijungimo";
         toast.error(text);
@@ -121,194 +110,84 @@ function AuthCallbackPage() {
     }
 
     void finishLogin();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [ensureProfile, navigate]);
 
   return (
-    <div className="relative grid min-h-screen place-items-center overflow-hidden px-4" style={{ background: "#0a0819" }}>
-      {/* Aurora background */}
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -left-40 top-10 h-[520px] w-[520px] rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, #C8452A33, transparent 65%)" }}
-        animate={{ x: [0, 40, 0], y: [0, 20, 0] }}
-        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        aria-hidden
-        className="pointer-events-none absolute -right-40 bottom-10 h-[460px] w-[460px] rounded-full blur-3xl"
-        style={{ background: "radial-gradient(circle, #E9B44C22, transparent 65%)" }}
-        animate={{ x: [0, -30, 0], y: [0, -20, 0] }}
-        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl shadow-2xl"
-      >
-        <Link to="/" className="mx-auto mb-8 flex items-center justify-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#C8452A] to-[#A63922] shadow-lg">
-            <Heart className="h-5 w-5 text-white" fill="currentColor" />
-          </div>
-          <span className="font-display text-xl font-bold text-white">Socialinės Valandos</span>
-        </Link>
-
-        {/* Orbiting spinner */}
-        <div className="relative mx-auto mb-6 grid h-24 w-24 place-items-center">
-          <motion.div
+    <div
+      className="relative grid min-h-screen place-items-center overflow-hidden px-4"
+      style={{ background: "#0a0819" }}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="relative grid h-32 w-32 place-items-center">
+          <motion.span
+            aria-hidden
             className="absolute inset-0 rounded-full border-2 border-transparent"
-            style={{ borderTopColor: "#C8452A", borderRightColor: "#E9B44C" }}
+            style={{ borderTopColor: "#C8452A", borderRightColor: "#E9B44C66" }}
             animate={{ rotate: 360 }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
           />
-          <motion.div
-            className="absolute inset-2 rounded-full border-2 border-transparent"
-            style={{ borderBottomColor: "#E9B44C55" }}
+          <motion.span
+            aria-hidden
+            className="absolute inset-4 rounded-full border-2 border-transparent"
+            style={{ borderBottomColor: "#E9B44C88" }}
             animate={{ rotate: -360 }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
           />
           <motion.div
-            className="grid h-12 w-12 place-items-center rounded-2xl"
+            className="grid h-16 w-16 place-items-center rounded-full"
             style={{ background: "linear-gradient(135deg, #C8452A, #E9B44C)" }}
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            animate={done ? { scale: [1, 1.18, 1] } : { scale: [1, 1.07, 1] }}
+            transition={{ duration: done ? 0.5 : 1.2, repeat: done ? 0 : Infinity, ease: "easeInOut" }}
           >
-            <Sparkles className="h-6 w-6 text-white" />
+            <Heart className="h-8 w-8 text-white" fill="currentColor" />
           </motion.div>
         </div>
 
-        <h1 className="text-center text-2xl font-bold text-white">
-          {roleKey ? "Vaidmuo nustatytas" : stepIdx >= 2 ? "Nustatomas tavo vaidmuo" : "Prisijungimas beveik baigtas"}
-        </h1>
-        <p className="mt-1 text-center text-sm text-white/60">
-          {roleLabel ? `Sveiki, ${roleLabel.toLowerCase()}!` : "Užbaigiam paskutinius žingsnius…"}
-        </p>
-
-        {/* Role scanner — persuka vaidmenis ir užsifiksuoja ties tavuoju */}
-        {stepIdx >= 2 && (
-          <div className="mt-5 grid grid-cols-4 gap-2">
-            {ROLE_CARDS.map((r, i) => {
-              const locked = roleKey === r.key;
-              const dim = !!roleKey && !locked;
-              const scanning = !roleKey && scanIdx === i;
-              const Icon = r.icon;
-              return (
-                <motion.div
-                  key={r.key}
-                  animate={{
-                    opacity: dim ? 0.2 : 1,
-                    scale: locked ? 1.08 : scanning ? 1.04 : 0.96,
-                    y: locked ? -4 : 0,
-                  }}
-                  transition={{ type: "spring", stiffness: 340, damping: 22 }}
-                  className="relative flex flex-col items-center gap-1 rounded-2xl border p-2 text-center"
-                  style={{
-                    borderColor: locked ? `${r.color}aa` : scanning ? `${r.color}66` : "#ffffff12",
-                    background: locked ? `${r.color}22` : scanning ? `${r.color}12` : "#ffffff05",
-                    boxShadow: locked ? `0 0 30px ${r.color}55` : "none",
-                  }}
-                >
-                  <Icon className="h-4 w-4" style={{ color: locked || scanning ? r.color : "#ffffff40" }} />
-                  <span className="text-[10px] leading-tight text-white/70">{r.label}</span>
-                  {locked && (
-                    <motion.span
-                      layoutId="role-lock-ring"
-                      className="pointer-events-none absolute inset-0 rounded-2xl border-2"
-                      style={{ borderColor: r.color }}
-                    />
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Paleidimo perėjimas į skydelį */}
-        <AnimatePresence>
-          {launching && (
+        <AnimatePresence mode="wait">
+          {done ? (
             <motion.div
-              key="launch"
+              key="done"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-7 flex flex-col items-center"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-sm font-bold text-white">
+                <Check className="h-4 w-4 text-emerald-400" /> Baigta
+              </span>
+              <p className="mt-3 font-display text-2xl font-black tracking-tight text-white">
+                Nukreipiame į tavo skydelį…
+              </p>
+              {roleLabel && <p className="mt-1 text-sm text-white/55">{roleLabel}</p>}
+            </motion.div>
+          ) : (
+            <motion.p
+              key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 grid place-items-center"
-              style={{ background: "#0a0819" }}
+              className="mt-7 font-display text-2xl font-black tracking-tight text-white"
             >
-              <motion.div
-                initial={{ scale: 0.2, opacity: 0 }}
-                animate={{ scale: [0.2, 1, 26], opacity: [0, 1, 1] }}
-                transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1], times: [0, 0.45, 1] }}
-                className="h-24 w-24 rounded-full"
-                style={{ background: "radial-gradient(circle, #E9B44C, #C8452A 70%)" }}
-              />
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: [0, 1, 0], y: 0 }}
-                transition={{ duration: 0.7 }}
-                className="absolute flex items-center gap-2 text-sm font-semibold text-white"
-              >
-                <Rocket className="h-4 w-4" /> Nukreipiame…
-              </motion.div>
-            </motion.div>
+              Socialinės Valandos
+            </motion.p>
           )}
         </AnimatePresence>
 
-
-        {/* Step list */}
-        <ul className="mt-6 space-y-2">
-          {STEPS.map((s, i) => {
-            const state = i < stepIdx ? "done" : i === stepIdx ? "active" : "pending";
-            const Icon = s.icon;
-            return (
-              <motion.li
-                key={s.key}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
-              >
-                <div
-                  className="grid h-8 w-8 place-items-center rounded-lg transition-colors"
-                  style={{
-                    background: state === "done" ? "#22c55e22" : state === "active" ? "#C8452A22" : "#ffffff08",
-                    border: `1px solid ${state === "done" ? "#22c55e55" : state === "active" ? "#C8452A55" : "#ffffff10"}`,
-                  }}
-                >
-                  <AnimatePresence mode="wait">
-                    {state === "active" ? (
-                      <motion.div
-                        key="active"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Icon className="h-4 w-4" style={{ color: "#E9B44C" }} />
-                      </motion.div>
-                    ) : (
-                      <Icon className="h-4 w-4" style={{ color: state === "done" ? "#22c55e" : "#ffffff40" }} />
-                    )}
-                  </AnimatePresence>
-                </div>
-                <span className={`text-sm ${state === "pending" ? "text-white/40" : "text-white/85"}`}>{s.label}</span>
-                {state === "done" && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="ml-auto text-xs font-semibold text-emerald-400"
-                  >
-                    ✓
-                  </motion.span>
-                )}
-              </motion.li>
-            );
-          })}
-        </ul>
-
-        <div className="mt-6 flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.02] p-3 text-xs text-white/60">
-          <ShieldCheck className="h-4 w-4" style={{ color: "#E9B44C" }} /> Saugu ir automatiška — nukreipsim į tinkamą sritį.
+        <div className="mt-6 h-[2px] w-52 overflow-hidden rounded-full bg-white/10">
+          <motion.div
+            className="h-full"
+            style={{ background: "linear-gradient(90deg, #C8452A, #E9B44C)" }}
+            initial={{ width: "0%" }}
+            animate={{ width: done ? "100%" : "72%" }}
+            transition={{ duration: done ? 0.5 : 1.4, ease: "easeInOut" }}
+          />
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
