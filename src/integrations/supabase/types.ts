@@ -352,6 +352,30 @@ export type Database = {
           },
         ]
       }
+      class_promotions: {
+        Row: {
+          created_at: string
+          graduated_count: number
+          id: string
+          promoted_count: number
+          school_year: string
+        }
+        Insert: {
+          created_at?: string
+          graduated_count?: number
+          id?: string
+          promoted_count?: number
+          school_year: string
+        }
+        Update: {
+          created_at?: string
+          graduated_count?: number
+          id?: string
+          promoted_count?: number
+          school_year?: string
+        }
+        Relationships: []
+      }
       dm_messages: {
         Row: {
           content: string
@@ -1261,6 +1285,7 @@ export type Database = {
         Returns: boolean
       }
       open_dm_room: { Args: { _other: string }; Returns: string }
+      promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
       revoke_certificate: {
@@ -1268,6 +1293,10 @@ export type Database = {
         Returns: boolean
       }
       run_deep_health_scan: { Args: never; Returns: Json }
+      set_my_assigned_classes: {
+        Args: { _classes: string[] }
+        Returns: string[]
+      }
       tick_auto_lockdown: { Args: never; Returns: undefined }
       verify_certificate: { Args: { _code: string }; Returns: Json }
       verify_school_signup_code: {
