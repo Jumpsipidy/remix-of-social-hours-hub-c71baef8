@@ -4,8 +4,8 @@ import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { LeafletMap } from "@/components/leaflet-map";
 import { MapillaryPreview } from "@/components/mapillary-preview";
-import {
 import { ProfileSkeleton } from "@/components/skeleton-loader";
+import {
   MapPin, Globe, Facebook, Instagram, Mail, Phone, Building2, CheckCircle2,
   Sparkles, ArrowLeft, Clock,
 } from "lucide-react";
