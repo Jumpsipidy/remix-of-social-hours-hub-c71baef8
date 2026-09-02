@@ -539,7 +539,18 @@ function SchoolDashboard() {
         </aside>
 
         <main className="min-w-0 space-y-6">
-          {scope?.unscoped && <SchoolClaimPanel onClaimed={() => void refresh()} />}
+          {dataLoading && !scope && <DashboardSkeleton />}
+
+          {scope?.unscoped && (
+            <>
+              <SchoolClaimPanel onClaimed={() => void refresh()} />
+              <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
+                Paskyra dar nepririšta prie mokyklos, todėl mokinių duomenys nerodomi. Įvesk
+                mokyklos kodą viršuje — po to lentelės užsipildys realiais duomenimis.
+              </div>
+            </>
+          )}
+
 
           {scope && !scope.unscoped && (
             <div className="rounded-2xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
