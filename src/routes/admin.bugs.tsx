@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Bug, ExternalLink, Flame, GripVertical, Trash2 } from "lucide-react";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/bugs")({ component: BugsPage });
 
@@ -99,7 +100,7 @@ function BugsPage() {
         </div>
       </div>
 
-      {loading && <p className="py-10 text-center text-sm text-muted-foreground">Kraunama…</p>}
+      {loading && <ListSkeleton rows={4} className="py-4" />}
 
       <div className="grid gap-4 lg:grid-cols-3">
         {COLS.map((col) => {

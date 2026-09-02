@@ -6,6 +6,7 @@ import { adminListRecentMessages, adminDeleteMessage } from "@/lib/admin-super.f
 import { toast } from "sonner";
 import { MessageSquare, RefreshCw, Trash2, Search, User } from "lucide-react";
 import { ROLE_LT } from "@/lib/admin-shared";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/messages")({ component: MessagesAuditPage });
 
@@ -140,7 +141,7 @@ function MessagesAuditPage() {
 
       {/* Grouped chat threads */}
       <div className="space-y-6">
-        {loading && <p className="py-10 text-center text-sm text-muted-foreground">Kraunama…</p>}
+        {loading && <ListSkeleton rows={6} className="py-4" />}
         {!loading && groups.length === 0 && (
           <p className="rounded-3xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">Žinučių nėra.</p>
         )}

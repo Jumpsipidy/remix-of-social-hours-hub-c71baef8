@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CalendarClock, RefreshCw, Trash2, CheckCircle2, XCircle, Clock, AlarmClock, PlayCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminAurora, SectionHeader, SaaSKpi, SaaSPanel, LivePill } from "@/components/admin/admin-ui";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/reservations")({ component: ReservationsPage });
 
@@ -87,7 +88,7 @@ function ReservationsPage() {
       </div>
 
       <div className="space-y-2">
-        {loading && <p className="py-10 text-center text-sm text-muted-foreground">Kraunama…</p>}
+        {loading && <ListSkeleton rows={6} className="py-4" />}
         {!loading && rows.length === 0 && (
           <SaaSPanel>
             <div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-muted-foreground">

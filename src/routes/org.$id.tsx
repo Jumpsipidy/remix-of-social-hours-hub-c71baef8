@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LeafletMap } from "@/components/leaflet-map";
 import { MapillaryPreview } from "@/components/mapillary-preview";
 import {
+import { ProfileSkeleton } from "@/components/skeleton-loader";
   MapPin, Globe, Facebook, Instagram, Mail, Phone, Building2, CheckCircle2,
   Sparkles, ArrowLeft, Clock,
 } from "lucide-react";
@@ -81,7 +82,7 @@ function OrgPublicPage() {
     })();
   }, [id]);
 
-  if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
+  if (loading) return <PageShell><ProfileSkeleton /></PageShell>;
   if (!p) {
     return (
       <PageShell>

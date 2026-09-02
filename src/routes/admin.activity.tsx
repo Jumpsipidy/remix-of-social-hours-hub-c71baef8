@@ -5,6 +5,7 @@ import type { AdminProfile, AdminReservation } from "@/lib/admin-shared";
 import { STATUS_LT } from "@/lib/admin-shared";
 import { AlarmClock, PlayCircle, CheckCircle2, XCircle, Activity as Pulse } from "lucide-react";
 import { motion } from "framer-motion";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/activity")({ component: ActivityPage });
 
@@ -132,7 +133,7 @@ function ActivityPage() {
 
       {/* Timeline */}
       <div className="relative">
-        {loading && <p className="py-16 text-center text-sm text-muted-foreground">Kraunama…</p>}
+        {loading && <ListSkeleton rows={6} className="py-4" />}
         {!loading && shown.length === 0 && (
           <p className="rounded-3xl border border-dashed border-border py-16 text-center text-sm text-muted-foreground">Nėra rezervacijų.</p>
         )}

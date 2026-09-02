@@ -8,6 +8,7 @@ import { ROLE_LT } from "@/lib/admin-shared";
 import { toast } from "sonner";
 import { Search, Users, GraduationCap, Building2, Shield, UserCog } from "lucide-react";
 import { SectionHeader, SaaSPanel, SaaSKpi } from "@/components/admin/admin-ui";
+import { TableSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/manage")({
   component: ManagePage,
@@ -147,7 +148,7 @@ function ManagePage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-xs text-muted-foreground">Kraunama…</td>
+                  <td colSpan={5} className="p-0"><table className="w-full"><tbody><TableSkeleton rows={5} cols={5} /></tbody></table></td>
                 </tr>
               )}
               <AnimatePresence initial={false}>

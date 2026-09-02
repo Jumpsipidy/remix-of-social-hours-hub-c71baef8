@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminListSchools, adminUpsertSchool, adminDeleteSchool } from "@/lib/admin-super.functions";
 import { toast } from "sonner";
 import { GraduationCap, Loader2, Plus, Save, Trash2, RefreshCw, Copy, Sparkles, ScrollText } from "lucide-react";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/schools")({ component: SchoolsPage });
 
@@ -123,7 +124,7 @@ function SchoolsPage() {
 
       {/* Diploma cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        {loading && <p className="col-span-full py-10 text-center text-sm text-muted-foreground">Kraunama…</p>}
+        {loading && <ListSkeleton rows={4} className="col-span-full py-4" />}
         {!loading && rows.length === 0 && (
           <p className="col-span-full rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">Nėra mokyklų.</p>
         )}
