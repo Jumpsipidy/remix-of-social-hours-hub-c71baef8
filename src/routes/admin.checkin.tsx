@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, RefreshCw, ScanLine, CheckCircle2, XCircle, Users } from "lucide-react";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/checkin")({
   head: () => ({ meta: [{ title: "QR įsiregistravimai — Super admin" }] }),
@@ -194,7 +195,7 @@ function AdminCheckinPage() {
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground p-8 text-center">Kraunama…</div>
+        <ListSkeleton rows={4} className="p-4" />
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">Nėra įrašų.</div>
       ) : (

@@ -97,3 +97,62 @@ export function TasksSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
+
+/** Lentelės eilučių griaučiai — naudoti vietoj „Kraunama…" teksto. */
+export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }).map((_, r) => (
+        <tr key={r} className="border-b border-border/40">
+          {Array.from({ length: cols }).map((_, c) => (
+            <td key={c} className="px-3 py-3">
+              <SkeletonLoader variant="text" className="h-3.5 w-full" delay={r + c} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+/** Kortelių/įrašų sąrašo griaučiai. */
+export function ListSkeleton({ rows = 5, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-3", className)} role="status" aria-label="Kraunama">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/40 p-4">
+          <SkeletonLoader variant="circle" className="h-10 w-10" delay={i} />
+          <div className="flex-1 space-y-2">
+            <SkeletonLoader variant="text" className="h-3.5 w-1/2" delay={i} />
+            <SkeletonLoader variant="text" className="h-3 w-1/3" delay={i + 1} />
+          </div>
+          <SkeletonLoader className="h-8 w-20 rounded-full" delay={i + 1} />
+        </div>
+      ))}
+      <span className="sr-only">Kraunama…</span>
+    </div>
+  );
+}
+
+/** Profilio / viešo puslapio griaučiai. */
+export function ProfileSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-10" role="status" aria-label="Kraunama">
+      <LoadingBar />
+      <SkeletonLoader className="h-48 w-full" delay={0} />
+      <div className="flex items-center gap-4">
+        <SkeletonLoader variant="circle" className="h-20 w-20" delay={1} />
+        <div className="flex-1 space-y-2">
+          <SkeletonLoader variant="text" className="h-6 w-64" delay={1} />
+          <SkeletonLoader variant="text" className="h-4 w-40" delay={2} />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonLoader key={i} className="h-28 w-full" delay={3 + i} />
+        ))}
+      </div>
+      <span className="sr-only">Kraunama…</span>
+    </div>
+  );
+}

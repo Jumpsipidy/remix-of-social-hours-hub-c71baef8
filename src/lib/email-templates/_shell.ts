@@ -3,7 +3,7 @@
 // Deep blacks, vibrant accents, and modern typography (sans-serif).
 
 export const APP_URL = "https://socialinesvalandos.dev";
-export const SUPPORT_EMAIL = "pagalba@socialinesvalandos.lt";
+export const SUPPORT_EMAIL = "pagalba@socialinesvalandos.dev";
 
 export function escape(s: string): string {
   return String(s)

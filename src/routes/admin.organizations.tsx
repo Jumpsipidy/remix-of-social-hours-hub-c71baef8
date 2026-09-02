@@ -5,6 +5,7 @@ import type { AdminProfile, AdminReservation } from "@/lib/admin-shared";
 import { Search, Building2, Trophy, Clock, CheckCircle2, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminAurora, SectionHeader, SaaSKpi, SaaSPanel, LivePill } from "@/components/admin/admin-ui";
+import { TableSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/organizations")({ component: OrganizationsPage });
 
@@ -90,7 +91,7 @@ function OrganizationsPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">Kraunama…</td></tr>}
+              {loading && <TableSkeleton rows={6} cols={7} />}
               {!loading && rows.map((r, i) => (
                 <motion.tr key={r.org.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: Math.min(i, 15) * 0.015 }} className="border-b border-border/40 last:border-0 hover:bg-accent/20">
                   <td className="px-4 py-3">

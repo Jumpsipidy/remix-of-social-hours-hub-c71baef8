@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Activity, Gauge, TrendingUp, Wifi, WifiOff, Clock } from "lucide-react";
 import { getPerformanceStats } from "@/lib/monitoring.functions";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar } from "recharts";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/performance")({
   head: () => ({ meta: [{ title: "Performance & Uptime — Admin" }] }),
@@ -52,7 +53,7 @@ function PerformancePage() {
         </button>
       </div>
 
-      {isLoading && <div className="rounded-2xl border border-border bg-card/40 p-8 text-center text-sm text-muted-foreground">Kraunama…</div>}
+      {isLoading && <ListSkeleton rows={4} />}
 
       {s && (
         <>

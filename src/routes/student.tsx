@@ -247,7 +247,7 @@ function StudentDashboard() {
   }, [user, profile, reservations, uniqueOrgs, streak, friendsCount, groupJoined, loginStreak, longestStreak]);
 
 
-  if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
+  if (loading) return <PageShell><div className="mx-auto w-full max-w-7xl px-4 py-10"><DashboardSkeleton /></div></PageShell>;
   if (!user || !profile) {
     return (
       <PageShell>

@@ -4,6 +4,7 @@ import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { LeafletMap } from "@/components/leaflet-map";
 import { MapillaryPreview } from "@/components/mapillary-preview";
+import { ProfileSkeleton } from "@/components/skeleton-loader";
 import {
   MapPin, Globe, Facebook, Instagram, Mail, Phone, Building2, CheckCircle2,
   Sparkles, ArrowLeft, Clock,
@@ -81,7 +82,7 @@ function OrgPublicPage() {
     })();
   }, [id]);
 
-  if (loading) return <PageShell><div className="p-20 text-center text-muted-foreground">Kraunama…</div></PageShell>;
+  if (loading) return <PageShell><ProfileSkeleton /></PageShell>;
   if (!p) {
     return (
       <PageShell>

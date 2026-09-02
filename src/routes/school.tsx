@@ -34,6 +34,8 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
 import { SchoolClaimPanel } from "@/components/school-claim-panel";
+import { SchoolClassesPanel } from "@/components/school-classes-panel";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { useAuth } from "@/hooks/use-auth";
 import {
   getSchoolSnapshot,
@@ -150,6 +152,7 @@ function SchoolDashboard() {
   });
 
   const [scope, setScope] = useState<SchoolScope | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
   const assignedClasses = useMemo(
     () => scope?.assigned_classes ?? profile?.assigned_classes ?? [],
     [scope?.assigned_classes, profile?.assigned_classes],
@@ -157,7 +160,8 @@ function SchoolDashboard() {
   const classRestricted = (scope?.class_restricted ?? assignedClasses.length > 0) === true;
 
   const refresh = useCallback(async () => {
-    if (!user || profile?.role !== "school_admin") return;
+    if (!user || (profile?.role !== "school_admin" && profile?.role !== "admin")) return;
+    setDataLoading(true);
     try {
       const snap = await getSchoolSnapshot();
       setScope(snap.scope ?? null);
@@ -175,6 +179,8 @@ function SchoolDashboard() {
       setAllRes((snap.reservations as Reservation[]).filter((r) => allowed.has(r.student_id)));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nepavyko įkelti mokyklos duomenų");
+    } finally {
+      setDataLoading(false);
     }
   }, [profile?.role, user]);
 
@@ -431,12 +437,14 @@ function SchoolDashboard() {
   if (loading) {
     return (
       <PageShell>
-        <div className="p-20 text-center text-muted-foreground">Kraunama…</div>
+        <div className="mx-auto w-full max-w-7xl px-4 py-10">
+          <DashboardSkeleton />
+        </div>
       </PageShell>
     );
   }
 
-  if (!user || profile?.role !== "school_admin") {
+  if (!user || (profile?.role !== "school_admin" && profile?.role !== "admin")) {
     return (
       <PageShell>
         <div className="mx-auto max-w-xl px-6 py-24 text-center">
@@ -531,7 +539,18 @@ function SchoolDashboard() {
         </aside>
 
         <main className="min-w-0 space-y-6">
-          {scope?.unscoped && <SchoolClaimPanel onClaimed={() => void refresh()} />}
+          {dataLoading && !scope && <DashboardSkeleton />}
+
+          {scope?.unscoped && (
+            <>
+              <SchoolClaimPanel onClaimed={() => void refresh()} />
+              <div className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm">
+                Paskyra dar nepririšta prie mokyklos, todėl mokinių duomenys nerodomi. Įvesk
+                mokyklos kodą viršuje — po to lentelės užsipildys realiais duomenimis.
+              </div>
+            </>
+          )}
+
 
           {scope && !scope.unscoped && (
             <div className="rounded-2xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
@@ -724,6 +743,10 @@ function SchoolDashboard() {
             >
               <StudentsTable students={filteredStudents} onAudit={setAuditing} />
             </Panel>
+          )}
+
+          {tab === "classes" && (
+            <SchoolClassesPanel current={assignedClasses} onSaved={() => void refresh()} />
           )}
 
           {tab === "classes" && (

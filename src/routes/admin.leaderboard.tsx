@@ -6,6 +6,7 @@ import { Trophy, RefreshCw, Medal, Flame, Users2, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { AdminAurora, SectionHeader, SaaSKpi, SaaSPanel, LivePill } from "@/components/admin/admin-ui";
+import { TableSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/admin/leaderboard")({ component: Page });
 
@@ -115,7 +116,7 @@ function Page() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">Kraunama…</td></tr>}
+              {loading && <TableSkeleton rows={6} cols={5} />}
               {!loading && rest.length === 0 && podium.length === 0 && <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">Tuščia.</td></tr>}
               {rest.map((r, i) => {
                 const earned = r.hours_earned ?? 0;

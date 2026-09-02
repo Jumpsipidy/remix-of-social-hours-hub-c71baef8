@@ -7,6 +7,7 @@ import { getMyCheckInTokens } from "@/lib/checkin.functions";
 import { ArrowLeft, RefreshCw, ShieldCheck, WifiOff, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/layout";
 import { CheckinSetupBanner } from "@/components/checkin-setup-banner";
+import { ListSkeleton } from "@/components/skeleton-loader";
 
 export const Route = createFileRoute("/_authenticated/checkin")({
   component: CheckinPage,
@@ -64,7 +65,7 @@ function CheckinPage() {
 
           <CheckinSetupBanner />
 
-          {loading && <p className="text-sm text-muted-foreground">Kraunama…</p>}
+          {loading && <ListSkeleton rows={3} />}
           {!loading && active.length === 0 && (
             <div className="rounded-3xl border border-border bg-card p-8 text-center">
               <p className="font-display text-lg font-semibold">Nėra aktyvių rezervacijų</p>
