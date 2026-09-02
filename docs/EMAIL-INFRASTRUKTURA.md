@@ -13,8 +13,8 @@ Visi automatiniai sistemos laiškai siunčiami per **Resend** infrastruktūrą n
 
 ## Palaikymas ir atsakymai
 Nors laiškai siunčiami iš `noreply`, visi pagalbos ir atgalinio ryšio kanalai nukreipti į oficialų pagalbos el. paštą:
-- **Pagalbos el. paštas:** `pagalba@socialinesvalandos.lt`
-- **Reply-To:** Visų laiškų `Reply-To` antraštė nustatyta į `pagalba@socialinesvalandos.lt`. Jei organizacija ar mokinys tiesiog paspaus „Atsakyti“ (Reply) savo pašto programoje, laiškas nukeliaus tiesiai į pagalbą.
+- **Pagalbos el. paštas:** `pagalba@socialinesvalandos.dev`
+- **Reply-To:** Visų laiškų `Reply-To` antraštė nustatyta į `pagalba@socialinesvalandos.dev`. Jei organizacija ar mokinys tiesiog paspaus „Atsakyti“ (Reply) savo pašto programoje, laiškas nukeliaus tiesiai į pagalbą.
 
 ## Klaidų pranešimai (Alerts)
 Administratorių gaunami kritinių klaidų pranešimai siunčiami iš:
@@ -24,4 +24,4 @@ Administratorių gaunami kritinių klaidų pranešimai siunčiami iš:
 ## Organizacijų kvietimo srautas
 1. Super Admin įveda el. paštą skydelyje `/admin/tools`.
 2. Išsiunčiamas firminis HTML laiškas su kvietimu.
-3. Jei organizacija turi klausimų ir atsako į laišką, jis pasiekia administratorių per `pagalba@socialinesvalandos.lt`.
+3. Jei organizacija turi klausimų ir atsako į laišką, jis pasiekia administratorių per `pagalba@socialinesvalandos.dev`.
