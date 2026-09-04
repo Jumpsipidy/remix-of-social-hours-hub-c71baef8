@@ -17,21 +17,13 @@ export function SchoolClassesPanel({
   onSaved: () => void;
 }) {
   const [classes, setClasses] = useState<string[]>(current);
-  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setClasses(current);
   }, [current]);
 
-  function add() {
-    const value = draft.trim().toUpperCase();
-    if (!value) return;
-    if (value.length > 8) return toast.error("Klasės pavadinimas per ilgas (iki 8 simbolių).");
-    if (classes.includes(value)) return toast.error("Ši klasė jau pridėta.");
-    setClasses((prev) => [...prev, value]);
-    setDraft("");
-  }
+
 
   async function save() {
     if (busy) return;
