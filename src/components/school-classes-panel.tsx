@@ -94,25 +94,28 @@ export function SchoolClassesPanel({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  add();
-                }
-              }}
-              placeholder="pvz. 8A"
-              className="h-10 w-32 rounded-xl border border-border bg-background/60 px-3 text-sm uppercase text-foreground placeholder:normal-case"
-            />
-            <button
-              type="button"
-              onClick={add}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-semibold text-foreground"
-            >
-              <Plus className="h-4 w-4" /> Pridėti
-            </button>
+            {CLASS_YEARS.map((c) => {
+              const on = classes.includes(c);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() =>
+                    setClasses((prev) => (on ? prev.filter((x) => x !== c) : [...prev, c]))
+                  }
+                  className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                    on
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background/60 text-foreground"
+                  }`}
+                >
+                  {on ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {c}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={save}
@@ -122,6 +125,7 @@ export function SchoolClassesPanel({
               {busy ? "Saugoma…" : "Išsaugoti"}
             </button>
           </div>
+
         </div>
       </div>
     </section>
