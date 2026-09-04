@@ -58,8 +58,9 @@ export function SchoolClassesPanel({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground">Kuruojamos klasės</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pridėk klases, kurias auklėji (pvz. 8A). Matysi tik tų klasių mokinius. Palik
-            tuščią, jei turi matyti visą mokyklą.
+            Pažymėk klases, kurias auklėji. Matysi tik tų klasių mokinius. Palik
+            nieko nepažymėjęs, jei turi matyti visą mokyklą.
+
           </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
