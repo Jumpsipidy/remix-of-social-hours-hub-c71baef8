@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { GraduationCap, Plus, X } from "lucide-react";
+import { GraduationCap, Plus, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CLASS_YEARS } from "@/lib/class-years";
 
 /**
  * Mokyklos administratorius (auklėtojas) pats pasirenka, kurias klases kuruoja.
@@ -16,21 +17,13 @@ export function SchoolClassesPanel({
   onSaved: () => void;
 }) {
   const [classes, setClasses] = useState<string[]>(current);
-  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setClasses(current);
   }, [current]);
 
-  function add() {
-    const value = draft.trim().toUpperCase();
-    if (!value) return;
-    if (value.length > 8) return toast.error("Klasės pavadinimas per ilgas (iki 8 simbolių).");
-    if (classes.includes(value)) return toast.error("Ši klasė jau pridėta.");
-    setClasses((prev) => [...prev, value]);
-    setDraft("");
-  }
+
 
   async function save() {
     if (busy) return;
@@ -65,8 +58,9 @@ export function SchoolClassesPanel({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground">Kuruojamos klasės</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pridėk klases, kurias auklėji (pvz. 8A). Matysi tik tų klasių mokinius. Palik
-            tuščią, jei turi matyti visą mokyklą.
+            Pažymėk klases, kurias auklėji. Matysi tik tų klasių mokinius. Palik
+            nieko nepažymėjęs, jei turi matyti visą mokyklą.
+
           </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -94,25 +88,28 @@ export function SchoolClassesPanel({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  add();
-                }
-              }}
-              placeholder="pvz. 8A"
-              className="h-10 w-32 rounded-xl border border-border bg-background/60 px-3 text-sm uppercase text-foreground placeholder:normal-case"
-            />
-            <button
-              type="button"
-              onClick={add}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border px-3 text-sm font-semibold text-foreground"
-            >
-              <Plus className="h-4 w-4" /> Pridėti
-            </button>
+            {CLASS_YEARS.map((c) => {
+              const on = classes.includes(c);
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() =>
+                    setClasses((prev) => (on ? prev.filter((x) => x !== c) : [...prev, c]))
+                  }
+                  className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-sm font-semibold transition-colors ${
+                    on
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-background/60 text-foreground"
+                  }`}
+                >
+                  {on ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {c}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={save}
@@ -122,6 +119,7 @@ export function SchoolClassesPanel({
               {busy ? "Saugoma…" : "Išsaugoti"}
             </button>
           </div>
+
         </div>
       </div>
     </section>

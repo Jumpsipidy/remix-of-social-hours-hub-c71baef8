@@ -71,15 +71,10 @@ function StudentDashboard() {
   const [customOpen, setCustomOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "completed">("all");
 
-  if (loading) {
-    return (
-      <PageShell>
-        <div className="mx-auto max-w-7xl px-4 py-12">
-          <DashboardSkeleton />
-        </div>
-      </PageShell>
-    );
-  }
+  // SVARBU: jokių ankstyvų `return` prieš likusius hook'us — kitaip React
+  // sugriūva („Rendered more hooks…") ir mokinys mato baltą ekraną.
+
+
 
   const loadReservations = async (uid: string) => {
     const { data } = await supabase

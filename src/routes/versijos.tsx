@@ -19,6 +19,21 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
+    v: "V2.3.0",
+    title: "Prisijungimo ir mokyklos skydelio stabilumas",
+    date: "2026 m. rugsėjis",
+    summary:
+      "Pašalinta pagrindinė prisijungimo klaida, sutvarkytas mokyklos administratoriaus skydelis ir puslapių perėjimai.",
+    items: [
+      { tag: "Pataisyta", text: "Didelis pataisymas: mokinio skydelis nebeužstringa baltame ekrane po prisijungimo (React hook'ų tvarkos klaida)." },
+      { tag: "Pataisyta", text: "Nebelieka juodo blyksnio keičiant puslapius ar perkraunant svetainę." },
+      { tag: "Pataisyta", text: "Mokyklos administratoriaus klasių priskyrimas dabar naudoja tas pačias klasių reikšmes kaip registracija — duomenys nebedingsta." },
+      { tag: "Pataisyta", text: "Mokyklos kodas SEDUVA2026 veikia, o mokyklos administratoriaus paskyra pririšta prie Šeduvos gimnazijos." },
+      { tag: "Patobulinta", text: "Skeleton užkrovimo būsenos rodomos ir atnaujinant duomenis, ne tik pirmą kartą." },
+    ],
+  },
+  {
+
     v: "V2.2.0",
     title: "Saugumas ir modernus klaidų valdymas",
     date: "2026 m. rugpjūtis",

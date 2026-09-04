@@ -539,7 +539,7 @@ function SchoolDashboard() {
         </aside>
 
         <main className="min-w-0 space-y-6">
-          {dataLoading && !scope && <DashboardSkeleton />}
+          {dataLoading && <DashboardSkeleton />}
 
           {scope?.unscoped && (
             <>
