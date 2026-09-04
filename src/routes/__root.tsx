@@ -273,19 +273,12 @@ function RootComponent() {
         <SecurityGatewayProvider>
           <ValoraBoot />
           <SecurityGatewayInternal />
-          <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={router.state.location.pathname}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: "linear" }}
-            className="flex-1 flex flex-col"
-            style={{ willChange: "opacity" }}
-          >
+          {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
+              atsiranda naujas ir matosi juodas blyksnis. */}
+          <div className="flex-1 flex flex-col">
             <Outlet />
-            </motion.div>
-          </AnimatePresence>
+          </div>
+
           <Toaster />
           <CelebrationStage />
 
