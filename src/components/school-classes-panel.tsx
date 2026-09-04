@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { GraduationCap, Plus, X } from "lucide-react";
+import { GraduationCap, Plus, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CLASS_YEARS } from "@/lib/class-years";
 
 /**
  * Mokyklos administratorius (auklėtojas) pats pasirenka, kurias klases kuruoja.
