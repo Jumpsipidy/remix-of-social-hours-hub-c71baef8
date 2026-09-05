@@ -778,6 +778,7 @@ function OpenTasksFeed() {
         .from("tasks")
         .select("id, title, task_date, available_hours, location, organization_id")
         .eq("is_open", true)
+        .gte("task_date", new Date().toISOString().slice(0, 10))
         .order("task_date", { ascending: true })
         .limit(4);
       const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>) ?? [];
