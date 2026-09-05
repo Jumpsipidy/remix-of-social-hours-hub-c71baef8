@@ -54,7 +54,18 @@ import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
 import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
 
+const SCHOOL_TABS = [
+  "overview", "students", "classes", "queue", "risk", "verify", "orgs", "events", "accounts",
+] as const;
+
 export const Route = createFileRoute("/school")({
+  // Kiekviena sekcija turi savo adresą – atsidaro kaip atskiras puslapis,
+  // o ne kaip turinys, kurį reikia slinkti žemyn.
+  validateSearch: (search: Record<string, unknown>) => {
+    const t = String(search?.tab ?? "overview");
+    const tab: SchoolTab = (SCHOOL_TABS as readonly string[]).includes(t) ? (t as SchoolTab) : "overview";
+    return { tab } as { tab?: SchoolTab };
+  },
   head: () => ({
     meta: [
       { title: "Mokyklos sritis — Socialinės Valandos" },
@@ -135,7 +146,15 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const [tab, setTab] = useState<SchoolTab>("overview");
+  const { tab = "overview" } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setTab = useCallback(
+    (next: SchoolTab) => {
+      void navigate({ search: { tab: next } });
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [navigate],
+  );
   const [antiCheatCfg, setAntiCheatCfg] = useState<Record<string, boolean> | undefined>(undefined);
   useEffect(() => setAntiCheatCfg(loadAntiCheatConfig()), []);
   const [allRes, setAllRes] = useState<Reservation[]>([]);
