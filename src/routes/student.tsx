@@ -77,8 +77,12 @@ function StudentDashboard() {
 
 
   const loadReservations = async (uid: string) => {
+    // Pasibaigusios, bet neuždarytos rezervacijos automatiškai užsidaro, kad
+    // nekabėtų kaip aktyvios.
+    try { await supabase.rpc("expire_stale_reservations" as never); } catch { /* nesvarbu */ }
     // Mokinys turi matyti ir savo sukurtas rezervacijas, ir tas, į kurias jis
     // buvo pakviestas kaip grupės dalyvis (anksčiau jos tiesiog dingdavo).
+
     const [{ data }, { data: parts }] = await Promise.all([
       supabase
         .from("reservations")
