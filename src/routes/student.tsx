@@ -77,13 +77,32 @@ function StudentDashboard() {
 
 
   const loadReservations = async (uid: string) => {
-    const { data } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("student_id", uid)
-      .order("reservation_date", { ascending: false });
-    const rs = (data as Reservation[]) ?? [];
+    // Mokinys turi matyti ir savo sukurtas rezervacijas, ir tas, į kurias jis
+    // buvo pakviestas kaip grupės dalyvis (anksčiau jos tiesiog dingdavo).
+    const [{ data }, { data: parts }] = await Promise.all([
+      supabase
+        .from("reservations")
+        .select("*")
+        .eq("student_id", uid)
+        .order("reservation_date", { ascending: false }),
+      supabase
+        .from("reservation_participants")
+        .select("reservation_id")
+        .eq("student_id", uid)
+        .eq("status", "accepted"),
+    ]);
+    let rs = (data as Reservation[]) ?? [];
+    const partIds = ((parts as { reservation_id: string }[] | null) ?? [])
+      .map((p) => p.reservation_id)
+      .filter((id) => !rs.some((r) => r.id === id));
+    if (partIds.length) {
+      const { data: extra } = await supabase.from("reservations").select("*").in("id", partIds);
+      rs = [...rs, ...((extra as Reservation[]) ?? [])].sort((a, b) =>
+        a.reservation_date < b.reservation_date ? 1 : -1,
+      );
+    }
     setReservations(rs);
+
     const ids = Array.from(new Set(rs.map((r) => r.organization_id).filter((v): v is string => !!v)));
     if (ids.length) {
       const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
