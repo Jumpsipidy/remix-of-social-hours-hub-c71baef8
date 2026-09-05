@@ -674,27 +674,35 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     const effectiveHours = isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded);
     if (!isLowerClass(classYear) && hoursNeeded < 8) { setError("8+ klasėms — minimalus tikslas 8 val."); return; }
     setBusy(true);
-    const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
-    if (!ok) {
-      setBusy(false);
-      setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
-      return;
-    }
+    try {
+      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
+      if (!ok) {
+        setBusy(false);
+        setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
+        return;
+      }
 
-    const { error: updErr } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName.trim(),
-        school_id: schoolId,
-        class_year: classYear,
-        hours_needed: effectiveHours,
-        role: "student",
-      })
-      .eq("id", userId);
-    setBusy(false);
-    if (updErr) { setError(updErr.message); return; }
-    window.location.reload();
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+          school_id: schoolId,
+          class_year: classYear,
+          hours_needed: effectiveHours,
+          role: "student",
+        })
+        .eq("id", userId);
+      setBusy(false);
+      if (updErr) { setError(updErr.message); return; }
+      window.location.reload();
+    } catch (e) {
+      // Klaidos objektas niekada nepatenka tiesiai į ekraną – kitaip mokinys
+      // matydavo „[object Object]".
+      setBusy(false);
+      setError(e instanceof Error ? e.message : "Nepavyko patvirtinti. Bandyk dar kartą.");
+    }
   };
+
 
   return (
     <PageShell>
