@@ -1248,6 +1248,7 @@ export type Database = {
         Args: { _participant_id?: string; _reservation_id?: string }
         Returns: string
       }
+      expire_stale_reservations: { Args: never; Returns: number }
       generate_check_in_code: { Args: never; Returns: string }
       generate_recurring_tasks: { Args: never; Returns: number }
       get_lockdown_public: {
