@@ -63,7 +63,8 @@ export const Route = createFileRoute("/school")({
   // o ne kaip turinys, kurį reikia slinkti žemyn.
   validateSearch: (search: Record<string, unknown>) => {
     const t = String(search?.tab ?? "overview");
-    return { tab: (SCHOOL_TABS as readonly string[]).includes(t) ? (t as SchoolTab) : ("overview" as SchoolTab) };
+    const tab: SchoolTab = (SCHOOL_TABS as readonly string[]).includes(t) ? (t as SchoolTab) : "overview";
+    return { tab } as { tab?: SchoolTab };
   },
   head: () => ({
     meta: [
@@ -145,7 +146,7 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
-  const { tab } = Route.useSearch();
+  const { tab = "overview" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const setTab = useCallback(
     (next: SchoolTab) => {
