@@ -77,13 +77,36 @@ function StudentDashboard() {
 
 
   const loadReservations = async (uid: string) => {
-    const { data } = await supabase
-      .from("reservations")
-      .select("*")
-      .eq("student_id", uid)
-      .order("reservation_date", { ascending: false });
-    const rs = (data as Reservation[]) ?? [];
+    // Pasibaigusios, bet neuždarytos rezervacijos automatiškai užsidaro, kad
+    // nekabėtų kaip aktyvios.
+    try { await supabase.rpc("expire_stale_reservations" as never); } catch { /* nesvarbu */ }
+    // Mokinys turi matyti ir savo sukurtas rezervacijas, ir tas, į kurias jis
+    // buvo pakviestas kaip grupės dalyvis (anksčiau jos tiesiog dingdavo).
+
+    const [{ data }, { data: parts }] = await Promise.all([
+      supabase
+        .from("reservations")
+        .select("*")
+        .eq("student_id", uid)
+        .order("reservation_date", { ascending: false }),
+      supabase
+        .from("reservation_participants")
+        .select("reservation_id")
+        .eq("student_id", uid)
+        .eq("status", "accepted"),
+    ]);
+    let rs = (data as Reservation[]) ?? [];
+    const partIds = ((parts as { reservation_id: string }[] | null) ?? [])
+      .map((p) => p.reservation_id)
+      .filter((id) => !rs.some((r) => r.id === id));
+    if (partIds.length) {
+      const { data: extra } = await supabase.from("reservations").select("*").in("id", partIds);
+      rs = [...rs, ...((extra as Reservation[]) ?? [])].sort((a, b) =>
+        a.reservation_date < b.reservation_date ? 1 : -1,
+      );
+    }
     setReservations(rs);
+
     const ids = Array.from(new Set(rs.map((r) => r.organization_id).filter((v): v is string => !!v)));
     if (ids.length) {
       const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
@@ -655,27 +678,35 @@ function StudentProfileSetup({ userId }: { userId: string }) {
     const effectiveHours = isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded);
     if (!isLowerClass(classYear) && hoursNeeded < 8) { setError("8+ klasėms — minimalus tikslas 8 val."); return; }
     setBusy(true);
-    const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
-    if (!ok) {
-      setBusy(false);
-      setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
-      return;
-    }
+    try {
+      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
+      if (!ok) {
+        setBusy(false);
+        setError("Neteisingas mokyklos kodas. Paklausk klasės auklėtojo arba mokyklos administratoriaus.");
+        return;
+      }
 
-    const { error: updErr } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName.trim(),
-        school_id: schoolId,
-        class_year: classYear,
-        hours_needed: effectiveHours,
-        role: "student",
-      })
-      .eq("id", userId);
-    setBusy(false);
-    if (updErr) { setError(updErr.message); return; }
-    window.location.reload();
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+          school_id: schoolId,
+          class_year: classYear,
+          hours_needed: effectiveHours,
+          role: "student",
+        })
+        .eq("id", userId);
+      setBusy(false);
+      if (updErr) { setError(updErr.message); return; }
+      window.location.reload();
+    } catch (e) {
+      // Klaidos objektas niekada nepatenka tiesiai į ekraną – kitaip mokinys
+      // matydavo „[object Object]".
+      setBusy(false);
+      setError(e instanceof Error ? e.message : "Nepavyko patvirtinti. Bandyk dar kartą.");
+    }
   };
+
 
   return (
     <PageShell>
@@ -759,6 +790,7 @@ function OpenTasksFeed() {
         .from("tasks")
         .select("id, title, task_date, available_hours, location, organization_id")
         .eq("is_open", true)
+        .gte("task_date", new Date().toISOString().slice(0, 10))
         .order("task_date", { ascending: true })
         .limit(4);
       const list = (data as Array<{ id: string; title: string; task_date: string; available_hours: number; location: string; organization_id: string }>) ?? [];

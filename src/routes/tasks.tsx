@@ -96,7 +96,7 @@ function TasksPage() {
   useEffect(() => {
     (async () => {
       const [{ data: tData }, { data: oData }] = await Promise.all([
-        supabase.from("tasks").select(TASK_COLUMNS).eq("is_open", true).order("task_date", { ascending: true }),
+        supabase.from("tasks").select(TASK_COLUMNS).eq("is_open", true).gte("task_date", new Date().toISOString().slice(0, 10)).order("task_date", { ascending: true }),
         supabase.from("profiles").select("id, full_name, organization_name, email").eq("role", "organization"),
       ]);
       const list = (tData as Task[]) ?? [];
