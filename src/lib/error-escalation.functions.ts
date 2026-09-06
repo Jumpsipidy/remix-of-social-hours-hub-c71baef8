@@ -606,6 +606,26 @@ export const escalateAppError = createServerFn({ method: "POST" })
       }
     }
 
+    // MASS DETECTION — nesvarbu, kiek vartotojų: jei per MASS_WINDOW_MIN susikaupia
+    // MASS_THRESHOLD tikrų klaidų, sistema akivaizdžiai lūžusi → lockdown.
+    if (!lockdownReason && !isTest) {
+      const massSince = new Date(Date.now() - MASS_WINDOW_MIN * 60_000).toISOString();
+      const { data: massRows } = await supabaseAdmin
+        .from("activity_log")
+        .select("meta")
+        .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+        .gte("created_at", massSince)
+        .limit(MASS_THRESHOLD + 50);
+      const eligible = ((massRows ?? []) as Array<{ meta: { message?: string } | null }>).filter(
+        (row) => !isTelemetryNoise(row.meta?.message),
+      );
+      if (eligible.length >= MASS_THRESHOLD) {
+        lockdownReason = "flood";
+        criticalCount = Math.max(criticalCount, eligible.length);
+      }
+    }
+
+
     if (lockdownReason) {
       const { data: ss } = await supabaseAdmin
         .from("site_settings")
