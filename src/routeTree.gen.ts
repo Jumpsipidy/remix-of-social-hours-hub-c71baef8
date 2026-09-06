@@ -46,6 +46,7 @@ import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
 import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
+import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
 import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
 import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
 import { Route as AdminNotfoundRouteImport } from './routes/admin.notfound'
@@ -257,6 +258,11 @@ const AdminPushRoute = AdminPushRouteImport.update({
   path: '/push',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPreviewRoute = AdminPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
   id: '/performance',
   path: '/performance',
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -479,6 +486,7 @@ export interface FileRoutesByTo {
   '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -542,6 +550,7 @@ export interface FileRoutesById {
   '/admin/notfound': typeof AdminNotfoundRoute
   '/admin/organizations': typeof AdminOrganizationsRoute
   '/admin/performance': typeof AdminPerformanceRoute
+  '/admin/preview': typeof AdminPreviewRoute
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
@@ -605,6 +614,7 @@ export interface FileRouteTypes {
     | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
+    | '/admin/preview'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
+    | '/admin/preview'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/admin/notfound'
     | '/admin/organizations'
     | '/admin/performance'
+    | '/admin/preview'
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
@@ -1041,6 +1053,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPushRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/preview': {
+      id: '/admin/preview'
+      path: '/preview'
+      fullPath: '/admin/preview'
+      preLoaderRoute: typeof AdminPreviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/performance': {
       id: '/admin/performance'
       path: '/performance'
@@ -1238,6 +1257,7 @@ interface AdminRouteChildren {
   AdminNotfoundRoute: typeof AdminNotfoundRoute
   AdminOrganizationsRoute: typeof AdminOrganizationsRoute
   AdminPerformanceRoute: typeof AdminPerformanceRoute
+  AdminPreviewRoute: typeof AdminPreviewRoute
   AdminPushRoute: typeof AdminPushRoute
   AdminReservationsRoute: typeof AdminReservationsRoute
   AdminSchoolsRoute: typeof AdminSchoolsRoute
@@ -1265,6 +1285,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotfoundRoute: AdminNotfoundRoute,
   AdminOrganizationsRoute: AdminOrganizationsRoute,
   AdminPerformanceRoute: AdminPerformanceRoute,
+  AdminPreviewRoute: AdminPreviewRoute,
   AdminPushRoute: AdminPushRoute,
   AdminReservationsRoute: AdminReservationsRoute,
   AdminSchoolsRoute: AdminSchoolsRoute,

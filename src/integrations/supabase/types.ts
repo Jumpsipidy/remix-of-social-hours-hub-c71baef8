@@ -1286,6 +1286,10 @@ export type Database = {
         Returns: boolean
       }
       is_lockdown_active: { Args: never; Returns: boolean }
+      is_reservation_participant: {
+        Args: { _reservation_id: string; _user_id: string }
+        Returns: boolean
+      }
       open_dm_room: { Args: { _other: string }; Returns: string }
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }

@@ -241,6 +241,14 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       meta: Record<string, unknown> | null;
     }>).filter((row) => !String(row.meta?.path ?? "").startsWith("/admin"));
 
+    // Vienas prisijungęs žmogus = vienas unikalus lankytojas, net jei jis naršo
+    // keliose sesijose ar įrenginiuose. Tik neprisijungusiems naudojame sesiją.
+    const visitorKey = (row: { id: string; user_id: string | null; meta: Record<string, unknown> | null }) =>
+      String(row.user_id ?? row.meta?.session_id ?? row.id);
+    const sessionKey = (row: { id: string; user_id: string | null; meta: Record<string, unknown> | null }) =>
+      String(row.meta?.session_id ?? row.user_id ?? row.id);
+
+
     const fallbackDaily = Array.from({ length: days }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (days - 1 - i));
@@ -250,7 +258,7 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       return {
         d,
         views: pageRows.length,
-        uniques: new Set(pageRows.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        uniques: new Set(pageRows.map(visitorKey)).size,
         signins: dayRows.filter((row) => row.action === "auth.signed_in").length,
         signouts: dayRows.filter((row) => row.action === "auth.signed_out").length,
       };
@@ -266,27 +274,27 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       range_days: days,
       totals: {
         views: pageViews.length,
-        uniques: new Set(pageViews.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        uniques: new Set(pageViews.map(visitorKey)).size,
         signins: fallbackRows.filter((row) => row.action === "auth.signed_in").length,
         signouts: fallbackRows.filter((row) => row.action === "auth.signed_out").length,
-        sessions: new Set(fallbackRows.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size,
+        sessions: new Set(fallbackRows.map(sessionKey)).size,
         signed_in_users: new Set(fallbackRows.map((row) => row.user_id).filter(Boolean)).size,
       },
       prev_totals: { views: 0, uniques: 0, signins: 0, signouts: 0 },
-      active_now: pageViews.filter((row) => Date.now() - new Date(row.created_at).getTime() <= 5 * 60 * 1000).length,
+      active_now: new Set(pageViews.filter((row) => Date.now() - new Date(row.created_at).getTime() <= 5 * 60 * 1000).map(visitorKey)).size,
       admin_hidden_events: ((rawActivityRes.data ?? []) as Array<{ meta?: Record<string, unknown> | null }>).filter((row) => String(row.meta?.path ?? "").startsWith("/admin")).length,
       daily: fallbackDaily,
       hourly: Array.from({ length: 24 }, (_, h) => {
         const rows = fallbackRows.filter((row) => new Date(row.created_at).getHours() === h);
         const views = rows.filter((row) => row.action === "page.view");
-        return { h, views: views.length, signins: rows.filter((row) => row.action === "auth.signed_in").length, uniques: new Set(views.map((row) => String(row.meta?.session_id ?? row.user_id ?? row.id))).size };
+        return { h, views: views.length, signins: rows.filter((row) => row.action === "auth.signed_in").length, uniques: new Set(views.map(visitorKey)).size };
       }),
       weekday: Array.from({ length: 7 }, (_, w) => ({ w, views: pageViews.filter((row) => new Date(row.created_at).getDay() === w).length })),
       top_pages: Object.entries(pageViews.reduce<Record<string, { n: number; u: Set<string> }>>((acc, row) => {
         const path = String(row.meta?.path ?? "/");
         acc[path] ??= { n: 0, u: new Set() };
         acc[path].n += 1;
-        acc[path].u.add(String(row.meta?.session_id ?? row.user_id ?? row.id));
+        acc[path].u.add(visitorKey(row));
         return acc;
       }, {})).sort((a, b) => b[1].n - a[1].n).slice(0, 15).map(([path, value]) => ({ path, n: value.n, u: value.u.size })),
       devices: countBy("device").map(([device, n]) => ({ device, n })),
