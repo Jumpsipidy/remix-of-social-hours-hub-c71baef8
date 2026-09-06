@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AdminAurora } from "@/components/admin/admin-ui";
 import { AdminMobileBoot } from "@/components/admin/mobile-boot";
 import {
+  Eye,
   Shield,
   LayoutDashboard,
   Building2,
