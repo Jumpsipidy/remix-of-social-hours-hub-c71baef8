@@ -26,6 +26,10 @@ const FLOOD_WINDOW_MIN = 5;
 const FLOOD_THRESHOLD = 20;
 const FLOOD_MIN_USERS = 3;
 const FLOOD_MIN_FINGERPRINTS = 3;
+// Mass detection: absoliutus stogas — tiek klaidų per tiek minučių = lockdown,
+// nesvarbu kiek vartotojų jas sukėlė.
+const MASS_WINDOW_MIN = 10;
+const MASS_THRESHOLD = 100;
 
 type InlineAiAnalysis = {
   suspected_cause?: string | null;
