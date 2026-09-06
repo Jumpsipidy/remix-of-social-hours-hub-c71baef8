@@ -241,6 +241,14 @@ export const adminAnalytics = createServerFn({ method: "GET" })
       meta: Record<string, unknown> | null;
     }>).filter((row) => !String(row.meta?.path ?? "").startsWith("/admin"));
 
+    // Vienas prisijungęs žmogus = vienas unikalus lankytojas, net jei jis naršo
+    // keliose sesijose ar įrenginiuose. Tik neprisijungusiems naudojame sesiją.
+    const visitorKey = (row: { id: string; user_id: string | null; meta: Record<string, unknown> | null }) =>
+      String(row.user_id ?? row.meta?.session_id ?? row.id);
+    const sessionKey = (row: { id: string; user_id: string | null; meta: Record<string, unknown> | null }) =>
+      String(row.meta?.session_id ?? row.user_id ?? row.id);
+
+
     const fallbackDaily = Array.from({ length: days }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (days - 1 - i));
