@@ -9,105 +9,139 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VersijosRouteImport } from './routes/versijos'
-import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as UpdatePasswordRouteImport } from './routes/update-password'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as StudentRouteImport } from './routes/student'
-import { Route as StatusRouteImport } from './routes/status'
-import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
-import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/socialines-valandos-mokykloms'
-import { Route as SchoolsRouteImport } from './routes/schools'
-import { Route as SchoolRouteImport } from './routes/school'
-import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
-import { Route as SaugumasRouteImport } from './routes/saugumas'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as PrivatumasRouteImport } from './routes/privatumas'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OrganizationRouteImport } from './routes/organization'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AboutOrgsRouteImport } from './routes/about-orgs'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as VerifyIndexRouteImport } from './routes/verify.index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
-import { Route as OrganizationWelcomeRouteImport } from './routes/organization.welcome'
-import { Route as OrgIdRouteImport } from './routes/org.$id'
-import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
-import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
-import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
-import { Route as AdminToolsRouteImport } from './routes/admin.tools'
-import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
-import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
-import { Route as AdminPushRouteImport } from './routes/admin.push'
-import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
-import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
-import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
-import { Route as AdminNotfoundRouteImport } from './routes/admin.notfound'
-import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
-import { Route as AdminManageRouteImport } from './routes/admin.manage'
-import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
-import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
-import { Route as AdminIncidentsRouteImport } from './routes/admin.incidents'
-import { Route as AdminIncidentLookupRouteImport } from './routes/admin.incident-lookup'
-import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
-import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
-import { Route as AdminCheckinRouteImport } from './routes/admin.checkin'
-import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
-import { Route as AdminAutofixRouteImport } from './routes/admin.autofix'
-import { Route as AdminAuditRouteImport } from './routes/admin.audit'
-import { Route as AdminAnticheatRouteImport } from './routes/admin.anticheat'
-import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
-import { Route as AdminActivityRouteImport } from './routes/admin.activity'
-import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutOrgsRouteImport } from './routes/about-orgs'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OrganizationRouteImport } from './routes/organization'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PrivatumasRouteImport } from './routes/privatumas'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SaugumasRouteImport } from './routes/saugumas'
+import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
+import { Route as SchoolRouteImport } from './routes/school'
+import { Route as SchoolsRouteImport } from './routes/schools'
+import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/socialines-valandos-mokykloms'
+import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
+import { Route as StatusRouteImport } from './routes/status'
+import { Route as StudentRouteImport } from './routes/student'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as UpdatePasswordRouteImport } from './routes/update-password'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as VersijosRouteImport } from './routes/versijos'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
+import { Route as AdminActivityRouteImport } from './routes/admin.activity'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAnticheatRouteImport } from './routes/admin.anticheat'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminAutofixRouteImport } from './routes/admin.autofix'
+import { Route as AdminBugsRouteImport } from './routes/admin.bugs'
+import { Route as AdminCheckinRouteImport } from './routes/admin.checkin'
+import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
+import { Route as AdminIncidentLookupRouteImport } from './routes/admin.incident-lookup'
+import { Route as AdminIncidentsRouteImport } from './routes/admin.incidents'
+import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
+import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
+import { Route as AdminManageRouteImport } from './routes/admin.manage'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminNotfoundRouteImport } from './routes/admin.notfound'
+import { Route as AdminOrganizationsRouteImport } from './routes/admin.organizations'
+import { Route as AdminPerformanceRouteImport } from './routes/admin.performance'
+import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
+import { Route as AdminPushRouteImport } from './routes/admin.push'
+import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
+import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
+import { Route as AdminToolsRouteImport } from './routes/admin.tools'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
+import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
+import { Route as OrgIdRouteImport } from './routes/org.$id'
+import { Route as OrganizationWelcomeRouteImport } from './routes/organization.welcome'
+import { Route as VerifyIndexRouteImport } from './routes/verify.index'
+import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
+import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 
-const VersijosRoute = VersijosRouteImport.update({
-  id: '/versijos',
-  path: '/versijos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
-  id: '/update-password',
-  path: '/update-password',
+const AboutOrgsRoute = AboutOrgsRouteImport.update({
+  id: '/about-orgs',
+  path: '/about-orgs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentRoute = StudentRouteImport.update({
-  id: '/student',
-  path: '/student',
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StatusRoute = StatusRouteImport.update({
-  id: '/status',
-  path: '/status',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SocialiniuValanduLapasRoute = SocialiniuValanduLapasRouteImport.update({
-  id: '/socialiniu-valandu-lapas',
-  path: '/socialiniu-valandu-lapas',
+const OrganizationRoute = OrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivatumasRoute = PrivatumasRouteImport.update({
+  id: '/privatumas',
+  path: '/privatumas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaugumasRoute = SaugumasRouteImport.update({
+  id: '/saugumas',
+  path: '/saugumas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavanorysteSeduvojeRoute = SavanorysteSeduvojeRouteImport.update({
+  id: '/savanoryste-seduvoje',
+  path: '/savanoryste-seduvoje',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchoolRoute = SchoolRouteImport.update({
+  id: '/school',
+  path: '/school',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SchoolsRoute = SchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SocialinesValandosMokyklomsRoute =
@@ -116,235 +150,54 @@ const SocialinesValandosMokyklomsRoute =
     path: '/socialines-valandos-mokykloms',
     getParentRoute: () => rootRouteImport,
   } as any)
-const SchoolsRoute = SchoolsRouteImport.update({
-  id: '/schools',
-  path: '/schools',
+const SocialiniuValanduLapasRoute = SocialiniuValanduLapasRouteImport.update({
+  id: '/socialiniu-valandu-lapas',
+  path: '/socialiniu-valandu-lapas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SchoolRoute = SchoolRouteImport.update({
-  id: '/school',
-  path: '/school',
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SavanorysteSeduvojeRoute = SavanorysteSeduvojeRouteImport.update({
-  id: '/savanoryste-seduvoje',
-  path: '/savanoryste-seduvoje',
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SaugumasRoute = SaugumasRouteImport.update({
-  id: '/saugumas',
-  path: '/saugumas',
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrivatumasRoute = PrivatumasRouteImport.update({
-  id: '/privatumas',
-  path: '/privatumas',
+const UpdatePasswordRoute = UpdatePasswordRouteImport.update({
+  id: '/update-password',
+  path: '/update-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OrganizationRoute = OrganizationRouteImport.update({
-  id: '/organization',
-  path: '/organization',
+const VersijosRoute = VersijosRouteImport.update({
+  id: '/versijos',
+  path: '/versijos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutOrgsRoute = AboutOrgsRouteImport.update({
-  id: '/about-orgs',
-  path: '/about-orgs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyIndexRoute = VerifyIndexRouteImport.update({
-  id: '/verify/',
-  path: '/verify/',
-  getParentRoute: () => rootRouteImport,
+const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
+  id: '/checkin',
+  path: '/checkin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const VerifyCodeRoute = VerifyCodeRouteImport.update({
-  id: '/verify/$code',
-  path: '/verify/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrganizationWelcomeRoute = OrganizationWelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
-  getParentRoute: () => OrganizationRoute,
-} as any)
-const OrgIdRoute = OrgIdRouteImport.update({
-  id: '/org/$id',
-  path: '/org/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogKasYraSocialinesValandosRoute =
-  BlogKasYraSocialinesValandosRouteImport.update({
-    id: '/blog/kas-yra-socialines-valandos',
-    path: '/blog/kas-yra-socialines-valandos',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const BlogKaipSurinktiSocialinesValandasRoute =
-  BlogKaipSurinktiSocialinesValandasRouteImport.update({
-    id: '/blog/kaip-surinkti-socialines-valandas',
-    path: '/blog/kaip-surinkti-socialines-valandas',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminToolsRoute = AdminToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSchoolsRoute = AdminSchoolsRouteImport.update({
-  id: '/schools',
-  path: '/schools',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminReservationsRoute = AdminReservationsRouteImport.update({
-  id: '/reservations',
-  path: '/reservations',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPushRoute = AdminPushRouteImport.update({
-  id: '/push',
-  path: '/push',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPreviewRoute = AdminPreviewRouteImport.update({
-  id: '/preview',
-  path: '/preview',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
-  id: '/organizations',
-  path: '/organizations',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNotfoundRoute = AdminNotfoundRouteImport.update({
-  id: '/notfound',
-  path: '/notfound',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMessagesRoute = AdminMessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminManageRoute = AdminManageRouteImport.update({
-  id: '/manage',
-  path: '/manage',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLockdownRoute = AdminLockdownRouteImport.update({
-  id: '/lockdown',
-  path: '/lockdown',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLeaderboardRoute = AdminLeaderboardRouteImport.update({
-  id: '/leaderboard',
-  path: '/leaderboard',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIncidentsRoute = AdminIncidentsRouteImport.update({
-  id: '/incidents',
-  path: '/incidents',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIncidentLookupRoute = AdminIncidentLookupRouteImport.update({
-  id: '/incident-lookup',
-  path: '/incident-lookup',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminErrorsRoute = AdminErrorsRouteImport.update({
-  id: '/errors',
-  path: '/errors',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailsRoute = AdminEmailsRouteImport.update({
-  id: '/emails',
-  path: '/emails',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCheckinRoute = AdminCheckinRouteImport.update({
-  id: '/checkin',
-  path: '/checkin',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBugsRoute = AdminBugsRouteImport.update({
-  id: '/bugs',
-  path: '/bugs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAutofixRoute = AdminAutofixRouteImport.update({
-  id: '/autofix',
-  path: '/autofix',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAuditRoute = AdminAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAnticheatRoute = AdminAnticheatRouteImport.update({
-  id: '/anticheat',
-  path: '/anticheat',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminActivityRoute = AdminActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAccountsRoute = AdminAccountsRouteImport.update({
@@ -352,19 +205,156 @@ const AdminAccountsRoute = AdminAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AdminRoute,
 } as any)
-const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnticheatRoute = AdminAnticheatRouteImport.update({
+  id: '/anticheat',
+  path: '/anticheat',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAutofixRoute = AdminAutofixRouteImport.update({
+  id: '/autofix',
+  path: '/autofix',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBugsRoute = AdminBugsRouteImport.update({
+  id: '/bugs',
+  path: '/bugs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCheckinRoute = AdminCheckinRouteImport.update({
   id: '/checkin',
   path: '/checkin',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => AdminRoute,
 } as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
+const AdminEmailsRoute = AdminEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminErrorsRoute = AdminErrorsRouteImport.update({
+  id: '/errors',
+  path: '/errors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIncidentLookupRoute = AdminIncidentLookupRouteImport.update({
+  id: '/incident-lookup',
+  path: '/incident-lookup',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminIncidentsRoute = AdminIncidentsRouteImport.update({
+  id: '/incidents',
+  path: '/incidents',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeaderboardRoute = AdminLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLockdownRoute = AdminLockdownRouteImport.update({
+  id: '/lockdown',
+  path: '/lockdown',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminManageRoute = AdminManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotfoundRoute = AdminNotfoundRouteImport.update({
+  id: '/notfound',
+  path: '/notfound',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrganizationsRoute = AdminOrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPerformanceRoute = AdminPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPreviewRoute = AdminPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPushRoute = AdminPushRouteImport.update({
+  id: '/push',
+  path: '/push',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReservationsRoute = AdminReservationsRouteImport.update({
+  id: '/reservations',
+  path: '/reservations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSchoolsRoute = AdminSchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminToolsRoute = AdminToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicErrorBeaconRoute = ApiPublicErrorBeaconRouteImport.update({
-  id: '/api/public/error-beacon',
-  path: '/api/public/error-beacon',
+const BlogKaipSurinktiSocialinesValandasRoute =
+  BlogKaipSurinktiSocialinesValandasRouteImport.update({
+    id: '/blog/kaip-surinkti-socialines-valandas',
+    path: '/blog/kaip-surinkti-socialines-valandas',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const BlogKasYraSocialinesValandosRoute =
+  BlogKasYraSocialinesValandosRouteImport.update({
+    id: '/blog/kas-yra-socialines-valandos',
+    path: '/blog/kas-yra-socialines-valandos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OrgIdRoute = OrgIdRouteImport.update({
+  id: '/org/$id',
+  path: '/org/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationWelcomeRoute = OrganizationWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => OrganizationRoute,
+} as any)
+const VerifyIndexRoute = VerifyIndexRouteImport.update({
+  id: '/verify/',
+  path: '/verify/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyCodeRoute = VerifyCodeRouteImport.update({
+  id: '/verify/$code',
+  path: '/verify/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedOrganizationScanRoute =
@@ -373,6 +363,16 @@ const AuthenticatedOrganizationScanRoute =
     path: '/organization/scan',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicErrorBeaconRoute = ApiPublicErrorBeaconRouteImport.update({
+  id: '/api/public/error-beacon',
+  path: '/api/public/error-beacon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -781,158 +781,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/versijos': {
-      id: '/versijos'
-      path: '/versijos'
-      fullPath: '/versijos'
-      preLoaderRoute: typeof VersijosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/update-password': {
-      id: '/update-password'
-      path: '/update-password'
-      fullPath: '/update-password'
-      preLoaderRoute: typeof UpdatePasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/student': {
-      id: '/student'
-      path: '/student'
-      fullPath: '/student'
-      preLoaderRoute: typeof StudentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/status': {
-      id: '/status'
-      path: '/status'
-      fullPath: '/status'
-      preLoaderRoute: typeof StatusRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/socialiniu-valandu-lapas': {
-      id: '/socialiniu-valandu-lapas'
-      path: '/socialiniu-valandu-lapas'
-      fullPath: '/socialiniu-valandu-lapas'
-      preLoaderRoute: typeof SocialiniuValanduLapasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/socialines-valandos-mokykloms': {
-      id: '/socialines-valandos-mokykloms'
-      path: '/socialines-valandos-mokykloms'
-      fullPath: '/socialines-valandos-mokykloms'
-      preLoaderRoute: typeof SocialinesValandosMokyklomsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/schools': {
-      id: '/schools'
-      path: '/schools'
-      fullPath: '/schools'
-      preLoaderRoute: typeof SchoolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/school': {
-      id: '/school'
-      path: '/school'
-      fullPath: '/school'
-      preLoaderRoute: typeof SchoolRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/savanoryste-seduvoje': {
-      id: '/savanoryste-seduvoje'
-      path: '/savanoryste-seduvoje'
-      fullPath: '/savanoryste-seduvoje'
-      preLoaderRoute: typeof SavanorysteSeduvojeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/saugumas': {
-      id: '/saugumas'
-      path: '/saugumas'
-      fullPath: '/saugumas'
-      preLoaderRoute: typeof SaugumasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privatumas': {
-      id: '/privatumas'
-      path: '/privatumas'
-      fullPath: '/privatumas'
-      preLoaderRoute: typeof PrivatumasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organization': {
-      id: '/organization'
-      path: '/organization'
-      fullPath: '/organization'
-      preLoaderRoute: typeof OrganizationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about-orgs': {
-      id: '/about-orgs'
-      path: '/about-orgs'
-      fullPath: '/about-orgs'
-      preLoaderRoute: typeof AboutOrgsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -942,228 +795,172 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/about-orgs': {
+      id: '/about-orgs'
+      path: '/about-orgs'
+      fullPath: '/about-orgs'
+      preLoaderRoute: typeof AboutOrgsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verify/': {
-      id: '/verify/'
-      path: '/verify'
-      fullPath: '/verify/'
-      preLoaderRoute: typeof VerifyIndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organization': {
+      id: '/organization'
+      path: '/organization'
+      fullPath: '/organization'
+      preLoaderRoute: typeof OrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privatumas': {
+      id: '/privatumas'
+      path: '/privatumas'
+      fullPath: '/privatumas'
+      preLoaderRoute: typeof PrivatumasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saugumas': {
+      id: '/saugumas'
+      path: '/saugumas'
+      fullPath: '/saugumas'
+      preLoaderRoute: typeof SaugumasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/savanoryste-seduvoje': {
+      id: '/savanoryste-seduvoje'
+      path: '/savanoryste-seduvoje'
+      fullPath: '/savanoryste-seduvoje'
+      preLoaderRoute: typeof SavanorysteSeduvojeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/school': {
+      id: '/school'
+      path: '/school'
+      fullPath: '/school'
+      preLoaderRoute: typeof SchoolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schools': {
+      id: '/schools'
+      path: '/schools'
+      fullPath: '/schools'
+      preLoaderRoute: typeof SchoolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socialines-valandos-mokykloms': {
+      id: '/socialines-valandos-mokykloms'
+      path: '/socialines-valandos-mokykloms'
+      fullPath: '/socialines-valandos-mokykloms'
+      preLoaderRoute: typeof SocialinesValandosMokyklomsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/socialiniu-valandu-lapas': {
+      id: '/socialiniu-valandu-lapas'
+      path: '/socialiniu-valandu-lapas'
+      fullPath: '/socialiniu-valandu-lapas'
+      preLoaderRoute: typeof SocialiniuValanduLapasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/update-password': {
+      id: '/update-password'
+      path: '/update-password'
+      fullPath: '/update-password'
+      preLoaderRoute: typeof UpdatePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/versijos': {
+      id: '/versijos'
+      path: '/versijos'
+      fullPath: '/versijos'
+      preLoaderRoute: typeof VersijosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/checkin': {
+      id: '/_authenticated/checkin'
+      path: '/checkin'
+      fullPath: '/checkin'
+      preLoaderRoute: typeof AuthenticatedCheckinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/verify/$code': {
-      id: '/verify/$code'
-      path: '/verify/$code'
-      fullPath: '/verify/$code'
-      preLoaderRoute: typeof VerifyCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organization/welcome': {
-      id: '/organization/welcome'
-      path: '/welcome'
-      fullPath: '/organization/welcome'
-      preLoaderRoute: typeof OrganizationWelcomeRouteImport
-      parentRoute: typeof OrganizationRoute
-    }
-    '/org/$id': {
-      id: '/org/$id'
-      path: '/org/$id'
-      fullPath: '/org/$id'
-      preLoaderRoute: typeof OrgIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/kas-yra-socialines-valandos': {
-      id: '/blog/kas-yra-socialines-valandos'
-      path: '/blog/kas-yra-socialines-valandos'
-      fullPath: '/blog/kas-yra-socialines-valandos'
-      preLoaderRoute: typeof BlogKasYraSocialinesValandosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog/kaip-surinkti-socialines-valandas': {
-      id: '/blog/kaip-surinkti-socialines-valandas'
-      path: '/blog/kaip-surinkti-socialines-valandas'
-      fullPath: '/blog/kaip-surinkti-socialines-valandas'
-      preLoaderRoute: typeof BlogKaipSurinktiSocialinesValandasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/tools': {
-      id: '/admin/tools'
-      path: '/tools'
-      fullPath: '/admin/tools'
-      preLoaderRoute: typeof AdminToolsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/schools': {
-      id: '/admin/schools'
-      path: '/schools'
-      fullPath: '/admin/schools'
-      preLoaderRoute: typeof AdminSchoolsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/reservations': {
-      id: '/admin/reservations'
-      path: '/reservations'
-      fullPath: '/admin/reservations'
-      preLoaderRoute: typeof AdminReservationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/push': {
-      id: '/admin/push'
-      path: '/push'
-      fullPath: '/admin/push'
-      preLoaderRoute: typeof AdminPushRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/preview': {
-      id: '/admin/preview'
-      path: '/preview'
-      fullPath: '/admin/preview'
-      preLoaderRoute: typeof AdminPreviewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/performance': {
-      id: '/admin/performance'
-      path: '/performance'
-      fullPath: '/admin/performance'
-      preLoaderRoute: typeof AdminPerformanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/organizations': {
-      id: '/admin/organizations'
-      path: '/organizations'
-      fullPath: '/admin/organizations'
-      preLoaderRoute: typeof AdminOrganizationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/notfound': {
-      id: '/admin/notfound'
-      path: '/notfound'
-      fullPath: '/admin/notfound'
-      preLoaderRoute: typeof AdminNotfoundRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/messages': {
-      id: '/admin/messages'
-      path: '/messages'
-      fullPath: '/admin/messages'
-      preLoaderRoute: typeof AdminMessagesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/manage': {
-      id: '/admin/manage'
-      path: '/manage'
-      fullPath: '/admin/manage'
-      preLoaderRoute: typeof AdminManageRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/lockdown': {
-      id: '/admin/lockdown'
-      path: '/lockdown'
-      fullPath: '/admin/lockdown'
-      preLoaderRoute: typeof AdminLockdownRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/leaderboard': {
-      id: '/admin/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/admin/leaderboard'
-      preLoaderRoute: typeof AdminLeaderboardRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/incidents': {
-      id: '/admin/incidents'
-      path: '/incidents'
-      fullPath: '/admin/incidents'
-      preLoaderRoute: typeof AdminIncidentsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/incident-lookup': {
-      id: '/admin/incident-lookup'
-      path: '/incident-lookup'
-      fullPath: '/admin/incident-lookup'
-      preLoaderRoute: typeof AdminIncidentLookupRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/errors': {
-      id: '/admin/errors'
-      path: '/errors'
-      fullPath: '/admin/errors'
-      preLoaderRoute: typeof AdminErrorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/emails': {
-      id: '/admin/emails'
-      path: '/emails'
-      fullPath: '/admin/emails'
-      preLoaderRoute: typeof AdminEmailsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/checkin': {
-      id: '/admin/checkin'
-      path: '/checkin'
-      fullPath: '/admin/checkin'
-      preLoaderRoute: typeof AdminCheckinRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/bugs': {
-      id: '/admin/bugs'
-      path: '/bugs'
-      fullPath: '/admin/bugs'
-      preLoaderRoute: typeof AdminBugsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/autofix': {
-      id: '/admin/autofix'
-      path: '/autofix'
-      fullPath: '/admin/autofix'
-      preLoaderRoute: typeof AdminAutofixRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/audit': {
-      id: '/admin/audit'
-      path: '/audit'
-      fullPath: '/admin/audit'
-      preLoaderRoute: typeof AdminAuditRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/anticheat': {
-      id: '/admin/anticheat'
-      path: '/anticheat'
-      fullPath: '/admin/anticheat'
-      preLoaderRoute: typeof AdminAnticheatRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/analytics': {
-      id: '/admin/analytics'
-      path: '/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AdminAnalyticsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/activity': {
-      id: '/admin/activity'
-      path: '/activity'
-      fullPath: '/admin/activity'
-      preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/accounts': {
@@ -1173,25 +970,214 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccountsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/_authenticated/checkin': {
-      id: '/_authenticated/checkin'
-      path: '/checkin'
-      fullPath: '/checkin'
-      preLoaderRoute: typeof AuthenticatedCheckinRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/anticheat': {
+      id: '/admin/anticheat'
+      path: '/anticheat'
+      fullPath: '/admin/anticheat'
+      preLoaderRoute: typeof AdminAnticheatRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/autofix': {
+      id: '/admin/autofix'
+      path: '/autofix'
+      fullPath: '/admin/autofix'
+      preLoaderRoute: typeof AdminAutofixRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bugs': {
+      id: '/admin/bugs'
+      path: '/bugs'
+      fullPath: '/admin/bugs'
+      preLoaderRoute: typeof AdminBugsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/checkin': {
+      id: '/admin/checkin'
+      path: '/checkin'
+      fullPath: '/admin/checkin'
+      preLoaderRoute: typeof AdminCheckinRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/emails': {
+      id: '/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/errors': {
+      id: '/admin/errors'
+      path: '/errors'
+      fullPath: '/admin/errors'
+      preLoaderRoute: typeof AdminErrorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/incident-lookup': {
+      id: '/admin/incident-lookup'
+      path: '/incident-lookup'
+      fullPath: '/admin/incident-lookup'
+      preLoaderRoute: typeof AdminIncidentLookupRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/incidents': {
+      id: '/admin/incidents'
+      path: '/incidents'
+      fullPath: '/admin/incidents'
+      preLoaderRoute: typeof AdminIncidentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leaderboard': {
+      id: '/admin/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/admin/leaderboard'
+      preLoaderRoute: typeof AdminLeaderboardRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/lockdown': {
+      id: '/admin/lockdown'
+      path: '/lockdown'
+      fullPath: '/admin/lockdown'
+      preLoaderRoute: typeof AdminLockdownRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/manage': {
+      id: '/admin/manage'
+      path: '/manage'
+      fullPath: '/admin/manage'
+      preLoaderRoute: typeof AdminManageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notfound': {
+      id: '/admin/notfound'
+      path: '/notfound'
+      fullPath: '/admin/notfound'
+      preLoaderRoute: typeof AdminNotfoundRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/organizations': {
+      id: '/admin/organizations'
+      path: '/organizations'
+      fullPath: '/admin/organizations'
+      preLoaderRoute: typeof AdminOrganizationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/performance': {
+      id: '/admin/performance'
+      path: '/performance'
+      fullPath: '/admin/performance'
+      preLoaderRoute: typeof AdminPerformanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/preview': {
+      id: '/admin/preview'
+      path: '/preview'
+      fullPath: '/admin/preview'
+      preLoaderRoute: typeof AdminPreviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/push': {
+      id: '/admin/push'
+      path: '/push'
+      fullPath: '/admin/push'
+      preLoaderRoute: typeof AdminPushRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reservations': {
+      id: '/admin/reservations'
+      path: '/reservations'
+      fullPath: '/admin/reservations'
+      preLoaderRoute: typeof AdminReservationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/schools': {
+      id: '/admin/schools'
+      path: '/schools'
+      fullPath: '/admin/schools'
+      preLoaderRoute: typeof AdminSchoolsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tools': {
+      id: '/admin/tools'
+      path: '/tools'
+      fullPath: '/admin/tools'
+      preLoaderRoute: typeof AdminToolsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/error-beacon': {
-      id: '/api/public/error-beacon'
-      path: '/api/public/error-beacon'
-      fullPath: '/api/public/error-beacon'
-      preLoaderRoute: typeof ApiPublicErrorBeaconRouteImport
+    '/blog/kaip-surinkti-socialines-valandas': {
+      id: '/blog/kaip-surinkti-socialines-valandas'
+      path: '/blog/kaip-surinkti-socialines-valandas'
+      fullPath: '/blog/kaip-surinkti-socialines-valandas'
+      preLoaderRoute: typeof BlogKaipSurinktiSocialinesValandasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/kas-yra-socialines-valandos': {
+      id: '/blog/kas-yra-socialines-valandos'
+      path: '/blog/kas-yra-socialines-valandos'
+      fullPath: '/blog/kas-yra-socialines-valandos'
+      preLoaderRoute: typeof BlogKasYraSocialinesValandosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/$id': {
+      id: '/org/$id'
+      path: '/org/$id'
+      fullPath: '/org/$id'
+      preLoaderRoute: typeof OrgIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organization/welcome': {
+      id: '/organization/welcome'
+      path: '/welcome'
+      fullPath: '/organization/welcome'
+      preLoaderRoute: typeof OrganizationWelcomeRouteImport
+      parentRoute: typeof OrganizationRoute
+    }
+    '/verify/': {
+      id: '/verify/'
+      path: '/verify'
+      fullPath: '/verify/'
+      preLoaderRoute: typeof VerifyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify/$code': {
+      id: '/verify/$code'
+      path: '/verify/$code'
+      fullPath: '/verify/$code'
+      preLoaderRoute: typeof VerifyCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/organization/scan': {
@@ -1200,6 +1186,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/organization/scan'
       preLoaderRoute: typeof AuthenticatedOrganizationScanRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/error-beacon': {
+      id: '/api/public/error-beacon'
+      path: '/api/public/error-beacon'
+      fullPath: '/api/public/error-beacon'
+      preLoaderRoute: typeof ApiPublicErrorBeaconRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
