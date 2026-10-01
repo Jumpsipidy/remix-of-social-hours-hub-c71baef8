@@ -30,7 +30,7 @@ const VERSIONS: Version[] = [
       { tag: "Patobulinta", text: "Po atkūrimo laiško išsiuntimo iškart rodoma vieta kodui įvesti." },
       { tag: "Patobulinta", text: "Prisijungimas ir registracija be 3D efektų — aiškesni ir greitesni, su nuorodomis į taisykles lietuviškai." },
       { tag: "Patobulinta", text: "Užduočių puslapis kraunasi greičiau ir rodo užkrovimo kortelių šabloną." },
-      { tag: "Pašalinta", text: "Valora įžanginis ekranas ir jo puslapis." },
+      { tag: "Patobulinta", text: "Pašalintas Valora įžanginis ekranas ir jo puslapis." },
       { tag: "Pataisyta", text: "Užblokuotas Google Analytics skriptas nebekelia klaidų pranešimų." },
     ],
   },
