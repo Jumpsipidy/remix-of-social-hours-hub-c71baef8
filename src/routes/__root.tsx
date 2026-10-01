@@ -262,6 +262,13 @@ function RootComponent() {
     document.documentElement.classList.add("dark");
     document.documentElement.classList.remove("light");
     try { localStorage.removeItem("theme"); } catch {}
+    // Slaptažodžio atkūrimo laiškas kartais grąžina į pagrindinį puslapį su
+    // #access_token…&type=recovery. Nukreipiam į tikrą atkūrimo puslapį.
+    const { hash, search, pathname } = window.location;
+    const isRecovery = /type=recovery/.test(hash) || /type=recovery/.test(search);
+    if (isRecovery && pathname !== "/update-password") {
+      window.location.replace(`/update-password${search}${hash}`);
+    }
   }, []);
   
   return (

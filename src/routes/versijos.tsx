@@ -19,6 +19,22 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
+    v: "V2.4.0",
+    title: "Saugesnis slaptažodžio atkūrimas ir švaresnis prisijungimas",
+    date: "2026 m. spalis",
+    summary:
+      "Sutvarkytas slaptažodžio atkūrimas, supaprastinti prisijungimo ir registracijos puslapiai, greitesnis užduočių puslapis.",
+    items: [
+      { tag: "Pataisyta", text: "Slaptažodį pakeisti galima tik per tikrą atkūrimo nuorodą arba kodą iš laiško — nebegalima apeiti." },
+      { tag: "Pataisyta", text: "Atkūrimo nuoroda nebenumeta į tuščią pagrindinį puslapį, o atidaro naujo slaptažodžio formą." },
+      { tag: "Patobulinta", text: "Po atkūrimo laiško išsiuntimo iškart rodoma vieta kodui įvesti." },
+      { tag: "Patobulinta", text: "Prisijungimas ir registracija be 3D efektų — aiškesni ir greitesni, su nuorodomis į taisykles lietuviškai." },
+      { tag: "Patobulinta", text: "Užduočių puslapis kraunasi greičiau ir rodo užkrovimo kortelių šabloną." },
+      { tag: "Pašalinta", text: "Valora įžanginis ekranas ir jo puslapis." },
+      { tag: "Pataisyta", text: "Užblokuotas Google Analytics skriptas nebekelia klaidų pranešimų." },
+    ],
+  },
+  {
     v: "V2.3.0",
     title: "Prisijungimo ir mokyklos skydelio stabilumas",
     date: "2026 m. rugsėjis",
