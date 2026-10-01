@@ -1,3 +1,4 @@
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -16,7 +17,6 @@ import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
-import { ValoraBoot } from "@/components/valora-boot";
 import { SecurityGatewayInternal } from "@/components/security-gateway";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
@@ -54,7 +54,7 @@ function NotFoundComponent() {
   return <NotFoundScreen path={typeof window !== "undefined" ? window.location.pathname : undefined} />;
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   return (
@@ -263,13 +263,19 @@ function RootComponent() {
     document.documentElement.classList.add("dark");
     document.documentElement.classList.remove("light");
     try { localStorage.removeItem("theme"); } catch {}
+    // Slaptažodžio atkūrimo laiškas kartais grąžina į pagrindinį puslapį su
+    // #access_token…&type=recovery. Nukreipiam į tikrą atkūrimo puslapį.
+    const { hash, search, pathname } = window.location;
+    const isRecovery = /type=recovery/.test(hash) || /type=recovery/.test(search);
+    if (isRecovery && pathname !== "/update-password") {
+      window.location.replace(`/update-password${search}${hash}`);
+    }
   }, []);
   
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SecurityGatewayProvider>
-          <ValoraBoot />
           <SecurityGatewayInternal />
           {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
               atsiranda naujas ir matosi juodas blyksnis. */}

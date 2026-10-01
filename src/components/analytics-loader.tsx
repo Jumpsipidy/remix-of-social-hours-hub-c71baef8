@@ -29,6 +29,8 @@ function loadGoogleAnalytics() {
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
   script.dataset.svAnalytics = "google";
+  // Reklamų blokatoriai dažnai blokuoja GTM — tai ne klaida, tyliai ignoruojam.
+  script.onerror = () => { script.remove(); };
   document.head.appendChild(script);
 }
 

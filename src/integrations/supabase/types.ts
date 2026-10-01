@@ -110,6 +110,83 @@ export type Database = {
         }
         Relationships: []
       }
+      api_key_usage: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          id: number
+          ip: string | null
+          path: string
+          status: number
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          id?: number
+          ip?: string | null
+          path: string
+          status: number
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          id?: number
+          ip?: string | null
+          path?: string
+          status?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_usage_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          note: string | null
+          request_count: number
+          revoked_at: string | null
+          scopes: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          note?: string | null
+          request_count?: number
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          note?: string | null
+          request_count?: number
+          revoked_at?: string | null
+          scopes?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       auth_security_events: {
         Row: {
           created_at: string

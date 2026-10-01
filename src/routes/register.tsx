@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2, Clock, Send, Sparkles, Rocket, Award, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
@@ -56,19 +56,6 @@ function RegisterPage() {
   const [description, setDescription] = useState("");
   const [confirmReal, setConfirmReal] = useState(false);
 
-  // Tilt effect for card
-  const cardRef = useRef<HTMLDivElement>(null);
-  const mx = useMotionValue(0);
-  const my = useMotionValue(0);
-  const rx = useSpring(useTransform(my, [-1, 1], [4, -4]), { stiffness: 120, damping: 14 });
-  const ry = useSpring(useTransform(mx, [-1, 1], [-4, 4]), { stiffness: 120, damping: 14 });
-  function handleMove(e: React.MouseEvent) {
-    const r = cardRef.current?.getBoundingClientRect();
-    if (!r) return;
-    mx.set(((e.clientX - r.left) / r.width) * 2 - 1);
-    my.set(((e.clientY - r.top) / r.height) * 2 - 1);
-  }
-  function handleLeave() { mx.set(0); my.set(0); }
 
   useEffect(() => {
     supabase.from("schools").select("id, name, city").eq("is_active", true).order("name")
@@ -170,35 +157,7 @@ function RegisterPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      {/* Aurora background — emerald/teal tint (unique vibe vs. login) */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(160_80%_45%/0.22),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(var(--primary)/0.22),transparent_50%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--card)))] opacity-90" />
-        <motion.div
-          className="absolute -left-32 bottom-10 h-[520px] w-[520px] rounded-full bg-emerald-500/25 blur-[140px]"
-          animate={{ x: [0, 60, -20, 0], y: [0, -40, 30, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -right-40 top-10 h-[460px] w-[460px] rounded-full bg-primary/25 blur-[140px]"
-          animate={{ x: [0, -50, 30, 0], y: [0, 30, -20, 0] }}
-          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/3 h-[420px] w-[420px] rounded-full bg-cyan-500/15 blur-[140px]"
-          animate={{ x: [0, 30, -40, 0], y: [0, -20, 20, 0] }}
-          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(hsl(var(--foreground))_1px,transparent_1px),linear-gradient(90deg,hsl(var(--foreground))_1px,transparent_1px)] [background-size:44px_44px]" />
-        {Array.from({ length: 14 }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="absolute h-1 w-1 rounded-full bg-emerald-400/70 shadow-[0_0_10px_hsl(160_80%_50%)]"
-            style={{ left: `${(i * 53) % 100}%`, top: `${(i * 37) % 100}%` }}
-            animate={{ y: [0, -18, 0], opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: 4 + (i % 5), repeat: Infinity, delay: i * 0.3 }}
-          />
-        ))}
-      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_60%)]" aria-hidden />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
         {/* Left — journey narrative */}
@@ -265,17 +224,12 @@ function RegisterPage() {
           </Link>
 
           <motion.div
-            ref={cardRef}
-            onMouseMove={handleMove}
-            onMouseLeave={handleLeave}
-            style={{ rotateX: rx, rotateY: ry, transformPerspective: 1200 }}
-            initial={{ opacity: 0, y: 20, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="group relative rounded-[2rem] p-[1.5px]"
           >
-            <div className="absolute inset-0 rounded-[2rem] bg-[conic-gradient(from_0deg,#2DD4BF,hsl(var(--primary)),#FF4D2D/0.3,#2DD4BF)] opacity-80 blur-[1px] [animation:spin_10s_linear_infinite]" aria-hidden />
-            <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur-2xl">
+            <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
@@ -436,6 +390,11 @@ function RegisterPage() {
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 Jau turi paskyrą?{" "}
                 <Link to="/login" className="font-semibold text-emerald-300 hover:underline">Prisijunk</Link>
+              </p>
+              <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+                Tęsdamas sutinki su{" "}
+                <Link to="/terms" className="font-semibold underline underline-offset-2 hover:text-foreground">Naudojimosi taisyklėmis</Link>{" "}ir{" "}
+                <Link to="/privacy" className="font-semibold underline underline-offset-2 hover:text-foreground">Privatumo politika</Link>.
               </p>
             </div>
           </motion.div>

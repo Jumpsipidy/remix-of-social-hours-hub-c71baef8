@@ -9,6 +9,7 @@ export const Route = createFileRoute("/update-password")({
     meta: [
       { title: "Naujas slaptažodis — Socialinės Valandos" },
       { name: "description", content: "Saugiai pasikeisk Socialinių Valandų paskyros slaptažodį." },
+      { name: "robots", content: "noindex" },
     ],
   }),
   component: UpdatePasswordPage,
@@ -27,17 +28,39 @@ function UpdatePasswordPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // Saugumas: forma atsidaro TIK jei atėjo tikra atkūrimo nuoroda (code / token_hash /
+    // #type=recovery) arba patvirtintas kodas. Vien prisijungusi sesija nebeužtenka.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" && !cancelled) {
+        setReady(true);
+        setStatus("Nuoroda patvirtinta. Įvesk naują slaptažodį.");
+      }
+    });
     async function prepareRecoverySession() {
       try {
         const url = new URL(window.location.href);
+        const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
         const code = url.searchParams.get("code");
-        if (code) {
+        const tokenHash = url.searchParams.get("token_hash");
+        const hashErr = hash.get("error_description") || url.searchParams.get("error_description");
+        if (hashErr) throw new Error("Nuoroda nebegalioja. Įvesk kodą iš laiško arba paprašyk naujos.");
+        if (tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
+          if (error) throw error;
+        } else if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
+        } else if (hash.get("type") === "recovery" && hash.get("access_token") && hash.get("refresh_token")) {
+          const { error } = await supabase.auth.setSession({
+            access_token: hash.get("access_token")!,
+            refresh_token: hash.get("refresh_token")!,
+          });
+          if (error) throw error;
+        } else {
+          if (!cancelled) setStatus("Įvesk kodą iš laiško arba atidaryk nuorodą laiške.");
+          return;
         }
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (!data.session) throw new Error("Atkūrimo nuoroda pasibaigė arba neteisinga.");
+        window.history.replaceState(null, "", "/update-password");
         if (!cancelled) {
           setReady(true);
           setStatus("Nuoroda patvirtinta. Įvesk naują slaptažodį.");
@@ -51,7 +74,7 @@ function UpdatePasswordPage() {
     }
     void prepareRecoverySession();
     setEmail(sessionStorage.getItem("sv_reset_email") ?? "");
-    return () => { cancelled = true; };
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
   async function verifyCode(e: React.FormEvent) {
@@ -91,7 +114,9 @@ function UpdatePasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast.success("Slaptažodis pakeistas. Gali prisijungti.");
+      await supabase.auth.signOut();
+      sessionStorage.removeItem("sv_reset_email");
+      toast.success("Slaptažodis pakeistas. Prisijunk su nauju slaptažodžiu.");
       navigate({ to: "/login" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko pakeisti slaptažodžio");

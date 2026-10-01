@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Heart, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function ForgotPasswordPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -29,7 +30,8 @@ function ForgotPasswordPage() {
       });
       if (error) throw error;
       sessionStorage.setItem("sv_reset_email", email.trim());
-      toast.success("Jei paskyra egzistuoja, atkūrimo nuoroda išsiųsta į el. paštą.");
+      toast.success("Jei paskyra egzistuoja, laiškas išsiųstas. Įvesk kodą arba spausk nuorodą laiške.");
+      navigate({ to: "/update-password" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko išsiųsti atkūrimo nuorodos");
     } finally {

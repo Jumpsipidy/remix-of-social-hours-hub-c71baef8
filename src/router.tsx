@@ -1,9 +1,10 @@
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter, ErrorComponent } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import { FriendlyErrorScreen } from "@/components/friendly-error";
 
-function DefaultError({ error, reset }: { error: Error; reset: () => void }) {
+function DefaultError({ error, reset }: ErrorComponentProps) {
   return <FriendlyErrorScreen error={error} onRetry={reset} source="router.default" />;
 }
 
