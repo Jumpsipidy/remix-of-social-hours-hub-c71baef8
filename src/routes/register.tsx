@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2, Clock, Send, Sparkles, Rocket, Award, ArrowRight, Loader2 } from "lucide-react";
