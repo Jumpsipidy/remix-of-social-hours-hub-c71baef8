@@ -2,7 +2,6 @@ User-agent: *
 Allow: /
 Allow: /tasks
 Allow: /about-orgs
-Allow: /valora
 Allow: /socialiniu-valandu-lapas
 Allow: /socialines-valandos-mokykloms
 Allow: /savanoryste-seduvoje

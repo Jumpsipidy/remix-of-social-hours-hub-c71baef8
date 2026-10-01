@@ -8,7 +8,7 @@ import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { TiltCard } from "@/components/tilt-card";
-import { TasksBackgroundFX } from "@/components/tasks-background";
+import { TasksSkeleton } from "@/components/skeleton-loader";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
@@ -83,6 +83,7 @@ function TasksPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"tasks" | "orgs" | "map">("tasks");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
   const [orgs, setOrgs] = useState<Record<string, OrgProfile>>({});
   const [allOrgs, setAllOrgs] = useState<OrgProfile[]>([]);
   const [q, setQ] = useState("");
@@ -95,12 +96,14 @@ function TasksPage() {
 
   useEffect(() => {
     (async () => {
+     try {
       const [{ data: tData }, { data: oData }] = await Promise.all([
         supabase.from("tasks").select(TASK_COLUMNS).eq("is_open", true).gte("task_date", new Date().toISOString().slice(0, 10)).order("task_date", { ascending: true }),
         supabase.from("profiles").select("id, full_name, organization_name, email").eq("role", "organization"),
       ]);
       const list = (tData as Task[]) ?? [];
       setTasks(list);
+      setLoadingTasks(false);
       let orgList = (oData as OrgProfile[]) ?? [];
       // RLS can hide organization profiles, which showed a generic „Organizacija"
       // label instead of the real name. Fall back to the public directory.
@@ -117,6 +120,7 @@ function TasksPage() {
       const map: Record<string, OrgProfile> = {};
       orgList.forEach((p) => (map[p.id] = p));
       setOrgs(map);
+     } finally { setLoadingTasks(false); }
     })();
   }, []);
 
@@ -218,14 +222,13 @@ function TasksPage() {
   return (
     <PageShell>
       <div className="relative">
-        <TasksBackgroundFX />
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
           <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <span className="text-xs font-semibold uppercase tracking-wider text-primary">Atraskite galimybes</span>
           <h1 className="mt-2 font-display text-4xl font-bold tracking-tight sm:text-5xl">Užduotys ir organizacijos</h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
-            {tasks.length} atvirų užduočių iš {allOrgs.length} organizacijų. Filtruok pagal miestą, kategoriją arba raktinius žodžius.
+            {loadingTasks ? "Kraunamos užduotys…" : `${tasks.length} atvirų užduočių iš ${allOrgs.length} organizacijų.`} Filtruok pagal miestą, kategoriją arba raktinius žodžius.
           </p>
 
           <div className="mt-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -335,6 +338,8 @@ function TasksPage() {
             onSelectTask={handleReserve}
             onSelectOrg={(org) => navigate({ to: `/org/${org.id}` })}
           />
+        ) : tab === "tasks" && loadingTasks ? (
+          <TasksSkeleton count={6} />
         ) : tab === "tasks" ? (
           <>
             {filteredTasks.length === 0 && (
