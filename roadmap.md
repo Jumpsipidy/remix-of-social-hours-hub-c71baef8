@@ -16,3 +16,15 @@
 - [x] Reservations/check-in 500s (recursive RLS policy removed)
 - [x] Analytics counts one signed-in user once
 - [x] Auto-lockdown at 100 errors / 10 min regardless of user count
+- [ ] Integrate official Sentry TanStack Start SDK without hardcoding SENTRY_AUTH_TOKEN
+- [ ] Rebuild login/register and add GitHub OAuth with reliable success redirect
+- [ ] Add logout transition and remove remaining 3D effects from auth/tasks
+- [ ] Upgrade loading skeletons across async surfaces
+- [ ] Rework task details, organization profile links, and reservation messaging
+- [ ] Build persistent role-aware /chat and fix chat RLS/runtime errors
+- [ ] Repair student map, friends search/add, and organization group flows
+- [ ] Rework role-aware one-time onboarding tour
+- [ ] Prepare main-site auth ticket creation/consumption for auth.socialinesvalandos.dev
+- [ ] Audit achievement/reservation emails and document support/sender addresses
+- [ ] Improve route SEO and smooth scrolling
+- [ ] Run broad public and authenticated E2E coverage where available
