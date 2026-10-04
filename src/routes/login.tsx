@@ -56,7 +56,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [successRole, setSuccessRole] = useState<string | null>(null);
-  const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | null>(null);
+  const [oauthBusy, setOauthBusy] = useState<"google" | "discord" | "github" | null>(null);
   const [fails, setFails] = useState<number>(0);
   useEffect(() => {
     try {
@@ -142,7 +142,7 @@ function LoginPage() {
     }
   }
 
-  async function handleOAuth(provider: "google" | "discord") {
+  async function handleOAuth(provider: "google" | "discord" | "github") {
     if (oauthBusy) return;
     setOauthBusy(provider);
     clearImpersonation();
@@ -157,7 +157,8 @@ function LoginPage() {
     });
     if (error) {
       setOauthBusy(null);
-      toast.error(`Nepavyko prisijungti per ${provider === "google" ? "Google" : "Discord"}`);
+      const label = provider === "google" ? "Google" : provider === "discord" ? "Discord" : "GitHub";
+      toast.error(`Nepavyko prisijungti per ${label}`);
     }
   }
 

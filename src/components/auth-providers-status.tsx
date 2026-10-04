@@ -7,6 +7,7 @@ type ProviderStatus = { name: string; key: string; enabled: boolean | null };
 const PROVIDERS: Array<{ name: string; key: string }> = [
   { name: "Google", key: "google" },
   { name: "Discord", key: "discord" },
+  { name: "GitHub", key: "github" },
   { name: "El. paštas", key: "email" },
 ];
 

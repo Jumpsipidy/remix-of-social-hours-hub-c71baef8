@@ -68,16 +68,19 @@ function AuthCallbackPage() {
         if (!data.session?.user) throw new Error("Sesija nebuvo sukurta. Bandyk prisijungti dar kartą.");
 
         let role = "student";
+        let studentSetupComplete = false;
         try {
           const ensured = await ensureProfile();
           role = ensured.profile?.role ?? "student";
+          studentSetupComplete = !!ensured.profile?.school_id && !!ensured.profile?.class_year;
         } catch {
           const { data: prof } = await supabase
             .from("profiles")
-            .select("role")
+            .select("role, school_id, class_year")
             .eq("id", data.session.user.id)
             .maybeSingle();
           role = (prof as { role?: string } | null)?.role ?? "student";
+          studentSetupComplete = !!(prof as { school_id?: string | null } | null)?.school_id && !!(prof as { class_year?: string | null } | null)?.class_year;
         }
 
         void insertActivityLogRow({
@@ -101,7 +104,10 @@ function AuthCallbackPage() {
         // Visas ekranas trunka bent 1,6 s ir daugiausiai ~2,2 s.
         const elapsed = Date.now() - startedAt;
         await new Promise((r) => setTimeout(r, Math.max(650, 1600 - elapsed)));
-        if (!cancelled) navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
+        if (!cancelled) {
+          if (role === "student" && !studentSetupComplete) navigate({ to: "/complete-profile", replace: true });
+          else navigate({ to: DASH_BY_ROLE[role] ?? "/student", replace: true });
+        }
       } catch (err) {
         const text = err instanceof Error ? err.message : "Nepavyko užbaigti prisijungimo";
         toast.error(text);
