@@ -154,6 +154,11 @@ function RegisterPage() {
     const { error } = await supabase.auth.signInWithOAuth({ provider: "discord", options: { redirectTo } });
     if (error) toast.error("Nepavyko prisijungti per Discord");
   }
+  async function handleGithub() {
+    const redirectTo = `${window.location.origin}/auth/callback`;
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo } });
+    if (error) toast.error("Nepavyko prisijungti per GitHub");
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -300,7 +305,7 @@ function RegisterPage() {
               ) : (
                 <>
                   {/* OAuth first — parity with login */}
-                  <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                  <div className="mt-6 grid gap-2 sm:grid-cols-3">
                     <button onClick={handleGoogle} type="button"
                       className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
                       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
@@ -310,6 +315,10 @@ function RegisterPage() {
                       className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
                       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
                       <DiscordIcon /> Discord
+                    </button>
+                    <button onClick={handleGithub} type="button"
+                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:border-emerald-400/50">
+                      <GithubIcon /> GitHub
                     </button>
                   </div>
 
@@ -440,4 +449,8 @@ function GoogleIcon() {
       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12S6.8 21.5 12 21.5c6.9 0 9.5-4.8 9.5-9.3 0-.6-.1-1.1-.2-1.6H12z" />
     </svg>
   );
+}
+
+function GithubIcon() {
+  return <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden fill="currentColor"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>;
 }
