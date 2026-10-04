@@ -1,5 +1,8 @@
+import "./instrument.server";
 import "./lib/error-capture";
 
+import * as Sentry from "@sentry/tanstackstart-react";
+import { wrapFetchWithSentry } from "@sentry/tanstackstart-react";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -37,13 +40,14 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
-export default {
+const serverEntry: ServerEntry = {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
+      Sentry.captureException(error, { tags: { boundary: "server.entry" } });
       console.error(error);
       return new Response(renderErrorPage(), {
         status: 500,
@@ -52,3 +56,5 @@ export default {
     }
   },
 };
+
+export default wrapFetchWithSentry(serverEntry);

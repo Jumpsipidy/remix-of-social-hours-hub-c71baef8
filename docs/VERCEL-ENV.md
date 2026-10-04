@@ -30,6 +30,7 @@ neveiks arba lūš dalis funkcijų.
 | `DISCORD_WEBHOOK_URL` | pasirinktinai | kritinių klaidų pranešimai |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_JWK`, `VAPID_SUBJECT` | pasirinktinai | push pranešimai |
 | `SESSION_SECRET` | pasirinktinai | vidinė sesijų pasirašymo paslaptis |
+| `SENTRY_AUTH_TOKEN` | **BŪTINA Sentry source maps** | tik Vercel build metu įkelia source map failus; pridėti Vercel → Project Settings → Environment Variables ir pažymėti Production + Preview |
 
 ## 3. Patikra po deploy
 

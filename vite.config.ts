@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
 import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -70,5 +71,11 @@ export default defineConfig({
     nitro(),
     viteReact(),
     mirrorOutputToDist(),
+    sentryTanstackStart({
+      org: "socialinesvalandosdev",
+      project: "javascript-tanstackstart-react",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: { filesToDeleteAfterUpload: [".output/**/*.map", "dist/**/*.map"] },
+    }),
   ],
 });
