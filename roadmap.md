@@ -40,8 +40,11 @@
 - [x] P1 Sentry test button (Admin → Įrankiai)
 - [x] P1 Only Super Admin creates school admins (database-enforced)
 - [x] P1 School admin manager: school, multi/all classes, auto year renewal
-- [ ] P1 Certificate/QR security audit
-- [ ] P2 Cities + /tasks filters + Mapbox + task popup (needs VITE_MAPBOX_PUBLIC_TOKEN)
-- [ ] P3 Reservation popups, /chat, bulk accept, notifications
-- [ ] P4 Friends invites + "Eikime kartu"
-- [ ] P5 Animations, skeletons, school-admin overhaul, E2E
+- [x] P1 Certificate/QR: verify re-checks HMAC signature (supports CERT_SIGNING_SECRET_OLD)
+- [x] P2 Cities, city/org filters, whole-Lithuania map (Mapbox via VITE_MAPBOX_PUBLIC_TOKEN, OSM fallback), task popup
+- [x] P3 /chat page, reservation→chat messages, bulk accept/decline, new-message emails
+- [x] P4 Friend invite link (/friends/add/:id); group reservations already existed
+- [x] P5 Auth switch + forgot-password animations, shimmer skeletons, school chat link, tests
+- [x] Bot gate: black 'Patikrinimas, ar jūs ne robotas' with own hold check → reCAPTCHA fallback
+- [ ] Signed-in end-to-end checks (blocked: no test session available for this Supabase project)
+- [ ] Deeper school-admin dashboard redesign (open)
