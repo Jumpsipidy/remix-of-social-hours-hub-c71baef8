@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Wrench, RefreshCw, Home, Copy, Check, ShieldAlert, ArrowRight, LifeBuoy } from "lucide-react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { looksLikeStaleAsset, reloadOnce } from "@/lib/stale-deploy-guard";
 import { fingerprint as computeFingerprint } from "@/lib/error-fingerprint";
 
 type Props = {
@@ -14,6 +15,11 @@ export function FriendlyErrorScreen({ error, onRetry, source = "route.boundary" 
   const err = error instanceof Error ? error : new Error(String(error ?? "Nežinoma klaida"));
   const fp = useMemo(() => computeFingerprint(err.message, err.stack ?? null), [err.message, err.stack]);
   const [copied, setCopied] = useState(false);
+  // Sena puslapio versija po atnaujinimo → tyliai perkrauname vieną kartą.
+  useEffect(() => {
+    const msg = error instanceof Error ? error.message : String(error ?? "");
+    if (looksLikeStaleAsset(msg)) reloadOnce();
+  }, [error]);
   const router = useRouter();
 
   const copyIncident = async () => {
