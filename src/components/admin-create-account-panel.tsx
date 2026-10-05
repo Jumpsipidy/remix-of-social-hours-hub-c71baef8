@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { ClassPicker } from "@/components/admin/class-picker";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -26,7 +28,11 @@ export function AdminCreateAccountPanel() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [classes, setClasses] = useState("");
+  const [classes, setClasses] = useState<string[]>([]);
+  const [schoolId, setSchoolId] = useState("");
+  const [autoRenew, setAutoRenew] = useState(true);
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => { supabase.from("schools").select("id, name").order("name").then(({ data }) => setSchools(data ?? [])); }, []);
   const [busy, setBusy] = useState(false);
 
   const isSchoolAdmin = kind === "school_admin";
@@ -43,13 +49,13 @@ export function AdminCreateAccountPanel() {
           role: isSchoolAdmin ? "school_admin" : "organization",
           organization_name: isSchoolAdmin ? null : orgName.trim(),
           org_category: isSchoolAdmin ? null : kind,
-          assigned_classes: isSchoolAdmin
-            ? classes.split(",").map((c) => c.trim()).filter(Boolean)
-            : null,
+          assigned_classes: isSchoolAdmin ? classes : null,
+          school_id: isSchoolAdmin ? schoolId : null,
+          auto_year_renewal: autoRenew,
         },
       });
       toast.success(res.updated ? "Paskyra atnaujinta" : "Paskyra sukurta. Perduok kredencialus asmeniškai.");
-      setOrgName(""); setFullName(""); setEmail(""); setPassword(""); setClasses("");
+      setOrgName(""); setFullName(""); setEmail(""); setPassword(""); setClasses([]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");
     } finally {
@@ -139,12 +145,18 @@ export function AdminCreateAccountPanel() {
           </button>
         </div>
         {isSchoolAdmin && (
-          <input
-            value={classes}
-            onChange={(e) => setClasses(e.target.value)}
-            placeholder="Priskirtos klasės, pvz. 8a, 8b"
-            className="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-primary sm:col-span-2"
-          />
+          <div className="space-y-3 sm:col-span-2">
+            <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required
+              className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white outline-none focus:border-primary">
+              <option value="" className="text-black">— Pasirink mokyklą —</option>
+              {schools.map((s) => <option key={s.id} value={s.id} className="text-black">{s.name}</option>)}
+            </select>
+            <ClassPicker value={classes} onChange={setClasses} />
+            <label className="flex items-center gap-2 text-sm text-white/80">
+              <input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} />
+              Automatiškai kelti klases kiekvienų mokslo metų pradžioje
+            </label>
+          </div>
         )}
       </div>
 
