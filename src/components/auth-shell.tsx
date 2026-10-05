@@ -41,8 +41,8 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
   const c = COPY[mode];
   const isLogin = mode === "login";
   return (
-    <div className="relative min-h-screen bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.10),transparent_60%)]" aria-hidden />
+    <div className="relative auth-shell min-h-screen bg-background text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6">
         <div className={`grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
           {/* Brand panel */}
@@ -189,8 +189,8 @@ export function OAuthButtons({ disabled, beforeStart }: { disabled?: boolean; be
               <div className="relative grid h-20 w-20 place-items-center">
                 <motion.span
                   aria-hidden
-                  className="absolute inset-0 rounded-full border-2 border-transparent"
-                  style={{ borderTopColor: "hsl(var(--primary))" }}
+                  className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary"
+                  
                   animate={{ rotate: 360 }}
                   transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
                 />

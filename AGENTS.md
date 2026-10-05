@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Use the official Sentry TanStack Start SDK at client, router, middleware, and server-entry boundaries; this preserves full-stack traces and private source-map uploads.
+
+- Authentication pages use scoped sans-serif typography and semantic theme colors; this keeps forms legible without restyling unrelated pages.

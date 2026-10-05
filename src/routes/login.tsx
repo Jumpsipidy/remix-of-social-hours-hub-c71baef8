@@ -40,6 +40,8 @@ export const Route = createFileRoute("/login")({
       { name: "description", content: "Prisijunk prie Socialinių Valandų platformos su Google, Discord arba el. pašto paskyra ir tęsk savanorystės valandų rinkimą." },
       { property: "og:title", content: "Prisijungti — Socialinės Valandos" },
       { property: "og:description", content: "Prisijunk prie moksleivių savanorystės platformos su Google, Discord arba el. paštu." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:url", content: "https://socialinesvalandos.dev/login" },
       { name: "robots", content: "noindex, follow" },
     ],
@@ -153,9 +155,9 @@ function LoginPage() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">El. paštas</label>
-          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:shadow-[0_0_0_4px_hsl(var(--primary)/0.12)]">
+          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           </div>
         </div>
         <div>
@@ -163,9 +165,9 @@ function LoginPage() {
             <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Slaptažodis</label>
             <Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">Pamiršai?</Link>
           </div>
-          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:shadow-[0_0_0_4px_hsl(var(--primary)/0.12)]">
+          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
             <Lock className="h-4 w-4 text-muted-foreground" />
-            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" />
+            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Slėpti slaptažodį" : "Rodyti slaptažodį"}>
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

@@ -6,6 +6,8 @@ import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2
 import { supabase } from "@/integrations/supabase/client";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AuthShell, OAuthButtons } from "@/components/auth-shell";
 
 export const Route = createFileRoute("/register")({
@@ -16,6 +18,8 @@ export const Route = createFileRoute("/register")({
       { name: "description", content: "Sukurk moksleivio paskyrą su mokyklos kodu ir klase arba pateik organizacijos prieigos prašymą Socialinių Valandų platformoje." },
       { property: "og:title", content: "Registruotis — Socialinės Valandos" },
       { property: "og:description", content: "Sukurk paskyrą Socialinių Valandų platformoje ir pradėk rinkti savanorystės valandas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:url", content: "https://socialinesvalandos.dev/register" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/register" }],
@@ -38,6 +42,8 @@ function RegisterPage() {
   const verifyCode = useServerFn(verifySchoolSignupCode);
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
+  const [schoolsError, setSchoolsError] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,14 +64,23 @@ function RegisterPage() {
   const [confirmReal, setConfirmReal] = useState(false);
 
 
-  useEffect(() => {
-    supabase.from("schools").select("id, name, city").eq("is_active", true).order("name")
-      .then(({ data }) => {
-        const rows = (data as SchoolRow[]) ?? [];
-        setSchools(rows);
-        if (rows.length && !schoolId) setSchoolId(rows[0].id);
-      });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  async function loadSchools() {
+    setSchoolsLoading(true);
+    setSchoolsError(false);
+    try {
+      const { data, error } = await supabase.from("schools").select("id, name, city").eq("is_active", true).order("name");
+      if (error) throw error;
+      const rows = (data as SchoolRow[]) ?? [];
+      setSchools(rows);
+      setSchoolId((current) => current || rows[0]?.id || "");
+    } catch {
+      setSchoolsError(true);
+    } finally {
+      setSchoolsLoading(false);
+    }
+  }
+
+  useEffect(() => { void loadSchools(); }, []);
 
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -77,11 +92,12 @@ function RegisterPage() {
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
       const rule = hoursRuleFor(classYear);
       if (!rule.locked && hoursNeeded < rule.min) { toast.error(`8+ klasėms — min. ${rule.min} val.`); return; }
-      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
-      if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
+
     }
     setLoading(true);
     try {
+      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
+      if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
       const { data: signUp, error } = await supabase.auth.signUp({
         email, password,
         options: {
@@ -150,7 +166,7 @@ function RegisterPage() {
                   <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
                   <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi.</p>
                 </div>
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2DD4BF,hsl(var(--primary)))] shadow-[0_10px_30px_-10px_#2DD4BF/0.7]">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary">
                   <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
               </div>
@@ -163,12 +179,12 @@ function RegisterPage() {
                 ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
                   const active = mode === opt.k;
                   return (
-                    <button key={opt.k} type="button" onClick={() => setMode(opt.k)}
-                      className={`group/mode relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-transparent bg-[linear-gradient(135deg,#2DD4BF,hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_#2DD4BF/0.7]" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-emerald-400/50"}`}>
+                    <Button variant="outline" key={opt.k} type="button" onClick={() => setMode(opt.k)}
+                      className={`group/mode h-auto relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-primary/50"}`}>
                       <opt.icon className="h-5 w-5" />
                       <span className="text-sm font-semibold">{opt.label}</span>
                       <span className={`text-[11px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.hint}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -178,9 +194,9 @@ function RegisterPage() {
                   <motion.div 
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4 text-xs text-amber-200/90 leading-relaxed shadow-lg"
+                    className="mt-4 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-xs text-foreground leading-relaxed shadow-lg"
                   >
-                    <div className="flex items-center gap-2 mb-1 text-amber-300 font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-2 mb-1 text-foreground font-bold uppercase tracking-wider">
                       <Clock className="h-3 w-3" /> Svarbu
                     </div>
                     Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
@@ -196,20 +212,19 @@ function RegisterPage() {
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Trumpas veiklos aprašymas (min. 30 simb.)</label>
                       <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
                         placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
-                        className="mt-1.5 w-full rounded-xl border border-border bg-background/60 p-3 text-sm outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]" />
+                        className="mt-1.5 w-full rounded-xl border border-border bg-background/60 p-3 text-sm outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20" />
                     </div>
                     <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
                       <input type="checkbox" checked={confirmReal} onChange={(e) => setConfirmReal(e.target.checked)} className="mt-0.5" />
                       <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi.</span>
                     </label>
-                    <motion.button
-                      type="submit" disabled={loading}
-                      whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.98 }}
-                      className="group/submit relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] py-3.5 text-sm font-bold text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)] transition-all hover:shadow-[0_20px_60px_-15px_hsl(160_80%_50%/0.9)] disabled:opacity-60"
+                    <Button
+                      type="submit" disabled={loading || (mode === "student" && (schoolsLoading || schoolsError || !schools.length))}
+                      className="group/submit relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
                     >
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
                       {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Siunčiama…</> : <><Send className="h-4 w-4" /> Pateikti prašymą</>}
-                    </motion.button>
+                    </Button>
                   </form>
                 </>
               ) : (
@@ -226,28 +241,37 @@ function RegisterPage() {
 
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokykla</label>
-                      <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
-                        {schools.length === 0 && <option value="">Kraunama…</option>}
+                      {schoolsLoading ? (
+                        <div role="status" aria-label="Kraunamos mokyklos" className="mt-1.5">
+                          <Skeleton className="h-11 w-full rounded-xl" />
+                        </div>
+                      ) : schoolsError ? (
+                        <div role="alert" className="mt-2 flex items-center justify-between gap-2 text-sm text-destructive">
+                          Nepavyko įkelti mokyklų.
+                          <Button type="button" variant="outline" size="sm" onClick={() => void loadSchools()}>Bandyti dar kartą</Button>
+                        </div>
+                      ) : <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20">
+                        {schools.length === 0 && <option value="">Mokyklų nėra</option>}
                         {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
-                      </select>
+                      </select>}
                     </div>
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Klasė</label>
                       <select value={classYear} onChange={(e) => setClassYear(e.target.value)} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20">
                         <option value="">Pasirink…</option>
                         {CLASS_YEARS.map((c) => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
 
-                    <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/5 p-4 backdrop-blur">
-                      <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                    <div className="rounded-2xl border border-success/30 bg-success/10 p-4 backdrop-blur">
+                      <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-success">
                         <Clock className="h-4 w-4" /> Kiek valandų turi atlikti?
                       </label>
                       {classYear && isLowerClass(classYear) ? (
                         <div className="mt-3 flex items-center gap-3">
-                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-emerald-400/40 bg-emerald-400/10 text-sm font-bold text-emerald-200">20</div>
+                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-success/40 bg-success/10 text-sm font-bold text-foreground">20</div>
                           <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> fiksuota.</span>
                         </div>
                       ) : (
@@ -255,7 +279,7 @@ function RegisterPage() {
                           <input type="number" min={classYear ? hoursRuleFor(classYear).min : 8} max={500}
                             value={hoursNeeded} required
                             onChange={(e) => setHoursNeeded(Math.max(classYear ? hoursRuleFor(classYear).min : 8, Number(e.target.value)))}
-                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-emerald-400" />
+                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
                           <span className="text-xs text-muted-foreground">val. per metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
                         </div>
                       )}
@@ -264,8 +288,8 @@ function RegisterPage() {
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokyklos kodas</label>
                       <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
-                        autoComplete="off" placeholder="Pvz.: SEDUVOS2026"
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm tracking-wider outline-none backdrop-blur transition-all focus:border-emerald-400 focus:bg-background focus:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]" />
+                        autoComplete="off" placeholder="Mokyklos registracijos kodas"
+                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm tracking-wider outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20" />
                       <p className="mt-1 text-[11px] text-muted-foreground">🔑 Iš klasės auklėtojo / mokyklos administratoriaus.</p>
                     </div>
 
@@ -277,14 +301,13 @@ function RegisterPage() {
                       <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje. Melagingi duomenys — paskyros pašalinimas.</span>
                     </label>
 
-                    <motion.button
-                      type="submit" disabled={loading}
-                      whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.98 }}
-                      className="group/submit relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] py-3.5 text-sm font-bold text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.7)] transition-all hover:shadow-[0_20px_60px_-15px_hsl(160_80%_50%/0.9)] disabled:opacity-60"
+                    <Button
+                      type="submit" disabled={loading || (mode === "student" && (schoolsLoading || schoolsError || !schools.length))}
+                      className="group/submit relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
                     >
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
+                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
                       {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Kuriama…</> : <>Sukurti paskyrą <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-1" /></>}
-                    </motion.button>
+                    </Button>
                   </form>
                 </>
               )}
@@ -310,10 +333,10 @@ function Field({ label, icon: Icon, value, onChange, placeholder, type = "text",
   return (
     <div>
       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
-      <div className="group/f mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 backdrop-blur transition-all focus-within:border-emerald-400 focus-within:bg-background focus-within:shadow-[0_0_0_4px_hsl(160_80%_50%/0.12)]">
-        <Icon className="h-4 w-4 text-muted-foreground transition-colors group-focus-within/f:text-emerald-300" />
+      <div className="group/f mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 backdrop-blur transition-all focus-within:border-primary focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/20">
+        <Icon className="h-4 w-4 text-muted-foreground transition-colors group-focus-within/f:text-success" />
         <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required}
-          className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" placeholder={placeholder} />
+          className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder={placeholder} />
       </div>
     </div>
   );
