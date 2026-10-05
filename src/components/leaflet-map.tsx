@@ -1,3 +1,4 @@
+import type { MapMarker } from "./leaflet-map-inner";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 // Client-only wrapper: leaflet touches `window` at module load and crashes SSR.
@@ -12,6 +13,9 @@ export type LeafletMapProps = {
   className?: string;
   interactive?: boolean;
   onPick?: (c: { lat: number; lng: number }) => void;
+  markers?: MapMarker[];
+  onMarkerClick?: (id: string) => void;
+  showCenter?: boolean;
 };
 
 export function LeafletMap({
@@ -22,6 +26,9 @@ export function LeafletMap({
   className,
   interactive = true,
   onPick,
+  markers,
+  onMarkerClick,
+  showCenter,
 }: LeafletMapProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -37,7 +44,7 @@ export function LeafletMap({
   return (
     <div className={shell} style={{ height, width: "100%" }}>
       <Suspense fallback={<div style={{ height: "100%", background: "#0b1220" }} />}>
-        <LeafletMapInner lat={lat} lng={lng} zoom={zoom} interactive={interactive} onPick={onPick} />
+        <LeafletMapInner lat={lat} lng={lng} zoom={zoom} interactive={interactive} onPick={onPick} markers={markers} onMarkerClick={onMarkerClick} showCenter={showCenter} />
       </Suspense>
     </div>
   );

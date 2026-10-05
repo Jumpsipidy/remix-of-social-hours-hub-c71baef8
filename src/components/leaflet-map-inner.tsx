@@ -1,17 +1,22 @@
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const DefaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+function pin(color: string, size = 18) {
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:${color};border:3px solid #fff;box-shadow:0 0 0 4px ${color}55,0 4px 12px rgba(0,0,0,.4)"></span>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+const DefaultIcon = pin("#f97316");
+const TaskIcon = pin("#f97316");
+const OrgIcon = pin("#94a3b8", 14);
+const UserIcon = pin("#3b82f6", 16);
+
+export type MapMarker = { id: string; lat: number; lng: number; label: string; kind: "task" | "organization" };
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -43,6 +48,9 @@ export type LeafletMapInnerProps = {
   zoom?: number;
   interactive?: boolean;
   onPick?: (c: Coords) => void;
+  markers?: MapMarker[];
+  onMarkerClick?: (id: string) => void;
+  showCenter?: boolean;
 };
 
 export default function LeafletMapInner({
@@ -51,6 +59,9 @@ export default function LeafletMapInner({
   zoom = 15,
   interactive = true,
   onPick,
+  markers,
+  onMarkerClick,
+  showCenter = true,
 }: LeafletMapInnerProps) {
   const ref = useRef<L.Map | null>(null);
   return (
@@ -69,7 +80,17 @@ export default function LeafletMapInner({
     >
       <TileLayer url={DARK_TILES} attribution={ATTRIBUTION} />
       <Recenter center={{ lat, lng }} zoom={zoom} />
-      <Marker position={[lat, lng]} />
+      {showCenter && <Marker position={[lat, lng]} icon={markers ? UserIcon : DefaultIcon} />}
+      {markers?.map((m) => (
+        <Marker
+          key={m.id}
+          position={[m.lat, m.lng]}
+          icon={m.kind === "task" ? TaskIcon : OrgIcon}
+          eventHandlers={{ click: () => onMarkerClick?.(m.id) }}
+        >
+          <Tooltip direction="top" offset={[0, -8]}>{m.label}</Tooltip>
+        </Marker>
+      ))}
       {onPick && <ClickHandler onPick={onPick} />}
     </MapContainer>
   );

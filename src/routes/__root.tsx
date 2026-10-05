@@ -273,6 +273,15 @@ function RootComponent() {
     const isRecovery = /type=recovery/.test(hash) || /type=recovery/.test(search);
     if (isRecovery && pathname !== "/update-password") {
       window.location.replace(`/update-password${search}${hash}`);
+      return;
+    }
+    // OAuth (Google/Discord/GitHub) kartais grąžina į pagrindinį puslapį, jei
+    // Supabase redirect allowlist neturi /auth/callback. Perimam ir nukreipiam
+    // į prisijungimo užbaigimo animaciją.
+    const isOAuthReturn =
+      (/[?&]code=/.test(search) && !/type=/.test(search)) || /access_token=/.test(hash);
+    if (isOAuthReturn && pathname === "/") {
+      window.location.replace(`/auth/callback${search}${hash}`);
     }
   }, []);
   

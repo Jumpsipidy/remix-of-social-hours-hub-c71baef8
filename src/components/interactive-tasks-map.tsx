@@ -87,7 +87,7 @@ export function InteractiveTasksMap({
     return list;
   }, [tasks, organizations]);
 
-  const center = userLoc || { lat: 55.75, lng: 23.75 }; // Default to Šeduva area if no location
+  const center = userLoc || (markers[0] ? { lat: markers[0].lat, lng: markers[0].lng } : { lat: 55.75, lng: 23.75 }); // Default to Šeduva area if no location
 
   if (!mounted) return <div className="h-[500px] w-full bg-card/50 rounded-3xl animate-pulse" />;
 
@@ -98,9 +98,12 @@ export function InteractiveTasksMap({
           <LeafletMap 
             lat={center.lat} 
             lng={center.lng} 
-            zoom={userLoc ? 12 : 8} 
+            zoom={userLoc ? 12 : markers.length ? 11 : 8} 
             height="100%" 
             className="z-0"
+            showCenter={!!userLoc}
+            markers={markers.map((m) => ({ id: m.id, lat: m.lat, lng: m.lng, label: m.taskTitle || m.name, kind: m.type }))}
+            onMarkerClick={(id) => setSelected(markers.find((m) => m.id === id) ?? null)}
           />
           {/* Custom markers logic would usually go inside LeafletMapInner, 
               but for this artifact we assume the LeafletMap handles basic display.
