@@ -109,6 +109,19 @@ function PrivacyPage() {
         </section>
 
         <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-white">4a. Naujos funkcijos (V2.5)</h2>
+          <ul className="list-disc space-y-1 pl-6">
+            <li><b>Pokalbiai:</b> žinutės tarp mokinių, organizacijų ir mokyklos administracijos automatiškai ištrinamos po 12 dienų. Mokyklos administracija gali matyti savo mokyklos mokinių pokalbius su organizacijomis.</li>
+            <li><b>Draugai:</b> draugai mato vienas kito vardą ir bendras rezervacijas; asmeninės žinutės ištrinamos po 2 dienų.</li>
+            <li><b>Žemėlapis ir vieta:</b> tavo buvimo vieta naudojama tik naršyklėje žemėlapiui centruoti ir nesaugoma.</li>
+            <li><b>Robotų patikra:</b> trumpam tikriname naršyklės požymius ir judesius, kad atskirtume robotus; prireikus naudojama Google reCAPTCHA.</li>
+            <li><b>Klaidų sekimas:</b> naudojame Sentry klaidoms aptikti; esant klaidai gali būti įrašomas anonimizuotas ekrano veiksmų įrašas (tekstas ir įvestys paslepiami).</li>
+            <li><b>Pažymėjimai ir QR kodai:</b> pažymėjimuose yra vardas, klasė, mokykla ir valandos; juos patikrinti gali bet kas, turintis kodą.</li>
+            <li><b>Laiškai:</b> pranešimus siunčiame per Resend; juos galima išjungti nustatymuose.</li>
+          </ul>
+        </section>
+
+        <section className="space-y-3">
           <h2 className="text-xl font-semibold text-white">5. Tavo teisės (BDAR)</h2>
           <ul className="list-disc space-y-1 pl-6">
             <li>Susipažinti su savo duomenimis</li>
