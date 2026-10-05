@@ -3,7 +3,7 @@ import { AlertTriangle, ShieldAlert, TrendingDown, CalendarX, Search, FileSearch
 import { highestSeverity, type FraudFlag } from "@/lib/fraud-flags";
 
 type Row = {
-  student: { id: string; full_name: string | null; class_year: string | null };
+  student: { id: string; full_name: string | null; class_year?: string | null };
   flags: FraudFlag[];
   reservations: unknown[];
   progress: number;
