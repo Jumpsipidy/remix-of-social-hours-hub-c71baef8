@@ -26,60 +26,53 @@ const VERSIONS: Version[] = [
     summary:
       "V2.5 sujungia viską, ką kūrėme tris mėnesius: naujas prisijungimas, žemėlapis, pokalbiai, draugai, saugumas ir mokyklų valdymas. Žemiau — kas jau veikia ir kas ateina.",
     items: [
-      { tag: "Nauja", text: "SOCI GUARD — mūsų pačių sukurta apsauga nuo robotų: serverio iššūkis, skaičiavimo užduotis, palaikymo ir paveikslėlių patikra, paaiškinimai lietuviškai." },
-      { tag: "Nauja", text: "Organizacija pati pasirenka, kiek valandų skirti užbaigiant darbą (0–8). Mokyklos administratorius taip pat gali — arba praleisti ir palikti planuotas." },
-      { tag: "Patobulinta", text: "Tik sveikos valandos — jokių 1,5 ar 2,7 val. Visos valandos suapvalinamos automatiškai." },
+      // ── Svarbiausios naujovės ──
+      { tag: "Nauja", text: "Pokalbiai /chat visiems: mokinys ↔ organizacija, organizacija ↔ mokykla, mokykla gali pradėti pokalbį su mokiniu ir organizacija kartu. Vaidmenų žymos (Mokinys, Organizacija, Mokyklos admin), žinutės ištrinamos po 12 dienų." },
+      { tag: "Nauja", text: "Lietuvos žemėlapis su organizacijų smeigtukais, miestų (Šeduva, Radviliškis, Šiauliai) ir organizacijų filtrais." },
+      { tag: "Nauja", text: "Visiškai naujas organizacijos skydelis: greiti mygtukai, „Laukia tavo sprendimo“, kitas darbas, suteiktos valandos, profilio pilnumas." },
+      { tag: "Nauja", text: "Visiškai naujas mokyklos administratoriaus skydelis su klasėmis, paieška, pokalbiais, renginiais ir PDF / QR patikra." },
+      { tag: "Nauja", text: "Rizikos centras mokykloms: įtartini signalai, atsiliekantys mokiniai, rizikos lygiai ir paieška." },
+      { tag: "Nauja", text: "SOCI GUARD — mūsų pačių apsauga nuo robotų: serverio iššūkis, skaičiavimo užduotis, palaikymas, paveikslėlių eilė, reCAPTCHA atsarginis variantas ir paaiškinimai, kodėl patikra parodyta." },
+      { tag: "Nauja", text: "Draugai: pakvietimo nuoroda, užklausos ir bendros rezervacijos — kiekvienas gauna savo QR kodą ir valandas." },
+      { tag: "Nauja", text: "QR įsiregistravimas: besikeičiantis kodas kas 30 s, 6 skaitmenų kodas be interneto, keli vizitai per dieną ir organizacijos „Šiandien laukiami“ sąrašas." },
+      { tag: "Nauja", text: "Organizacija pati pasirenka, kiek valandų skirti užbaigiant darbą (0–8). Mokyklos admin taip pat — arba praleidžia ir palieka planuotas." },
+      { tag: "Nauja", text: "Mokyklos renginiai: kūrimas su miestu, mokinių registracijos, „Priimti“ / „Atmesti“ ir valandų patvirtinimas tiesiai pagrindiniame skydelyje." },
+      { tag: "Nauja", text: "Gyvi atnaujinimai ir pranešimai: naujos registracijos, patvirtinimai ir žinutės atsiranda iškart, be puslapio perkrovimo." },
+      { tag: "Nauja", text: "Rodomasis įvedimo vedlys su judančiais pavyzdžiais, mygtuku „Praleisti“ ir be kartojimo tame pačiame įrenginyje." },
+      { tag: "Nauja", text: "Naujas prisijungimas ir registracija su Google, Discord ir GitHub, sklandus perėjimas tarp jų ir atsijungimo animacija." },
+      { tag: "Nauja", text: "Apsaugoti PDF pažymėjimai su parašu ir veikiančiu QR patikrinimu /verify." },
+      { tag: "Nauja", text: "Super Admin: mokyklų administratorių kūrimas, mokyklos ir klasių priskyrimas, automatinis klasių perkėlimas kas metus, organizacijų ir bendruomenių paskyros." },
+      { tag: "Nauja", text: "Super Admin apžvalga: gyvas rezervacijų kelias (registracija → patvirtinta → atvyko → valandos), QR įsiregistravimo dalis ir top organizacijos." },
+      { tag: "Nauja", text: "Masinis rezervacijų patvirtinimas ir atmetimas organizacijoms." },
+      { tag: "Nauja", text: "Pranešimų centras: filtrai, santykinis laikas, pranešimai pažymimi perskaitytais patys, žinutės atidaro /chat." },
       { tag: "Nauja", text: "Greitas laiko pasirinkimas mokiniams: diena, pradžia ir trukmė vienu paspaudimu." },
-      { tag: "Nauja", text: "QR įsiregistravimas su keliais vizitais per dieną: mokinys pasirenka, kurį rodo, o organizacija mato visą šiandienos sąrašą." },
-      { tag: "Nauja", text: "Gyvi atnaujinimai: naujos registracijos ir būsenos atsiranda iškart, be puslapio perkrovimo, su pranešimais." },
-      { tag: "Pataisyta", text: "Mokyklos renginių registracijos rodomos pagrindiniame mokyklos skydelyje su „Priimti“ ir „Atmesti“." },
-      { tag: "Nauja", text: "Rizikos centras, naujas organizacijų ir mokyklų skydelis, rodomasis įvedimo vedlys, šviesus režimas ir pokalbių vaidmenų žymos." },
-      { tag: "Nauja", text: "Visiškai naujas prisijungimas ir registracija su Google, Discord ir GitHub bei sklandžiomis animacijomis." },
-      { tag: "Nauja", text: "Lietuvos žemėlapis su organizacijų vietomis ir užduotimis Šeduvoje, Radviliškyje ir Šiauliuose." },
-      { tag: "Nauja", text: "Pokalbiai /chat: mokinys ↔ organizacija ir mokyklos administratorius ↔ organizacija, žinutės automatiškai ištrinamos po 12 dienų." },
-      { tag: "Nauja", text: "Draugai: pakvietimo nuoroda ir bendros rezervacijos — kiekvienas gauna savo QR kodą ir valandas." },
-      { tag: "Nauja", text: "Masinis rezervacijų patvirtinimas organizacijoms su pranešimais mokiniams." },
-      { tag: "Nauja", text: "„Mokyklos akys“ didelio kontrasto režimas." },
-      { tag: "Sauga", text: "Saugūs, parašu patikrinami pažymėjimai su QR kodais — suklastoti iškart atpažįstami." },
-      { tag: "Sauga", text: "Patikrinimas „ar jūs ne robotas“ su atsargine reCAPTCHA ir apsauginis užrakinimas klaidų antplūdžio metu." },
-      { tag: "Sauga", text: "Mokyklos administratorių paskyras gali kurti tik pagrindinis administratorius." },
-      { tag: "Pataisyta", text: "Administratoriaus sukurta mokyklos paskyra nebetampa mokinio paskyra." },
-      { tag: "Patobulinta", text: "Klasių kėlimas kiekvieną rugsėjo 1 d. ir automatinis mokytojų klasių atnaujinimas." },
-      { tag: "Patobulinta", text: "Gražesni užkrovimo šablonai visuose puslapiuose ir klaidų sekimas." },
-      { tag: "Dizainas", text: "Ateityje: atnaujintas mokyklos skydelis, dar daugiau telefonų pritaikymo ir naujos ataskaitos mokykloms." },
-      { tag: "Nauja", text: "Naujas pokalbis vienu mygtuku: organizacijos rašo mokiniams ir mokykloms, mokyklos — organizacijoms." },
-      { tag: "Nauja", text: "Mokyklos administracija mato savo mokinius organizacijose ir gali pradėti trišalį pokalbį (mokinys + organizacija + mokykla)." },
-      { tag: "Nauja", text: "Kontaktų sąraše rodoma mokinio klasė ir klasių filtrai." },
-      { tag: "Nauja", text: "Super administratorius renkasi mokyklą, kelias ar visas klases ir automatinį metų atnaujinimą." },
-      { tag: "Nauja", text: "Testinės klaidos mygtukas Sentry stebėjimui ir ekrano įrašai klaidų metu (tekstas paslėptas)." },
-      { tag: "Nauja", text: "Užduoties langas su informacija, žemėlapiu, rezervacija, žinute organizacijai ir jos profiliu." },
-      { tag: "Nauja", text: "Miesto pasirinkimas ir filtrai: Šeduva, Radviliškis, Šiauliai." },
-      { tag: "Nauja", text: "Atsijungimo animacija ir naujos perėjimo animacijos tarp prisijungimo ir registracijos." },
-      { tag: "Nauja", text: "Slaptažodžio atkūrimo animacija su skrendančiu laišku." },
-      { tag: "Nauja", text: "Profilio užbaigimas po Google, Discord ar GitHub prisijungimo." },
-      { tag: "Nauja", text: "Super administratoriaus skydelių peržiūra — kiekvieną rolę galima apžiūrėti atskirai." },
-      { tag: "Nauja", text: "Incidentų paieška pagal SC- ir #0TY263T formato kodus." },
-      { tag: "Sauga", text: "Serverio lygio užrakinimas: užrakto metu duomenų keisti negalima net apeinant svetainę." },
-      { tag: "Sauga", text: "Automatinis užrakinimas po 100 klaidų per 10 minučių." },
-      { tag: "Sauga", text: "Mokyklos administratorius mato tik savo mokyklos mokinių pokalbius." },
-      { tag: "Sauga", text: "Pažymėjimo parašas tikrinamas iš naujo — duomenų bazėje pakeisti įrašai pažymimi kaip suklastoti." },
-      { tag: "Sauga", text: "Pašalintas atsarginis viešas parašo raktas, apsaugoti el. laiškai nuo įterpto kodo, testinių duomenų trynimas liečia tik testines paskyras." },
-      { tag: "Patobulinta", text: "Pasenusios rezervacijos automatiškai atmetamos po 12 valandų." },
-      { tag: "Patobulinta", text: "Analitika skaičiuoja unikalius vartotojus, ne pakartotinius apsilankymus." },
-      { tag: "Patobulinta", text: "Telefonuose išjungti sunkūs efektai — greitesni meniu, sklandus slinkimas, be priartinimo rašant." },
-      { tag: "Dizainas", text: "„Mokyklos akys“ dabar tikras šviesus režimas visuose puslapiuose." },
-      { tag: "Dizainas", text: "Apvalus logotipas, nauji klaidų ekranai ir gražesni užkrovimo šablonai." },
-      { tag: "Pataisyta", text: "Mokiniai vėl mato savo ir draugų rezervacijas; pokalbių teisių klaidos išspręstos." },
-      { tag: "Pataisyta", text: "Nebelieka juodo blyksnio ir „Nepavyko įkelti duomenų“ skydeliuose." },
-      { tag: "Nauja", text: "Naujas mokyklos Rizikos centras: filtruojamos kortelės, klasių filtrai, aiškus rizikos lygis ir greita peržiūra." },
-      { tag: "Patobulinta", text: "Pranešimų centras: laikas „prieš 5 min.“, „Skaityti visus“, atskirų pranešimų šalinimas ir tiesioginis kelias į pokalbius." },
-      { tag: "Dizainas", text: "Švelnesnis, akims malonesnis šviesus režimas ir mažiau dirbtinai atrodančių efektų." },
-      { tag: "Nauja", text: "Naujas įvadinis vedlys su gyvomis mini demonstracijomis, greitu „Praleisti“ ir rodomas tik kartą tame pačiame įrenginyje." },
-      { tag: "Nauja", text: "Greitos prieigos plytelės organizacijos ir mokyklos skydeliuose." },
-      { tag: "Sauga", text: "Atidarius kitos rolės skydelį rodoma „Oops, tai ne tavo“ ir grąžinama į savo skydelį." },
-      { tag: "Pataisyta", text: "Organizacijos nebenukreipiamos į mokinio skydelį po prisijungimo." },
-      { tag: "Pataisyta", text: "Klaidos langas nebemirksi ir neišnyksta užsikrovus puslapiui." },
-      { tag: "Patobulinta", text: "Užkrovimo šablonas rodomas kiekviename puslapyje pereinant." },
+      { tag: "Nauja", text: "„Mano mokiniai organizacijose“ mokyklos administratoriui — matai, kur dirba tavo mokiniai." },
+      { tag: "Nauja", text: "Avarinis užrakinimas serverio lygiu ir automatinis užrakinimas esant klaidų bangai." },
+      // ── Patobulinimai ──
+      { tag: "Patobulinta", text: "Tik sveikos valandos — jokių 1,5 ar 2,7 val." },
+      { tag: "Patobulinta", text: "Mobiliesiems: mokinio greitų nuorodų juosta, kortelės vietoj lentelių, greitesni langai, be priartinimo iPhone." },
+      { tag: "Patobulinta", text: "Rezervacijos patvirtinimas aiškiai parodo datą, valandas ir mygtuką „Peržiūrėti“." },
+      { tag: "Patobulinta", text: "Organizacijų profiliai atsidaro mokiniams su vieša informacija ir atvirais darbais." },
+      { tag: "Patobulinta", text: "Klaidų ekranas palaukia ir pats bando dar kartą, o po atnaujinimo sena puslapio versija perkraunama automatiškai." },
+      { tag: "Patobulinta", text: "Sentry klaidų sekimas su „Siųsti testinę klaidą“ mygtuku ir apsaugotu sesijos įrašu." },
+      { tag: "Patobulinta", text: "Lietuviškas SEO ir naujas privatumo puslapis." },
+      // ── Dizainas ──
+      { tag: "Dizainas", text: "Pagrindinis puslapis atnaujintas, bet atpažįstamas; pašalinti „DI stiliaus“ ženkliukai ir blizgučiai." },
+      { tag: "Dizainas", text: "Tikras šviesus režimas „Mokyklos akys“ — švelnus, akims malonus." },
+      { tag: "Dizainas", text: "Užkrovimo šablonai kiekvienam puslapiui, atskiri telefonams." },
+      { tag: "Dizainas", text: "Šventinė V2.5 juosta ir šis puslapis 🎉" },
+      // ── Sauga ──
+      { tag: "Sauga", text: "Mokyklų administratorius gali sukurti tik Super Admin — taisyklė užtikrinta duomenų bazėje." },
+      { tag: "Sauga", text: "Sutvarkyti 23 saugumo radiniai: prieigos taisyklės, klaidų pranešimai, mokyklos kodo tikrinimas serveryje, CSV formulių apsauga." },
+      { tag: "Sauga", text: "Pažymėjimų parašo raktas be viešo atsarginio varianto, apsauga nuo nuorodų įterpimo." },
+      // ── Pataisymai ──
+      { tag: "Pataisyta", text: "Rezervacijos vėl rodomos visuose skydeliuose." },
+      { tag: "Pataisyta", text: "Mokyklos admino paskyra nebetampa mokiniu po sukūrimo." },
+      { tag: "Pataisyta", text: "Senas pokalbių langas skydeliuose pašalintas — viskas veda į /chat." },
+      { tag: "Pataisyta", text: "Neteisingas skydelis po prisijungimo ir klaidos langas, kuris dingdavo po užkrovimo." },
+      { tag: "Pataisyta", text: "Slaptažodžio atkūrimas ir prisijungimas, kai ryšys su serveriu lėtas." },
+      { tag: "Pataisyta", text: "Pranešimų centro klaida po prisijungimo ir „Pranešti apie klaidą“ mygtukas, uždengdavęs šventinę juostą." },
+      { tag: "Pataisyta", text: "Žodis „Lovable“ pašalintas iš viso puslapio."  },
     ],
   },
   {
@@ -399,6 +392,15 @@ export const Route = createFileRoute("/versijos")({
   component: VersionsPage,
 });
 
+const HIGHLIGHTS = [
+  { e: "💬", t: "Pokalbiai visiems", d: "Mokiniai, organizacijos ir mokyklos susirašinėja vienoje vietoje. Žinutės dingsta po 12 dienų." },
+  { e: "🗺️", t: "Lietuvos žemėlapis", d: "Visos organizacijos ir užduotys žemėlapyje su miestų filtrais." },
+  { e: "🏢", t: "Nauji skydeliai", d: "Organizacijos ir mokyklos skydeliai sukurti iš naujo — greiti mygtukai ir viskas po ranka." },
+  { e: "🛡️", t: "SOCI GUARD", d: "Mūsų pačių apsauga nuo robotų, kuri paaiškina, kodėl tave patikrino." },
+  { e: "📱", t: "QR įsiregistravimas", d: "Besikeičiantis kodas, keli vizitai per dieną ir veikimas be interneto." },
+  { e: "👥", t: "Draugai ir grupės", d: "Pakviesk draugą nuoroda ir rezervuok kartu — valandos kiekvienam." },
+];
+
 function VersionsPage() {
   const [open, setOpen] = useState<Set<string>>(() => new Set([VERSIONS[0]?.v ?? ""]));
   const allOpen = open.size === VERSIONS.length;
@@ -409,15 +411,15 @@ function VersionsPage() {
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
         <section className="relative overflow-hidden rounded-[2rem] border border-primary/40 bg-card p-6 sm:p-10">
           <div aria-hidden className="pointer-events-none absolute inset-0">
-            {Array.from({ length: 18 }).map((_, n) => (
-              <span key={n} className="sv-confetti absolute block h-2 w-1.5 rounded-sm bg-primary" style={{ left: `${(n * 53) % 100}%`, animationDelay: `${(n % 6) * 0.35}s`, opacity: 0.25 + (n % 4) * 0.15 }} />
+            {Array.from({ length: 40 }).map((_, n) => (
+              <span key={n} className={`sv-confetti absolute block rounded-sm ${["bg-primary", "bg-accent", "bg-secondary", "bg-destructive"][n % 4]} ${n % 3 ? "h-2 w-1.5" : "h-3 w-1"}`} style={{ left: `${(n * 37) % 100}%`, animationDelay: `${(n % 10) * 0.3}s`, opacity: 0.35 + (n % 4) * 0.15 }} />
             ))}
           </div>
           <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground">
             <PartyPopper className="h-3.5 w-3.5" /> Didžiausias atnaujinimas
           </span>
           <h1 className="relative mt-5 font-display text-6xl font-black leading-none tracking-tight sm:text-8xl">
-            <span className="text-primary">V2.5</span>
+            <span className="sv-v25-title inline-block text-primary">V2.5</span> <span className="inline-block text-5xl sm:text-7xl">🎉</span>
           </h1>
           <p className="relative mt-4 max-w-xl text-base font-semibold sm:text-lg">
             3 mėnesiai darbo. Šimtai pakeitimų. Viena platforma, kuri pagaliau sujungia mokinius, organizacijas ir mokyklas.
@@ -435,6 +437,22 @@ function VersionsPage() {
               <div key={x.l} className="rounded-2xl border border-border bg-background/60 p-4 text-center">
                 <p className="font-display text-2xl font-black sm:text-3xl">{x.k}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">{x.l}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.5</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Nuo didžiausių naujovių iki smulkmenų — žemiau visas sąrašas.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {HIGHLIGHTS.map((h, i) => (
+              <div key={h.t} className="sv-hl-in rounded-3xl border border-border bg-card p-5" style={{ animationDelay: `${i * 90}ms` }}>
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/15 text-2xl">{h.e}</span>
+                  <p className="font-display text-lg font-bold leading-tight">{h.t}</p>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{h.d}</p>
               </div>
             ))}
           </div>

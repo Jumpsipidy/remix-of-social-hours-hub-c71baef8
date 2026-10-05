@@ -625,3 +625,8 @@ html.school-eyes body {
 .sv-v25-shine { background-image: linear-gradient(110deg, transparent 30%, color-mix(in oklab, var(--primary-foreground) 35%, transparent) 50%, transparent 70%); background-size: 200% 100%; animation: sv-v25-shine 2.6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .sv-v25-pop, .sv-v25-shine { animation: none; } }
 @media (max-width: 639px) { html[data-v25] .sv-bug-widget { display: none; } }
+@keyframes sv-hl-in { from { opacity: 0; transform: translateY(14px) scale(.98) } to { opacity: 1; transform: none } }
+.sv-hl-in { animation: sv-hl-in .5s ease-out both; }
+@keyframes sv-v25-title { 0% { transform: scale(.6) rotate(-6deg); opacity: 0 } 60% { transform: scale(1.08) rotate(2deg); opacity: 1 } 100% { transform: none } }
+.sv-v25-title { animation: sv-v25-title .9s cubic-bezier(.2,.9,.3,1.3) both; }
+@media (prefers-reduced-motion: reduce) { .sv-hl-in, .sv-v25-title { animation: none; } }
