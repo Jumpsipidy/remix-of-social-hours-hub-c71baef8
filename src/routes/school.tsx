@@ -1,3 +1,4 @@
+import { MessageCircle } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -553,6 +554,11 @@ function SchoolDashboard() {
                   </span>
                 </button>
               ))}
+              <Link to="/chat" className="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-muted-foreground transition hover:bg-accent hover:text-foreground">
+                <MessageCircle className="h-4 w-4 shrink-0" />
+                <span className="min-w-0 flex-1 text-sm font-semibold">Mokinių pokalbiai</span>
+                <span className="rounded-full bg-background px-2 py-0.5 text-[10px] font-bold">chat</span>
+              </Link>
             </nav>
           </div>
         </aside>

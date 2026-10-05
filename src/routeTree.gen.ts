@@ -34,6 +34,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as VersijosRouteImport } from './routes/versijos'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAccountsRouteImport } from './routes/admin.accounts'
@@ -70,6 +71,7 @@ import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as AuthenticatedFriendsAddIdRouteImport } from './routes/_authenticated/friends.add.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -195,6 +197,11 @@ const VersijosRoute = VersijosRouteImport.update({
   id: '/versijos',
   path: '/versijos',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCheckinRoute = AuthenticatedCheckinRouteImport.update({
   id: '/checkin',
@@ -379,6 +386,12 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedFriendsAddIdRoute =
+  AuthenticatedFriendsAddIdRouteImport.update({
+    id: '/friends/add/$id',
+    path: '/friends/add/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -405,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -441,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/friends/add/$id': typeof AuthenticatedFriendsAddIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -466,6 +481,7 @@ export interface FileRoutesByTo {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/chat': typeof AuthenticatedChatRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -502,6 +518,7 @@ export interface FileRoutesByTo {
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/friends/add/$id': typeof AuthenticatedFriendsAddIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -530,6 +547,7 @@ export interface FileRoutesById {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
   '/admin/activity': typeof AdminActivityRoute
@@ -566,6 +584,7 @@ export interface FileRoutesById {
   '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/_authenticated/friends/add/$id': typeof AuthenticatedFriendsAddIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -594,6 +613,7 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/chat'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -630,6 +650,7 @@ export interface FileRouteTypes {
     | '/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
+    | '/friends/add/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -655,6 +676,7 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/chat'
     | '/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -691,6 +713,7 @@ export interface FileRouteTypes {
     | '/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
+    | '/friends/add/$id'
   id:
     | '__root__'
     | '/'
@@ -718,6 +741,7 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/_authenticated/chat'
     | '/_authenticated/checkin'
     | '/admin/accounts'
     | '/admin/activity'
@@ -754,6 +778,7 @@ export interface FileRouteTypes {
     | '/_authenticated/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
+    | '/_authenticated/friends/add/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -968,6 +993,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/versijos'
       preLoaderRoute: typeof VersijosRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkin': {
       id: '/_authenticated/checkin'
@@ -1221,17 +1253,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/friends/add/$id': {
+      id: '/_authenticated/friends/add/$id'
+      path: '/friends/add/$id'
+      fullPath: '/friends/add/$id'
+      preLoaderRoute: typeof AuthenticatedFriendsAddIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedCheckinRoute: typeof AuthenticatedCheckinRoute
   AuthenticatedOrganizationScanRoute: typeof AuthenticatedOrganizationScanRoute
+  AuthenticatedFriendsAddIdRoute: typeof AuthenticatedFriendsAddIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedCheckinRoute: AuthenticatedCheckinRoute,
   AuthenticatedOrganizationScanRoute: AuthenticatedOrganizationScanRoute,
+  AuthenticatedFriendsAddIdRoute: AuthenticatedFriendsAddIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

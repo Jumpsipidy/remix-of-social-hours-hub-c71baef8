@@ -116,6 +116,19 @@ export function FriendsPanel({ userId, schoolId }: Props) {
             <p className="text-sm font-semibold">Susirask klasiokus</p>
             <p className="text-xs text-muted-foreground">Ieškok iš savo mokyklos ir pridėk kaip draugus</p>
           </div>
+          <button
+            type="button"
+            onClick={async () => {
+              const link = `${window.location.origin}/friends/add/${userId}`;
+              try {
+                if (navigator.share) await navigator.share({ title: "Būkime draugai Socialinėse Valandose", url: link });
+                else { await navigator.clipboard.writeText(link); toast.success("Pakvietimo nuoroda nukopijuota"); }
+              } catch { /* user cancelled */ }
+            }}
+            className="ml-auto rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-primary active:scale-95"
+          >
+            Dalintis pakvietimu
+          </button>
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

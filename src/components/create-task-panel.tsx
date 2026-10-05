@@ -1,3 +1,4 @@
+import { CITIES } from "@/lib/cities";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
@@ -43,6 +44,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [end, setEnd] = useState("17:00");
   const [hours, setHours] = useState(3);
   const [location, setLocation] = useState("");
+  const [city, setCity] = useState<string>("Šeduva");
   const [address, setAddress] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -82,6 +84,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       end_time: end || null,
       available_hours: hours,
       location: location.trim() || address || "",
+      city,
       address: address,
       latitude: lat,
       longitude: lng,
@@ -171,6 +174,17 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 <LabeledInput label="Pradžia" type="time" value={start} onChange={setStart} />
                 <LabeledInput label="Pabaiga" type="time" value={end} onChange={setEnd} />
                 <LabeledInput label="Valandos" type="number" value={String(hours)} onChange={(v) => setHours(Number(v) || 0)} />
+              </div>
+              <div>
+                <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Miestas</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {CITIES.map((c) => (
+                    <button key={c} type="button" onClick={() => setCity(c)}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition active:scale-95 ${city === c ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/50"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
                 <input

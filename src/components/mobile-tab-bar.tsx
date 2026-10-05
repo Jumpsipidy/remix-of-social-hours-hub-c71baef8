@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, ListChecks, QrCode, Bell, User, LayoutDashboard, Building2, School } from "lucide-react";
+import { Home, ListChecks, QrCode, Bell, MessageCircle, User, LayoutDashboard, Building2, School } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
 
@@ -22,18 +22,18 @@ const TABS_BY_ROLE: Record<AppRole, TabItem[]> = {
     { to: "/student", label: "Pradžia", short: "Pradžia", icon: Home },
     { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
     { to: "/checkin", label: "QR kodas", short: "QR", icon: QrCode },
-    { to: "/student", label: "Skelbimai", short: "Skelbimai", icon: Bell, match: (p) => p.startsWith("/student") },
+    { to: "/chat", label: "Pokalbiai", short: "Pokalbiai", icon: MessageCircle },
   ],
   organization: [
     { to: "/organization", label: "Pultas", short: "Pultas", icon: LayoutDashboard },
     { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
     { to: "/organization/scan", label: "Skenuoti", short: "QR", icon: QrCode },
-    { to: "/organization", label: "Organizacija", short: "Org", icon: Building2, match: (p) => p.startsWith("/organization") },
+    { to: "/chat", label: "Pokalbiai", short: "Pokalbiai", icon: MessageCircle },
   ],
   school_admin: [
     { to: "/school", label: "Mokykla", short: "Mokykla", icon: School },
     { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
-    { to: "/school", label: "Auditas", short: "Auditas", icon: LayoutDashboard, match: (p) => p.startsWith("/school") },
+    { to: "/chat", label: "Pokalbiai", short: "Pokalbiai", icon: MessageCircle },
   ],
   admin: [
     { to: "/admin", label: "Admin", short: "Admin", icon: LayoutDashboard },

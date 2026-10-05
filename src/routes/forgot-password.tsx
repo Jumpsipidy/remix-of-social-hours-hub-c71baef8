@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Heart, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,13 +32,30 @@ function ForgotPasswordPage() {
       });
       if (error) throw error;
       sessionStorage.setItem("sv_reset_email", email.trim());
-      toast.success("Jei paskyra egzistuoja, laiškas išsiųstas. Įvesk kodą arba spausk nuorodą laiške.");
-      navigate({ to: "/update-password" });
+      setSent(true);
+      setTimeout(() => navigate({ to: "/update-password" }), 1800);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko išsiųsti atkūrimo nuorodos");
     } finally {
       setBusy(false);
     }
+  }
+
+  if (sent) {
+    return (
+      <div className="relative grid min-h-screen place-items-center overflow-hidden bg-background px-6 text-center">
+        <div>
+          <motion.div initial={{ x: -120, y: 40, rotate: -20, opacity: 0 }} animate={{ x: [ -120, 0, 0, 160 ], y: [40, 0, 0, -120], rotate: [-20, 0, 0, 25], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.6, times: [0, 0.35, 0.65, 1], ease: "easeInOut" }} className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-gradient-primary shadow-glow">
+            <Mail className="h-9 w-9 text-primary-foreground" />
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-6 text-2xl font-bold">Laiškas išsiųstas</motion.h1>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-2 text-sm text-muted-foreground">
+            Jei paskyra egzistuoja, rasi nuorodą ir kodą savo pašte. Atidarome kodo įvedimą…
+          </motion.p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -50,7 +69,7 @@ function ForgotPasswordPage() {
           <span className="font-display text-xl font-bold">Socialinės Valandos</span>
         </Link>
 
-        <div className="rounded-3xl border border-border bg-gradient-card p-8 shadow-elegant backdrop-blur-xl">
+        <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="rounded-3xl border border-border bg-gradient-card p-8 shadow-elegant backdrop-blur-xl">
           <Link to="/login" className="mb-5 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-3.5 w-3.5" /> Grįžti į prisijungimą
           </Link>
@@ -88,10 +107,10 @@ function ForgotPasswordPage() {
               disabled={busy}
               className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60"
             >
-              {busy ? "Siunčiama…" : "Siųsti atkūrimo nuorodą"}
+              {busy ? <span className="inline-flex items-center gap-2"><motion.span animate={{ x: [0, 6, 0] }} transition={{ repeat: Infinity, duration: 0.8 }}><Mail className="h-4 w-4" /></motion.span> Siunčiama…</span> : "Siųsti atkūrimo nuorodą"}
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

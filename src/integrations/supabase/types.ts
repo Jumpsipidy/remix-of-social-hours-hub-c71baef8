@@ -380,6 +380,32 @@ export type Database = {
           },
         ]
       }
+      chat_reads: {
+        Row: {
+          last_read_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_reads_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_rooms: {
         Row: {
           created_at: string
@@ -1376,8 +1402,26 @@ export type Database = {
         Args: { _reservation_id: string; _user_id: string }
         Returns: boolean
       }
+      list_my_conversations: {
+        Args: never
+        Returns: {
+          last_at: string
+          last_message: string
+          organization_id: string
+          organization_name: string
+          reservation_date: string
+          reservation_id: string
+          room_id: string
+          school_admin_id: string
+          school_admin_name: string
+          student_id: string
+          student_name: string
+          unread: number
+        }[]
+      }
       next_class_year: { Args: { _c: string }; Returns: string }
       open_dm_room: { Args: { _other: string }; Returns: string }
+      open_org_chat: { Args: { _org: string }; Returns: string }
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }

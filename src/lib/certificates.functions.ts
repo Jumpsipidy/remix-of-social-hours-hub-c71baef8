@@ -25,6 +25,13 @@ async function sha256Hex(msg: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 function makeCode(): string {
   const rnd = new Uint8Array(9);
   crypto.getRandomValues(rnd);
@@ -221,7 +228,22 @@ export const verifyCertificatePublic = createServerFn({ method: "POST" })
       _code: data.code.trim().toUpperCase(),
     });
     if (error) throw new Error(error.message);
-    return (res ?? { valid: false, reason: "not_found" }) as unknown as {
+    const result = (res ?? { valid: false, reason: "not_found" }) as any;
+    // Re-verify the HMAC signature so a row edited directly in the database
+    // (without the signing secret) is reported as forged.
+    if (result.valid) {
+      const { data: row } = await supabaseAdmin.from("certificates").select("code, content_hash, signature").eq("code", data.code.trim().toUpperCase()).maybeSingle();
+      const secrets = [process.env.CERT_SIGNING_SECRET, process.env.CERT_SIGNING_SECRET_OLD].filter(Boolean) as string[];
+      if (!row || !secrets.length) return { valid: false, reason: "unverifiable" } as typeof result;
+      let ok = false;
+      for (const sec of secrets) {
+        const expected = await hmacHex(sec, row.code + "|" + row.content_hash);
+        if (safeEqual(expected, row.signature)) { ok = true; break; }
+      }
+      if (!ok || row.content_hash !== result.content_hash) return { valid: false, reason: "tampered" } as typeof result;
+      result.signature_verified = true;
+    }
+    return result as {
       valid: boolean;
       reason?: string;
       code?: string;

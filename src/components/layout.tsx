@@ -81,6 +81,7 @@ export function Navbar() {
   if (activeRole) {
     const dash = DASHBOARD_BY_ROLE[activeRole];
     if (dash) links.push(dash);
+    if (activeRole !== "admin") links.push({ to: "/chat", label: "Pokalbiai" });
   }
 
   const handleSignOut = async () => {

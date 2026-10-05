@@ -46,7 +46,7 @@ export function InteractiveTasksMap({
         lng = CITY_COORDS[c].lng + ((h % 5) - 2) * 0.003;
       }
       const key = `${t.organization_id}:${lat.toFixed(3)}:${lng.toFixed(3)}`;
-      const p = byKey.get(key) ?? { id: key, lat, lng, orgId: t.organization_id, orgName: t.is_event ? (t.event_host_name || orgName(t.organization_id)) : orgName(t.organization_id), tasks: [], address: t.address || t.location || "" };
+      const p: Pin = byKey.get(key) ?? { id: key, lat, lng, orgId: t.organization_id, orgName: t.is_event ? (t.event_host_name || orgName(t.organization_id)) : orgName(t.organization_id), tasks: [], address: t.address || t.location || "" };
       p.tasks.push(t);
       byKey.set(key, p);
     });

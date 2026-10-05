@@ -66,7 +66,7 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
 
   const pass = () => {
     sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
-    void logActivity("security.gateway_passed", { meta: { reasons } });
+    void logActivity("security.sketchy_access", { meta: { passed: true, reasons } });
     setIsBlocked(false);
   };
 
