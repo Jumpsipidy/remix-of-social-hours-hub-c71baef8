@@ -48,3 +48,5 @@
 - [x] Bot gate: black 'Patikrinimas, ar jūs ne robotas' with own hold check → reCAPTCHA fallback
 - [ ] Signed-in end-to-end checks (blocked: no test session available for this Supabase project)
 - [ ] Deeper school-admin dashboard redesign (open)
+
+- [ ] Wrong-role dashboard access: show "Oops, tai ne tavo" and redirect to own dashboard
