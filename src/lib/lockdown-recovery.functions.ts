@@ -46,6 +46,17 @@ async function sendRecoveryEmail(to: string, code: string, silentMin: number) {
 }
 
 export const tryLockdownAutoRecovery = createServerFn({ method: "POST" }).handler(async () => {
+  // Only signed-in super admins may trigger recovery from the browser.
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const auth = getRequest()?.headers.get("authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (!token) return { ok: false, skipped: "unauthorized" as const };
+  const { supabaseAdmin: sbAuth } = await import("@/integrations/supabase/client.server");
+  const { data: u } = await sbAuth.auth.getUser(token);
+  if (!u?.user) return { ok: false, skipped: "unauthorized" as const };
+  const { data: isAdmin } = await sbAuth.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+  if (!isAdmin) return { ok: false, skipped: "unauthorized" as const };
+
   const now = Date.now();
   if (now - lastCheck < THROTTLE_MS) {
     return { ok: true, skipped: "throttled" as const };

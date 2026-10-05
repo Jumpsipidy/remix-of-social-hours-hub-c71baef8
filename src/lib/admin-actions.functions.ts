@@ -54,6 +54,11 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     const { data: usersPage, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
     if (listError) throw new Error(listError.message);
     const existing = usersPage.users.find((u) => u.email?.toLowerCase() === normalizedEmail);
+    // School admins may only create brand-new accounts. Overwriting an existing
+    // user (password, role, profile) is restricted to super admins.
+    if (existing && !isAdmin) {
+      throw new Error("Paskyra su šiuo el. paštu jau egzistuoja");
+    }
 
     const payload = {
       email: normalizedEmail,

@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { motion } from "framer-motion";
 import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2, Clock, Send, Sparkles, Rocket, Award, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
+import { signUpStudentWithCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +39,7 @@ function hoursRuleFor(cy: string): { locked: boolean; min: number; default: numb
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const verifyCode = useServerFn(verifySchoolSignupCode);
+  const signUpStudent = useServerFn(signUpStudentWithCode);
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [schoolsLoading, setSchoolsLoading] = useState(true);
@@ -96,25 +96,24 @@ function RegisterPage() {
     }
     setLoading(true);
     try {
-      const { ok } = await verifyCode({ data: { schoolId, code: schoolCode.trim() } });
-      if (!ok) { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
-      const { data: signUp, error } = await supabase.auth.signUp({
-        email, password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            role: mode,
-            full_name: fullName,
-            hours_needed: mode === "student" ? (isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded)) : 0,
-            school_id: mode === "student" ? schoolId : null,
-            class_year: mode === "student" ? classYear : null,
-          },
+      const res = await signUpStudent({
+        data: {
+          email: email.trim(),
+          password,
+          fullName,
+          schoolId,
+          classYear: classYear as never,
+          hoursNeeded: isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded),
+          code: schoolCode.trim(),
+          redirectTo: `${window.location.origin}/`,
         },
       });
-      if (error) throw error;
-      if (mode === "student" && signUp.user) {
-        await supabase.from("profiles").update({ school_id: schoolId, class_year: classYear }).eq("id", signUp.user.id);
+      if (!res.ok) {
+        if (res.reason === "bad_code") { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
+        throw new Error(res.reason === "signup" && res.message ? res.message : "Nepavyko sukurti paskyros");
       }
+      const signUp = { session: res.session };
+      if (res.session) await supabase.auth.setSession(res.session);
       sessionStorage.setItem("sv_signup_email", email.trim());
       if (!signUp.session) {
         toast.success("Paskyra sukurta! Patvirtink el. paštą kodu.");

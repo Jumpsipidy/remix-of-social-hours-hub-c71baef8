@@ -36,21 +36,29 @@ export const Route = createFileRoute("/api/public/error-beacon")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = (await request.json()) as { items?: Item[] };
+          const body = (await request.json()) as { items?: Item[]; access_token?: unknown };
           const items = Array.isArray(body?.items) ? body.items.slice(0, 50) : [];
           if (items.length === 0) return new Response("empty", { status: 204 });
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+          // Only signed-in users may submit; identity comes from the verified token.
+          const token = typeof body?.access_token === "string" ? body.access_token : "";
+          if (!token || token.split(".").length !== 3) return new Response("unauthorized", { status: 401 });
+          const { data: authData } = await supabaseAdmin.auth.getUser(token);
+          const uid = authData?.user?.id;
+          if (!uid) return new Response("unauthorized", { status: 401 });
+          const ALLOWED = new Set(["client.error", "supabase.error"]);
+
           const rows = items
             .map((it) => it.row)
-            .filter((r): r is NonNullable<typeof r> => !!r && typeof r.action === "string")
+            .filter((r): r is NonNullable<typeof r> => !!r && typeof r.action === "string" && ALLOWED.has(r.action))
             .filter((r) => !isTelemetryRow(r))
             .map((r) => ({
-              user_id: r.user_id ?? null,
+              user_id: uid,
               action: String(r.action).slice(0, 100),
               meta: {
-                ...(r.meta ?? {}),
+                ...(JSON.stringify(r.meta ?? {}).length <= 8000 ? (r.meta ?? {}) : { truncated: true }),
                 _beacon: true,
                 _received_at: new Date().toISOString(),
               } as any,
@@ -60,7 +68,7 @@ export const Route = createFileRoute("/api/public/error-beacon")({
 
           const { error } = await supabaseAdmin.from("activity_log").insert(rows as any);
           if (error) {
-            return new Response(JSON.stringify({ error: error.message }), {
+            return new Response(JSON.stringify({ error: "insert failed" }), {
               status: 500,
               headers: { "Content-Type": "application/json" },
             });
@@ -70,7 +78,7 @@ export const Route = createFileRoute("/api/public/error-beacon")({
             headers: { "Content-Type": "application/json" },
           });
         } catch (e) {
-          return new Response(JSON.stringify({ error: (e as Error).message }), {
+          return new Response(JSON.stringify({ error: "bad request" }), {
             status: 400,
             headers: { "Content-Type": "application/json" },
           });

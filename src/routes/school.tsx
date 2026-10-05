@@ -1,3 +1,4 @@
+import { csvCell } from "@/lib/csv-safe";
 import { QuickTiles } from "@/components/quick-tiles";
 import { WrongRole } from "@/components/wrong-role";
 import { MessageCircle } from "lucide-react";
@@ -434,15 +435,15 @@ function SchoolDashboard() {
           const s = studentById[r.student_id];
           const fl = (flagsByRes[r.id] ?? []).map((f) => f.label).join("; ");
           return [
-            `"${(s?.full_name ?? "").replace(/"/g, '""')}"`,
-            s?.class_year ?? "",
+            csvCell(s?.full_name ?? ""),
+            csvCell(s?.class_year ?? ""),
             r.reservation_date,
             r.start_time?.slice(0, 5),
             r.end_time?.slice(0, 5),
             Number(r.hours_to_earn),
             r.status,
-            `"${orgName(r.organization_id).replace(/"/g, '""')}"`,
-            `"${fl.replace(/"/g, '""')}"`,
+            csvCell(orgName(r.organization_id)),
+            csvCell(fl),
             reviewed.has(r.id) ? "taip" : "ne",
           ].join(",");
         }),

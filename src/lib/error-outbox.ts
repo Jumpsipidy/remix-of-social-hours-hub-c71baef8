@@ -106,7 +106,18 @@ export function beaconFlush() {
     return;
   }
   try {
-    const blob = new Blob([JSON.stringify({ items: reportable })], { type: "application/json" });
+    let accessToken: string | null = null;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && /^sb-.*-auth-token$/.test(k)) {
+          accessToken = JSON.parse(localStorage.getItem(k) ?? "null")?.access_token ?? null;
+          break;
+        }
+      }
+    } catch { /* ignore */ }
+    if (!accessToken) return; // beacon endpoint only accepts signed-in reports
+    const blob = new Blob([JSON.stringify({ items: reportable, access_token: accessToken })], { type: "application/json" });
     const ok = navigator.sendBeacon("/api/public/error-beacon", blob);
     if (ok) write([]); // optimistic clear — server will dedupe by fingerprint
   } catch {

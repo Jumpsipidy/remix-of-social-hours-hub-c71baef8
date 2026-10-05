@@ -476,7 +476,25 @@ export const escalateAppError = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     // Explicit admin tests bypass every filter, rate limit and dedupe so the
     // super admin can prove the alert channels actually work end-to-end.
-    const isTest = data.test === true;
+    // Identify the caller from the verified bearer token only (never trust
+    // a client-supplied email).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let authedUserId: string | null = null;
+    let callerIsAdmin = false;
+    try {
+      const auth = getRequest()?.headers.get("authorization") ?? "";
+      const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+      if (token && token.split(".").length === 3) {
+        const { data: u } = await supabaseAdmin.auth.getUser(token);
+        authedUserId = u?.user?.id ?? null;
+        if (authedUserId) {
+          const { data: adm } = await supabaseAdmin.rpc("has_role", { _user_id: authedUserId, _role: "admin" });
+          callerIsAdmin = !!adm;
+        }
+      }
+    } catch { /* anonymous */ }
+    // Test mode (bypasses filters) is reserved for admins.
+    const isTest = data.test === true && callerIsAdmin;
 
     // Filter noise server-side too. UI freezes / slow API are telemetry only:
     // log them for debugging context, but never email, Discord, AI-analyze, or lockdown.
@@ -495,8 +513,10 @@ export const escalateAppError = createServerFn({ method: "POST" })
     // request outright. Rate limiting only silences the notification channels;
     // logging + lockdown evaluation always run.
     const rateLimited = !isTest && !checkRate(fp);
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Over the per-IP cap: drop entirely (no row, no lockdown evaluation).
+    if (rateLimited) return { ok: true, rateLimited: true };
+    // Anonymous reports are not persisted and can never influence lockdown.
+    if (!authedUserId && !isTest) return { ok: true, ignored: true };
 
     // Compute one stable group ID before logging so every row, alert and AI
     // analysis points to the same fingerprint.
@@ -507,15 +527,6 @@ export const escalateAppError = createServerFn({ method: "POST" })
     // matched against a real profile) may count toward the auto-lockdown
     // threshold. Anonymous reports are still logged, but they can't take the
     // site down.
-    let authedUserId: string | null = null;
-    if (data.userEmail) {
-      const { data: prof } = await supabaseAdmin
-        .from("profiles")
-        .select("id")
-        .eq("email", data.userEmail.toLowerCase())
-        .maybeSingle();
-      authedUserId = (prof as { id: string } | null)?.id ?? null;
-    }
 
     await supabaseAdmin.from("activity_log").insert({
       user_id: authedUserId,
@@ -618,6 +629,7 @@ export const escalateAppError = createServerFn({ method: "POST" })
         .from("activity_log")
         .select("meta")
         .in("action", ["client.error", "supabase.error", "app.critical", "app.warning"])
+        .not("user_id", "is", null)
         .gte("created_at", massSince)
         .limit(MASS_THRESHOLD + 50);
       const eligible = ((massRows ?? []) as Array<{ meta: { message?: string } | null }>).filter(

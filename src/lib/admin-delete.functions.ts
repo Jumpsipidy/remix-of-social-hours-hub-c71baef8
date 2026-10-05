@@ -59,7 +59,13 @@ export const adminListAllAccounts = createServerFn({ method: "GET" })
 
 export const adminDeleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: { userId: string }) => input)
+  .validator((input: { userId: string }) => {
+    const userId = String(input?.userId ?? "");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      throw new Error("Netinkamas vartotojo ID");
+    }
+    return { userId };
+  })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
@@ -88,8 +94,9 @@ export const adminDeleteAccount = createServerFn({ method: "POST" })
     await supabaseAdmin.from("reservations").delete().or(`student_id.eq.${id},organization_id.eq.${id}`);
     await supabaseAdmin.from("tasks").delete().eq("organization_id", id);
     await supabaseAdmin.from("user_achievements").delete().eq("user_id", id);
-    await supabaseAdmin.from("friendships").delete().or(`user_id.eq.${id},friend_id.eq.${id}`);
-    await supabaseAdmin.from("dm_messages").delete().or(`sender_id.eq.${id},receiver_id.eq.${id}`);
+    await supabaseAdmin.from("friendships").delete().or(`requester_id.eq.${id},addressee_id.eq.${id}`);
+    await supabaseAdmin.from("dm_messages").delete().eq("sender_id", id);
+    await supabaseAdmin.from("dm_rooms").delete().or(`user_a.eq.${id},user_b.eq.${id}`);
     await supabaseAdmin.from("certificates").delete().eq("student_id", id);
     
     // Bug reports & access requests (best-effort)
