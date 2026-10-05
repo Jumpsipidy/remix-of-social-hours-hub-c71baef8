@@ -36,6 +36,7 @@ import { PageShell } from "../components/layout";
 import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CreateEventPanel } from "@/components/create-event-panel";
+import { SchoolEventsManager } from "@/components/school-events-manager";
 import { SchoolCreateOrgPanel } from "@/components/school-create-org-panel";
 import { SchoolClaimPanel } from "@/components/school-claim-panel";
 import { SchoolClassesPanel } from "@/components/school-classes-panel";
@@ -920,7 +921,12 @@ function SchoolDashboard() {
 
           {tab === "events" && (
             <Panel title="Vienkartiniai renginiai" subtitle="Mokyklos admino kuriamos veiklos">
-              <CreateEventPanel />
+              <CreateEventPanel onCreated={() => setEventsKey((k) => k + 1)} />
+            </Panel>
+          )}
+          {tab === "events" && (
+            <Panel title="Užsiregistravę mokiniai" subtitle="Priimk arba atmesk mokinius, po renginio patvirtink valandas">
+              <SchoolEventsManager refreshKey={eventsKey} />
             </Panel>
           )}
 
