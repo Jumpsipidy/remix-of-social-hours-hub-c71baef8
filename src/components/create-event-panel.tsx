@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { CalendarPlus, MapPin, Clock, FileText, Users, Sparkles } from "lucide-react";
 import { TagsInput } from "@/components/tags-input";
+import { CITIES, type City } from "@/lib/cities";
 
 /**
  * School admins post one-time volunteer events (not tied to an organization).
@@ -22,6 +23,7 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
   const [hours, setHours] = useState(2);
   const [spots, setSpots] = useState(5);
   const [location, setLocation] = useState("");
+  const [city, setCity] = useState<City>("Šeduva");
   const [desc, setDesc] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -47,6 +49,7 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
       available_hours: hours,
       spots_total: spots,
       location,
+      city,
       is_open: true,
     } as any);
     setBusy(false);
@@ -96,8 +99,15 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
           <div className="mt-1 flex items-center gap-2 rounded-xl border border-border bg-background px-3">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <input value={location} onChange={(e) => setLocation(e.target.value)}
-              className="h-10 w-full bg-transparent text-sm outline-none" placeholder="Miestas, adresas" />
+              className="h-10 w-full bg-transparent text-sm outline-none" placeholder="Adresas" />
           </div>
+        </label>
+        <label className="text-xs font-semibold text-muted-foreground">
+          Miestas
+          <select value={city} onChange={(e) => setCity(e.target.value as City)}
+            className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none">
+            {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
         </label>
         <label className="text-xs font-semibold text-muted-foreground">
           Pradžia
