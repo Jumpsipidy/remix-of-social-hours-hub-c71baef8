@@ -1382,6 +1382,10 @@ export type Database = {
           longest_login_streak: number
         }[]
       }
+      has_reservation_for_task: {
+        Args: { _task_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

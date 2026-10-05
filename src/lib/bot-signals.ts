@@ -78,6 +78,8 @@ export const REASON_LABELS: Record<string, string> = {
   bad_pow: "Įrenginys neatliko skaičiavimo užduoties",
   synthetic_event: "Paspaudimas sugeneruotas programiškai",
   short_hold: "Mygtukas laikytas per trumpai",
+  wrong_order: "Paveikslėliai paspausti ne ta tvarka",
+  tap_too_fast: "Paveikslėliai paspausti per greitai (ne žmogaus greičiu)",
   no_motion: "Pelė visiškai nejudėjo — būdinga robotams",
   robotic_timing: "Judesiai per tolygūs, kaip mašinos",
 };
