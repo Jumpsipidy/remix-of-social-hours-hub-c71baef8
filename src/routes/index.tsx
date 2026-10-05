@@ -290,18 +290,7 @@ function Home() {
 
           <div className="relative mx-auto max-w-4xl text-center">
 
-            <div
-              className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
-            >
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 motion-reduce:hidden"
-                style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
-                
-              />
-              <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
-              <span className="relative">Lietuvos moksleiviams · nemokamai</span>
-            </div>
+
             <div className="mb-6 flex justify-center">
               <Link to="/versijos" className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition active:scale-95">
                 <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">NAUJA</span>
