@@ -413,7 +413,7 @@ export type Database = {
           organization_id: string
           reservation_id: string | null
           school_admin_id: string | null
-          student_id: string
+          student_id: string | null
         }
         Insert: {
           created_at?: string
@@ -421,7 +421,7 @@ export type Database = {
           organization_id: string
           reservation_id?: string | null
           school_admin_id?: string | null
-          student_id: string
+          student_id?: string | null
         }
         Update: {
           created_at?: string
@@ -429,7 +429,7 @@ export type Database = {
           organization_id?: string
           reservation_id?: string | null
           school_admin_id?: string | null
-          student_id?: string
+          student_id?: string | null
         }
         Relationships: [
           {
@@ -1402,6 +1402,14 @@ export type Database = {
         Args: { _reservation_id: string; _user_id: string }
         Returns: boolean
       }
+      list_chat_contacts: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       list_my_conversations: {
         Args: never
         Returns: {
@@ -1420,6 +1428,7 @@ export type Database = {
         }[]
       }
       next_class_year: { Args: { _c: string }; Returns: string }
+      open_chat_with: { Args: { _other: string }; Returns: string }
       open_dm_room: { Args: { _other: string }; Returns: string }
       open_org_chat: { Args: { _org: string }; Returns: string }
       promote_class_years: { Args: never; Returns: Json }

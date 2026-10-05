@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/chat")({
 });
 
 type Conv = {
-  room_id: string; reservation_id: string | null; student_id: string; organization_id: string; school_admin_id: string | null;
+  room_id: string; reservation_id: string | null; student_id: string | null; organization_id: string; school_admin_id: string | null;
   student_name: string | null; organization_name: string | null; school_admin_name: string | null;
   reservation_date: string | null; last_message: string | null; last_at: string; unread: number;
 };
@@ -108,9 +108,10 @@ function ChatPage() {
 
   const active = convs?.find((c) => c.room_id === activeId) ?? null;
   const titleFor = (c: Conv) => {
-    if (profile?.role === "organization") return c.student_id === c.school_admin_id ? (c.school_admin_name ?? "Mokyklos administracija") : (c.student_name ?? "Mokinys");
+    const schoolOnly = !c.student_id;
+    if (profile?.role === "organization") return schoolOnly ? (c.school_admin_name ?? "Mokyklos administracija") : (c.student_name ?? "Mokinys");
     if (profile?.role === "student") return c.organization_name ?? "Organizacija";
-    return `${c.student_id === c.school_admin_id ? "Mokykla" : c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
+    return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
   const shown = useMemo(() => (convs ?? []).filter((c) => titleFor(c).toLowerCase().includes(filter.toLowerCase())), [convs, filter, profile?.role]);
   const totalUnread = (convs ?? []).reduce((a, c) => a + c.unread, 0);
@@ -124,6 +125,24 @@ function ChatPage() {
     if (id === active.student_id) return active.student_name ?? "Mokinys";
     return "Mokyklos administratorius";
   };
+
+  const [picker, setPicker] = useState(false);
+  const [contacts, setContacts] = useState<{ id: string; name: string; role: string }[] | null>(null);
+  const [contactQ, setContactQ] = useState("");
+  async function openPicker() {
+    setPicker(true);
+    if (contacts) return;
+    const { data, error } = await (supabase.rpc as any)("list_chat_contacts");
+    if (error) { toast.error("Nepavyko įkelti kontaktų"); setContacts([]); return; }
+    setContacts((data as any[]) ?? []);
+  }
+  async function startWith(id: string) {
+    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: id });
+    if (error) { toast.error(error.message); return; }
+    setPicker(false);
+    await loadConvs();
+    navigate({ to: "/chat", search: { room: data as string } });
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -148,9 +167,36 @@ function ChatPage() {
               <Clock className="h-3.5 w-3.5" /> Žinutės saugomos 12 dienų{totalUnread ? ` · ${totalUnread} neperskaitytų` : ""}
             </p>
           </div>
+          <button type="button" onClick={openPicker} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition active:scale-95">
+            <MessageCircle className="h-4 w-4" /> Naujas pokalbis
+          </button>
         </div>
+        <AnimatePresence>
+          {picker && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 sm:items-center sm:p-4" onClick={() => setPicker(false)}>
+              <motion.div initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }} transition={{ duration: 0.2 }} onClick={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-md overflow-hidden rounded-t-3xl border border-border bg-card sm:rounded-3xl">
+                <div className="border-b border-border p-4">
+                  <h2 className="font-display text-lg font-bold">Kam rašyti?</h2>
+                  <input autoFocus value={contactQ} onChange={(e) => setContactQ(e.target.value)} placeholder="Ieškoti…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                </div>
+                <div className="max-h-[55vh] overflow-y-auto p-2">
+                  {contacts === null ? (
+                    <div className="space-y-2 p-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}</div>
+                  ) : contacts.filter((c) => c.name?.toLowerCase().includes(contactQ.toLowerCase())).length === 0 ? (
+                    <p className="p-6 text-center text-sm text-muted-foreground">Kontaktų nerasta.</p>
+                  ) : contacts.filter((c) => c.name?.toLowerCase().includes(contactQ.toLowerCase())).map((c) => (
+                    <button key={c.id} type="button" onClick={() => startWith(c.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted active:scale-[0.99]">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">{c.role === "organization" ? <Building2 className="h-4 w-4" /> : c.role === "school_admin" ? <ShieldCheck className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}</span>
+                      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.name}</span><span className="text-xs text-muted-foreground">{c.role === "organization" ? "Organizacija" : c.role === "school_admin" ? "Mokyklos administracija" : "Mokinys"}</span></span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="grid h-[70vh] min-h-[480px] overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[320px_1fr]">
+        <div className="grid h-[calc(100dvh-14rem)] min-h-[420px] md:h-[70vh] overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[320px_1fr]">
           {/* List */}
           <aside className={`flex min-h-0 flex-col border-r border-border ${activeId ? "hidden md:flex" : "flex"}`}>
             <div className="border-b border-border p-3">
