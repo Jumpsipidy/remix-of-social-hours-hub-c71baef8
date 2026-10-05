@@ -17,7 +17,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 /** School admin: own one-time events + the students who signed up, with accept / decline / award hours. */
-export function SchoolEventsManager({ refreshKey = 0 }: { refreshKey?: number }) {
+export function SchoolEventsManager({ refreshKey = 0, onlyPending = false }: { refreshKey?: number; onlyPending?: boolean }) {
   const { user } = useAuth();
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [res, setRes] = useState<Res[]>([]);
@@ -45,6 +45,15 @@ export function SchoolEventsManager({ refreshKey = 0 }: { refreshKey?: number })
   }, [user]);
 
   useEffect(() => { void load(); }, [load, refreshKey]);
+  // Live updates — no page refresh needed
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`school-events-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => { void load(); })
+      .subscribe();
+    return () => { void supabase.removeChannel(ch); };
+  }, [user, load]);
 
   const setStatus = async (r: Res, status: "approved" | "declined") => {
     setBusy(r.id);
@@ -64,12 +73,17 @@ export function SchoolEventsManager({ refreshKey = 0 }: { refreshKey?: number })
   };
 
   if (events === null) return <div className="space-y-2">{[0, 1].map((i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}</div>;
+  if (onlyPending) {
+    const pend = res.filter((r) => r.status === "pending");
+    if (!pend.length) return null;
+  }
   if (!events.length) return <p className="rounded-2xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Dar nesukūrei renginių. Kai mokiniai užsiregistruos, jų užklausos atsiras čia.</p>;
 
   return (
     <div className="space-y-3">
       {events.map((e) => {
-        const rows = res.filter((r) => r.task_id === e.id);
+        const rows = res.filter((r) => r.task_id === e.id && (!onlyPending || r.status === "pending"));
+        if (onlyPending && !rows.length) return null;
         const pending = rows.filter((r) => r.status === "pending").length;
         return (
           <div key={e.id} className="rounded-2xl border border-border bg-card p-4">
