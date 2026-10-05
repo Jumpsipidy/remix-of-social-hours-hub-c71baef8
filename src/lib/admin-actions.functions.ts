@@ -108,3 +108,49 @@ export const schoolAdminCreatedCount = createServerFn({ method: "GET" })
     const count = usersPage.users.filter((u) => (u.user_metadata as any)?.created_by_school_admin === context.userId).length;
     return { count, cap: MAX_ORG_ACCOUNTS_PER_SCHOOL_ADMIN };
   });
+
+async function assertSuperAdmin(context: { supabase: any; userId: string }) {
+  const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+  if (!isAdmin) throw new Error("Tik Super Admin");
+}
+
+/** Super Admin: list all school-admin accounts with their school + classes. */
+export const adminListSchoolAdmins = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: admins, error }, { data: schools }] = await Promise.all([
+      (supabaseAdmin.from("profiles") as any)
+        .select("id, full_name, email, associated_school_id, school_id, assigned_classes, auto_year_renewal, created_at")
+        .eq("role", "school_admin")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin.from("schools").select("id, name, city").order("name"),
+    ]);
+    if (error) throw new Error(error.message);
+    return { admins: (admins ?? []) as any[], schools: schools ?? [] };
+  });
+
+/** Super Admin: change school, classes and auto renewal of a school admin. */
+export const adminUpdateSchoolAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input: { id: string; school_id: string; assigned_classes: string[]; auto_year_renewal: boolean; full_name?: string }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(input.id) || !/^[0-9a-f-]{36}$/i.test(input.school_id)) throw new Error("Netinkami duomenys");
+    return { ...input, assigned_classes: (input.assigned_classes ?? []).map((c) => String(c).trim()).filter(Boolean).slice(0, 40) };
+  })
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: target } = await supabaseAdmin.from("profiles").select("role").eq("id", data.id).maybeSingle();
+    if ((target as any)?.role !== "school_admin") throw new Error("Tai ne mokyklos administratorius");
+    const patch: Record<string, unknown> = {
+      school_id: data.school_id,
+      associated_school_id: data.school_id,
+      assigned_classes: data.assigned_classes,
+      auto_year_renewal: data.auto_year_renewal,
+    };
+    if (data.full_name?.trim()) patch.full_name = data.full_name.trim().slice(0, 120);
+    const { error } = await (supabaseAdmin.from("profiles") as any).update(patch).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
