@@ -212,6 +212,26 @@ export const sendOrgInviteEmail = createServerFn({ method: "POST" })
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
 
+    // Only invite addresses that actually asked to join (organization access
+    // requests) — admins can't use this to email arbitrary recipients.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: req } = await supabaseAdmin
+      .from("organization_access_requests")
+      .select("id")
+      .ilike("contact_email", data.to.trim())
+      .limit(1)
+      .maybeSingle();
+    if (!req) throw new Error("Kvietimą galima siųsti tik organizacijai, pateikusiai prieigos užklausą");
+
+    // Audit every invitation.
+    await supabaseAdmin.from("activity_log").insert({
+      user_id: context.userId,
+      action: "admin.org_invite_sent",
+      entity_type: "organization_access_request",
+      meta: { to: data.to.trim().toLowerCase() },
+    });
+
+
     const html = renderOrgInviteEmail({ 
       orgName: data.orgName || "Organizacija",
       variant: (data.variant as 1 | 2 | 3 | 4 | 5) || 1

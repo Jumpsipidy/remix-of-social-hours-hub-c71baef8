@@ -59,7 +59,13 @@ export const adminListAllAccounts = createServerFn({ method: "GET" })
 
 export const adminDeleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: { userId: string }) => input)
+  .validator((input: { userId: string }) => {
+    const userId = String(input?.userId ?? "");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      throw new Error("Netinkamas vartotojo ID");
+    }
+    return { userId };
+  })
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
