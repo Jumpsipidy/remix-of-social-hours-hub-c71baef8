@@ -728,6 +728,7 @@ export type Database = {
           address: string | null
           assigned_classes: string[]
           associated_school_id: string | null
+          auto_year_renewal: boolean
           bio: string | null
           city: string | null
           class_year: string | null
@@ -762,6 +763,7 @@ export type Database = {
           address?: string | null
           assigned_classes?: string[]
           associated_school_id?: string | null
+          auto_year_renewal?: boolean
           bio?: string | null
           city?: string | null
           class_year?: string | null
@@ -796,6 +798,7 @@ export type Database = {
           address?: string | null
           assigned_classes?: string[]
           associated_school_id?: string | null
+          auto_year_renewal?: boolean
           bio?: string | null
           city?: string | null
           class_year?: string | null
@@ -931,6 +934,7 @@ export type Database = {
           check_in_code: string | null
           checked_in_at: string | null
           checked_in_by: string | null
+          city: string | null
           created_at: string
           end_time: string
           hours_to_earn: number
@@ -953,6 +957,7 @@ export type Database = {
           check_in_code?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
+          city?: string | null
           created_at?: string
           end_time: string
           hours_to_earn?: number
@@ -975,6 +980,7 @@ export type Database = {
           check_in_code?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
+          city?: string | null
           created_at?: string
           end_time?: string
           hours_to_earn?: number
@@ -1110,6 +1116,7 @@ export type Database = {
         Row: {
           address: string | null
           available_hours: number
+          city: string | null
           created_at: string
           created_by: string | null
           description: string
@@ -1136,6 +1143,7 @@ export type Database = {
         Insert: {
           address?: string | null
           available_hours?: number
+          city?: string | null
           created_at?: string
           created_by?: string | null
           description?: string
@@ -1162,6 +1170,7 @@ export type Database = {
         Update: {
           address?: string | null
           available_hours?: number
+          city?: string | null
           created_at?: string
           created_by?: string | null
           description?: string
