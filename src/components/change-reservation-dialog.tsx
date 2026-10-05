@@ -27,7 +27,7 @@ function calcHours(start: string, end: string) {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
   const diff = eh * 60 + em - (sh * 60 + sm);
-  return Math.max(0, Math.round((diff / 60) * 10) / 10);
+  return Math.max(0, Math.round(diff / 60));
 }
 
 export function ChangeReservationDialog({ open, reservation, onClose, onSaved }: Props) {

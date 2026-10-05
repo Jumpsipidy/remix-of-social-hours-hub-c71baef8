@@ -49,7 +49,7 @@ function calcHours(s: string, e: string) {
   const [eh, em] = e.split(":").map(Number);
   const m = eh * 60 + em - (sh * 60 + sm);
   if (m <= 0) return 0;
-  const h = Math.round((m / 60) * 100) / 100;
+  const h = Math.round(m / 60);
   return Math.min(MAX_HOURS_PER_SESSION, h);
 }
 
