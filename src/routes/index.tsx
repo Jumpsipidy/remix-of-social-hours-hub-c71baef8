@@ -302,12 +302,18 @@ function Home() {
               <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
               <span className="relative">Lietuvos moksleiviams · nemokamai</span>
             </div>
+            <div className="mb-6 flex justify-center">
+              <Link to="/versijos" className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition active:scale-95">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">NAUJA</span>
+                V2.5 — didžiausias atnaujinimas <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
 
             <KineticHeadline
               as="h2"
               text="Kiekviena valanda — žingsnis pokyčio link"
               accentWords={["valanda"]}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[40px] sm:text-5xl md:text-7xl lg:text-[104px] font-display font-black text-white"
+              className="mb-6 sm:mb-8 leading-[1.05] text-[34px] sm:text-5xl md:text-7xl lg:text-[104px] font-display font-black text-white"
             />
 
             <p
@@ -375,6 +381,23 @@ function Home() {
 
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
+        <section className="relative px-4 pt-4 pb-12 sm:px-6">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { t: "Pokalbiai", d: "Mokinys, organizacija ir mokykla vienoje vietoje", to: "/chat" },
+              { t: "Žemėlapis", d: "Užduotys Šeduvoje, Radviliškyje, Šiauliuose", to: "/tasks" },
+              { t: "Draugai", d: "Kviesk draugą ir eikite kartu", to: "/student" },
+              { t: "QR pažymėjimai", d: "Patikrinami per sekundę", to: "/verify" },
+            ].map((f) => (
+              <Link key={f.t} to={f.to} className="group rounded-2xl border border-border bg-card/70 p-4 transition hover:border-primary/50 active:scale-[0.98]">
+                <p className="font-display text-base font-bold text-foreground">{f.t}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.d}</p>
+                <ArrowRight className="mt-3 h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
         <section className="relative border-y border-white/10">
           <div className="mx-auto grid max-w-7xl grid-cols-1 md:grid-cols-3">
             {[

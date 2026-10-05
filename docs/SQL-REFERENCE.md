@@ -290,3 +290,9 @@ WHERE jobname IN ('purge-messages-hourly','purge-dm-15m','recurring-tasks-daily'
 -- 3. Health scan (turėtų grąžinti "critical_failures": 0)
 SELECT public.run_deep_health_scan();
 ```
+
+## V2.5 pokalbių funkcijos
+- `open_chat_with(_other uuid) → uuid` — atidaro/sukuria pokalbį pagal rolių taisykles.
+- `open_school_student_chat(_student uuid, _org uuid) → uuid` — mokyklos admin trišalis pokalbis.
+- `list_chat_contacts() → (id, name, role, class_year, org_id, org_name)` — kam vartotojas gali rašyti.
+- `chat_rooms.student_id` — nullable.

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/layout";
-import { Rocket, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, PartyPopper, ChevronDown, ChevronsUpDown } from "lucide-react";
 
 const TITLE = "Versijų istorija — visi Socialinių Valandų atnaujinimai";
 const DESC =
@@ -37,7 +38,31 @@ const VERSIONS: Version[] = [
       { tag: "Pataisyta", text: "Administratoriaus sukurta mokyklos paskyra nebetampa mokinio paskyra." },
       { tag: "Patobulinta", text: "Klasių kėlimas kiekvieną rugsėjo 1 d. ir automatinis mokytojų klasių atnaujinimas." },
       { tag: "Patobulinta", text: "Gražesni užkrovimo šablonai visuose puslapiuose ir klaidų sekimas." },
-      { tag: "Dizainas", text: "Ateityje: tikras šviesus režimas, pilnas pritaikymas telefonams, atnaujintas mokyklos skydelis ir sklandesnis atsijungimas." },
+      { tag: "Dizainas", text: "Ateityje: atnaujintas mokyklos skydelis, dar daugiau telefonų pritaikymo ir naujos ataskaitos mokykloms." },
+      { tag: "Nauja", text: "Naujas pokalbis vienu mygtuku: organizacijos rašo mokiniams ir mokykloms, mokyklos — organizacijoms." },
+      { tag: "Nauja", text: "Mokyklos administracija mato savo mokinius organizacijose ir gali pradėti trišalį pokalbį (mokinys + organizacija + mokykla)." },
+      { tag: "Nauja", text: "Kontaktų sąraše rodoma mokinio klasė ir klasių filtrai." },
+      { tag: "Nauja", text: "Super administratorius renkasi mokyklą, kelias ar visas klases ir automatinį metų atnaujinimą." },
+      { tag: "Nauja", text: "Testinės klaidos mygtukas Sentry stebėjimui ir ekrano įrašai klaidų metu (tekstas paslėptas)." },
+      { tag: "Nauja", text: "Užduoties langas su informacija, žemėlapiu, rezervacija, žinute organizacijai ir jos profiliu." },
+      { tag: "Nauja", text: "Miesto pasirinkimas ir filtrai: Šeduva, Radviliškis, Šiauliai." },
+      { tag: "Nauja", text: "Atsijungimo animacija ir naujos perėjimo animacijos tarp prisijungimo ir registracijos." },
+      { tag: "Nauja", text: "Slaptažodžio atkūrimo animacija su skrendančiu laišku." },
+      { tag: "Nauja", text: "Profilio užbaigimas po Google, Discord ar GitHub prisijungimo." },
+      { tag: "Nauja", text: "Super administratoriaus skydelių peržiūra — kiekvieną rolę galima apžiūrėti atskirai." },
+      { tag: "Nauja", text: "Incidentų paieška pagal SC- ir #0TY263T formato kodus." },
+      { tag: "Sauga", text: "Serverio lygio užrakinimas: užrakto metu duomenų keisti negalima net apeinant svetainę." },
+      { tag: "Sauga", text: "Automatinis užrakinimas po 100 klaidų per 10 minučių." },
+      { tag: "Sauga", text: "Mokyklos administratorius mato tik savo mokyklos mokinių pokalbius." },
+      { tag: "Sauga", text: "Pažymėjimo parašas tikrinamas iš naujo — duomenų bazėje pakeisti įrašai pažymimi kaip suklastoti." },
+      { tag: "Sauga", text: "Pašalintas atsarginis viešas parašo raktas, apsaugoti el. laiškai nuo įterpto kodo, testinių duomenų trynimas liečia tik testines paskyras." },
+      { tag: "Patobulinta", text: "Pasenusios rezervacijos automatiškai atmetamos po 12 valandų." },
+      { tag: "Patobulinta", text: "Analitika skaičiuoja unikalius vartotojus, ne pakartotinius apsilankymus." },
+      { tag: "Patobulinta", text: "Telefonuose išjungti sunkūs efektai — greitesni meniu, sklandus slinkimas, be priartinimo rašant." },
+      { tag: "Dizainas", text: "„Mokyklos akys“ dabar tikras šviesus režimas visuose puslapiuose." },
+      { tag: "Dizainas", text: "Apvalus logotipas, nauji klaidų ekranai ir gražesni užkrovimo šablonai." },
+      { tag: "Pataisyta", text: "Mokiniai vėl mato savo ir draugų rezervacijas; pokalbių teisių klaidos išspręstos." },
+      { tag: "Pataisyta", text: "Nebelieka juodo blyksnio ir „Nepavyko įkelti duomenų“ skydeliuose." },
     ],
   },
   {
@@ -358,71 +383,90 @@ export const Route = createFileRoute("/versijos")({
 });
 
 function VersionsPage() {
+  const [open, setOpen] = useState<Set<string>>(() => new Set([VERSIONS[0]?.v ?? ""]));
+  const allOpen = open.size === VERSIONS.length;
+  const toggle = (v: string) => setOpen((o) => { const n = new Set(o); n.has(v) ? n.delete(v) : n.add(v); return n; });
+  const big = VERSIONS[0];
   return (
     <PageShell>
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-20">
-        <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          <Rocket className="h-3.5 w-3.5 text-primary" /> Versijų istorija
-        </span>
-        <h1 className="mt-5 font-display text-3xl font-bold leading-tight sm:text-5xl">
-          Viskas, kas pasikeitė nuo pirmos dienos
-        </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Socialinės Valandos auga viešai. Žemiau — kiekviena versija, naujos funkcijos ir pataisymai.
-        </p>
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+        <section className="relative overflow-hidden rounded-[2rem] border border-primary/40 bg-card p-6 sm:p-10">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            {Array.from({ length: 18 }).map((_, n) => (
+              <span key={n} className="sv-confetti absolute block h-2 w-1.5 rounded-sm bg-primary" style={{ left: `${(n * 53) % 100}%`, animationDelay: `${(n % 6) * 0.35}s`, opacity: 0.25 + (n % 4) * 0.15 }} />
+            ))}
+          </div>
+          <span className="relative inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground">
+            <PartyPopper className="h-3.5 w-3.5" /> Didžiausias atnaujinimas
+          </span>
+          <h1 className="relative mt-5 font-display text-6xl font-black leading-none tracking-tight sm:text-8xl">
+            <span className="text-primary">V2.5</span>
+          </h1>
+          <p className="relative mt-4 max-w-xl text-base font-semibold sm:text-lg">
+            3 mėnesiai darbo. Šimtai pakeitimų. Viena platforma, kuri pagaliau sujungia mokinius, organizacijas ir mokyklas.
+          </p>
+          <p className="relative mt-2 max-w-xl text-sm text-muted-foreground">
+            Sukurta savo laiku ir savo lėšomis — ačiū visiems, kas testavo, rašė klaidas ir laukė.
+          </p>
+          <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { k: big?.items.length ?? 0, l: "naujovių V2.5" },
+              { k: TOTAL_CHANGES, l: "pakeitimų iš viso" },
+              { k: VERSIONS.length, l: "versijų" },
+              { k: "3 mėn.", l: "darbo" },
+            ].map((x) => (
+              <div key={x.l} className="rounded-2xl border border-border bg-background/60 p-4 text-center">
+                <p className="font-display text-2xl font-black sm:text-3xl">{x.k}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">{x.l}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="mt-8 grid grid-cols-3 gap-3">
-          {[
-            { k: VERSIONS.length, l: "versijų" },
-            { k: TOTAL_CHANGES, l: "pakeitimų" },
-            { k: VERSIONS[0]?.v ?? "—", l: "dabartinė" },
-          ].map((s) => (
-            <div key={s.l} className="rounded-2xl border border-border bg-card/60 p-4 text-center">
-              <p className="font-display text-xl font-bold sm:text-2xl">{s.k}</p>
-              <p className="mt-1 text-[11px] uppercase tracking-widest text-muted-foreground">{s.l}</p>
-            </div>
-          ))}
+        <div className="mt-10 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <h2 className="truncate font-display text-xl font-bold sm:text-2xl">Visa versijų istorija</h2>
+          <button
+            type="button"
+            onClick={() => setOpen(allOpen ? new Set() : new Set(VERSIONS.map((v) => v.v)))}
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold transition active:scale-95"
+          >
+            <ChevronsUpDown className="h-4 w-4" /> {allOpen ? "Suskleisti viską" : "Išskleisti viską"}
+          </button>
         </div>
 
-        <ol className="relative mt-12 space-y-8 border-l border-border pl-6 sm:pl-8">
-          {VERSIONS.map((rel, i) => (
-            <li key={rel.v} className="relative">
-              <span
-                aria-hidden
-                className={`absolute -left-[calc(1.5rem+5px)] top-2 h-2.5 w-2.5 rounded-full sm:-left-[calc(2rem+5px)] ${
-                  i === 0 ? "bg-primary shadow-[0_0_16px_hsl(var(--primary))]" : "bg-border"
-                }`}
-              />
-              <div className="rounded-3xl border border-border bg-card/60 p-5 sm:p-6">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                  <div className="min-w-0">
-                    <h2 className="font-display text-lg font-bold sm:text-xl">
-                      <span className="text-primary">{rel.v}</span> · {rel.title}
-                    </h2>
-                    <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{rel.date}</p>
+        <ol className="relative mt-6 space-y-4 border-l border-border pl-5 sm:pl-8">
+          {VERSIONS.map((rel, i) => {
+            const isOpen = open.has(rel.v);
+            return (
+              <li key={rel.v} className="relative">
+                <span aria-hidden className={`absolute -left-[calc(1.25rem+5px)] top-6 h-2.5 w-2.5 rounded-full sm:-left-[calc(2rem+5px)] ${i === 0 ? "bg-primary" : "bg-border"}`} />
+                <div className={`rounded-3xl border bg-card/60 ${i === 0 ? "border-primary/50" : "border-border"}`}>
+                  <button type="button" onClick={() => toggle(rel.v)} aria-expanded={isOpen} className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-3 p-5 text-left sm:p-6">
+                    <div className="min-w-0">
+                      <h3 className="font-display text-lg font-bold sm:text-xl"><span className="text-primary">{rel.v}</span> · {rel.title}</h3>
+                      <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{rel.date} · {rel.items.length} pakeitimų</p>
+                    </div>
+                    <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                    <div className="overflow-hidden">
+                      <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+                        <p className="text-sm leading-relaxed text-muted-foreground">{rel.summary}</p>
+                        <ul className="mt-4 space-y-2">
+                          {rel.items.map((it) => (
+                            <li key={it.text} className="flex flex-wrap items-start gap-2 text-sm">
+                              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TAG_STYLE[it.tag]}`}>{it.tag}</span>
+                              <span className="min-w-0 flex-1 leading-relaxed text-muted-foreground">{it.text}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                  {i === 0 && (
-                    <span className="shrink-0 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
-                      Naujausia
-                    </span>
-                  )}
                 </div>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{rel.summary}</p>
-                <ul className="mt-4 space-y-2">
-                  {rel.items.map((it) => (
-                    <li key={it.text} className="flex flex-wrap items-start gap-2 text-sm">
-                      <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TAG_STYLE[it.tag]}`}
-                      >
-                        {it.tag}
-                      </span>
-                      <span className="min-w-0 flex-1 leading-relaxed text-muted-foreground">{it.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
 
         <div className="mt-12 rounded-2xl border border-border bg-card p-6">
@@ -430,10 +474,7 @@ function VersionsPage() {
             Radai klaidą arba turi idėją? Rašyk{" "}
             <span className="font-semibold text-foreground">pagalba@socialinesvalandos.dev</span> — įtrauksime į kitą versiją.
           </p>
-          <Link
-            to="/saugumas"
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-semibold"
-          >
+          <Link to="/saugumas" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-5 text-sm font-semibold">
             Kaip saugome duomenis <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
