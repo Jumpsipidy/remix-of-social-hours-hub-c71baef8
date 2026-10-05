@@ -49,7 +49,7 @@ function AdminOverview() {
       const dayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       const [p, r, t, m, s] = await Promise.all([
         supabase.from("profiles").select("id, role, full_name, organization_name, email, hours_earned, hours_needed, created_at"),
-        supabase.from("reservations").select("id, status, hours_to_earn, reservation_date, organization_id, student_id, created_at").order("created_at", { ascending: false }),
+        supabase.from("reservations").select("id, status, hours_to_earn, reservation_date, organization_id, student_id, created_at, checked_in_at").order("created_at", { ascending: false }),
         supabase.from("tasks").select("id", { count: "exact", head: true }).eq("is_open", true),
         supabase.from("messages").select("id", { count: "exact", head: true }).gte("created_at", dayAgo),
         supabase.from("schools").select("id", { count: "exact", head: true }),
@@ -70,6 +70,8 @@ function AdminOverview() {
       .channel("admin-overview")
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, () => setTick((v) => v + 1))
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => setTick((v) => v + 1))
+      .on("postgres_changes", { event: "*", schema: "public", table: "tasks" }, () => setTick((v) => v + 1))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants" }, () => setTick((v) => v + 1))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
@@ -170,6 +172,8 @@ function AdminOverview() {
           </motion.div>
         ))}
       </section>
+
+      <LiveFunnel reservations={reservations as (AdminReservation & { checked_in_at?: string | null })[]} profiles={profiles} />
 
       <section className="grid gap-4 lg:grid-cols-3">
         <SaaSPanel className="lg:col-span-2">
@@ -291,5 +295,68 @@ function AdminOverview() {
         </ul>
       </SaaSPanel>
     </div>
+  );
+}
+
+/** Gyvas kelias: registracija → patvirtinta → atvyko (QR) → valandos. Viskas iš tų pačių duomenų kaip QR skydelis. */
+function LiveFunnel({ reservations, profiles }: { reservations: (AdminReservation & { checked_in_at?: string | null })[]; profiles: AdminProfile[] }) {
+  const total = reservations.length;
+  const pending = reservations.filter((r) => r.status === "pending").length;
+  const approved = reservations.filter((r) => ["approved", "confirmed", "completed"].includes(r.status)).length;
+  const checked = reservations.filter((r) => !!r.checked_in_at).length;
+  const completed = reservations.filter((r) => r.status === "completed").length;
+  const declined = reservations.filter((r) => r.status === "declined").length;
+  const today = new Date().toLocaleDateString("sv-SE");
+  const todayRows = reservations.filter((r) => r.reservation_date === today && ["approved", "confirmed", "completed"].includes(r.status));
+  const todayChecked = todayRows.filter((r) => r.checked_in_at).length;
+  const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
+  const name = (id: string) => { const p = profiles.find((x) => x.id === id); return p?.organization_name || p?.full_name || "—"; };
+  const byOrg = new Map<string, { hrs: number; done: number; all: number }>();
+  for (const r of reservations) {
+    const o = byOrg.get(r.organization_id) ?? { hrs: 0, done: 0, all: 0 };
+    o.all++; if (r.status === "completed") { o.done++; o.hrs += Math.round(Number(r.hours_to_earn) || 0); }
+    byOrg.set(r.organization_id, o);
+  }
+  const top = [...byOrg.entries()].sort((a, b) => b[1].hrs - a[1].hrs).slice(0, 5);
+  const steps = [
+    { l: "Registracijos", v: total, p: 100 },
+    { l: "Patvirtinta", v: approved, p: pct(approved, total) },
+    { l: "Atvyko (QR)", v: checked, p: pct(checked, total) },
+    { l: "Valandos įskaitytos", v: completed, p: pct(completed, total) },
+  ];
+  return (
+    <section className="grid gap-4 lg:grid-cols-3">
+      <SaaSPanel className="lg:col-span-2">
+        <p className="text-sm font-bold">Rezervacijų kelias · gyvai</p>
+        <p className="text-xs text-muted-foreground">{pending} laukia · {declined} atmesta · atmetimo dalis {pct(declined, total)}%</p>
+        <div className="mt-4 space-y-2.5">
+          {steps.map((s) => (
+            <div key={s.l}>
+              <div className="flex justify-between text-xs"><span className="font-semibold">{s.l}</span><span className="tabular-nums text-muted-foreground">{s.v} · {s.p}%</span></div>
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${s.p}%` }} /></div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl border border-border p-2"><p className="text-lg font-black tabular-nums">{todayChecked}/{todayRows.length}</p><p className="text-[11px] text-muted-foreground">Šiandien atvyko</p></div>
+          <div className="rounded-xl border border-border p-2"><p className="text-lg font-black tabular-nums">{pct(checked, approved)}%</p><p className="text-[11px] text-muted-foreground">QR įsiregistravimas</p></div>
+          <div className="rounded-xl border border-border p-2"><p className="text-lg font-black tabular-nums">{completed ? (reservations.filter((r) => r.status === "completed").reduce((a, r) => a + Math.round(Number(r.hours_to_earn) || 0), 0) / completed).toFixed(1) : 0}</p><p className="text-[11px] text-muted-foreground">Vid. val. vizitui</p></div>
+        </div>
+      </SaaSPanel>
+      <SaaSPanel>
+        <p className="text-sm font-bold">Top organizacijos pagal valandas</p>
+        <ul className="mt-3 space-y-2">
+          {top.length === 0 && <li className="text-xs text-muted-foreground">Dar nėra užbaigtų darbų.</li>}
+          {top.map(([id, o], i) => (
+            <li key={id} className="flex items-center gap-2 text-sm">
+              <span className="w-5 text-xs font-bold text-muted-foreground">{i + 1}.</span>
+              <span className="min-w-0 flex-1 truncate font-semibold">{name(id)}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{o.done}/{o.all}</span>
+              <span className="w-14 text-right font-bold tabular-nums">{o.hrs} val.</span>
+            </li>
+          ))}
+        </ul>
+      </SaaSPanel>
+    </section>
   );
 }
