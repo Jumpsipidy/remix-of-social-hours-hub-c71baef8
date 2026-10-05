@@ -44,7 +44,14 @@ function CheckinPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick]);
 
-  const active = tokens.filter((t) => !t.checked_in);
+  const today = new Date().toLocaleDateString("sv-SE");
+  const active = tokens
+    .filter((t) => !t.checked_in)
+    .sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  const keyOf = (t: Token) => (t.kind === "participant" ? t.participant_id : t.reservation_id);
+  const [sel, setSel] = useState<string | null>(null);
+  const current = active.find((t) => keyOf(t) === sel) ?? active.find((t) => t.date === today) ?? active[0];
+  const todayCount = active.filter((t) => t.date === today).length;
 
   return (
     <PageShell>
@@ -73,10 +80,28 @@ function CheckinPage() {
             </div>
           )}
 
+          {active.length > 1 && (
+            <div className="mb-4">
+              <p className="mb-2 text-sm font-semibold">
+                {todayCount > 1 ? `Šiandien turi ${todayCount} vizitus — pasirink, kurį rodai` : `Turi ${active.length} aktyvias rezervacijas — pasirink`}
+              </p>
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                {active.map((t) => {
+                  const on = current && keyOf(current) === keyOf(t);
+                  return (
+                    <button key={keyOf(t)} type="button" onClick={() => setSel(keyOf(t))}
+                      className={`min-w-[170px] shrink-0 rounded-2xl border p-3 text-left transition active:scale-[0.98] ${on ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/40"}`}>
+                      <p className="text-[11px] font-semibold text-primary">{t.date === today ? "Šiandien" : t.date} · {t.start}–{t.end}</p>
+                      <p className="mt-0.5 truncate text-sm font-bold">{t.org_name}</p>
+                      {t.title && <p className="truncate text-xs text-muted-foreground">{t.title}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <div className="space-y-6">
-            {active.map((t) => (
-              <TokenCard key={(t.kind === "participant" ? t.participant_id : t.reservation_id)} token={t} now={now} />
-            ))}
+            {current && <TokenCard key={keyOf(current)} token={current} now={now} />}
           </div>
 
           {tokens.some((t) => t.checked_in) && (
@@ -88,7 +113,7 @@ function CheckinPage() {
                        className="flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     <span className="font-mono tracking-widest">{t.code}</span>
-                    <span className="text-muted-foreground">— jau įregistruota</span>
+                    <span className="text-muted-foreground">— {t.org_name} · {t.date} {t.start} · jau įregistruota</span>
                   </div>
                 ))}
               </div>
@@ -151,7 +176,8 @@ function TokenCard({ token, now }: { token: Token; now: number }) {
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">
               {token.kind === "participant" ? "Grupės narys" : "Rezervacija"}
             </p>
-            <h2 className="mt-1 font-display text-xl font-bold">Rodyk organizacijai</h2>
+            <h2 className="mt-1 font-display text-xl font-bold">{token.org_name}</h2>
+            <p className="text-sm font-semibold">{token.date} · {token.start}–{token.end}{token.title ? ` · ${token.title}` : ""}</p>
             <p className="mt-2 text-sm text-muted-foreground">
               Organizacija nuskaitys QR kodą. Jei nėra interneto — pasakyk 6 skaitmenų kodą arba parodyk ekrane.
             </p>
