@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.tg_profiles_guard_privileged() FROM PUBLIC, anon, authenticated;
