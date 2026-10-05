@@ -52,6 +52,7 @@ import {
   type ReservationLike,
 } from "@/lib/fraud-flags";
 import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
+import { RiskCenter } from "@/components/school/risk-center";
 import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
 
@@ -881,58 +882,9 @@ function SchoolDashboard() {
           {tab === "risk" && (
             <Panel
               title="Rizikos centras"
-              subtitle="Mokiniai su mažesniu progresu arba įtartinais rezervacijų signalais"
+              subtitle="Paspausk kortelę, kad filtruotum. Peržiūra atidaro visą mokinio istoriją."
             >
-              <div className="grid gap-3 xl:grid-cols-2">
-                {riskStudents.map(({ student, flags, reservations, progress, score }) => (
-                  <div
-                    key={student.id}
-                    className="rounded-2xl border border-border bg-background/55 p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar name={student.full_name} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{student.full_name ?? "—"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {student.class_year ?? "—"} kl. · {reservations.length} rezerv. · rizikos
-                          indeksas {score}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => setAuditing(student)}
-                        className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:bg-accent"
-                      >
-                        Auditas
-                      </button>
-                    </div>
-                    <div className="mt-4 flex items-center gap-3">
-                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-accent">
-                        <div
-                          className="h-full bg-gradient-primary"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                      <b className="text-sm">{progress}%</b>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {flags.slice(0, 5).map((flag, i) => (
-                        <span
-                          key={`${flag.code}-${i}`}
-                          className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning-foreground"
-                        >
-                          {flag.label}
-                        </span>
-                      ))}
-                      {flags.length === 0 && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                          Mažas progresas / nėra rezervacijų
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {riskStudents.length === 0 && <Empty text="Rizikos signalų nėra." />}
-              </div>
+              <RiskCenter rows={riskStudents} onAudit={setAuditing} />
             </Panel>
           )}
 
