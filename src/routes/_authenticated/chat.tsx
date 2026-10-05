@@ -126,6 +126,15 @@ function ChatPage() {
     return "Mokyklos administratorius";
   };
 
+  // Role badge for every sender.
+  const roleOf = (id: string | null): { label: string; cls: string } | null => {
+    if (!id || !active) return null;
+    if (id === active.organization_id) return { label: "Organizacija", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-300" };
+    if (id === active.school_admin_id) return { label: "Mokyklos admin.", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300" };
+    if (id === active.student_id) return { label: "Mokinys", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-300" };
+    return { label: "Mokyklos admin.", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300" };
+  };
+
   const [picker, setPicker] = useState(false);
   const [contacts, setContacts] = useState<{ id: string; name: string; role: string; class_year: string | null; org_id: string | null; org_name: string | null }[] | null>(null);
   const [classF, setClassF] = useState<string | null>(null);
@@ -246,6 +255,7 @@ function ChatPage() {
               ) : shown.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   <MessageCircle className="mx-auto mb-2 h-8 w-8" />
+                  Žinutės saugomos 12 dienų, po to ištrinamos automatiškai.<br />
                   Pokalbių dar nėra. Jie atsiras, kai rezervuosi užduotį arba parašysi organizacijai.
                 </div>
               ) : shown.map((c) => {
@@ -288,6 +298,9 @@ function ChatPage() {
                     </p>
                   </div>
                 </header>
+                <div className="flex items-center justify-center gap-1.5 border-b border-border bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                  <Clock className="h-3 w-3 shrink-0" /> Žinutės automatiškai ištrinamos po 12 dienų.
+                </div>
                 <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-background/40 p-4">
                   {msgs === null ? (
                     <div className="space-y-3">{[60, 40, 70, 50].map((w, i) => <Skeleton key={i} className={`h-10 rounded-2xl ${i % 2 ? "ml-auto" : ""}`} style={{ width: `${w}%` }} />)}</div>
@@ -300,7 +313,11 @@ function ChatPage() {
                         return (
                           <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card"}`}>
-                              {!mine && <p className="mb-0.5 text-[10px] font-bold opacity-70">{nameOf(m.sender_id)}</p>}
+                              {(() => { const r = roleOf(m.sender_id); return (
+                                <p className={`mb-0.5 flex items-center gap-1.5 text-[10px] font-bold ${mine ? "justify-end opacity-80" : "opacity-80"}`}>
+                                  <span>{mine ? "Tu" : nameOf(m.sender_id)}</span>
+                                  {r && <span className={`rounded-full px-1.5 py-px text-[9px] font-bold ${mine ? "bg-primary-foreground/20 text-primary-foreground" : r.cls}`}>{r.label}</span>}
+                                </p>); })()}
                               <p className="whitespace-pre-wrap break-words">{m.content}</p>
                               <p className="mt-0.5 text-right text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}</p>
                             </div>

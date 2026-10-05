@@ -303,7 +303,13 @@ function StudentDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+      <nav aria-label="Greitos nuorodos" className="sticky top-14 z-30 -mb-2 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 lg:hidden">
+        {[["#mano-rezervacijos","Mano rezervacijos"],["/tasks","Rasti užduotį"],["/chat","Pokalbiai"],["#draugai","Draugai"]].map(([href,label]) => (
+          <a key={href} href={href} className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold active:scale-95">{label}</a>
+        ))}
+      </nav>
+      <div className="flex flex-col lg:block">
+      <section className="order-1 mx-auto max-w-7xl px-4 pt-8 sm:px-6">
         <DashHero
           eyebrow="Mokinio sritis"
           icon={GraduationCap}
@@ -335,7 +341,7 @@ function StudentDashboard() {
       </section>
 
       {/* Hero: Ring + Next reservation */}
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
+      <section className="order-2 mx-auto mt-8 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
           <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card p-4 shadow-md sm:p-6">
             <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
@@ -392,7 +398,7 @@ function StudentDashboard() {
       </section>
 
       {/* Stat cards */}
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+      <section className="order-4 mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: Clock, label: "Užbaigtos valandos", value: completed, sub: `iš ${required} reikalingų`, accent: DASH_GREEN },
@@ -407,7 +413,7 @@ function StudentDashboard() {
 
       {/* Login streak + school leaderboard */}
       {profile.role === "student" && (
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+      <section className="order-5 mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <StreakCard
             streak={loginStreak}
@@ -457,7 +463,7 @@ function StudentDashboard() {
 
       {/* Weekly chart + Achievements */}
 
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+      <section className="order-6 mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
             <div className="flex items-center justify-between">
@@ -497,7 +503,7 @@ function StudentDashboard() {
       <OpenTasksFeed />
 
       {/* Group invites + Friends */}
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+      <section id="draugai" className="order-4 lg:order-none mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-4">
             <GroupInvitesInbox userId={user.id} />
@@ -514,7 +520,7 @@ function StudentDashboard() {
       </section>
 
       {/* Reservations list w/ filter */}
-      <section className="mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
+      <section id="mano-rezervacijos" className="order-3 lg:order-none scroll-mt-20 mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
@@ -592,6 +598,7 @@ function StudentDashboard() {
           </div>
         </div>
       </section>
+      </div>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <CustomReservationDialog
