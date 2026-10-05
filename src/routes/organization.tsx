@@ -1,3 +1,4 @@
+import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
@@ -249,6 +250,7 @@ function OrgDashboard() {
 
 
   if (loading) return <PageShell><div className="mx-auto max-w-7xl px-4 py-12"><DashboardSkeleton /></div></PageShell>;
+  if (user && profile?.role && profile.role !== "organization" && profile.role !== "admin") return <WrongRole role={profile.role} />;
   if (!user || profile?.role !== "organization") {
     return (
       <PageShell>

@@ -600,3 +600,5 @@ html.school-eyes body {
 @keyframes sv-confetti { 0% { transform: translateY(-20px) rotate(0) } 100% { transform: translateY(420px) rotate(540deg) } }
 .sv-confetti { top: -10px; animation: sv-confetti 4.5s linear infinite; }
 @media (prefers-reduced-motion: reduce), (max-width: 768px) { .sv-confetti { animation-duration: 7s; } }
+@keyframes sv-wrongrole { from { width: 0 } to { width: 100% } }
+.sv-wrongrole-bar { animation: sv-wrongrole 1.6s linear both; }

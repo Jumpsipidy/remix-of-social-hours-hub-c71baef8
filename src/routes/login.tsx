@@ -116,7 +116,7 @@ function LoginPage() {
       }
       const role = ensured.profile?.role ?? "student";
       const target = DASH_BY_ROLE[role] ?? "/";
-      if (role) { try { localStorage.setItem("sv_last_role_v1", role); } catch {} }
+      if (role) { try { localStorage.setItem("sv_last_role_v1", role); localStorage.setItem("sv_last_role_uid_v1", signIn.user.id); } catch {} }
       try { localStorage.removeItem(FAIL_KEY); } catch {}
       setFails(0);
       setCaptchaProof(null);

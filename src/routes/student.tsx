@@ -1,3 +1,4 @@
+import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -277,6 +278,7 @@ function StudentDashboard() {
     );
   }
 
+  if (profile.role !== "student" && profile.role !== "admin") return <WrongRole role={profile.role} />;
   if (profile.role === "student" && (!profile.school_id || !profile.class_year || !profile.hours_needed)) {
     return <StudentProfileSetup userId={user.id} />;
   }

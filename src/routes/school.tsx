@@ -1,3 +1,4 @@
+import { WrongRole } from "@/components/wrong-role";
 import { MessageCircle } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -465,6 +466,7 @@ function SchoolDashboard() {
     );
   }
 
+  if (user && profile?.role && profile.role !== "school_admin" && profile.role !== "admin") return <WrongRole role={profile.role} />;
   if (!user || (profile?.role !== "school_admin" && profile?.role !== "admin")) {
     return (
       <PageShell>
