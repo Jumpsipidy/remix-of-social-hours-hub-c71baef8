@@ -624,3 +624,4 @@ html.school-eyes body {
 @keyframes sv-v25-shine { from { background-position: -200% 0 } to { background-position: 200% 0 } }
 .sv-v25-shine { background-image: linear-gradient(110deg, transparent 30%, color-mix(in oklab, var(--primary-foreground) 35%, transparent) 50%, transparent 70%); background-size: 200% 100%; animation: sv-v25-shine 2.6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .sv-v25-pop, .sv-v25-shine { animation: none; } }
+@media (max-width: 639px) { html[data-v25] .sv-bug-widget { display: none; } }
