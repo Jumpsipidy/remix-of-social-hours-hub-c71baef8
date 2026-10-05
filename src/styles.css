@@ -595,3 +595,7 @@ html.school-eyes body {
 .sv-logout-ring { animation: sv-logout-ring 1.1s ease-out infinite; }
 .sv-logout-icon { animation: sv-logout-icon .9s ease-in .2s both; }
 @media (prefers-reduced-motion: reduce) { .sv-logout, .sv-logout-ring, .sv-logout-icon { animation: none !important; } }
+
+@keyframes sv-confetti { 0% { transform: translateY(-20px) rotate(0) } 100% { transform: translateY(420px) rotate(540deg) } }
+.sv-confetti { top: -10px; animation: sv-confetti 4.5s linear infinite; }
+@media (prefers-reduced-motion: reduce), (max-width: 768px) { .sv-confetti { animation-duration: 7s; } }
