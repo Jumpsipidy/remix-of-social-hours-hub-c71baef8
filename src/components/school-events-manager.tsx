@@ -63,12 +63,15 @@ export function SchoolEventsManager({ refreshKey = 0, onlyPending = false }: { r
     toast.success(status === "approved" ? "Mokinys priimtas" : "Užklausa atmesta");
     void load();
   };
-  const award = async (r: Res) => {
+  const [pick, setPick] = useState<{ id: string; h: number } | null>(null);
+  const award = async (r: Res, hrs?: number) => {
     setBusy(r.id);
-    const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
+    const h = hrs ?? Math.round(Number(r.hours_to_earn) || 0);
+    const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id, _hours: h });
     setBusy(null);
+    setPick(null);
     if (error) return toast.error("Nepavyko: " + error.message);
-    toast.success(`Suteikta ${Number(r.hours_to_earn)} val.`);
+    toast.success(`Suteikta ${h} val.`);
     void load();
   };
 
@@ -117,7 +120,23 @@ export function SchoolEventsManager({ refreshKey = 0, onlyPending = false }: { r
                         </div>
                       )}
                       {(r.status === "approved" || r.status === "confirmed") && (
-                        <button disabled={busy === r.id} onClick={() => award(r)} className="inline-flex h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white active:scale-95 disabled:opacity-50"><Award className="h-3.5 w-3.5" /> Patvirtinti valandas</button>
+                        <button disabled={busy === r.id} onClick={() => setPick({ id: r.id, h: Math.round(Number(r.hours_to_earn) || 0) })} className="inline-flex h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white active:scale-95 disabled:opacity-50"><Award className="h-3.5 w-3.5" /> Patvirtinti valandas</button>
+                      )}
+                      {pick?.id === r.id && (
+                        <div className="w-full rounded-xl border border-border bg-muted/40 p-3">
+                          <p className="mb-2 text-xs font-semibold">Kiek valandų skirti? (tik sveikos)</p>
+                          <div className="grid grid-cols-9 gap-1">
+                            {Array.from({ length: 9 }, (_, h) => (
+                              <button key={h} type="button" onClick={() => setPick({ id: r.id, h })}
+                                className={`h-9 rounded-lg border text-xs font-bold ${pick.h === h ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>{h}</button>
+                            ))}
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <button disabled={busy === r.id} onClick={() => award(r, pick.h)} className="h-9 rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50">Patvirtinti · {pick.h} val.</button>
+                            <button disabled={busy === r.id} onClick={() => award(r)} className="h-9 rounded-lg border border-border px-3 text-xs font-bold disabled:opacity-50">Praleisti — skirti {Math.round(Number(r.hours_to_earn) || 0)} val.</button>
+                            <button onClick={() => setPick(null)} className="h-9 px-2 text-xs text-muted-foreground">Atšaukti</button>
+                          </div>
+                        </div>
                       )}
                     </li>
                   );
