@@ -622,7 +622,7 @@ function OrgDashboard() {
       })()}
 
       <section className="mx-auto mt-6 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-5">
-        <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">
+        <div id="org-requests" className="scroll-mt-24 rounded-3xl border border-border bg-gradient-card p-6 shadow-md lg:col-span-3">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold">Laukiančios užklausos</h2>
