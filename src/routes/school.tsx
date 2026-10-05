@@ -145,6 +145,7 @@ function pct(student: Student) {
 
 function SchoolDashboard() {
   const { user, profile, loading } = useAuth();
+  const [eventsKey, setEventsKey] = useState(0);
   const [students, setStudents] = useState<Student[]>([]);
   const [orgs, setOrgs] = useState<OrgProfile[]>([]);
   const [orgMap, setOrgMap] = useState<Record<string, OrgProfile>>({});
