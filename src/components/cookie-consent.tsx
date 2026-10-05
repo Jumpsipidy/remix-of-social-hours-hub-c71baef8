@@ -203,7 +203,7 @@ export function CookieConsent() {
                   <button
                     type="button"
                     onClick={acceptAll}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-600 px-4 py-2 text-sm font-bold text-foreground shadow-lg shadow-fuchsia-500/20 hover:brightness-110 sm:flex-none transition-all active:scale-95"
+                    className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 sm:flex-none transition-all active:scale-95"
                   >
                     Sutikti su visais
                   </button>
