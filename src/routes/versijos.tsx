@@ -26,6 +26,14 @@ const VERSIONS: Version[] = [
     summary:
       "V2.5 sujungia viską, ką kūrėme tris mėnesius: naujas prisijungimas, žemėlapis, pokalbiai, draugai, saugumas ir mokyklų valdymas. Žemiau — kas jau veikia ir kas ateina.",
     items: [
+      { tag: "Nauja", text: "SOCI GUARD — mūsų pačių sukurta apsauga nuo robotų: serverio iššūkis, skaičiavimo užduotis, palaikymo ir paveikslėlių patikra, paaiškinimai lietuviškai." },
+      { tag: "Nauja", text: "Organizacija pati pasirenka, kiek valandų skirti užbaigiant darbą (0–8). Mokyklos administratorius taip pat gali — arba praleisti ir palikti planuotas." },
+      { tag: "Patobulinta", text: "Tik sveikos valandos — jokių 1,5 ar 2,7 val. Visos valandos suapvalinamos automatiškai." },
+      { tag: "Nauja", text: "Greitas laiko pasirinkimas mokiniams: diena, pradžia ir trukmė vienu paspaudimu." },
+      { tag: "Nauja", text: "QR įsiregistravimas su keliais vizitais per dieną: mokinys pasirenka, kurį rodo, o organizacija mato visą šiandienos sąrašą." },
+      { tag: "Nauja", text: "Gyvi atnaujinimai: naujos registracijos ir būsenos atsiranda iškart, be puslapio perkrovimo, su pranešimais." },
+      { tag: "Pataisyta", text: "Mokyklos renginių registracijos rodomos pagrindiniame mokyklos skydelyje su „Priimti“ ir „Atmesti“." },
+      { tag: "Nauja", text: "Rizikos centras, naujas organizacijų ir mokyklų skydelis, rodomasis įvedimo vedlys, šviesus režimas ir pokalbių vaidmenų žymos." },
       { tag: "Nauja", text: "Visiškai naujas prisijungimas ir registracija su Google, Discord ir GitHub bei sklandžiomis animacijomis." },
       { tag: "Nauja", text: "Lietuvos žemėlapis su organizacijų vietomis ir užduotimis Šeduvoje, Radviliškyje ir Šiauliuose." },
       { tag: "Nauja", text: "Pokalbiai /chat: mokinys ↔ organizacija ir mokyklos administratorius ↔ organizacija, žinutės automatiškai ištrinamos po 12 dienų." },

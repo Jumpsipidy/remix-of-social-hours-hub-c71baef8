@@ -48,7 +48,7 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
     // demand when the DB trigger never fired (older rows / missing trigger).
     const { data: ownedRaw } = await supabase
       .from("reservations")
-      .select("id, check_in_code, checked_in_at, status, reservation_date, organization_id")
+      .select("id, check_in_code, checked_in_at, status, reservation_date, start_time, end_time, organization_id, task_id")
       .eq("student_id", userId)
       .eq("status", "approved");
 
@@ -80,6 +80,30 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
       if (code) parts.push({ ...p, check_in_code: code });
     }
 
+    // Context for each token (org, date, time) so the student can tell several same-day visits apart.
+    const resIds = [...new Set([...owned.map((r) => r.id), ...parts.map((p) => p.reservation_id)])];
+    const { data: resInfo } = resIds.length
+      ? await supabase.from("reservations").select("id, reservation_date, start_time, end_time, organization_id, task_id").in("id", resIds)
+      : { data: [] as { id: string; reservation_date: string; start_time: string; end_time: string; organization_id: string; task_id: string | null }[] };
+    const orgIds = [...new Set((resInfo ?? []).map((r) => r.organization_id))];
+    const taskIds = [...new Set((resInfo ?? []).map((r) => r.task_id).filter(Boolean) as string[])];
+    const [{ data: orgs }, { data: tasks }] = await Promise.all([
+      orgIds.length ? supabase.from("profiles").select("id, organization_name, full_name").in("id", orgIds) : Promise.resolve({ data: [] as { id: string; organization_name: string | null; full_name: string | null }[] }),
+      taskIds.length ? supabase.from("tasks").select("id, title").in("id", taskIds) : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+    ]);
+    const info = (rid: string) => {
+      const r = (resInfo ?? []).find((x) => x.id === rid);
+      const o = (orgs ?? []).find((x) => x.id === r?.organization_id);
+      const t = (tasks ?? []).find((x) => x.id === r?.task_id);
+      return {
+        date: r?.reservation_date ?? "",
+        start: String(r?.start_time ?? "").slice(0, 5),
+        end: String(r?.end_time ?? "").slice(0, 5),
+        org_name: o?.organization_name ?? o?.full_name ?? "Organizacija",
+        title: t?.title ?? null,
+      };
+    };
+
     const window = Math.floor(Date.now() / 1000 / WINDOW_SECONDS);
 
     const tokens = await Promise.all([
@@ -88,6 +112,7 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
         const sig = (await hmacHex(secret, payload)).slice(0, 24);
         return {
           kind: "owner" as const,
+          ...info(r.id),
           reservation_id: r.id,
           code: r.check_in_code as string,
           checked_in: !!r.checked_in_at,
@@ -100,6 +125,7 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
         const sig = (await hmacHex(secret, payload)).slice(0, 24);
         return {
           kind: "participant" as const,
+          ...info(p.reservation_id),
           reservation_id: p.reservation_id,
           participant_id: p.id,
           code: p.check_in_code as string,

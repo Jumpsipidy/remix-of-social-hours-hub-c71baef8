@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { ArrowLeft, Camera, CameraOff, KeyRound, ScanLine, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/layout";
 import { CheckinSetupBanner } from "@/components/checkin-setup-banner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 
 export const Route = createFileRoute("/_authenticated/organization/scan")({
@@ -275,6 +277,8 @@ function ScanPage() {
             )}
           </AnimatePresence>
 
+          <TodayList refreshKey={history.length} />
+
           {history.length > 0 && (
             <div className="mt-8">
               <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">Šios sesijos įrašai</p>
@@ -304,5 +308,59 @@ function ScanPage() {
         </div>
       </div>
     </PageShell>
+  );
+}
+
+type TodayRow = { id: string; student_id: string; start_time: string; end_time: string; checked_in_at: string | null; status: string; task_id: string | null };
+
+/** Visi šiandienos vizitai — jei mokinys turi kelis, matai kiekvieną atskirai. */
+function TodayList({ refreshKey }: { refreshKey: number }) {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<TodayRow[] | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!user) return;
+    let off = false;
+    const load = async () => {
+      const today = new Date().toLocaleDateString("sv-SE");
+      const { data } = await supabase.from("reservations")
+        .select("id, student_id, start_time, end_time, checked_in_at, status, task_id")
+        .eq("organization_id", user.id).eq("reservation_date", today)
+        .in("status", ["approved", "confirmed", "completed"]).order("start_time");
+      const list = (data as TodayRow[]) ?? [];
+      if (off) return;
+      setRows(list);
+      const ids = [...new Set(list.map((r) => r.student_id))];
+      if (ids.length) {
+        const { data: ps } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        if (!off) setNames(Object.fromEntries((ps ?? []).map((p) => [p.id, p.full_name ?? "Mokinys"])));
+      }
+    };
+    void load();
+    const ch = supabase.channel(`scan-today-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => { void load(); })
+      .subscribe();
+    return () => { off = true; void supabase.removeChannel(ch); };
+  }, [user, refreshKey]);
+  if (!rows || rows.length === 0) return null;
+  const counts: Record<string, number> = {};
+  rows.forEach((r) => { counts[r.student_id] = (counts[r.student_id] ?? 0) + 1; });
+  const done = rows.filter((r) => r.checked_in_at).length;
+  return (
+    <div className="mt-8">
+      <p className="mb-3 text-sm font-semibold">Šiandien laukiami · {done}/{rows.length} atvyko</p>
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.id} className={`flex items-center gap-3 rounded-2xl border p-3 text-sm ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+            <span className="w-24 shrink-0 font-mono text-xs tabular-nums">{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</span>
+            <span className="min-w-0 flex-1 truncate font-semibold">
+              {names[r.student_id] ?? "Mokinys"}
+              {counts[r.student_id] > 1 && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">{counts[r.student_id]} vizitai šiandien</span>}
+            </span>
+            <span className="text-xs font-semibold">{r.checked_in_at ? `✓ ${new Date(r.checked_in_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}` : "Laukiama"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

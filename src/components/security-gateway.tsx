@@ -147,6 +147,11 @@ export function SecurityGatewayInternal() {
   return (
     <div className="fixed inset-0 z-[2147483647] overflow-y-auto px-4 py-[max(2rem,env(safe-area-inset-top))]" style={{ background: "#000" }} role="dialog" aria-modal="true" aria-labelledby="sv-bot-title">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto flex min-h-full w-full max-w-sm flex-col justify-center text-center">
+        <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5" style={{ border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)" }}>
+          <ShieldCheck className="h-4 w-4" style={{ color: "#60a5fa" }} />
+          <span className="text-xs font-black tracking-wide" style={{ color: "#fff" }}>SOCI GUARD</span>
+          <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.5)" }}>· mūsų apsauga</span>
+        </div>
         <h1 id="sv-bot-title" className="text-2xl font-black tracking-tight" style={{ color: "#fff" }}>
           Patikrinimas, ar jūs ne robotas
         </h1>

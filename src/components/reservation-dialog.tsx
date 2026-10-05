@@ -1,3 +1,4 @@
+import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2 } from "lucide-react";
@@ -45,7 +46,7 @@ function calcHours(start: string, end: string): number {
   const [eh, em] = end.split(":").map(Number);
   const mins = (eh * 60 + em) - (sh * 60 + sm);
   if (mins <= 0) return 0;
-  return Math.round((mins / 60) * 100) / 100;
+  return Math.round(mins / 60);
 }
 
 export function ReservationDialog({ target, onClose, onConfirm }: Props) {
@@ -135,6 +136,7 @@ export function ReservationDialog({ target, onClose, onConfirm }: Props) {
             </div>
 
             <div className="max-h-[55vh] sm:max-h-[60vh] overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+              <QuickTimePicker date={date} start={start} end={end} fromTomorrow={false} onChange={(v) => { if (v.date) setDate(v.date); if (v.start) setStart(v.start); if (v.end) setEnd(v.end); }} />
               {/* Date */}
               <Field icon={<Calendar className="h-4 w-4" />} label="Data">
                 <input

@@ -173,7 +173,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 <LabeledInput label="Data" type="date" value={date} min={todayISO()} onChange={setDate} />
                 <LabeledInput label="Pradžia" type="time" value={start} onChange={setStart} />
                 <LabeledInput label="Pabaiga" type="time" value={end} onChange={setEnd} />
-                <LabeledInput label="Valandos" type="number" value={String(hours)} onChange={(v) => setHours(Number(v) || 0)} />
+                <LabeledInput label="Valandos" type="number" value={String(hours)} onChange={(v) => setHours(Math.min(8, Math.max(0, Math.round(Number(v) || 0))))} />
               </div>
               <div>
                 <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Miestas</p>

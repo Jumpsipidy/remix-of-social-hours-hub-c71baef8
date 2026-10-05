@@ -328,7 +328,7 @@ function OrgDashboard() {
     refresh(user.id);
   };
 
-  const finalizeCompleted = async (r: Reservation) => {
+  const finalizeCompleted = async (r: Reservation, hrs?: number) => {
     if (busyId) return;
     if (!r.checked_in_at) {
       toast.error("Mokinys dar neįsiregistravo — nuskaityk jo QR arba 6 skaitmenų kodą");
@@ -337,13 +337,14 @@ function OrgDashboard() {
     }
     setBusyId(r.id);
 
-    const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id });
+    const { error } = await supabase.rpc("award_reservation_hours", { _reservation_id: r.id, _hours: hrs ?? Math.round(Number(r.hours_to_earn) || 0) });
     if (error) { setBusyId(null); toast.error(error.message); return; }
-    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${Number(r.hours_to_earn)} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
+    const given = hrs ?? Math.round(Number(r.hours_to_earn) || 0);
+    await ensureRoomAndNotify(r, `🤖 Sistema: ${orgLabel} teisiškai patvirtino darbo užbaigimą. ${given} val. įskaityta į mokinio profilį ir išsiųsta mokyklos taryboms.`, user.id);
     // Fire-and-forget email — never block the UI on Resend
     sendHoursConfirmedEmail({ data: { reservationId: r.id } })
       .catch((e) => console.warn("[email] hours-confirmed failed", e));
-    toast.success(`Užduotis uždaryta · ${Number(r.hours_to_earn)} val. įskaityta`);
+    toast.success(`Užduotis uždaryta · ${given} val. įskaityta`);
     setVerifyRes(null);
     setBusyId(null);
     refresh(user.id);
@@ -784,7 +785,7 @@ function OrgDashboard() {
         hours={Number(verifyRes?.hours_to_earn ?? 0)}
         studentName={verifyRes ? (students[verifyRes.student_id]?.full_name ?? "Mokinys") : ""}
         onCancel={() => setVerifyRes(null)}
-        onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
+        onConfirm={async (h) => { if (verifyRes) await finalizeCompleted(verifyRes, h); }}
       />
       </div>
     </PageShell>

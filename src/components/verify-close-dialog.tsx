@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldAlert, CheckCircle2 } from "lucide-react";
 
@@ -13,16 +13,19 @@ export function VerifyCloseDialog({
   hours: number;
   studentName: string;
   onCancel: () => void;
-  onConfirm: () => Promise<void> | void;
+  onConfirm: (hours: number) => Promise<void> | void;
 }) {
   const [accepted, setAccepted] = useState(false);
+  const planned = Math.max(0, Math.min(8, Math.round(hours || 0)));
+  const [chosen, setChosen] = useState(planned);
+  useEffect(() => { if (open) setChosen(planned); }, [open, planned]);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
     if (!accepted || submitting) return;
     setSubmitting(true);
     try {
-      await onConfirm();
+      await onConfirm(chosen);
       setAccepted(false);
     } finally {
       setSubmitting(false);
@@ -55,7 +58,7 @@ export function VerifyCloseDialog({
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-destructive">Institucinis patvirtinimas</p>
                   <h3 className="mt-1 font-display text-xl font-bold">Patvirtinti ir uždaryti užduotį</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{studentName} · {hours} val.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{studentName} · planuota {planned} val.</p>
                 </div>
               </div>
               <button
@@ -67,6 +70,20 @@ export function VerifyCloseDialog({
             </div>
 
             <div className="space-y-4 p-5">
+              <div>
+                <p className="mb-2 text-sm font-semibold">Kiek valandų skirti?</p>
+                <div className="grid grid-cols-9 gap-1.5">
+                  {Array.from({ length: 9 }, (_, h) => (
+                    <button key={h} type="button" onClick={() => setChosen(h)}
+                      className={`h-10 rounded-xl border text-sm font-bold tabular-nums transition active:scale-95 ${chosen === h ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40"}`}>
+                      {h}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Tik sveikos valandos. {chosen === planned ? "Paliksi planuotas valandas." : `Pakeista: ${planned} → ${chosen} val.`}
+                </p>
+              </div>
               <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-foreground">
                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-destructive">Kritinis teisinis įspėjimas</p>
                 Spausdami „Patvirtinti“, jūs teisiškai patvirtinate pagal institucinę politiką, kad mokinys sėkmingai
@@ -100,7 +117,7 @@ export function VerifyCloseDialog({
                 className="inline-flex items-center gap-1.5 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                {submitting ? "Tvirtinama…" : "Patvirtinti ir įrašyti valandas"}
+                {submitting ? "Tvirtinama…" : `Patvirtinti · ${chosen} val.`}
               </motion.button>
             </div>
           </motion.div>
