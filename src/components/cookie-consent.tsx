@@ -128,23 +128,23 @@ export function CookieConsent() {
       className="fixed inset-x-0 bottom-0 z-[9999] px-3 pb-3 pt-4 sm:px-6 sm:pb-6"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)" }}
     >
-      <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-neutral-950/95 shadow-2xl backdrop-blur-xl">
-        <div className="bg-gradient-to-r from-indigo-500/10 via-fuchsia-500/10 to-cyan-500/10 p-5 sm:p-6">
+      <div className="mx-auto max-w-3xl overflow-hidden rounded-2xl border border-border bg-popover shadow-lg">
+        <div className="p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-xl">
+            <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted text-xl">
               🍪
             </div>
             <div className="flex-1">
-              <h2 id="cookie-title" className="text-base font-semibold text-white sm:text-lg">
+              <h2 id="cookie-title" className="text-base font-semibold text-foreground sm:text-lg">
                 Slapukų nustatymai
               </h2>
-              <p className="mt-1 text-sm leading-relaxed text-neutral-300">
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                 Naudojame slapukus, kad svetainė veiktų (prisijungimas, sesija) ir kad galėtume
                 anonimiškai matuoti, kaip ja naudojatės. Gali priimti visus, atmesti nebūtinus arba
                 pasirinkti kategorijas.{" "}
                 <Link
                   to="/privatumas"
-                  className="underline underline-offset-2 hover:text-white"
+                  className="underline underline-offset-2 hover:text-foreground"
                   onClick={close}
                 >
                   Slapukų politika
@@ -179,7 +179,7 @@ export function CookieConsent() {
                   <button
                     type="button"
                     onClick={() => setShowDetails(true)}
-                    className="text-sm text-neutral-400 underline underline-offset-2 hover:text-white"
+                    className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
                   >
                     Tinkinti pasirinkimus
                   </button>
@@ -187,7 +187,7 @@ export function CookieConsent() {
                   <button
                     type="button"
                     onClick={saveChoice}
-                    className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+                    className="rounded-lg border border-white/15 bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-white/10"
                   >
                     Išsaugoti pasirinkimus
                   </button>
@@ -196,14 +196,14 @@ export function CookieConsent() {
                   <button
                     type="button"
                     onClick={rejectAll}
-                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15 sm:flex-none transition-colors"
+                    className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent sm:flex-none transition-colors"
                   >
                     Atmesti visus
                   </button>
                   <button
                     type="button"
                     onClick={acceptAll}
-                    className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-fuchsia-500/20 hover:brightness-110 sm:flex-none transition-all active:scale-95"
+                    className="flex-1 rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-600 px-4 py-2 text-sm font-bold text-foreground shadow-lg shadow-fuchsia-500/20 hover:brightness-110 sm:flex-none transition-all active:scale-95"
                   >
                     Sutikti su visais
                   </button>
@@ -232,7 +232,7 @@ function CategoryRow({
 }) {
   return (
     <label
-      className={`flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 ${
+      className={`flex items-start gap-3 rounded-xl border border-border bg-white/[0.02] p-3 ${
         disabled ? "opacity-70" : "cursor-pointer hover:bg-white/[0.04]"
       }`}
     >
@@ -244,8 +244,8 @@ function CategoryRow({
         className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
       />
       <div className="flex-1">
-        <div className="text-sm font-medium text-white">{title}</div>
-        <div className="text-xs leading-relaxed text-neutral-400">{description}</div>
+        <div className="text-sm font-medium text-foreground">{title}</div>
+        <div className="text-xs leading-relaxed text-muted-foreground">{description}</div>
       </div>
     </label>
   );
