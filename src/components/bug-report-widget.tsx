@@ -117,7 +117,7 @@ export function BugReportWidget() {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 z-[100] font-sans md:bottom-4" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="sv-bug-widget fixed bottom-20 left-4 z-[100] font-sans md:bottom-4" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
       {!open ? (
         <button onClick={() => { void captureScreenshot({ force: true }).then(setShot); setOpen(true); }}
           title="Pranešti apie klaidą"

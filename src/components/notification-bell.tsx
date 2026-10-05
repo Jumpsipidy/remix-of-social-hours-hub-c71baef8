@@ -242,6 +242,15 @@ export function NotificationBell() {
     setOpen(false);
   };
 
+  // Atidarius sąrašą, pranešimai laikomi perskaitytais uždarant — nereikia spausti „Skaityti visus“.
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (open) { wasOpen.current = true; return; }
+    if (wasOpen.current) {
+      wasOpen.current = false;
+      setItems((prev) => (prev.some((x) => !x.read) ? prev.map((x) => ({ ...x, read: true })) : prev));
+    }
+  }, [open]);
   const markAllRead = () => setItems((prev) => prev.map((x) => ({ ...x, read: true })));
 
   const filters: { key: FilterKey; label: string }[] = [

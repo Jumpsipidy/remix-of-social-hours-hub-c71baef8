@@ -12,10 +12,15 @@ export function V25Banner() {
   useEffect(() => {
     try { setShow(localStorage.getItem(KEY) !== "1"); } catch { setShow(true); }
   }, []);
+  const visible = show && !(path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register");
+  useEffect(() => {
+    if (visible) document.documentElement.dataset.v25 = "1"; else delete document.documentElement.dataset.v25;
+    return () => { delete document.documentElement.dataset.v25; };
+  }, [visible]);
   if (!show || path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register") return null;
   const close = () => { setShow(false); try { localStorage.setItem(KEY, "1"); } catch {} };
   return (
-    <div className="sv-v25-in fixed inset-x-3 bottom-3 z-40 sm:left-4 sm:right-auto sm:w-[400px]" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="sv-v25-in fixed inset-x-3 bottom-3 z-40 sm:left-auto sm:right-4 sm:w-[400px]" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
       <div className="pointer-events-none absolute inset-x-0 -top-2 h-0" aria-hidden>
         {BITS.map((b, i) => (
           <span key={i} className="sv-v25-pop absolute text-base" style={{ left: `${8 + i * 11}%`, animationDelay: `${i * 0.22}s` }}>{b}</span>
