@@ -459,16 +459,6 @@ function OrgDashboard() {
       )}
 
       {view === "dashboard" && <>
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <QuickTiles tiles={[
-          { label: "Sukurti užduotį", hint: "Naujas skelbimas", icon: Plus, tone: "primary", onClick: () => openCreateTask() },
-          { label: "Laukia sprendimo", value: pending.length, hint: pending.length ? "Peržiūrėk užklausas" : "Viskas apdorota", icon: Inbox, tone: pending.length ? "warning" : "default", onClick: () => document.getElementById("org-requests")?.scrollIntoView({ behavior: "smooth" }) },
-          { label: "Vykdoma", value: approved.length, hint: nextApproved ? `Kitas: ${String(nextApproved.reservation_date).slice(5, 10)}` : "Nėra suplanuotų", icon: PlayCircle },
-          { label: "Skenuoti QR", hint: "Atvykimo patvirtinimas", icon: ScanLine, to: "/organization/scan" },
-          { label: "Pokalbiai", hint: "Mokiniai ir mokyklos", icon: MessageSquare, to: "/chat" },
-          { label: "Valandų suteikta", value: hoursDelivered, hint: `${uniqueStudents} mokinių`, icon: Clock },
-        ]} />
-      </section>
 
 
       {/* Primary stats */}
@@ -796,6 +786,7 @@ function OrgDashboard() {
         onCancel={() => setVerifyRes(null)}
         onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
       />
+      </div>
     </PageShell>
   );
 }
