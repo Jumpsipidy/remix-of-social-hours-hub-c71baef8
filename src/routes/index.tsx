@@ -386,7 +386,7 @@ function Home() {
             {[
               { t: "Pokalbiai", d: "Mokinys, organizacija ir mokykla vienoje vietoje", to: "/chat" },
               { t: "Žemėlapis", d: "Užduotys Šeduvoje, Radviliškyje, Šiauliuose", to: "/tasks" },
-              { t: "Draugai", d: "Kviesk draugą ir eikite kartu", to: "/friends" },
+              { t: "Draugai", d: "Kviesk draugą ir eikite kartu", to: "/dashboard" },
               { t: "QR pažymėjimai", d: "Patikrinami per sekundę", to: "/verify" },
             ].map((f) => (
               <Link key={f.t} to={f.to as any} className="group rounded-2xl border border-border bg-card/70 p-4 transition hover:border-primary/50 active:scale-[0.98]">
