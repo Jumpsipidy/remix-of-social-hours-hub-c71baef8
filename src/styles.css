@@ -298,38 +298,38 @@ body {
    ========================================================================== */
 html.school-eyes {
   color-scheme: light;
-  --background: #f6f7f9;
-  --foreground: #10151d;
+  --background: #f2f4f7;
+  --foreground: #1a2230;
   --card: #ffffff;
-  --card-foreground: #10151d;
+  --card-foreground: #1a2230;
   --popover: #ffffff;
-  --popover-foreground: #10151d;
-  --primary: #1c3f6e;
+  --popover-foreground: #1a2230;
+  --primary: #2456c7;
   --primary-foreground: #ffffff;
-  --primary-glow: #1c3f6e;
-  --secondary: #eceff4;
-  --secondary-foreground: #10151d;
-  --muted: #eceff4;
-  --muted-foreground: #4a5565;
-  --accent: #e7ecf3;
-  --accent-foreground: #10151d;
+  --primary-glow: #4b7be0;
+  --secondary: #e9edf3;
+  --secondary-foreground: #1a2230;
+  --muted: #eef1f5;
+  --muted-foreground: #5a6474;
+  --accent: #e6eefc;
+  --accent-foreground: #1a2230;
   --success: #10643c;
   --success-foreground: #ffffff;
   --warning: #7a4a05;
   --warning-foreground: #ffffff;
   --destructive: #a3161b;
   --destructive-foreground: #ffffff;
-  --border: #d3d9e2;
+  --border: #e1e6ed;
   --input: #ffffff;
-  --ring: #1c3f6e;
-  --radius: 0.6rem;
+  --ring: #2456c7;
+  --radius: 0.85rem;
   --gradient-hero: none;
   --gradient-primary: none;
   --gradient-accent: none;
   --gradient-card: none;
   --gradient-mesh: none;
-  --shadow-sm: 0 1px 2px rgba(16, 21, 29, 0.06);
-  --shadow-md: 0 2px 8px rgba(16, 21, 29, 0.07);
+  --shadow-sm: 0 1px 2px rgba(26, 34, 48, 0.05);
+  --shadow-md: 0 1px 2px rgba(26,34,48,.04), 0 4px 14px rgba(26, 34, 48, 0.06);
   --shadow-lg: 0 8px 24px rgba(16, 21, 29, 0.08);
   --shadow-elegant: 0 8px 24px rgba(16, 21, 29, 0.08);
   --shadow-glow: none;
@@ -337,8 +337,8 @@ html.school-eyes {
 
 html.school-eyes,
 html.school-eyes body {
-  background: #f6f7f9 !important;
-  color: #10151d !important;
+  background: #f2f4f7 !important;
+  color: #1a2230 !important;
 }
 
 /* Stiklo / švytėjimo / judesio efektai — pagrindinis „AI slop" šaltinis. */
@@ -392,7 +392,7 @@ html.school-eyes body {
 .school-eyes nav,
 .school-eyes aside {
   background-color: transparent !important;
-  color: #10151d !important;
+  color: #1a2230 !important;
 }
 .school-eyes [class*="bg-background"],
 .school-eyes [class*="bg-card"],
@@ -400,7 +400,7 @@ html.school-eyes body {
 .school-eyes [class*="bg-secondary"],
 .school-eyes [class*="bg-popover"] {
   background-color: #ffffff !important;
-  color: #10151d !important;
+  color: #1a2230 !important;
 }
 .school-eyes [class*="shadow-glow"],
 .school-eyes [class*="drop-shadow"] {
@@ -422,7 +422,7 @@ html.school-eyes body {
 .school-eyes [class*="text-zinc-"],
 .school-eyes [class*="text-stone-"],
 .school-eyes [class*="text-neutral-"] {
-  color: #10151d !important;
+  color: #1a2230 !important;
 }
 .school-eyes .text-muted-foreground,
 .school-eyes [class*="text-white/6"],
@@ -433,15 +433,15 @@ html.school-eyes body {
 .school-eyes .text-gradient,
 .school-eyes [class*="bg-clip-text"] {
   background: none !important;
-  -webkit-text-fill-color: #1c3f6e !important;
-  color: #1c3f6e !important;
+  -webkit-text-fill-color: #2456c7 !important;
+  color: #2456c7 !important;
 }
 
 /* Gradientiniai mygtukai / plokštės — vientisa firminė spalva. */
 .school-eyes [class*="bg-gradient"],
 .school-eyes [style*="linear-gradient"] {
   background-image: none !important;
-  background-color: #1c3f6e !important;
+  background-color: #2456c7 !important;
 }
 .school-eyes [class*="bg-gradient"],
 .school-eyes [class*="bg-gradient"] *,
@@ -456,8 +456,8 @@ html.school-eyes body {
 .school-eyes section[class*="bg-gradient"],
 .school-eyes div[class*="bg-gradient-card"] {
   background-color: #ffffff !important;
-  color: #10151d !important;
-  -webkit-text-fill-color: #10151d !important;
+  color: #1a2230 !important;
+  -webkit-text-fill-color: #1a2230 !important;
 }
 .school-eyes div[class*="bg-gradient-card"] * {
   color: inherit !important;
@@ -480,7 +480,7 @@ html.school-eyes body {
 .school-eyes input:focus-visible,
 .school-eyes select:focus-visible,
 .school-eyes textarea:focus-visible {
-  outline: 3px solid #1c3f6e !important;
+  outline: 3px solid #2456c7 !important;
   outline-offset: 2px !important;
 }
 
@@ -545,7 +545,7 @@ html.school-eyes body {
   background-color: #ffffff !important;
   background-image: none !important;
 }
-.school-eyes [class*="bg-background"] { background-color: #f6f7f9 !important; }
+.school-eyes [class*="bg-background"] { background-color: #f2f4f7 !important; }
 .school-eyes [class*="text-white"],
 .school-eyes [class*="text-slate-1"],
 .school-eyes [class*="text-slate-2"],
@@ -555,14 +555,15 @@ html.school-eyes body {
 .school-eyes [class*="text-gray-2"],
 .school-eyes [class*="text-[#e"],
 .school-eyes [class*="text-[#f"] {
-  color: #10151d !important;
+  color: #1a2230 !important;
 }
+.school-eyes [class*="bg-card"] { box-shadow: 0 1px 2px rgba(26,34,48,.04), 0 4px 14px rgba(26,34,48,.05); }
 .school-eyes [class*="border-white"],
 .school-eyes [class*="border-slate-8"],
-.school-eyes [class*="border-slate-7"] { border-color: #d3d9e2 !important; }
+.school-eyes [class*="border-slate-7"] { border-color: #e1e6ed !important; }
 /* Mygtukai su primary fonu lieka kontrastingi */
-.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) { background-color: #1c3f6e !important; color: #fff !important; }
-.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) * { color: #fff !important; }
+.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) { background-color: #2456c7 !important; color: #fff !important; }
+.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) * { color: #fff !important; }
 .school-eyes [class*="bg-gradient-to"] { background-image: none !important; }
 .school-eyes .leaflet-tile-pane { filter: none !important; }
 .school-eyes img, .school-eyes video { filter: none !important; }

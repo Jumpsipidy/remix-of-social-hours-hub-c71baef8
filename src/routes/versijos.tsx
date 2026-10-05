@@ -63,6 +63,9 @@ const VERSIONS: Version[] = [
       { tag: "Dizainas", text: "Apvalus logotipas, nauji klaidų ekranai ir gražesni užkrovimo šablonai." },
       { tag: "Pataisyta", text: "Mokiniai vėl mato savo ir draugų rezervacijas; pokalbių teisių klaidos išspręstos." },
       { tag: "Pataisyta", text: "Nebelieka juodo blyksnio ir „Nepavyko įkelti duomenų“ skydeliuose." },
+      { tag: "Nauja", text: "Naujas mokyklos Rizikos centras: filtruojamos kortelės, klasių filtrai, aiškus rizikos lygis ir greita peržiūra." },
+      { tag: "Patobulinta", text: "Pranešimų centras: laikas „prieš 5 min.“, „Skaityti visus“, atskirų pranešimų šalinimas ir tiesioginis kelias į pokalbius." },
+      { tag: "Dizainas", text: "Švelnesnis, akims malonesnis šviesus režimas ir mažiau dirbtinai atrodančių efektų." },
     ],
   },
   {

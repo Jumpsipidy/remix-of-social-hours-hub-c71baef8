@@ -136,12 +136,12 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
         <span>{q}</span>
         <motion.span 
           animate={{ 
-            rotate: isOpen ? 45 : 0,
-            scale: isOpen ? 1.2 : 1
+            rotate: isOpen ? 180 : 0,
+            scale: 1
           }}
           className="text-primary/60"
         >
-          <Sparkles className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
@@ -290,18 +290,7 @@ function Home() {
 
           <div className="relative mx-auto max-w-4xl text-center">
 
-            <div
-              className="relative mb-7 inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.24em] text-white/70 backdrop-blur"
-            >
-              <motion.span
-                aria-hidden
-                className="absolute inset-0 motion-reduce:hidden"
-                style={{ background: `linear-gradient(90deg, transparent, ${LT_YELLOW}22, ${LT_GREEN}22, ${LT_RED}22, transparent)`, backgroundSize: "220% 100%" }}
-                
-              />
-              <Sparkles className="relative h-3 w-3" style={{ color: GOLD }} />
-              <span className="relative">Lietuvos moksleiviams · nemokamai</span>
-            </div>
+
             <div className="mb-6 flex justify-center">
               <Link to="/versijos" className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition active:scale-95">
                 <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">NAUJA</span>
@@ -371,7 +360,7 @@ function Home() {
                 <div className="text-2xl font-display font-semibold text-white">
                   <CountUp value={counts.hours} /> val.
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.2em] text-white/50">
+                <div className="text-[10px] tracking-normal text-white/50">
                   jau užregistruota mūsų bendruomenėje
                 </div>
               </div>
@@ -426,7 +415,7 @@ function Home() {
                 <div className="mb-3 text-4xl sm:text-5xl md:text-6xl font-display font-light" style={{ color: s.c }}>
                   <CountUp value={s.v} />
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.24em] text-white/60">{s.l}</div>
+                <div className="text-[11px] tracking-normal text-white/60">{s.l}</div>
               </motion.div>
             ))}
 
@@ -462,7 +451,7 @@ function Home() {
                       </span>
                       <div>
                         <h3 className="text-lg font-semibold text-white">{s.name}</h3>
-                        <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-white/45">
+                        <p className="mt-0.5 text-[11px] tracking-normal text-white/45">
                           {s.loc}
                         </p>
                         <p className="mt-3 text-sm leading-relaxed text-white/65">
@@ -526,7 +515,7 @@ function Home() {
                       <c.icon className="h-6 w-6" style={{ color: c.accent }} />
                     </motion.div>
 
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/50">
+                    <div className="mb-3 text-[11px] font-bold tracking-normal text-white/50">
                       {c.tag}
                     </div>
                     <h3 className="mb-4 text-3xl italic font-display text-white" style={{ fontWeight: 500 }}>
@@ -687,7 +676,7 @@ function Home() {
           </Reveal>
           <div className="mx-auto max-w-xl px-4">
             <SpotlightCard accent={LT_GREEN} className="p-6 text-center sm:p-8">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-[11px] tracking-normal text-white/55">
                 <GraduationCap className="h-3.5 w-3.5" style={{ color: LT_YELLOW }} /> Mokykla
               </span>
               <p className="mt-4 font-display text-2xl italic sm:text-3xl text-white">Šeduvos gimnazija</p>
