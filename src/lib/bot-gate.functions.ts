@@ -45,14 +45,37 @@ async function requestInfo() {
   return { uaHash: (await sha256Hex(ua)).slice(0, 16), reasons };
 }
 
-export const issueGateChallenge = createServerFn({ method: "POST" }).handler(async () => {
-  const { uaHash, reasons } = await requestInfo();
-  const nonce = crypto.randomUUID();
-  const issuedAt = Date.now();
-  const difficulty = reasons.length ? 4 : 3; // leading hex zeros
-  const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}`);
-  return { nonce, issuedAt, difficulty, sig, serverReasons: reasons };
-});
+// Icons for the second step ("paspausk paveikslėlius nurodyta tvarka").
+const SYMBOLS = ["sun", "tree", "heart", "star", "house", "bike", "book", "leaf", "moon", "cloud"] as const;
+
+function randInt(n: number) {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] % n;
+}
+
+export const issueGateChallenge = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ clientRisk: z.number().int().min(0).max(50) }).partial().parse(d ?? {}))
+  .handler(async ({ data }) => {
+    const { uaHash, reasons } = await requestInfo();
+    const nonce = crypto.randomUUID();
+    const issuedAt = Date.now();
+    const difficulty = reasons.length ? 4 : 3; // leading hex zeros
+    // Extra step when the server or the device itself looks suspicious.
+    const steps = reasons.length > 0 || (data.clientRisk ?? 0) >= 2 ? 2 : 1;
+    // Build a 6-icon grid and ask for 3 of them in a given order.
+    const pool = [...SYMBOLS];
+    const grid: string[] = [];
+    while (grid.length < 6) grid.push(pool.splice(randInt(pool.length), 1)[0]);
+    const order: number[] = [];
+    while (order.length < 3) { const i = randInt(6); if (!order.includes(i)) order.push(i); }
+    const answer = order.join(",");
+    const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}`);
+    return {
+      nonce, issuedAt, difficulty, sig, steps, serverReasons: reasons,
+      grid, targets: order.map((i) => grid[i]),
+    };
+  });
 
 const verifySchema = z.object({
   nonce: z.string().uuid(),
@@ -66,6 +89,12 @@ const verifySchema = z.object({
   distinctIntervals: z.number().int().min(0).max(10000),
   pointerType: z.enum(["mouse", "touch", "pen", ""]),
   trusted: z.boolean(),
+  steps: z.number().int().min(1).max(2),
+  grid: z.array(z.string().max(10)).length(6),
+  targets: z.array(z.string().max(10)).length(3),
+  tapAnswer: z.array(z.number().int().min(0).max(5)).max(3).optional(),
+  tapIntervals: z.array(z.number().min(0).max(120000)).max(3).optional(),
+  inputMode: z.enum(["pointer", "keyboard"]).optional(),
 });
 
 export const verifyGate = createServerFn({ method: "POST" })
@@ -73,7 +102,10 @@ export const verifyGate = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { uaHash } = await requestInfo();
     const fail: string[] = [];
-    const expected = await hmac(`c|${data.nonce}|${data.issuedAt}|${data.difficulty}|${uaHash}`);
+    // The answer is re-derived from grid+targets and covered by the signature,
+    // so the client can't change the step count or the expected order.
+    const derived = data.targets.map((t) => data.grid.indexOf(t)).join(",");
+    const expected = await hmac(`c|${data.nonce}|${data.issuedAt}|${data.difficulty}|${uaHash}|${data.steps}|${data.grid.join(",")}|${derived}`);
     if (!safeEqual(expected, data.sig)) fail.push("bad_signature");
     const age = Date.now() - data.issuedAt;
     if (age > 5 * 60_000) fail.push("expired");
@@ -83,7 +115,13 @@ export const verifyGate = createServerFn({ method: "POST" })
     if (!data.trusted) fail.push("synthetic_event");
     if (data.holdMs < 1500) fail.push("short_hold");
     // Touch screens barely move while held; mice always wobble a little.
-    if (data.pointerType === "mouse" && data.jitter < 2) fail.push("no_motion");
+    if (data.inputMode !== "keyboard" && data.pointerType === "mouse" && data.jitter < 2) fail.push("no_motion");
+    if (data.steps === 2) {
+      const ans = (data.tapAnswer ?? []).join(",");
+      if (ans !== derived) fail.push("wrong_order");
+      const iv = data.tapIntervals ?? [];
+      if (iv.length < 3 || iv.some((ms) => ms < 180)) fail.push("tap_too_fast");
+    }
     if (data.points >= 6 && data.distinctIntervals <= 1) fail.push("robotic_timing");
     if (fail.length) return { ok: false as const, reasons: fail };
     const exp = Date.now() + 6 * 3600_000;
