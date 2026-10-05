@@ -561,7 +561,7 @@ function Page() {
 
       {loading && !a ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-32 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" />)}
+          {[...Array(4)].map((_, i) => <div key={i} data-skeleton="" className="sv-skeleton h-32 rounded-2xl" />)}
         </div>
       ) : a ? (
         <div className="space-y-6">

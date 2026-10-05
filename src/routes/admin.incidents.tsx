@@ -74,7 +74,7 @@ function AdminIncidentsPage() {
       <div className="grid gap-4">
         {isLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-32 w-full animate-pulse rounded-2xl bg-white/5" />
+            <div key={i} data-skeleton="" className="sv-skeleton h-32 w-full rounded-2xl" />
           ))
         ) : filteredLogs?.length === 0 ? (
           <GlassCard className="flex flex-col items-center justify-center py-20 text-center">
