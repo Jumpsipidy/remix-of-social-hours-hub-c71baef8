@@ -131,7 +131,7 @@ export function renderShell(opts: ShellOptions): string {
                         <td align="center">
                           <div class="avatar-wrap" style="width:100px; height:100px; background:linear-gradient(135deg, ${theme.primary}, ${theme.secondary}); border-radius:30px; overflow:hidden; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px ${theme.primary}44;">
                             ${opts.userAvatar 
-                              ? `<img src="${opts.userAvatar}" width="100" height="100" style="display:block; width:100%; height:100%; object-fit:cover;" />`
+                              ? `<img src="${escape(opts.userAvatar)}" width="100" height="100" style="display:block; width:100%; height:100%; object-fit:cover;" />`
                               : `<div style="font-size:40px; font-weight:900; line-height:100px; color:#ffffff; text-align:center;">${opts.userInitial || opts.medallionEmoji}</div>`
                             }
                           </div>
