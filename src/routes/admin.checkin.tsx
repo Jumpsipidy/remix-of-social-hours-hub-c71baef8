@@ -40,7 +40,6 @@ function AdminCheckinPage() {
         .from("reservations")
         .select("id, check_in_code, checked_in_at, status, reservation_date, hours_to_earn, student_id, organization_id")
         .in("status", ["approved", "completed"])
-        .not("check_in_code", "is", null)
         .order("reservation_date", { ascending: false })
         .limit(200);
       if (resError) throw resError;
@@ -141,6 +140,17 @@ function AdminCheckinPage() {
   }
 
   useEffect(() => { void load(); }, []);
+  // Gyvai sinchronizuojama su organizacijų QR skenavimu
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const bump = () => { clearTimeout(t); t = setTimeout(() => { void load(); }, 400); };
+    const ch = supabase.channel("admin-checkin")
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, bump)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants" }, bump)
+      .subscribe();
+    return () => { clearTimeout(t); void supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = rows.filter((r) => {
     if (filter === "pending") return !r.checked_in_at;
