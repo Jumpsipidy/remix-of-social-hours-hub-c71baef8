@@ -23,6 +23,7 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     org_category?: OrgCategory | null;
     school_id?: string | null;
     assigned_classes?: string[] | null;
+    auto_year_renewal?: boolean;
   }) => input)
 
   .handler(async ({ data, context }) => {
@@ -47,6 +48,7 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
       throw new Error("El. paštas ir bent 6 simbolių slaptažodis būtini");
     }
     if (!["organization", "school_admin"].includes(data.role)) throw new Error("Netinkama rolė");
+    if (data.role === "school_admin" && !data.school_id) throw new Error("Pasirink mokyklą mokyklos administratoriui");
 
     const normalizedEmail = data.email.trim().toLowerCase();
     const { data: usersPage, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -86,6 +88,7 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         // "School admin can view … in their school" RLS policies to work.
         associated_school_id: data.role === "school_admin" ? (data.school_id ?? (me as any)?.school_id ?? null) : null,
         assigned_classes: data.role === "school_admin" ? (data.assigned_classes ?? []) : [],
+        auto_year_renewal: data.auto_year_renewal ?? true,
         hours_needed: 0,
         hours_earned: 0,
       },
