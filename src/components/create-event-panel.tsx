@@ -127,8 +127,8 @@ export function CreateEventPanel({ onCreated }: { onCreated?: () => void }) {
         </label>
         <label className="text-xs font-semibold text-muted-foreground">
           Valandos (viena vieta)
-          <input type="number" min={0.5} step={0.5} value={hours}
-            onChange={(e) => setHours(Number(e.target.value))}
+          <input type="number" min={1} max={8} step={1} value={hours}
+            onChange={(e) => setHours(Math.round(Number(e.target.value)) || 0)}
             className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none" />
         </label>
         <label className="text-xs font-semibold text-muted-foreground">
