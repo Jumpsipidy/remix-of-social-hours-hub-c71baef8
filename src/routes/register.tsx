@@ -6,6 +6,7 @@ import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2
 import { supabase } from "@/integrations/supabase/client";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
+import { AuthShell, OAuthButtons } from "@/components/auth-shell";
 
 export const Route = createFileRoute("/register")({
   ssr: false,
@@ -141,99 +142,9 @@ function RegisterPage() {
     } finally { setLoading(false); }
   }
 
-  async function handleGoogle() {
-    const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo, queryParams: { prompt: "select_account" } },
-    });
-    if (error) toast.error("Nepavyko prisijungti per Google");
-  }
-  async function handleDiscord() {
-    const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "discord", options: { redirectTo } });
-    if (error) toast.error("Nepavyko prisijungti per Discord");
-  }
-  async function handleGithub() {
-    const redirectTo = `${window.location.origin}/auth/callback`;
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo } });
-    if (error) toast.error("Nepavyko prisijungti per GitHub");
-  }
-
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.12),transparent_60%)]" aria-hidden />
-
-      <div className="relative z-10 mx-auto grid min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:grid-cols-2 lg:gap-12">
-        {/* Left — journey narrative */}
-        <div className="hidden flex-col justify-center lg:flex">
-          <Link to="/" className="group inline-flex items-center gap-2">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-primary shadow-glow transition-transform group-hover:scale-110">
-              <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="font-display text-2xl font-bold">Socialinės Valandos</span>
-          </Link>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mt-14">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 backdrop-blur">
-              <Rocket className="h-3 w-3" /> Pradžia · 60 sekundžių
-            </div>
-            <h1 className="mt-6 max-w-lg text-6xl font-black leading-[1.02] tracking-tighter">
-              Pradėk savo<br />
-              <span className="bg-[linear-gradient(120deg,#2DD4BF,#FF4D2D,#2DD4BF)] bg-[length:200%_100%] bg-clip-text text-transparent [animation:gradient-shift_6s_ease_infinite]">
-                valandų kelionę
-              </span><br />
-              šiandien.
-            </h1>
-            <p className="mt-6 max-w-md text-base text-muted-foreground">
-              Sukurk paskyrą per minutę. Įrašyk mokyklos kodą, pasirink klasę — ir jau gali rezervuoti pirmąją savanorystę.
-            </p>
-          </motion.div>
-
-          <ol className="mt-10 grid max-w-md gap-3">
-            {[
-              { n: "01", icon: SchoolIcon, title: "Įvesk mokyklos kodą", body: "Gauk iš klasės auklėtojo — patvirtina, kad esi tikras mokinys." },
-              { n: "02", icon: GraduationCap, title: "Pasirink klasę", body: "5–7 kl. — 20 val. 8+ kl. — bent 8 val. per metus." },
-              { n: "03", icon: Award, title: "Rink valandas", body: "Rezervuok užduotis, atlik, gauk patvirtinimą — viskas skaidru." },
-            ].map((s, i) => (
-              <motion.li
-                key={s.n}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 * i + 0.3 }}
-                whileHover={{ x: 4 }}
-                className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-card/40 p-4 backdrop-blur-xl transition-colors hover:border-emerald-400/50 hover:bg-card/70"
-              >
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(135deg,hsl(160_80%_45%),hsl(var(--primary)))] text-primary-foreground shadow-[0_10px_30px_-10px_hsl(160_80%_50%/0.6)] transition-transform group-hover:rotate-6">
-                  <s.icon className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-[10px] font-bold tracking-widest text-emerald-400/80">{s.n}</span>
-                    <p className="text-sm font-semibold">{s.title}</p>
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{s.body}</p>
-                </div>
-              </motion.li>
-            ))}
-          </ol>
-        </div>
-
-        {/* Right — form card */}
-        <div className="mx-auto w-full max-w-md">
-          <Link to="/" className="mb-8 inline-flex items-center gap-2 lg:hidden">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-              <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="font-display text-lg font-bold">Socialinės Valandos</span>
-          </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="group relative rounded-[2rem] p-[1.5px]"
-          >
+    <AuthShell mode="register">
+            <div>
             <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
@@ -304,24 +215,7 @@ function RegisterPage() {
                 </>
               ) : (
                 <>
-                  {/* OAuth first — parity with login */}
-                  <div className="mt-6 grid gap-2 sm:grid-cols-3">
-                    <button onClick={handleGoogle} type="button"
-                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
-                      <GoogleIcon /> Google
-                    </button>
-                    <button onClick={handleDiscord} type="button"
-                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:-translate-y-0.5 hover:border-emerald-400/50 hover:shadow-[0_10px_30px_-15px_hsl(160_80%_50%/0.6)]">
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-emerald-400/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
-                      <DiscordIcon /> Discord
-                    </button>
-                    <button onClick={handleGithub} type="button"
-                      className="group/btn relative flex items-center justify-center gap-2 overflow-hidden rounded-full border border-border bg-background/80 py-3 text-sm font-semibold backdrop-blur transition-all hover:border-emerald-400/50">
-                      <GithubIcon /> GitHub
-                    </button>
-                  </div>
-
+                  <div className="mt-6"><OAuthButtons /></div>
                   <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
                     arba el. paštu
@@ -406,17 +300,7 @@ function RegisterPage() {
                 <Link to="/privacy" className="font-semibold underline underline-offset-2 hover:text-foreground">Privatumo politika</Link>.
               </p>
             </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-      `}</style>
-    </div>
+    </AuthShell>
   );
 }
 
@@ -434,23 +318,4 @@ function Field({ label, icon: Icon, value, onChange, placeholder, type = "text",
       </div>
     </div>
   );
-}
-
-function DiscordIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden fill="#5865F2">
-      <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.075.075 0 0 0-.079.037c-.34.607-.719 1.4-.984 2.023a18.29 18.29 0 0 0-5.487 0 12.51 12.51 0 0 0-1-2.023.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 5.163 4.369a.07.07 0 0 0-.032.027C2.229 8.756 1.431 13.03 1.823 17.253a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.027c.462-.63.874-1.295 1.226-1.995a.076.076 0 0 0-.041-.105 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.106c.36.699.772 1.364 1.225 1.994a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.055c.5-4.887-.838-9.125-3.548-12.857a.061.061 0 0 0-.031-.028zM8.02 14.68c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.418 0 1.334-.956 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.418 2.157-2.418 1.21 0 2.176 1.094 2.157 2.418 0 1.334-.946 2.419-2.157 2.419z"/>
-    </svg>
-  );
-}
-function GoogleIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden>
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.1s2.7-6.1 6-6.1c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12S6.8 21.5 12 21.5c6.9 0 9.5-4.8 9.5-9.3 0-.6-.1-1.1-.2-1.6H12z" />
-    </svg>
-  );
-}
-
-function GithubIcon() {
-  return <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden fill="currentColor"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>;
 }
