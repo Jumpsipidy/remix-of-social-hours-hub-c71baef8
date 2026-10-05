@@ -18,7 +18,6 @@ import { BugReportWidget } from "../components/bug-report-widget";
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
-import { SecurityGatewayInternal } from "@/components/security-gateway";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
@@ -289,7 +288,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SecurityGatewayProvider>
-          <SecurityGatewayInternal />
           {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
               atsiranda naujas ir matosi juodas blyksnis. */}
           <div className="flex-1 flex flex-col">

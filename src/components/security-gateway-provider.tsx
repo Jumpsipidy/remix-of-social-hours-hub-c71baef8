@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { isPreviewEnvironment, logActivity } from "@/lib/activity-log";
+import { SecurityGatewayInternal } from "./security-gateway";
 import { BOT_THRESHOLD, collectBotSignals } from "@/lib/bot-signals";
 
 /**
@@ -79,8 +80,6 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Lazy import avoids a circular import between provider and UI.
-import { SecurityGatewayInternal } from "./security-gateway";
 function GatewaySlot() { return <SecurityGatewayInternal />; }
 
 export function useSecurityGateway() {
