@@ -164,12 +164,12 @@ export const resetDevData = createServerFn({ method: "POST" })
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Delete every non-admin account (students, organizations, school_admins,
-    // whether real or @dev.local). Admins are preserved so the caller stays signed in.
+    // Delete only @dev.local test accounts — real users are never touched. Admins are preserved so the caller stays signed in.
     const { data: profs } = await supabaseAdmin
       .from("profiles")
-      .select("id, role")
-      .neq("role", "admin");
+      .select("id, role, email")
+      .neq("role", "admin")
+      .ilike("email", "%@dev.local");
     const ids = (profs ?? []).map((p) => p.id);
     if (ids.length === 0) return { ok: true, cleared: 0 };
 

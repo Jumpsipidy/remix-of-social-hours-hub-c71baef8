@@ -524,3 +524,74 @@ html.school-eyes body {
 @media (prefers-reduced-motion: reduce) { .sv-skeleton::after { animation: none; } }
 /* Free OSM fallback tiles tinted dark to match the theme */
 .sv-dark-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
+
+/* ==========================================================================
+   "Mokyklos akys" v2 — tikras šviesus režimas: perrašomos ir kietai
+   užkoduotos tamsios spalvos (bg-black, bg-slate-9xx, bg-[#0…], text-white).
+   ========================================================================== */
+.school-eyes [class*="bg-black"],
+.school-eyes [class*="bg-slate-9"],
+.school-eyes [class*="bg-zinc-9"],
+.school-eyes [class*="bg-neutral-9"],
+.school-eyes [class*="bg-gray-9"],
+.school-eyes [class*="bg-slate-8"],
+.school-eyes [class*="bg-zinc-8"],
+.school-eyes [class*="bg-[#0"],
+.school-eyes [class*="bg-[#1"],
+.school-eyes [class*="bg-[oklch(0.1"],
+.school-eyes [class*="bg-[oklch(0.2"],
+.school-eyes [class*="bg-background"],
+.school-eyes [class*="bg-card"] {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+.school-eyes [class*="bg-background"] { background-color: #f6f7f9 !important; }
+.school-eyes [class*="text-white"],
+.school-eyes [class*="text-slate-1"],
+.school-eyes [class*="text-slate-2"],
+.school-eyes [class*="text-slate-3"],
+.school-eyes [class*="text-zinc-1"],
+.school-eyes [class*="text-zinc-2"],
+.school-eyes [class*="text-gray-2"],
+.school-eyes [class*="text-[#e"],
+.school-eyes [class*="text-[#f"] {
+  color: #10151d !important;
+}
+.school-eyes [class*="border-white"],
+.school-eyes [class*="border-slate-8"],
+.school-eyes [class*="border-slate-7"] { border-color: #d3d9e2 !important; }
+/* Mygtukai su primary fonu lieka kontrastingi */
+.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) { background-color: #1c3f6e !important; color: #fff !important; }
+.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) * { color: #fff !important; }
+.school-eyes [class*="bg-gradient-to"] { background-image: none !important; }
+.school-eyes .leaflet-tile-pane { filter: none !important; }
+.school-eyes img, .school-eyes video { filter: none !important; }
+
+/* ==========================================================================
+   Telefonai: mažiau sunkių efektų → sklandus slinkimas ir greiti meniu.
+   ========================================================================== */
+@media (max-width: 768px), (pointer: coarse) {
+  *, *::before, *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  [class*="blur-3xl"], [class*="blur-2xl"], [class*="blur-[1"] { display: none !important; }
+  [class*="shadow-2xl"], [class*="shadow-glow"] { box-shadow: 0 4px 14px rgba(0,0,0,.25) !important; }
+  [class*="animate-pulse"]:not(.sv-skeleton) { animation-duration: 2.4s !important; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { overscroll-behavior-y: none; }
+  [role="dialog"], [data-state] { will-change: auto; }
+  [data-radix-popper-content-wrapper], [role="dialog"] { transition-duration: 160ms !important; animation-duration: 160ms !important; }
+  input, select, textarea { font-size: 16px !important; } /* iOS: be priartinimo */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .leaflet-container { touch-action: pan-x pan-y; }
+}
+
+/* Atsijungimo animacija */
+@keyframes sv-logout-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes sv-logout-ring { from { transform: scale(.6); opacity: 1 } to { transform: scale(2.2); opacity: 0 } }
+@keyframes sv-logout-icon { 0% { transform: translateX(0) } 60% { transform: translateX(14px); opacity: 1 } 100% { transform: translateX(28px); opacity: 0 } }
+.sv-logout { animation: sv-logout-in .25s ease-out both; }
+.sv-logout-ring { animation: sv-logout-ring 1.1s ease-out infinite; }
+.sv-logout-icon { animation: sv-logout-icon .9s ease-in .2s both; }
+@media (prefers-reduced-motion: reduce) { .sv-logout, .sv-logout-ring, .sv-logout-icon { animation: none !important; } }

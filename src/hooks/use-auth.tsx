@@ -69,6 +69,7 @@ function makeMockUser(profile: Profile): User {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mock, setMock] = useState<MockSession | null>(null);
   const ensureProfile = useServerFn(ensureSignedInProfile);
@@ -197,6 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isImpersonating: !!mock,
       loading,
       signOut: async () => {
+        setLeaving(true);
+        const started = Date.now();
         try {
           const { deviceMeta } = await import("@/lib/device-meta");
           await logActivity("auth.signed_out", { meta: deviceMeta() });
@@ -205,6 +208,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try { localStorage.removeItem(ROLE_CACHE_KEY); localStorage.removeItem(ROLE_CACHE_UID_KEY); } catch {}
         setMock(null);
         await supabase.auth.signOut();
+        const wait = 1100 - (Date.now() - started);
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+        setTimeout(() => setLeaving(false), 300);
       },
       impersonate: (p: Profile) => {
         try { localStorage.setItem(MOCK_KEY, JSON.stringify({ profile: p })); } catch {}
@@ -230,7 +236,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [user, profile, loading, mock]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {leaving && (
+        <div className="sv-logout fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-5 bg-background/95" role="status" aria-live="polite">
+          <div className="relative flex h-20 w-20 items-center justify-center">
+            <span className="sv-logout-ring absolute inset-0 rounded-full border-2 border-primary" />
+            <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <svg className="sv-logout-icon h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            </span>
+          </div>
+          <p className="text-lg font-bold text-foreground">Atsijungiama…</p>
+          <p className="text-sm text-muted-foreground">Iki greito pasimatymo!</p>
+        </div>
+      )}
+    </AuthContext.Provider>
+  );
 }
 
 // Safe fallback used if a consumer renders before/without the provider

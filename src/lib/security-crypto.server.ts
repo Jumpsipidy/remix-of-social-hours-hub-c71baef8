@@ -10,7 +10,7 @@ export function hmacKey(): string {
     process.env.SB_SERVICE_ROLE_KEY ||
     process.env.SERVICE_ROLE_KEY ||
     process.env.SESSION_SECRET ||
-    "sv-security-fallback-secret-do-not-use"
+    (() => { throw new Error("Security signing key is not configured"); })()
   );
 }
 
