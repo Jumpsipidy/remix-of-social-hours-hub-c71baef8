@@ -1,102 +1,87 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { isPreviewEnvironment, logActivity } from "@/lib/activity-log";
+import { BOT_THRESHOLD, collectBotSignals } from "@/lib/bot-signals";
 
 /**
- * High-risk gateway that triggers a mandatory Captcha if the visitor 
- * comes from a sketchy source or matches high-risk patterns.
+ * Security gateway. Blocks the whole app (children are NOT rendered) when the
+ * visit looks automated or malicious, until the visitor passes our own
+ * "ar jūs ne robotas" check (and reCAPTCHA if that fails).
  */
 
 type GatewayState = {
   isBlocked: boolean;
   isVerifying: boolean;
+  reasons: string[];
   pass: () => void;
 };
 
 const GatewayContext = createContext<GatewayState | null>(null);
 
-const SKETCHY_REFERRERS = [
-  "sketchy-site.com",
-  "spam-link.net",
-  "bot-factory.org",
-  "dark-web-link.com",
-  "malicious-site.net"
-];
-
-/**
- * Tik tikrai jautrūs keliai. /login ir /register čia NĖRA — normalūs žmonės
- * juos atsidaro iš žymelės ar įrašę adresą (be referrer'io), ir jiems saugumo
- * patikra neturi šokti be jokios priežasties.
- */
+const SKETCHY_REFERRERS = ["sketchy-site.com", "spam-link.net", "bot-factory.org", "dark-web-link.com", "malicious-site.net"];
 const SENSITIVE_PATHS = ["/admin"];
-
-/** Tipiniai skenerių / injekcijų pėdsakai kelyje. */
-const SCANNER_PATH_HINTS = [
-  "/wp-admin", "/wp-login", "/phpmyadmin", "/.env", "/.git", "/config.php", "/xmlrpc.php",
+const SCANNER_PATH_HINTS = ["/wp-admin", "/wp-login", "/phpmyadmin", "/.env", "/.git", "/config.php", "/xmlrpc.php"];
+const INJECTION_HINTS = [
+  "phpmyadmin", "select ", "select+", "union ", "union+", "insert ", "drop ",
+  "exec(", "eval(", "<script", "javascript:", "../", "onerror=", "pg_sleep", "information_schema",
 ];
-
-const STORAGE_KEY = "sv_gateway_passed_v1";
+const STORAGE_KEY = "sv_gateway_passed_v2";
 
 export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
+  const [reasons, setReasons] = useState<string[]>([]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const passedAt = Number(sessionStorage.getItem(STORAGE_KEY) || 0);
+    if (passedAt && Date.now() - passedAt < 6 * 3600_000) { setIsVerifying(false); return; }
 
-    // 1. Check if already passed in this session
-    if (sessionStorage.getItem(STORAGE_KEY) === "1") {
-      setIsBlocked(false);
-      setIsVerifying(false);
-      return;
-    }
-
-    // 2. Heuristic check for "sketchy" activity
     const referrer = document.referrer.toLowerCase();
     const currentPath = window.location.pathname.toLowerCase();
-    
-    const isSketchyReferrer = SKETCHY_REFERRERS.some(r => referrer.includes(r));
-    const isSketchyDeepLink =
-      !referrer &&
-      (SENSITIVE_PATHS.some(p => currentPath.startsWith(p)) ||
-        SCANNER_PATH_HINTS.some(p => currentPath.startsWith(p)));
-
-    // Bot/skenerio pėdsakai užklausos parametruose (SQL injekcija, XSS, path traversal).
-    const queryParams = new URLSearchParams(window.location.search);
-    const INJECTION_HINTS = [
-      "phpmyadmin", "select ", "select+", "union ", "union+", "insert ", "drop ",
-      "exec(", "eval(", "<script", "javascript:", "../", "onerror=", "pg_sleep", "information_schema",
-    ];
-    const hasSketchyParams = Array.from(queryParams.values()).some((v) => {
-      const s = decodeURIComponent(v).toLowerCase();
+    const why: string[] = [];
+    if (SKETCHY_REFERRERS.some((r) => referrer.includes(r))) why.push("referrer");
+    if (!referrer && (SENSITIVE_PATHS.some((p) => currentPath.startsWith(p)) || SCANNER_PATH_HINTS.some((p) => currentPath.startsWith(p)))) why.push("deeplink");
+    const params = new URLSearchParams(window.location.search);
+    if (Array.from(params.values()).some((v) => {
+      let s = v; try { s = decodeURIComponent(v); } catch { /* keep raw */ }
+      s = s.toLowerCase();
       return INJECTION_HINTS.some((p) => s.includes(p));
-    });
+    })) why.push("params");
 
-    if (isSketchyReferrer || isSketchyDeepLink || hasSketchyParams) {
-      console.warn("[security-gateway] Sketchy activity detected:", { isSketchyReferrer, isSketchyDeepLink, hasSketchyParams });
-      void logActivity("security.sketchy_access", { 
-        meta: { 
-          referrer, 
-          path: currentPath, 
-          reason: isSketchyReferrer ? "referrer" : isSketchyDeepLink ? "deeplink" : "params" 
-        } 
-      });
+    // Automation fingerprint. Skipped in the editor preview so our own
+    // automated tests can run there.
+    if (!isPreviewEnvironment()) {
+      const bot = collectBotSignals();
+      if (bot.score >= BOT_THRESHOLD) why.push(...bot.reasons.map((r) => `bot:${r}`));
+    }
+
+    if (why.length) {
+      void logActivity("security.sketchy_access", { meta: { referrer, path: currentPath, reasons: why } });
+      setReasons(why);
       setIsBlocked(true);
     }
-    
     setIsVerifying(false);
   }, []);
 
   const pass = () => {
-    sessionStorage.setItem(STORAGE_KEY, "1");
+    sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
+    void logActivity("security.gateway_passed", { meta: { reasons } });
     setIsBlocked(false);
   };
 
   return (
-    <GatewayContext.Provider value={{ isBlocked, isVerifying, pass }}>
-      {children}
+    <GatewayContext.Provider value={{ isBlocked, isVerifying, reasons, pass }}>
+      {/* While blocked, the app itself is not rendered at all — removing the
+          overlay in DevTools reveals nothing. */}
+      {isBlocked ? null : children}
+      {isBlocked && <GatewaySlot />}
     </GatewayContext.Provider>
   );
 }
+
+// Lazy import avoids a circular import between provider and UI.
+import { SecurityGatewayInternal } from "./security-gateway";
+function GatewaySlot() { return <SecurityGatewayInternal />; }
 
 export function useSecurityGateway() {
   const ctx = useContext(GatewayContext);
