@@ -602,3 +602,5 @@ html.school-eyes body {
 @media (prefers-reduced-motion: reduce), (max-width: 768px) { .sv-confetti { animation-duration: 7s; } }
 @keyframes sv-wrongrole { from { width: 0 } to { width: 100% } }
 .sv-wrongrole-bar { animation: sv-wrongrole 1.6s linear both; }
+@keyframes sv-v25-in { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+.sv-v25-in { animation: sv-v25-in .35s ease-out 1.2s both; }
