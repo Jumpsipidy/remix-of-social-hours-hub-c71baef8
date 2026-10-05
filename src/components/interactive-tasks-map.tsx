@@ -76,7 +76,7 @@ export function InteractiveTasksMap({
         </Suspense>
       </div>
 
-      <div className="absolute left-4 top-4 z-[500] rounded-2xl border border-border bg-background/80 px-4 py-2 backdrop-blur-md">
+      <div className="absolute left-16 top-4 z-[500] rounded-2xl border border-border bg-background/80 px-4 py-2 backdrop-blur-md">
         <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
           <Navigation className="h-3 w-3" /> Visa Lietuva
         </h4>
