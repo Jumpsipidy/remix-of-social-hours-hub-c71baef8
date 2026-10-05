@@ -35,7 +35,7 @@ type ReservationDetails = {
 export function ChatDialog({ reservation, onClose }: { reservation: ChatReservation | null; onClose: () => void }) {
   const { user, profile } = useAuth();
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [room, setRoom] = useState<{ student_id: string; organization_id: string; school_admin_id: string | null } | null>(null);
+  const [room, setRoom] = useState<{ student_id: string | null; organization_id: string; school_admin_id: string | null } | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,7 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
     setResDetails(null);
     (async () => {
       // Look up / create room
-      let r: { id: string; student_id: string; organization_id: string; school_admin_id: string | null } | null = null;
+      let r: { id: string; student_id: string | null; organization_id: string; school_admin_id: string | null } | null = null;
 
       if (reservation.direct) {
         // school admin ↔ organization direct chat (reservation_id NULL)
