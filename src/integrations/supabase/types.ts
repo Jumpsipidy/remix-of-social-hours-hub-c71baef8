@@ -1405,8 +1405,11 @@ export type Database = {
       list_chat_contacts: {
         Args: never
         Returns: {
+          class_year: string
           id: string
           name: string
+          org_id: string
+          org_name: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
@@ -1431,6 +1434,10 @@ export type Database = {
       open_chat_with: { Args: { _other: string }; Returns: string }
       open_dm_room: { Args: { _other: string }; Returns: string }
       open_org_chat: { Args: { _org: string }; Returns: string }
+      open_school_student_chat: {
+        Args: { _org: string; _student: string }
+        Returns: string
+      }
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
