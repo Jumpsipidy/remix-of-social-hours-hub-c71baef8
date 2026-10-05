@@ -11,7 +11,7 @@
 const RELOAD_FLAG = "__stale_deploy_reloaded_at";
 const RELOAD_COOLDOWN_MS = 30_000;
 
-function looksLikeStaleAsset(msg: string, filename?: string): boolean {
+export function looksLikeStaleAsset(msg: string, filename?: string): boolean {
   const m = String(msg || "");
   if (/Failed to fetch dynamically imported module/i.test(m)) return true;
   if (/Loading (chunk|CSS chunk|module) .+ failed/i.test(m)) return true;
@@ -27,7 +27,7 @@ function looksLikeStaleAsset(msg: string, filename?: string): boolean {
   return false;
 }
 
-function reloadOnce() {
+export function reloadOnce() {
   try {
     const last = Number(sessionStorage.getItem(RELOAD_FLAG) || "0");
     if (Date.now() - last < RELOAD_COOLDOWN_MS) return;
@@ -73,6 +73,12 @@ export function installStaleDeployGuard() {
     true,
   );
 
+
+  // Vite fires this when a lazy route chunk is missing after a new deploy.
+  window.addEventListener("vite:preloadError", (e) => {
+    e.preventDefault();
+    reloadOnce();
+  });
 
   window.addEventListener("unhandledrejection", (e) => {
     const r = e.reason as unknown;
