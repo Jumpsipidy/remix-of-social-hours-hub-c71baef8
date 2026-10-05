@@ -1,3 +1,4 @@
+import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -270,6 +271,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 )}
               </div>
 
+              <QuickTimePicker date={date} start={start} end={end} fromTomorrow={true} onChange={(v) => { if (v.date) setDate(v.date); if (v.start) setStart(v.start); if (v.end) setEnd(v.end); }} />
               {/* Date */}
               <div className="mt-5">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
