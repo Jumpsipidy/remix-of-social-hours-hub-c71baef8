@@ -9,6 +9,12 @@ import {
 } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
+import { OnboardingDemo, type DemoKind } from "@/components/onboarding-demos";
+
+function demoFor(icon: unknown): DemoKind | null {
+  const m = new Map<unknown, DemoKind>([[Search, "tasks"], [CalendarCheck, "reserve"], [CheckCircle2, "hours"], [Trophy, "cert"], [FileCheck, "cert"], [Building2, "post"], [ClipboardList, "approve"], [MessageSquare, "chat"], [GraduationCap, "students"], [BarChart3, "students"], [ShieldAlert, "risk"]]);
+  return m.get(icon) ?? null;
+}
 
 /* ----------------------------------------------------------------------- */
 /*  Onboarding Wizard v6 — švarus, fokusuotas, mobile-first.               */
@@ -25,6 +31,8 @@ type Step = {
 };
 
 const STORAGE_KEY = "sv_onboarding_v6";
+/** Vieną kartą per įrenginį, nepriklausomai nuo paskyros. */
+const DEVICE_KEY = "sv_onboarding_device_v7";
 
 function stepsFor(role: AppRole | null, name?: string | null): Step[] {
   const first = name?.split(" ")[0]?.trim();
@@ -186,7 +194,7 @@ export function OnboardingTour() {
     if (loading || !isAuthenticated || !profile?.id) return;
     const key = `${STORAGE_KEY}:${profile.id}`;
     let seen = false;
-    try { seen = localStorage.getItem(key) === "1"; } catch {}
+    try { seen = localStorage.getItem(key) === "1" || localStorage.getItem(DEVICE_KEY) === "1"; } catch {}
     if (seen) return;
     const path = window.location.pathname;
     if (/^\/(login|register|auth|forgot-password|update-password|verify-email|status|checkin|verify|terms|privacy|privatumas)/.test(path)) return;
@@ -199,6 +207,9 @@ export function OnboardingTour() {
     setI(0);
     if (profile?.id) {
       try { localStorage.setItem(`${STORAGE_KEY}:${profile.id}`, "1"); } catch {}
+    }
+    try { localStorage.setItem(DEVICE_KEY, "1"); } catch {}
+    {
     }
   };
 
@@ -243,7 +254,7 @@ export function OnboardingTour() {
       >
         {/* Backdrop */}
         <motion.div
-          className="absolute inset-0 bg-slate-950/85 backdrop-blur-md"
+          className="absolute inset-0 bg-slate-950/85"
           onClick={finish}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -282,10 +293,9 @@ export function OnboardingTour() {
             </div>
             <button
               onClick={finish}
-              aria-label="Uždaryti"
-              className="-mr-2 rounded-full p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
+              className="-mr-1 inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 active:scale-95"
             >
-              <X className="h-4 w-4" />
+              Praleisti <X className="h-3.5 w-3.5" />
             </button>
           </div>
 
@@ -319,13 +329,13 @@ export function OnboardingTour() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.24, ease: "easeOut" }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
               >
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.06] ring-1 ring-inset ring-white/10">
                   <Icon className="h-6 w-6 text-white" />
                 </div>
 
-                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                <p className="mt-5 text-xs font-semibold text-white/50">
                   {step.eyebrow}
                 </p>
                 <h2
@@ -337,6 +347,7 @@ export function OnboardingTour() {
                 <p className="mt-3 text-[15px] leading-relaxed text-white/65">
                   {step.body}
                 </p>
+                {demoFor(step.icon) && <OnboardingDemo kind={demoFor(step.icon)!} />}
 
                 {step.points && step.points.length > 0 && (
                   <ul className="mt-5 space-y-2">
@@ -366,7 +377,7 @@ export function OnboardingTour() {
                       finish();
                       navigate({ to: step.cta!.to as never }).catch(() => {});
                     }}
-                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/90 ring-1 ring-inset ring-white/10 transition hover:bg-white/[0.1] hover:text-white"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/90 ring-1 ring-inset ring-white/10 transition hover:bg-white/[0.1] hover:text-white"
                   >
                     {step.cta.label}
                     <ArrowRight className="h-3.5 w-3.5" />

@@ -34,7 +34,9 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const passedAt = Number(sessionStorage.getItem(STORAGE_KEY) || 0);
+    // Testavimui: ?patikra=testas visada parodo robotų patikrą.
+    const forceTest = new URLSearchParams(window.location.search).get("patikra") === "testas";
+    const passedAt = forceTest ? 0 : Number(sessionStorage.getItem(STORAGE_KEY) || 0);
     if (passedAt && Date.now() - passedAt < 6 * 3600_000) { setIsVerifying(false); return; }
 
     const referrer = document.referrer.toLowerCase();
@@ -56,6 +58,7 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
       if (bot.score >= BOT_THRESHOLD) why.push(...bot.reasons.map((r) => `bot:${r}`));
     }
 
+    if (forceTest) why.push("manual-test");
     if (why.length) {
       void logActivity("security.sketchy_access", { meta: { referrer, path: currentPath, reasons: why } });
       setReasons(why);

@@ -66,6 +66,12 @@ const VERSIONS: Version[] = [
       { tag: "Nauja", text: "Naujas mokyklos Rizikos centras: filtruojamos kortelės, klasių filtrai, aiškus rizikos lygis ir greita peržiūra." },
       { tag: "Patobulinta", text: "Pranešimų centras: laikas „prieš 5 min.“, „Skaityti visus“, atskirų pranešimų šalinimas ir tiesioginis kelias į pokalbius." },
       { tag: "Dizainas", text: "Švelnesnis, akims malonesnis šviesus režimas ir mažiau dirbtinai atrodančių efektų." },
+      { tag: "Nauja", text: "Naujas įvadinis vedlys su gyvomis mini demonstracijomis, greitu „Praleisti“ ir rodomas tik kartą tame pačiame įrenginyje." },
+      { tag: "Nauja", text: "Greitos prieigos plytelės organizacijos ir mokyklos skydeliuose." },
+      { tag: "Sauga", text: "Atidarius kitos rolės skydelį rodoma „Oops, tai ne tavo“ ir grąžinama į savo skydelį." },
+      { tag: "Pataisyta", text: "Organizacijos nebenukreipiamos į mokinio skydelį po prisijungimo." },
+      { tag: "Pataisyta", text: "Klaidos langas nebemirksi ir neišnyksta užsikrovus puslapiui." },
+      { tag: "Patobulinta", text: "Užkrovimo šablonas rodomas kiekviename puslapyje pereinant." },
     ],
   },
   {
