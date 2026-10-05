@@ -35,3 +35,13 @@
 - [x] Replace certificate signing secret through secure input
 - [ ] Match CERT_SIGNING_SECRET in Vercel — requires user configuration
 - [ ] Verify authenticated sign-in, email delivery, and certificates — external Supabase does not provide an authenticated test session
+
+## Big overhaul (2026-10-05) — phases
+- [x] P1 Sentry test button (Admin → Įrankiai)
+- [x] P1 Only Super Admin creates school admins (database-enforced)
+- [x] P1 School admin manager: school, multi/all classes, auto year renewal
+- [ ] P1 Certificate/QR security audit
+- [ ] P2 Cities + /tasks filters + Mapbox + task popup (needs VITE_MAPBOX_PUBLIC_TOKEN)
+- [ ] P3 Reservation popups, /chat, bulk accept, notifications
+- [ ] P4 Friends invites + "Eikime kartu"
+- [ ] P5 Animations, skeletons, school-admin overhaul, E2E

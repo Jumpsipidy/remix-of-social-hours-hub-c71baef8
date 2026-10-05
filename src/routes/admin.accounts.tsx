@@ -21,6 +21,7 @@ import { DashHero, GlassCard } from "@/components/dashboard-kit";
 import { requireAdmin } from "@/lib/auth-guards";
 import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
 import { AdminCreateAccountPanel } from "@/components/admin-create-account-panel";
+import { SchoolAdminManager } from "@/components/admin/school-admin-manager";
 
 export const Route = createFileRoute("/admin/accounts")({
   beforeLoad: () => requireAdmin(),
@@ -92,6 +93,7 @@ function AdminAccountsPage() {
       />
 
       <AdminCreateAccountPanel />
+      <SchoolAdminManager />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
