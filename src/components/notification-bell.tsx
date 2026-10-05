@@ -16,10 +16,8 @@ function routeForNotif(
   if (n.kind === "bug") return { to: "/admin/bugs", hash };
   // Messages → role-specific dashboard (each dashboard listens for #chat/<id>)
   if (n.kind === "message") {
-    if (role === "organization") return { to: "/organization", hash };
-    if (role === "school_admin") return { to: "/school", hash };
     if (role === "admin") return { to: "/admin/messages", hash };
-    return { to: "/student", hash };
+    return { to: "/chat", hash: "" };
   }
   // Reservations → role dashboard
   if (n.kind === "reservation") {
@@ -234,178 +232,120 @@ export function NotificationBell() {
     ...(profile?.role === "admin" ? [{ key: "bug" as FilterKey, label: "Bug" }] : []),
   ];
 
+  const ago = (iso: string) => {
+    const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (m < 1) return "ką tik";
+    if (m < 60) return `prieš ${m} min.`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `prieš ${h} val.`;
+    return new Date(iso).toLocaleDateString("lt-LT", { month: "short", day: "numeric" });
+  };
+
   return (
     <div className="relative" ref={ref}>
-      {/* Bell button with spinning conic ring when unread */}
       <button
-        onClick={() => { setOpen((o) => !o); if (!open) markAllRead(); }}
-        aria-label="Pranešimai"
-        className="group relative grid h-10 w-10 place-items-center rounded-full"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={unread ? `Pranešimai, ${unread} nauji` : "Pranešimai"}
+        className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition hover:bg-accent active:scale-95"
       >
+        <Bell className="h-4 w-4" />
         {unread > 0 && (
-          <span
-            className="pointer-events-none absolute inset-0 rounded-full opacity-70 blur-sm"
-            style={{
-              background: "conic-gradient(from 0deg, hsl(var(--primary)), transparent 40%, hsl(var(--primary)) 80%, transparent)",
-              animation: "spin 3s linear infinite",
-            }}
-          />
-        )}
-        <span className="absolute inset-[2px] rounded-full border border-border bg-card transition group-hover:bg-accent" />
-        {unread > 0 && (
-          <motion.span
-            className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary/50"
-            animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
-          />
-        )}
-        <motion.span
-          animate={unread > 0 ? { rotate: [0, -12, 12, -8, 8, 0] } : { rotate: 0 }}
-          transition={{ duration: 1.4, repeat: unread > 0 ? Infinity : 0, repeatDelay: 2.5 }}
-          className="relative z-10"
-        >
-          <Bell className="h-4 w-4" />
-        </motion.span>
-        {unread > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -right-0.5 -top-0.5 z-10 grid h-5 min-w-[20px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shadow-lg shadow-destructive/40"
-          >
+          <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold tabular-nums text-destructive-foreground ring-2 ring-background">
             {unread > 9 ? "9+" : unread}
-          </motion.span>
+          </span>
         )}
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            className="fixed right-2 left-2 top-16 z-50 overflow-hidden rounded-2xl border border-border/60 bg-background/95 shadow-elegant backdrop-blur-xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[22rem]"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+            className="fixed left-2 right-2 top-16 z-50 overflow-hidden rounded-2xl border border-border bg-popover shadow-lg sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-[24rem]"
           >
-            {/* animated gradient top strip */}
-            <div className="relative h-1 w-full overflow-hidden">
-              <motion.div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(90deg, transparent, hsl(var(--primary)), transparent)" }}
-                animate={{ x: ["-100%", "100%"] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
-              />
-            </div>
-
-            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <p className="text-sm font-bold tracking-tight">Pranešimai</p>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-4 py-3">
+              <div className="min-w-0">
+                <p className="text-sm font-bold">Pranešimai</p>
+                <p className="text-xs text-muted-foreground">{unread ? `${unread} neperskaityti` : "Viskas perskaityta"}</p>
               </div>
-              {items.length > 0 && (
-                <button
-                  onClick={() => setItems([])}
-                  className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground transition hover:text-destructive"
-                >
-                  <Trash2 className="h-3 w-3" /> Išvalyti
-                </button>
-              )}
+              <div className="flex items-center gap-1">
+                {unread > 0 && (
+                  <button onClick={markAllRead} className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-accent">
+                    <CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />Skaityti visus
+                  </button>
+                )}
+                {items.length > 0 && (
+                  <button onClick={() => setItems([])} aria-label="Išvalyti" className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-destructive">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Filter tabs */}
-            <div className="flex gap-1 overflow-x-auto border-b border-border/60 px-2 py-2">
+            <div className="flex gap-1 overflow-x-auto border-b border-border px-2 py-2">
               {filters.map((f) => {
                 const count = f.key === "all" ? items.length : items.filter((n) => n.kind === f.key).length;
                 const active = filter === f.key;
                 return (
-                  <button
-                    key={f.key}
-                    onClick={() => setFilter(f.key)}
-                    className={`relative rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                      active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="notif-tab"
-                        className="absolute inset-0 rounded-lg bg-primary"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                    <span className="relative flex items-center gap-1">
-                      {f.label}
-                      <span className={`rounded px-1 text-[9px] ${active ? "bg-primary-foreground/20" : "bg-accent"}`}>{count}</span>
-                    </span>
+                  <button key={f.key} onClick={() => setFilter(f.key)}
+                    className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
+                    {f.label} <span className="tabular-nums opacity-70">{count}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-[60vh] overflow-y-auto overscroll-contain sm:max-h-96">
               {filtered.length === 0 && (
-                <div className="p-8 text-center text-xs text-muted-foreground">
-                  <div className="mx-auto mb-2 grid h-10 w-10 place-items-center rounded-full bg-accent">
-                    <Bell className="h-4 w-4 opacity-50" />
-                  </div>
-                  Kol kas nėra pranešimų
+                <div className="px-6 py-10 text-center">
+                  <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-muted"><Bell className="h-5 w-5 text-muted-foreground" /></div>
+                  <p className="text-sm font-semibold">Naujienų nėra</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Čia matysi žinutes ir rezervacijų atnaujinimus.</p>
                 </div>
               )}
-
               {(["today", "earlier"] as const).map((g) => {
                 const list = groups[g];
                 if (list.length === 0) return null;
                 return (
                   <div key={g}>
-                    <div className="sticky top-0 z-10 border-b border-border/40 bg-background/80 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground backdrop-blur">
+                    <div className="sticky top-0 z-10 bg-popover px-4 py-1.5 text-xs font-semibold text-muted-foreground">
                       {g === "today" ? "Šiandien" : "Anksčiau"}
                     </div>
-                    <AnimatePresence initial={false}>
-                      {list.map((n, i) => {
-                        const Icon = iconFor(n);
-                        return (
-                          <motion.button
-                            key={n.id}
-                            initial={{ opacity: 0, x: 12 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -12 }}
-                            transition={{ delay: i * 0.02 }}
-                            onClick={() => openNotif(n)}
-                            className="group flex w-full items-start gap-3 border-b border-border/40 p-3 text-left transition last:border-b-0 hover:bg-accent/50"
-                          >
-                            <div className={`relative grid h-9 w-9 shrink-0 place-items-center rounded-xl transition ${
-                              n.read ? "bg-accent text-muted-foreground" : "bg-primary/15 text-primary"
-                            }`}>
+                    {list.map((n) => {
+                      const Icon = iconFor(n);
+                      return (
+                        <div key={n.id} className={`group relative flex items-start gap-3 px-4 py-3 transition hover:bg-accent/60 ${n.read ? "" : "bg-primary/[0.04]"}`}>
+                          {!n.read && <span className="absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary" />}
+                          <button onClick={() => openNotif(n)} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+                            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${n.read ? "bg-muted text-muted-foreground" : "bg-primary/12 text-primary"}`}>
                               <Icon className="h-4 w-4" />
-                              {!n.read && (
-                                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold">{n.title}</p>
-                              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
-                              <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground/70">
-                                <span>
-                                  {new Date(n.at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}
-                                </span>
-                                {n.hash && (
-                                  <span className="flex items-center gap-0.5 rounded bg-accent px-1.5 py-0.5 font-mono text-[9px] text-foreground/70 transition group-hover:text-primary">
-                                    <LinkIcon className="h-2.5 w-2.5" />
-                                    {n.hash}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </AnimatePresence>
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-baseline justify-between gap-2">
+                                <span className={`truncate text-sm ${n.read ? "font-medium" : "font-semibold"}`}>{n.title}</span>
+                                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{ago(n.at)}</span>
+                              </span>
+                              <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{n.body}</span>
+                            </span>
+                          </button>
+                          <button onClick={() => setItems((all) => all.filter((x) => x.id !== n.id))} aria-label="Pašalinti"
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted-foreground opacity-100 hover:bg-background hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100">
+                            <XCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
             </div>
 
-            <div className="border-t border-border/60 px-4 py-2 text-center text-[10px] text-muted-foreground">
-              Spausk pranešimą — nueis tiesiai į turinį <span className="font-mono text-primary">#deep-link</span>
-            </div>
+            <button onClick={() => { setOpen(false); navigate({ to: "/chat" }); }}
+              className="flex w-full items-center justify-center gap-2 border-t border-border px-4 py-3 text-sm font-semibold text-primary hover:bg-accent">
+              <MessageSquare className="h-4 w-4" /> Atidaryti pokalbius
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
