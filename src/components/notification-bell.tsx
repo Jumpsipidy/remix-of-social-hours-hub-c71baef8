@@ -139,7 +139,8 @@ export function NotificationBell() {
       })
       .subscribe();
 
-    const filterField = profile?.role === "organization" ? "organization_id" : "student_id";
+    const isOwner = profile?.role === "organization" || profile?.role === "school_admin";
+    const filterField = isOwner ? "organization_id" : "student_id";
     const chRes = supabase
       .channel(`notif-res-${uid}`)
       .on(
@@ -149,6 +150,7 @@ export function NotificationBell() {
           const r = payload.new as { id: string; status: string; reservation_date: string };
           const oldR = payload.old as { status: string };
           if (!r || r.status === oldR?.status) return;
+          if (isOwner) return; // owner made the change themselves
           const map: Record<string, string> = {
             pending: "Laukia patvirtinimo",
             approved: "Rezervacija patvirtinta — vykdoma",
@@ -164,8 +166,25 @@ export function NotificationBell() {
             hash: `#reservation/${r.id}`,
           });
         },
-      )
-      .subscribe();
+      );
+    if (isOwner) {
+      chRes.on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "reservations", filter: `organization_id=eq.${uid}` },
+        (payload) => {
+          const r = payload.new as { id: string; reservation_date: string };
+          push({
+            kind: "reservation",
+            title: "Nauja mokinio registracija",
+            body: `${r.reservation_date} · laukia tavo patvirtinimo`,
+            status: "pending",
+            hash: `#reservation/${r.id}`,
+          });
+          toast.info("Nauja mokinio registracija — patvirtink ją");
+        },
+      );
+    }
+    chRes.subscribe();
 
     let chBugs: ReturnType<typeof supabase.channel> | null = null;
     if (profile?.role === "admin") {
