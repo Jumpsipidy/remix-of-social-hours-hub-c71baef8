@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
-import { TiltCard } from "@/components/tilt-card";
+import { TaskDetailDialog } from "@/components/task-detail-dialog";
+import { CITIES, cityOf } from "@/lib/cities";
 import { TasksSkeleton } from "@/components/skeleton-loader";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation } from "lucide-react";
 import { toast } from "sonner";
@@ -53,6 +54,7 @@ type Task = {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  city?: string | null;
 };
 
 type OrgProfile = { id: string; full_name: string | null; organization_name: string | null; email: string | null };
@@ -66,7 +68,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   svietimas: "Švietimas",
 };
 
-const TASK_COLUMNS = "id, organization_id, title, description, task_date, start_time, end_time, available_hours, location, spots_total, is_open, is_event, event_host_name, created_by";
+const TASK_COLUMNS = "id, organization_id, title, description, task_date, start_time, end_time, available_hours, location, spots_total, is_open, is_event, event_host_name, created_by, city, address, latitude, longitude";
 
 function guessCategory(t: Task): string {
   const text = `${t.title} ${t.description}`.toLowerCase();
@@ -89,6 +91,8 @@ function TasksPage() {
   const [q, setQ] = useState("");
   const [town, setTown] = useState<string>("");
   const [cat, setCat] = useState<string>("");
+  const [orgFilter, setOrgFilter] = useState<string>("");
+  const [detail, setDetail] = useState<Task | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
@@ -124,11 +128,11 @@ function TasksPage() {
     })();
   }, []);
 
-  const towns = useMemo(() => {
-    const set = new Set<string>();
-    tasks.forEach((t) => { if (t.location) set.add(t.location.split(",")[0].trim()); });
-    return Array.from(set).sort();
-  }, [tasks]);
+  const towns = CITIES as readonly string[];
+  const orgOptions = useMemo(() => {
+    const ids = new Set(tasks.filter((t) => !town || cityOf(t) === town).map((t) => t.organization_id));
+    return allOrgs.filter((o) => ids.has(o.id)).sort((a, b) => (a.organization_name ?? a.full_name ?? "").localeCompare(b.organization_name ?? b.full_name ?? "", "lt"));
+  }, [tasks, allOrgs, town]);
 
   const availableTags = useMemo(() => {
     const set = new Set<string>();
@@ -145,7 +149,8 @@ function TasksPage() {
       const tagsStr = (x.tags ?? []).join(" ");
       const text = `${x.title} ${x.description} ${x.location} ${orgName} ${tagsStr}`.toLowerCase();
       if (q && !text.includes(q.toLowerCase())) return false;
-      if (town && !x.location?.toLowerCase().includes(town.toLowerCase())) return false;
+      if (town && cityOf(x) !== town) return false;
+      if (orgFilter && x.organization_id !== orgFilter) return false;
       if (cat && guessCategory(x).toLowerCase() !== cat.toLowerCase()) return false;
       if (selectedTags.length) {
         const xt = x.tags ?? [];
@@ -154,7 +159,7 @@ function TasksPage() {
       }
       return true;
     });
-  }, [q, town, cat, selectedTags, tasks, orgs]);
+  }, [q, town, cat, orgFilter, selectedTags, tasks, orgs]);
 
   const filteredOrgs = useMemo(() => {
     if (!q) return allOrgs;
@@ -202,6 +207,7 @@ function TasksPage() {
       status: "pending",
       note: details.note || null,
       location: active.task.location ?? null,
+      city: cityOf(active.task),
       address: active.task.address ?? null,
       latitude: active.task.latitude ?? null,
       longitude: active.task.longitude ?? null,
@@ -217,7 +223,7 @@ function TasksPage() {
   const toggleTag = (t: string) =>
     setSelectedTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
 
-  const clearFilters = () => { setQ(""); setTown(""); setCat(""); setSelectedTags([]); };
+  const clearFilters = () => { setQ(""); setTown(""); setCat(""); setOrgFilter(""); setSelectedTags([]); };
 
   return (
     <PageShell>
@@ -261,7 +267,7 @@ function TasksPage() {
                 placeholder={tab === "tasks" ? "Paieška: pavadinimas, vieta, organizacija…" : "Ieškoti organizacijos…"}
                 className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             </div>
-            {tab === "tasks" && (
+            {(tab === "tasks" || tab === "map") && (
               <>
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -269,6 +275,14 @@ function TasksPage() {
                     className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
                     <option value="" className="bg-card text-foreground">Visi miestai</option>
                     {towns.map((t) => <option key={t} value={t} className="bg-card text-foreground">{t}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <select value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)} aria-label="Organizacija"
+                    className="h-9 max-w-[200px] rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    <option value="" className="bg-card text-foreground">Visos organizacijos ({orgOptions.length})</option>
+                    {orgOptions.map((o) => <option key={o.id} value={o.id} className="bg-card text-foreground">{o.organization_name ?? o.full_name}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
@@ -281,7 +295,7 @@ function TasksPage() {
                 </div>
               </>
             )}
-            {(q || town || cat || selectedTags.length > 0) && (
+            {(q || town || cat || orgFilter || selectedTags.length > 0) && (
               <button onClick={clearFilters} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-accent">
                 <X className="h-3 w-3" /> Išvalyti
               </button>
@@ -335,7 +349,7 @@ function TasksPage() {
           <InteractiveTasksMap 
             tasks={filteredTasks} 
             organizations={allOrgs}
-            onSelectTask={handleReserve}
+            onSelectTask={(t: Task) => setDetail(t)}
             onSelectOrg={(org) => navigate({ to: `/org/${org.id}` })}
           />
         ) : tab === "tasks" && loadingTasks ? (
@@ -353,12 +367,10 @@ function TasksPage() {
               <AnimatePresence mode="popLayout">
                 {filteredTasks.map((t, i) => (
                   <motion.div key={t.id} layout
-                    initial={{ opacity: 0, y: 30, rotateX: -12 }} animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4, delay: (i % 6) * 0.04, type: "spring", stiffness: 120, damping: 18 }}
-                    style={{ perspective: 1200 }}
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.3, delay: (i % 6) * 0.03 }}
                   >
-                    <TiltCard intensity={10}>
-                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
+                      <article onClick={() => setDetail(t)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
                         <div className="relative flex items-start justify-between gap-3">
                           <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
@@ -377,7 +389,7 @@ function TasksPage() {
                           <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
                         )}
                         <div className="relative mt-4 space-y-1.5 text-xs text-muted-foreground">
-                          <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}</p>
+                          <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}{cityOf(t) ? ` · ${cityOf(t)}` : ""}</p>
                           {t.start_time && t.end_time && (
                             <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
                           )}
@@ -401,12 +413,11 @@ function TasksPage() {
                           </div>
                         )}
                         <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
-                          onClick={() => handleReserve(t)}
+                          onClick={(e) => { e.stopPropagation(); handleReserve(t); }}
                           className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
                           Rezervuoti
                         </motion.button>
                       </article>
-                    </TiltCard>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -426,11 +437,9 @@ function TasksPage() {
                 const orgTaskCount = tasks.filter((t) => t.organization_id === o.id).length;
                 return (
                   <motion.div key={o.id}
-                    initial={{ opacity: 0, y: 30, rotateY: -15 }} animate={{ opacity: 1, y: 0, rotateY: 0 }}
-                    transition={{ delay: (i % 6) * 0.05, type: "spring", stiffness: 110, damping: 18 }}
-                    style={{ perspective: 1200 }}
+                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: (i % 6) * 0.04 }}
                   >
-                    <TiltCard intensity={9}>
                       <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-gradient-accent opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
                         <div className="relative flex items-center gap-3">
@@ -454,7 +463,6 @@ function TasksPage() {
                           Peržiūrėti užduotis
                         </motion.button>
                       </article>
-                    </TiltCard>
                   </motion.div>
                 );
               })}
@@ -465,6 +473,12 @@ function TasksPage() {
       </div>
 
       <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
+      <TaskDetailDialog
+        task={detail}
+        orgName={detail ? (detail.is_event ? (detail.event_host_name || orgName(detail.organization_id)) : orgName(detail.organization_id)) : ""}
+        onClose={() => setDetail(null)}
+        onReserve={(t) => { setDetail(null); handleReserve(t as Task); }}
+      />
       <CustomReservationDialog open={customOpen} onClose={() => setCustomOpen(false)} />
       <InviteFriendsDialog
         open={!!invite}
