@@ -507,67 +507,60 @@ function SchoolDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto grid max-w-[1520px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[280px_1fr]">
-        <aside className="lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]">
-          <div className="overflow-hidden rounded-[2rem] border border-border bg-gradient-card shadow-elegant backdrop-blur">
-            <div className="border-b border-border/70 p-5">
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                    Mokyklos sritis
-                  </p>
-                  <h1 className="truncate font-display text-lg font-bold">
-                    {profile.full_name ?? "Administratorius"}
-                  </h1>
-                </div>
-              </div>
-              <div className="mt-4 rounded-2xl border border-border/70 bg-background/55 p-3">
-                <p className="text-xs font-semibold text-muted-foreground">Prieigos apimtis</p>
-                {classRestricted ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {assignedClasses.map((c) => (
-                      <span
-                        key={c}
-                        className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-bold text-primary"
-                      >
-                        {c} kl.
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-1 text-sm font-semibold">Visa mokykla</p>
-                )}
-              </div>
+      <section className="dash-v3 mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <header className="border-b border-border pb-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+              <ShieldCheck className="h-5 w-5" />
             </div>
-            <nav className="space-y-1 p-3">
-              {nav.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setTab(item.id)}
-                  className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${tab === item.id ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1 text-sm font-semibold">{item.label}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tab === item.id ? "bg-primary-foreground/20" : "bg-background text-muted-foreground group-hover:text-foreground"}`}
-                  >
-                    {item.badge}
-                  </span>
-                </button>
-              ))}
-              <Link to="/chat" className="group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-muted-foreground transition hover:bg-accent hover:text-foreground">
-                <MessageCircle className="h-4 w-4 shrink-0" />
-                <span className="min-w-0 flex-1 text-sm font-semibold">Mokinių pokalbiai</span>
-                <span className="rounded-full bg-background px-2 py-0.5 text-[10px] font-bold">chat</span>
-              </Link>
-            </nav>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">
+                {classRestricted ? "Klasės auklėtojo kabinetas" : "Mokyklos vadovo kabinetas"}
+              </p>
+              <h1 className="truncate font-display text-xl font-bold sm:text-2xl">
+                {profile.full_name ?? "Administratorius"}
+              </h1>
+            </div>
+            <div className="flex w-full items-center gap-2 rounded-lg border border-border bg-card px-3 sm:w-80">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Ieškoti mokinio, klasės, partnerio…"
+                className="h-10 w-full bg-transparent text-sm outline-none"
+              />
+            </div>
           </div>
-        </aside>
+          <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Prieiga:</span>
+            {classRestricted ? (
+              assignedClasses.map((c) => (
+                <span key={c} className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">{c} kl.</span>
+              ))
+            ) : (
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">Visa mokykla</span>
+            )}
+          </div>
+        </header>
 
-        <main className="min-w-0 space-y-6">
+        <nav className="sticky top-16 z-20 -mx-4 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0" aria-label="Mokyklos skiltys">
+          {nav.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition-colors ${tab === item.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{item.badge}</span>
+            </button>
+          ))}
+          <Link to="/chat" className="-mb-px flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">
+            <MessageCircle className="h-4 w-4" /> Pokalbiai
+          </Link>
+        </nav>
+
+        <main className="mt-6 min-w-0 space-y-6">
           {dataLoading && <DashboardSkeleton />}
 
           {scope?.unscoped && (
@@ -580,47 +573,16 @@ function SchoolDashboard() {
             </>
           )}
 
-
-          {scope && !scope.unscoped && (
-            <div className="rounded-2xl border border-border bg-background/40 p-4 text-xs text-muted-foreground">
-              Matomi duomenys:{" "}
-              <b className="text-foreground">
-                {scope.class_restricted
-                  ? `tik priskirtos klasės (${scope.assigned_classes.join(", ")})`
-                  : "visa mokykla"}
-              </b>
-              . Kitų klasių ir mokyklų mokiniai nepasiekiami net per auditą.
-            </div>
-          )}
-
-          <header className="overflow-hidden rounded-[2rem] border border-border bg-gradient-card p-5 shadow-elegant backdrop-blur sm:p-7">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  {classRestricted ? "Klasės auklėtojo kabinetas" : "Direktoriaus kabinetas"} · {nav.find((n) => n.id === tab)?.label}
-                </p>
-                <h2 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-                  {classRestricted
-                    ? `Tavo auklėjamosios klasės (${assignedClasses.join(", ")})`
-                    : "Visos mokyklos apžvalga"}
-                </h2>
-                <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                  {classRestricted
-                    ? "Kaip klasės auklėtoja(s) matai tik savo priskirtų klasių mokinius, jų rezervacijas, sukauptas valandas ir riziką."
-                    : "Kaip mokyklos vadovas matai visą įstaigą — kiekvieną klasę, mokinį ir organizaciją vienoje vietoje."}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3">
-                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Ieškoti mokinio, klasės, partnerio…"
-                  className="h-11 w-full bg-transparent text-sm outline-none sm:w-72"
-                />
-              </div>
-            </div>
-          </header>
+          <div>
+            <h2 className="font-display text-2xl font-bold tracking-tight">
+              {nav.find((n) => n.id === tab)?.label}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {classRestricted
+                ? `Matai tik priskirtų klasių (${assignedClasses.join(", ")}) mokinius.`
+                : "Visa įstaiga — klasės, mokiniai ir organizacijos vienoje vietoje."}
+            </p>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Metric
