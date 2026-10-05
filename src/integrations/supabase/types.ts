@@ -1339,7 +1339,7 @@ export type Database = {
       are_friends: { Args: { _a: string; _b: string }; Returns: boolean }
       auto_lockdown_if_unhealthy: { Args: never; Returns: Json }
       award_reservation_hours: {
-        Args: { _reservation_id: string }
+        Args: { _hours?: number; _reservation_id: string }
         Returns: {
           hours_awarded: number
           new_total: number
