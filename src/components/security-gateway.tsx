@@ -127,7 +127,7 @@ export function SecurityGatewayInternal() {
           tapAnswer: c.steps === 2 ? tapAnswer : undefined,
           tapIntervals: c.steps === 2 ? tapIntervals : undefined,
           ...(holdData.current as object),
-        } as Parameters<typeof verifyGate>[0]["data"],
+        } as never,
       });
       if (r.ok) { setStage("ok"); setTimeout(() => pass(r.token), 700); return; }
       const f = fails + 1;
