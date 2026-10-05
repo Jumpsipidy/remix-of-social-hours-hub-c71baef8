@@ -1565,7 +1565,7 @@ function AdminErrorsPage() {
                     <div className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
                         <p className="text-sm font-semibold">Kopijuoti klaidas</p>
-                        <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į Lovable pokalbį.</p>
+                        <p className="text-xs text-muted-foreground">Formatuotas plain text — įklijuok į AI pokalbį.</p>
                         <div className="mt-2 flex gap-2">
                           <Button variant="outline" size="sm" onClick={() => copyAll(rows)}>
                             <Copy className="mr-1 h-4 w-4" /> Visas ({rows.length})
@@ -2035,7 +2035,7 @@ function AiAnalysisCard({ fingerprint }: { fingerprint: string }) {
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(label);
-      toast.success("Nukopijuota — įklijuok į Lovable chat");
+      toast.success("Nukopijuota — įklijuok į AI pokalbį");
       setTimeout(() => setCopied(null), 1600);
     }).catch(() => toast.error("Nepavyko kopijuoti"));
   }
@@ -2092,7 +2092,7 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
 
       {!data && !loading && !error && (
         <div className="mt-2 text-[11px] text-muted-foreground">
-          Gemini 3.5 Flash paims šios grupės kontekstą (žinutė, stack, breadcrumbs, routes) ir pasiūlys priežastį, fix'ą ir <b className="text-violet-300">ready-to-paste prompt Lovable agentui</b>, kad būtų galima iš karto įklijuoti į chat ir gauti auto-fix.
+          Gemini 3.5 Flash paims šios grupės kontekstą (žinutė, stack, breadcrumbs, routes) ir pasiūlys priežastį, fix'ą ir <b className="text-violet-300">ready-to-paste prompt AI agentui</b>, kad būtų galima iš karto įklijuoti į chat ir gauti auto-fix.
         </div>
       )}
 
@@ -2154,7 +2154,7 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-violet-300" />
-                  <span className="text-[11px] font-bold text-violet-200">⚡ Auto-fix su Lovable agentu</span>
+                  <span className="text-[11px] font-bold text-violet-200">⚡ Auto-fix su AI agentu</span>
                 </div>
                 <button
                   onClick={() => copy(agentPrompt, "prompt")}
@@ -2164,7 +2164,7 @@ Prašau: perskaityk minėtą failą, ištaisyk pagrindinę priežastį (ne tik s
                 </button>
               </div>
               <div className="mt-1.5 text-[10px] text-muted-foreground">
-                Spausk, atidaryk Lovable chat ir įklijuok (Ctrl+V) — agentas gaus visą kontekstą ir ištaisys automatiškai.
+                Spausk, atidaryk AI pokalbį ir įklijuok (Ctrl+V) — agentas gaus visą kontekstą ir ištaisys automatiškai.
               </div>
               <details className="mt-2">
                 <summary className="cursor-pointer text-[10px] text-violet-300/80 hover:text-violet-200">peržiūrėti prompt'ą</summary>
@@ -2298,7 +2298,7 @@ function AiCenterPanel() {
               <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300">AI klaidų centras</div>
               <div className="text-lg font-black">OpenAI · {usage?.model ?? "gpt-4o-mini"}</div>
               <div className="text-[11px] text-muted-foreground">
-                Analizuoja fingerprint grupes → priežastis, failas, fix'as, ready-to-paste promptas Lovable agentui.
+                Analizuoja fingerprint grupes → priežastis, failas, fix'as, ready-to-paste promptas AI agentui.
               </div>
             </div>
           </div>
@@ -2373,7 +2373,7 @@ function AiCenterPanel() {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300">▸ Paskutinės AI analizės</div>
-            <div className="text-xs text-muted-foreground">Kopijuok promptą → įklijuok į Lovable chat → agentas taiso.</div>
+            <div className="text-xs text-muted-foreground">Kopijuok promptą → įklijuok į AI pokalbį → agentas taiso.</div>
           </div>
           <span className="rounded-full border border-violet-500/40 bg-violet-500/15 px-3 py-1 text-xs font-black text-violet-200 tabular-nums">
             {usage?.total_analyses ?? recent.length}
@@ -2425,7 +2425,7 @@ function AiCenterPanel() {
                     onClick={() => copyText(prompt, `p-${a.fingerprint}`)}
                     className="rounded-md border border-violet-500/50 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 px-3 py-1.5 text-xs font-bold text-violet-100 hover:from-violet-500/30 hover:to-fuchsia-500/30"
                   >
-                    {copied === `p-${a.fingerprint}` ? <><Check className="mr-1 inline h-3 w-3" /> Nukopijuota</> : <><Copy className="mr-1 inline h-3 w-3" /> Kopijuoti promptą Lovable</>}
+                    {copied === `p-${a.fingerprint}` ? <><Check className="mr-1 inline h-3 w-3" /> Nukopijuota</> : <><Copy className="mr-1 inline h-3 w-3" /> Kopijuoti promptą</>}
                   </button>
                   {a.suggested_fix && (
                     <button

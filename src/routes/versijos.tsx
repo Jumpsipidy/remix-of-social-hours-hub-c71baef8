@@ -182,7 +182,7 @@ const VERSIONS: Version[] = [
       { tag: "Nauja", text: "Prisijungimo serijų sistema (3, 7, 14, 30 dienų) su apdovanojimais." },
       { tag: "Nauja", text: "Pasiekimų tinklelis su stikliniu dizainu." },
       { tag: "Nauja", text: "Lyderių lentelė administratoriui." },
-      { tag: "Pataisyta", text: "Analitika nebeskaičiuoja netikrų Lovable peržiūros apsilankymų." },
+      { tag: "Pataisyta", text: "Analitika nebeskaičiuoja netikrų peržiūros apsilankymų." },
     ],
   },
   {
@@ -226,7 +226,7 @@ const VERSIONS: Version[] = [
     date: "2026 m. balandis",
     summary: "Platforma perkelta į nuosavą infrastruktūrą.",
     items: [
-      { tag: "Patobulinta", text: "Atsietas Lovable Cloud — visa duomenų bazė, autentifikacija ir cron nuosavame Supabase projekte." },
+      { tag: "Patobulinta", text: "Atsieta senoji infrastruktūra — visa duomenų bazė, autentifikacija ir cron nuosavame Supabase projekte." },
       { tag: "Nauja", text: "Migracijos ir SQL dokumentacija docs/ aplanke." },
       { tag: "Nauja", text: "Google ir Discord prisijungimas." },
     ],
