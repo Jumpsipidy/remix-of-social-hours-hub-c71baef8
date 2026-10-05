@@ -19,6 +19,28 @@ type Version = {
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
   {
+    v: "V2.5.0",
+    title: "🎉 Didžiausias atnaujinimas — 3 mėnesių darbas",
+    date: "2026 m. spalis",
+    summary:
+      "V2.5 sujungia viską, ką kūrėme tris mėnesius: naujas prisijungimas, žemėlapis, pokalbiai, draugai, saugumas ir mokyklų valdymas. Žemiau — kas jau veikia ir kas ateina.",
+    items: [
+      { tag: "Nauja", text: "Visiškai naujas prisijungimas ir registracija su Google, Discord ir GitHub bei sklandžiomis animacijomis." },
+      { tag: "Nauja", text: "Lietuvos žemėlapis su organizacijų vietomis ir užduotimis Šeduvoje, Radviliškyje ir Šiauliuose." },
+      { tag: "Nauja", text: "Pokalbiai /chat: mokinys ↔ organizacija ir mokyklos administratorius ↔ organizacija, žinutės automatiškai ištrinamos po 12 dienų." },
+      { tag: "Nauja", text: "Draugai: pakvietimo nuoroda ir bendros rezervacijos — kiekvienas gauna savo QR kodą ir valandas." },
+      { tag: "Nauja", text: "Masinis rezervacijų patvirtinimas organizacijoms su pranešimais mokiniams." },
+      { tag: "Nauja", text: "„Mokyklos akys“ didelio kontrasto režimas." },
+      { tag: "Sauga", text: "Saugūs, parašu patikrinami pažymėjimai su QR kodais — suklastoti iškart atpažįstami." },
+      { tag: "Sauga", text: "Patikrinimas „ar jūs ne robotas“ su atsargine reCAPTCHA ir apsauginis užrakinimas klaidų antplūdžio metu." },
+      { tag: "Sauga", text: "Mokyklos administratorių paskyras gali kurti tik pagrindinis administratorius." },
+      { tag: "Pataisyta", text: "Administratoriaus sukurta mokyklos paskyra nebetampa mokinio paskyra." },
+      { tag: "Patobulinta", text: "Klasių kėlimas kiekvieną rugsėjo 1 d. ir automatinis mokytojų klasių atnaujinimas." },
+      { tag: "Patobulinta", text: "Gražesni užkrovimo šablonai visuose puslapiuose ir klaidų sekimas." },
+      { tag: "Dizainas", text: "Ateityje: tikras šviesus režimas, pilnas pritaikymas telefonams, atnaujintas mokyklos skydelis ir sklandesnis atsijungimas." },
+    ],
+  },
+  {
     v: "V2.4.0",
     title: "Saugesnis slaptažodžio atkūrimas ir švaresnis prisijungimas",
     date: "2026 m. spalis",
@@ -182,7 +204,7 @@ const VERSIONS: Version[] = [
       { tag: "Nauja", text: "Prisijungimo serijų sistema (3, 7, 14, 30 dienų) su apdovanojimais." },
       { tag: "Nauja", text: "Pasiekimų tinklelis su stikliniu dizainu." },
       { tag: "Nauja", text: "Lyderių lentelė administratoriui." },
-      { tag: "Pataisyta", text: "Analitika nebeskaičiuoja netikrų Lovable peržiūros apsilankymų." },
+      { tag: "Pataisyta", text: "Analitika nebeskaičiuoja netikrų peržiūros apsilankymų." },
     ],
   },
   {
@@ -226,7 +248,7 @@ const VERSIONS: Version[] = [
     date: "2026 m. balandis",
     summary: "Platforma perkelta į nuosavą infrastruktūrą.",
     items: [
-      { tag: "Patobulinta", text: "Atsietas Lovable Cloud — visa duomenų bazė, autentifikacija ir cron nuosavame Supabase projekte." },
+      { tag: "Patobulinta", text: "Atsieta senoji infrastruktūra — visa duomenų bazė, autentifikacija ir cron nuosavame Supabase projekte." },
       { tag: "Nauja", text: "Migracijos ir SQL dokumentacija docs/ aplanke." },
       { tag: "Nauja", text: "Google ir Discord prisijungimas." },
     ],

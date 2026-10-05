@@ -136,7 +136,7 @@ function AutoFixFeed() {
               <div>
                 <h1 className="text-2xl font-bold text-white">Auto-Fix Feed</h1>
                 <p className="text-sm text-white/60">
-                  AI (OpenAI · gpt-4o-mini) automatiškai analizuoja kiekvieną naują klaidą ir duoda paruoštą super-promptą Lovable agentui.
+                  AI (OpenAI · gpt-4o-mini) automatiškai analizuoja kiekvieną naują klaidą ir duoda paruoštą super-promptą AI agentui.
                 </p>
               </div>
             </div>
@@ -279,7 +279,7 @@ function FixCard({ analysis }: { analysis: Analysis }) {
     try {
       await navigator.clipboard.writeText(superPrompt);
       setCopied(true);
-      toast.success("Super-promptas nukopijuotas — įklijuok Lovable chat'e");
+      toast.success("Super-promptas nukopijuotas — įklijuok AI pokalbyje");
       setTimeout(() => setCopied(false), 2200);
     } catch {
       toast.error("Nepavyko nukopijuoti");
@@ -369,7 +369,7 @@ function FixCard({ analysis }: { analysis: Analysis }) {
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-violet-200">
             <Sparkles className="h-4 w-4" />
-            Super-promptas Lovable agentui
+            Super-promptas AI agentui
           </div>
           <button
             onClick={copyPrompt}
@@ -387,7 +387,7 @@ function FixCard({ analysis }: { analysis: Analysis }) {
           {superPrompt}
         </div>
         <p className="mt-2 text-[11px] text-white/40">
-          Įklijuok Lovable chat'e → agentas turės pilną kontekstą ir ištaisys bug'ą.
+          Įklijuok AI pokalbyje → agentas turės pilną kontekstą ir ištaisys bug'ą.
         </p>
       </div>
 
