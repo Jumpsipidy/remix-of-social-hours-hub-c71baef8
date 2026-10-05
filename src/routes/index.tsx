@@ -386,10 +386,10 @@ function Home() {
             {[
               { t: "Pokalbiai", d: "Mokinys, organizacija ir mokykla vienoje vietoje", to: "/chat" },
               { t: "Žemėlapis", d: "Užduotys Šeduvoje, Radviliškyje, Šiauliuose", to: "/tasks" },
-              { t: "Draugai", d: "Kviesk draugą ir eikite kartu", to: "/dashboard" },
+              { t: "Draugai", d: "Kviesk draugą ir eikite kartu", to: "/student" },
               { t: "QR pažymėjimai", d: "Patikrinami per sekundę", to: "/verify" },
             ].map((f) => (
-              <Link key={f.t} to={f.to as any} className="group rounded-2xl border border-border bg-card/70 p-4 transition hover:border-primary/50 active:scale-[0.98]">
+              <Link key={f.t} to={f.to} className="group rounded-2xl border border-border bg-card/70 p-4 transition hover:border-primary/50 active:scale-[0.98]">
                 <p className="font-display text-base font-bold text-foreground">{f.t}</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.d}</p>
                 <ArrowRight className="mt-3 h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
