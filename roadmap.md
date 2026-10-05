@@ -49,4 +49,4 @@
 - [ ] Signed-in end-to-end checks (blocked: no test session available for this Supabase project)
 - [ ] Deeper school-admin dashboard redesign (open)
 
-- [ ] Wrong-role dashboard access: show "Oops, tai ne tavo" and redirect to own dashboard
+- [x] Wrong-role dashboard access: "Oops, tai ne tavo" + redirect
