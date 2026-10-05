@@ -11,6 +11,7 @@ const OAUTH_SETUP_SCHEMA = z.object({
 });
 
 export const verifySchoolSignupCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((input) =>
     z
       .object({
@@ -19,17 +20,16 @@ export const verifySchoolSignupCode = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const normalizedCode = data.code.trim().toUpperCase();
     if (!normalizedCode) return { ok: false };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: valid, error } = await supabaseAdmin.rpc("verify_school_signup_code", {
+    const { data: valid, error } = await context.supabase.rpc("verify_school_signup_code", {
       _school_id: data.schoolId,
       _code: normalizedCode,
     });
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Nepavyko patikrinti kodo");
     return { ok: !!valid };
   });
 

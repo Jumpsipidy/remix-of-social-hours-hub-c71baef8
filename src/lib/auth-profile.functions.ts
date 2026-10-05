@@ -125,7 +125,10 @@ export const ensureSignedInProfile = createServerFn({ method: "POST" })
     }
 
     let emailMatchedProfile: Profile | null = null;
-    if (email) {
+    // Only reuse an email-matched profile (and its role) when this account has
+    // proven ownership of the address. Unverified sign-ups become students.
+    const emailVerified = Boolean(user.email_confirmed_at);
+    if (email && emailVerified) {
       const { data: match, error: matchError } = await selectFirstProfileByEmail(supabaseAdmin, email);
       if (matchError) throw new Error(matchError.message);
       emailMatchedProfile = (match as Profile | null) ?? null;
