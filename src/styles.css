@@ -604,3 +604,18 @@ html.school-eyes body {
 .sv-wrongrole-bar { animation: sv-wrongrole 1.6s linear both; }
 @keyframes sv-v25-in { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
 .sv-v25-in { animation: sv-v25-in .35s ease-out 1.2s both; }
+
+/* Dashboards v3 — flat, calm surfaces for organization & school dashboards */
+.dash-v3 .dash-card {
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  background: var(--card);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.dash-v3 .dash-card:hover { border-color: color-mix(in oklab, var(--primary) 45%, var(--border)); }
+.dash-v3 .dash-card:active { transform: scale(.99); }
+.dash-v3 .bg-gradient-card { background: var(--card) !important; }
+.dash-v3 .shadow-glow, .dash-v3 .shadow-elegant, .dash-v3 .shadow-xl, .dash-v3 .shadow-md { box-shadow: none !important; }
+.dash-v3 .backdrop-blur { backdrop-filter: none !important; }
+.dash-v3 .rounded-\[2rem\], .dash-v3 .rounded-3xl { border-radius: 1rem !important; }
+.dash-v3 nav::-webkit-scrollbar { display: none; }
