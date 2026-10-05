@@ -371,98 +371,84 @@ function OrgDashboard() {
 
   return (
     <PageShell>
-      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-card shadow-xl">
-          {orgMedia.cover_url && (
-            <img
-              src={orgMedia.cover_url}
-              alt="Organizacijos viršelio nuotrauka"
-              className="absolute inset-0 h-full w-full object-cover opacity-30"
-            />
-          )}
-          <div className="absolute inset-0 bg-background/85" aria-hidden />
-          <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
-            <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
-                <ShieldCheck className="h-3.5 w-3.5" /> Organizacijos sritis
-              </div>
-              <div className="mt-4 flex items-center gap-4">
-                <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-border bg-gradient-primary text-xl font-black text-primary-foreground shadow-glow sm:h-20 sm:w-20">
-                  {orgMedia.logo_url ? <img src={orgMedia.logo_url} alt="Organizacijos logotipas" className="h-full w-full object-cover" /> : orgLabel.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <h1 className="truncate font-display text-3xl font-black tracking-tight sm:text-5xl">{orgLabel}</h1>
-                  <p className="mt-1 max-w-2xl truncate text-sm text-muted-foreground">
-                    {profile.email} · {openTasks} aktyvios užduotys · {hoursDelivered} val. suteikta
-                  </p>
-                </div>
-              </div>
-              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                {pending.length ? `${pending.length} naujos užklausos laukia sprendimo.` : "Naujos užklausos apdorotos."} {approved.length ? ` ${approved.length} darbai šiuo metu vykdomi.` : ""}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Button asChild size="sm" className="rounded-full shadow-glow">
-                  <Link to="/organization/scan">
-                    <ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR
-                  </Link>
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="rounded-full bg-gradient-primary shadow-glow"
-                  onClick={() => openCreateTask()}
-                >
-                  <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
-                </Button>
-                <Button asChild size="sm" variant="outline" className="rounded-full">
-                  <Link to="/org/$id" params={{ id: user.id }} target="_blank">
-                    <Eye className="mr-1.5 h-4 w-4" /> Viešas profilis
-                  </Link>
-                </Button>
-                <Button size="sm" variant="secondary" className="rounded-full" onClick={() => setView("profile")}>
-                  <ImageIcon className="mr-1.5 h-4 w-4" /> Logo / baneris
-                </Button>
-                <span className="inline-flex items-center rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">● Online</span>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <HeroMetric label="Darbo eilė" value={liveWorkload} sub={liveWorkload ? `${pending.length} laukia · ${approved.length} vyksta` : "nėra aktyvių darbų"} />
-              <HeroMetric label="Profilio kokybė" value={`${profilePct}%`} sub={profilePct >= 85 ? "paruoštas mokiniams" : "papildyk logo, banerį ir aprašymą"} />
-              <HeroMetric
-                label="Kitas darbas"
-                value={nextApproved ? String(nextApproved.reservation_date).slice(0, 10) : "—"}
-                sub={nextApproved ? `${String(nextApproved.start_time).slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra vykdomų"}
-              />
-            </div>
+      <div className="dash-v3">
+      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+        {/* Top bar */}
+        <div className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
+          <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary text-base font-bold text-primary-foreground">
+            {orgMedia.logo_url ? <img src={orgMedia.logo_url} alt="Organizacijos logotipas" className="h-full w-full object-cover" /> : orgLabel.charAt(0)}
           </div>
-          <div className="relative border-t border-border/70 bg-background/45 px-5 py-3 backdrop-blur sm:px-7">
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><UserCheck className="h-3.5 w-3.5 text-success" /> {uniqueStudents} savanoriai atliko darbą</span>
-              <span className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary" /> {orgMedia.address ?? "vieta dar nepridėta"}</span>
-
-              <span className="h-1 w-1 rounded-full bg-border" />
-              <span className="min-w-[140px] flex-1">Profilis</span>
-              <span className="font-semibold text-foreground">{profileStrength}/{profileChecks.length}</span>
-              <span className="h-2 w-28 overflow-hidden rounded-full bg-muted">
-                <span className="block h-full rounded-full bg-gradient-primary" style={{ width: `${profilePct}%` }} />
-              </span>
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">
+              {new Date().toLocaleDateString("lt-LT", { weekday: "long", month: "long", day: "numeric" })}
+            </p>
+            <h1 className="truncate font-display text-xl font-bold sm:text-2xl">Labas, {orgLabel}</h1>
+          </div>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => openCreateTask()}>
+              <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-lg">
+              <Link to="/organization/scan" aria-label="Skenuoti QR"><ScanLine className="h-4 w-4 sm:mr-1.5" /><span className="hidden sm:inline">Skenuoti</span></Link>
+            </Button>
           </div>
         </div>
 
-        {/* View switcher */}
-        <div className="mt-6 inline-flex rounded-full border border-border bg-card/80 p-1 shadow-sm backdrop-blur">
+        {/* Bento overview */}
+        <div className="mt-5 grid gap-3 md:grid-cols-4 md:grid-rows-2">
           <button
-            onClick={() => setView("dashboard")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${view === "dashboard" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+            type="button"
+            onClick={() => document.getElementById("org-requests")?.scrollIntoView({ behavior: "smooth" })}
+            className="dash-card flex flex-col justify-between p-5 text-left md:col-span-2 md:row-span-2"
           >
-            📊 Ataskaita
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-muted-foreground">Laukia tavo sprendimo</span>
+              <Inbox className="h-5 w-5 text-primary" />
+            </div>
+            <div className="mt-6">
+              <p className="font-display text-6xl font-bold tabular-nums">{pending.length}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {pending.length ? "Naujos užklausos — peržiūrėk ir patvirtink." : "Visos užklausos apdorotos."}
+                {approved.length ? ` ${approved.length} darbai vyksta.` : ""}
+              </p>
+            </div>
+            <span className="mt-4 text-sm font-semibold text-primary">Peržiūrėti užklausas →</span>
           </button>
-          <button
-            onClick={() => setView("profile")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${view === "profile" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            🏢 Mano profilis
+          <div className="dash-card p-4">
+            <p className="text-xs text-muted-foreground">Kitas darbas</p>
+            <p className="mt-1 font-display text-2xl font-bold tabular-nums">{nextApproved ? String(nextApproved.reservation_date).slice(5, 10) : "—"}</p>
+            <p className="text-xs text-muted-foreground">{nextApproved ? `${String(nextApproved.start_time).slice(0, 5)} · ${Number(nextApproved.hours_to_earn)} val.` : "nėra suplanuotų"}</p>
+          </div>
+          <div className="dash-card p-4">
+            <p className="text-xs text-muted-foreground">Suteikta valandų</p>
+            <p className="mt-1 font-display text-2xl font-bold tabular-nums">{hoursDelivered}</p>
+            <p className="text-xs text-muted-foreground">{uniqueStudents} savanoriai</p>
+          </div>
+          <Link to="/chat" className="dash-card flex items-center gap-3 p-4">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <div><p className="text-sm font-semibold">Pokalbiai</p><p className="text-xs text-muted-foreground">Mokiniai ir mokyklos</p></div>
+          </Link>
+          <button type="button" onClick={() => setView("profile")} className="dash-card p-4 text-left">
+            <div className="flex items-center justify-between text-xs text-muted-foreground"><span>Profilis</span><span className="font-semibold text-foreground">{profilePct}%</span></div>
+            <span className="mt-3 block h-1.5 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-primary" style={{ width: `${profilePct}%` }} /></span>
+            <p className="mt-2 truncate text-xs text-muted-foreground">{orgMedia.address ?? "Pridėk adresą žemėlapiui"}</p>
           </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="sticky top-16 z-20 -mx-4 mt-6 flex gap-1 border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0">
+          {([["dashboard", "Ataskaita"], ["profile", "Mano profilis"]] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setView(id)}
+              className={`-mb-px border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${view === id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
+          <Link to="/org/$id" params={{ id: user.id }} target="_blank" className="ml-auto flex items-center gap-1.5 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
+            <Eye className="h-3.5 w-3.5" /> Viešas profilis
+          </Link>
         </div>
       </section>
 
@@ -473,16 +459,6 @@ function OrgDashboard() {
       )}
 
       {view === "dashboard" && <>
-      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <QuickTiles tiles={[
-          { label: "Sukurti užduotį", hint: "Naujas skelbimas", icon: Plus, tone: "primary", onClick: () => openCreateTask() },
-          { label: "Laukia sprendimo", value: pending.length, hint: pending.length ? "Peržiūrėk užklausas" : "Viskas apdorota", icon: Inbox, tone: pending.length ? "warning" : "default", onClick: () => document.getElementById("org-requests")?.scrollIntoView({ behavior: "smooth" }) },
-          { label: "Vykdoma", value: approved.length, hint: nextApproved ? `Kitas: ${String(nextApproved.reservation_date).slice(5, 10)}` : "Nėra suplanuotų", icon: PlayCircle },
-          { label: "Skenuoti QR", hint: "Atvykimo patvirtinimas", icon: ScanLine, to: "/organization/scan" },
-          { label: "Pokalbiai", hint: "Mokiniai ir mokyklos", icon: MessageSquare, to: "/chat" },
-          { label: "Valandų suteikta", value: hoursDelivered, hint: `${uniqueStudents} mokinių`, icon: Clock },
-        ]} />
-      </section>
 
 
       {/* Primary stats */}
@@ -810,6 +786,7 @@ function OrgDashboard() {
         onCancel={() => setVerifyRes(null)}
         onConfirm={async () => { if (verifyRes) await finalizeCompleted(verifyRes); }}
       />
+      </div>
     </PageShell>
   );
 }
