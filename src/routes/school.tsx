@@ -680,6 +680,11 @@ function SchoolDashboard() {
             </div>
           )}
           {tab === "overview" && (
+            <div className="mb-4">
+              <SchoolEventsManager refreshKey={eventsKey} onlyPending />
+            </div>
+          )}
+          {tab === "overview" && (
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
               <Panel title="Klasės progresas" subtitle="Greita priskirtų klasių sveikatos būsena">
                 <div className="space-y-3">
