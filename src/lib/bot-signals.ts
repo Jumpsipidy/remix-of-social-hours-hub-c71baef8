@@ -37,7 +37,7 @@ export function collectBotSignals(): { score: number; reasons: string[] } {
       }
     } catch { /* ignore */ }
     const fnStr = Function.prototype.toString.call(navigator.permissions?.query ?? (() => {}));
-    if (navigator.permissions?.query && !/\[native code\]/.test(fnStr)) add(2, "tampered_api");
+    if (typeof navigator.permissions?.query === "function" && !/\[native code\]/.test(fnStr)) add(2, "tampered_api");
   } catch {
     add(1, "probe_error");
   }
