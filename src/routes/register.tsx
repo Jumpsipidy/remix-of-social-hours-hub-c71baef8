@@ -144,8 +144,7 @@ function RegisterPage() {
 
   return (
     <AuthShell mode="register">
-            <div>
-            <div className="relative rounded-[calc(2rem-1.5px)] border border-border/50 bg-card/80 p-8 shadow-elegant backdrop-blur">
+            <div className="relative">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
@@ -292,7 +291,7 @@ function RegisterPage() {
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 Jau turi paskyrą?{" "}
-                <Link to="/login" className="font-semibold text-emerald-300 hover:underline">Prisijunk</Link>
+                <Link to="/login" className="font-semibold text-primary hover:underline">Prisijunk</Link>
               </p>
               <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
                 Tęsdamas sutinki su{" "}
