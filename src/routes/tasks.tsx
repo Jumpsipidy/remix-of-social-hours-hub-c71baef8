@@ -9,6 +9,7 @@ import { CustomReservationDialog } from "@/components/custom-reservation-dialog"
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { TaskDetailDialog } from "@/components/task-detail-dialog";
 import { CITIES, cityOf } from "@/lib/cities";
+import { startReservationChat } from "@/lib/reservation-chat";
 import { TasksSkeleton } from "@/components/skeleton-loader";
 import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation } from "lucide-react";
 import { toast } from "sonner";
@@ -214,6 +215,7 @@ function TasksPage() {
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
     toast.success(`Užklausa išsiųsta: ${active.target.name}`);
+    if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: active.task.organization_id, message: details.note || `Sveiki! Noriu prisijungti prie „${active.task.title}“ ${details.date}.` });
     logActivity("reservation.created", { entityType: "reservation", entityId: inserted?.id as string | undefined, meta: { hours: details.hours, org: active.target.name } });
     const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
     setActive(null);

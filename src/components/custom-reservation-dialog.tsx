@@ -18,6 +18,8 @@ import { AddressPicker, type AddressValue } from "@/components/address-picker";
 import { LeafletMap } from "@/components/leaflet-map";
 import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
 import { listOrganizations } from "@/lib/orgs.functions";
+import { CITIES } from "@/lib/cities";
+import { startReservationChat } from "@/lib/reservation-chat";
 
 
 type OrgRow = {
@@ -60,6 +62,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
+  const [city, setCity] = useState<string>("Šeduva");
   const [address, setAddress] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
@@ -128,7 +131,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       return;
     }
     setSubmitting(true);
-    const { error } = await insertWithSchemaFallback("reservations", {
+    const { data: inserted, error } = await supabase.from("reservations").insert({
       student_id: user.id,
       organization_id: orgId,
       reservation_date: date,
@@ -141,14 +144,16 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
       location: address,
       latitude: lat,
       longitude: lng,
-    });
+      city,
+    } as any).select("id").single();
     setSubmitting(false);
     if (error) {
       toast.error(error.message);
       return;
     }
 
-    toast.success("Pasiūlymas išsiųstas organizacijai");
+    if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: orgId!, message: note.trim() || `Sveiki! Siūlau savanorystę ${date} ${start}–${end} (${city}).` });
+    toast.success("Pasiūlymas išsiųstas organizacijai. Pokalbis atidarytas skiltyje „Pokalbiai“.");
     onCreated?.();
     onClose();
   };
@@ -353,11 +358,24 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 </p>
               </div>
 
+              {/* City */}
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-semibold">Miestas</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {CITIES.map((c) => (
+                    <button key={c} type="button" onClick={() => setCity(c)}
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold transition active:scale-95 ${city === c ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:border-primary/50"}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Note */}
               <div className="mt-5">
                 <label className="mb-2 block text-sm font-semibold">
                   Žinutė organizacijai{" "}
-                  <span className="text-xs font-normal text-muted-foreground">(nebūtina)</span>
+                  <span className="text-xs font-normal text-muted-foreground">(atsiras pokalbyje)</span>
                 </label>
                 <textarea
                   value={note}

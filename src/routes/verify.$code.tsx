@@ -71,6 +71,8 @@ function VerifyPage() {
               <p className="text-sm text-red-200/90">
                 {state.data.reason === "not_found" && "Sertifikatas nerastas mūsų duomenų bazėje. Tikėtina, kad dokumentas suklastotas arba kodas įrašytas neteisingai."}
                 {state.data.reason === "revoked" && `Sertifikatas atšauktas: ${state.data.revoked_reason ?? "priežastis nenurodyta"}`}
+                {state.data.reason === "tampered" && "Sertifikato parašas nesutampa — dokumentas buvo pakeistas ir NĖRA galiojantis."}
+                {state.data.reason === "unverifiable" && "Šiuo metu nepavyko patikrinti parašo. Pabandyk vėliau."}
               </p>
             </div>
           )}

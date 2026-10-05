@@ -29,10 +29,10 @@ const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN as string | undef
 const USE_MAPBOX = !!MAPBOX_TOKEN && MAPBOX_TOKEN.startsWith("pk.");
 const DARK_TILES = USE_MAPBOX
   ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/512/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`
-  : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  : "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = USE_MAPBOX
   ? '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://openstreetmap.org">OSM</a>'
-  : '&copy; <a href="https://openstreetmap.org">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
+  : '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>';
 export const MAP_PROVIDER = USE_MAPBOX ? "mapbox" : "carto";
 
 type Coords = { lat: number; lng: number };
@@ -90,7 +90,7 @@ export default function LeafletMapInner({
         if (m) ref.current = m;
       }}
     >
-      <TileLayer url={DARK_TILES} attribution={ATTRIBUTION} {...(USE_MAPBOX ? { tileSize: 512, zoomOffset: -1 } : {})} />
+      <TileLayer url={DARK_TILES} attribution={ATTRIBUTION} className={USE_MAPBOX ? "" : "sv-dark-tiles"} {...(USE_MAPBOX ? { tileSize: 512, zoomOffset: -1 } : {})} />
       <Recenter center={{ lat, lng }} zoom={zoom} />
       {showCenter && <Marker position={[lat, lng]} icon={markers ? UserIcon : DefaultIcon} />}
       {markers?.map((m) => (

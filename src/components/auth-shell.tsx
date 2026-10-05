@@ -44,13 +44,22 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
     <div className="relative auth-shell min-h-screen bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6">
-        <div className={`grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
+        <div className={`relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
+          {/* Sweep: a light band crosses the card when switching modes */}
+          <motion.div
+            key={`sweep-${mode}`}
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
+            initial={{ left: isLogin ? "100%" : "-33%" }}
+            animate={{ left: isLogin ? "-33%" : "100%" }}
+            transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+          />
           {/* Brand panel */}
           <motion.aside
             key={`panel-${mode}`}
-            initial={{ opacity: 0, x: isLogin ? -40 : 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ clipPath: isLogin ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)", x: isLogin ? -24 : 24 }}
+            animate={{ clipPath: "inset(0 0% 0 0%)", x: 0 }}
+            transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
             className="relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
           >
             <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary-foreground/10 blur-2xl" />
@@ -96,9 +105,9 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
             <AuthModeSwitch mode={mode} />
             <motion.div
               key={`form-${mode}`}
-              initial={{ opacity: 0, x: isLogin ? 30 : -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, x: isLogin ? 40 : -40, filter: "blur(8px)", scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)", scale: 1 }}
+              transition={{ duration: 0.55, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
               className="mt-6"
             >
               {children}

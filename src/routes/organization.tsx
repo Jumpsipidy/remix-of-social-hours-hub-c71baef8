@@ -244,6 +244,8 @@ function OrgDashboard() {
     return { weekdayCounts: counts, maxWD: Math.max(max, 1), busiestIdx: counts.indexOf(max), hasWeekdayData: max > 0 };
   }, [completed]);
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
+  const [bulkSel, setBulkSel] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
 
   if (loading) return <PageShell><div className="mx-auto max-w-7xl px-4 py-12"><DashboardSkeleton /></div></PageShell>;
@@ -285,6 +287,26 @@ function OrgDashboard() {
       .catch((e) => console.warn("[email] reservation-approved failed", e));
     toast.success("Užklausa patvirtinta — mokinys pradeda darbą");
     setBusyId(null);
+    refresh(user.id);
+  };
+
+  const bulkAct = async (kind: "approved" | "declined") => {
+    const ids = bulkSel.filter((id) => pending.some((p) => p.id === id));
+    if (!ids.length || bulkBusy) return;
+    if (!window.confirm(`${kind === "approved" ? "Patvirtinti" : "Atmesti"} ${ids.length} užklaus${ids.length === 1 ? "ą" : "as"}?`)) return;
+    setBulkBusy(true);
+    const { data, error } = await supabase.from("reservations").update({ status: kind }).in("id", ids).eq("status", "pending").select("id");
+    if (error) { setBulkBusy(false); toast.error(error.message); return; }
+    const done = new Set((data ?? []).map((d: any) => d.id as string));
+    for (const r of pending.filter((p) => done.has(p.id))) {
+      await ensureRoomAndNotify(r, kind === "approved"
+        ? `🤖 Sistema: ${orgLabel} PATVIRTINO užklausą. Valandos bus įskaitytos tik po galutinio uždarymo.`
+        : `🤖 Sistema: ${orgLabel} ATMETĖ šią rezervaciją.`, user.id);
+      (kind === "approved" ? sendReservationApprovedEmail : sendReservationDeclinedEmail)({ data: { reservationId: r.id } }).catch(() => {});
+    }
+    toast.success(`${done.size} užklaus${done.size === 1 ? "a" : "os"} ${kind === "approved" ? "patvirtint" : "atmest"}${done.size === 1 ? "a" : "os"}`);
+    setBulkSel([]);
+    setBulkBusy(false);
     refresh(user.id);
   };
 
@@ -598,6 +620,18 @@ function OrgDashboard() {
             </div>
             <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-semibold text-warning-foreground">{pending.length} naujos</span>
           </div>
+          {pending.length > 1 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-background/60 p-3">
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input type="checkbox" checked={bulkSel.length === pending.length} onChange={(e) => setBulkSel(e.target.checked ? pending.map((p) => p.id) : [])} />
+                Pažymėti visas ({bulkSel.length}/{pending.length})
+              </label>
+              <div className="ml-auto flex gap-2">
+                <button disabled={!bulkSel.length || bulkBusy} onClick={() => bulkAct("approved")} className="rounded-full bg-success px-4 py-1.5 text-xs font-bold text-success-foreground active:scale-95 disabled:opacity-40">Patvirtinti pažymėtas</button>
+                <button disabled={!bulkSel.length || bulkBusy} onClick={() => bulkAct("declined")} className="rounded-full border border-destructive px-4 py-1.5 text-xs font-bold text-destructive active:scale-95 disabled:opacity-40">Atmesti pažymėtas</button>
+              </div>
+            </div>
+          )}
           <div className="mt-6 space-y-3">
             {pending.length === 0 && (
               <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">Visos užklausos apdorotos 🎉</div>
@@ -605,9 +639,12 @@ function OrgDashboard() {
             {pending.map((r) => {
               const s = students[r.student_id];
               return (
-                <div key={r.id} className="rounded-2xl border border-border bg-background/60 p-4">
+                <div key={r.id} className={`rounded-2xl border bg-background/60 p-4 transition ${bulkSel.includes(r.id) ? "border-primary" : "border-border"}`}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
+                      {pending.length > 1 && (
+                        <input type="checkbox" aria-label="Pažymėti" checked={bulkSel.includes(r.id)} onChange={(e) => setBulkSel((p) => e.target.checked ? [...p, r.id] : p.filter((x) => x !== r.id))} />
+                      )}
                       <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-primary text-sm font-bold text-primary-foreground">
                         {(s?.full_name ?? "?").split(" ").map((n) => n[0]).slice(0, 2).join("")}
                       </div>
