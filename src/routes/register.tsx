@@ -219,7 +219,7 @@ function RegisterPage() {
                       <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi.</span>
                     </label>
                     <Button
-                      type="submit" disabled={loading || (mode === "student" && (schoolsLoading || schoolsError || !schools.length))}
+                      type="submit" disabled={loading}
                       className="group/submit relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
                     >
                       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
@@ -302,7 +302,7 @@ function RegisterPage() {
                     </label>
 
                     <Button
-                      type="submit" disabled={loading || (mode === "student" && (schoolsLoading || schoolsError || !schools.length))}
+                      type="submit" disabled={loading || schoolsLoading || schoolsError || !schools.length}
                       className="group/submit relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
                     >
                       <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />

@@ -30,6 +30,8 @@
 - [ ] Run broad public and authenticated E2E coverage where available
 
 ## Current authentication check
-- [ ] Correct login/signup contrast and fonts; show genuine school-loading skeletons and retry errors
-- [ ] Verify public pages and registration error handling
-- [ ] Replace certificate signing secret through secure input (user-provided; Vercel must match)
+- [x] Correct login/signup contrast and fonts; show genuine school-loading skeletons and retry errors
+- [x] Verify public pages and registration school-list failure/retry (no browser runtime errors; 162 automated tests passed)
+- [x] Replace certificate signing secret through secure input
+- [ ] Match CERT_SIGNING_SECRET in Vercel — requires user configuration
+- [ ] Verify authenticated sign-in, email delivery, and certificates — external Supabase does not provide an authenticated test session
