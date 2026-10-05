@@ -492,3 +492,16 @@ html.school-eyes body {
   }
 }
 
+
+/* Authentication pages keep readable type and native controls in both themes. */
+.auth-shell h1, .auth-shell h2, .auth-shell h3, .auth-shell h4,
+.auth-shell .font-display {
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+.auth-shell input, .auth-shell textarea, .auth-shell select { color: var(--foreground); }
+.auth-shell input::placeholder, .auth-shell textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+.auth-shell select option { background: var(--popover); color: var(--popover-foreground); }

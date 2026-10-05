@@ -28,3 +28,8 @@
 - [ ] Audit achievement/reservation emails and document support/sender addresses
 - [ ] Improve route SEO and smooth scrolling
 - [ ] Run broad public and authenticated E2E coverage where available
+
+## Current authentication check
+- [ ] Correct login/signup contrast and fonts; show genuine school-loading skeletons and retry errors
+- [ ] Verify public pages and registration error handling
+- [ ] Replace certificate signing secret through secure input (user-provided; Vercel must match)
