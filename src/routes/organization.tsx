@@ -488,8 +488,8 @@ function OrgDashboard() {
       <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <Suspense fallback={
           <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-            <div className="h-72 animate-pulse rounded-3xl bg-muted/50" />
-            <div className="h-72 animate-pulse rounded-3xl bg-muted/50" />
+            <div data-skeleton="" className="sv-skeleton h-72 rounded-3xl" />
+            <div data-skeleton="" className="sv-skeleton h-72 rounded-3xl" />
           </div>
         }>
           <OrgAnalytics chartData={chartData} pieData={pieData} totalHours={chartData.reduce((a, d) => a + d.hrs, 0)} />

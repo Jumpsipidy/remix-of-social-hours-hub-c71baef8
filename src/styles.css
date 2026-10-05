@@ -506,22 +506,32 @@ html.school-eyes body {
 }
 .auth-shell select option { background: var(--popover); color: var(--popover-foreground); }
 
-/* Shared shimmer skeleton (used by components/ui/skeleton) */
+/* Shared skeleton — calm, synced shimmer.
+   - Fades in after 180ms so fast loads never flash a skeleton.
+   - background-attachment: fixed makes every block share ONE light sweep,
+     so the page shimmers as a whole instead of flickering block by block. */
 .sv-skeleton {
   position: relative;
   overflow: hidden;
-  background: color-mix(in oklab, var(--muted) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 55%, transparent);
+  background-image: linear-gradient(100deg, transparent 20%, color-mix(in oklab, var(--foreground) 6%, transparent) 50%, transparent 80%);
+  background-size: 200vw 100%;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation: sv-skel-in .45s ease-out calc(180ms + var(--sk-delay, 0ms)) forwards, sv-skel-sweep 2.2s ease-in-out infinite;
 }
-.sv-skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--primary) 18%, transparent), color-mix(in oklab, var(--foreground) 8%, transparent), transparent);
-  animation: sv-skeleton-shine 1.4s cubic-bezier(.4,0,.2,1) infinite;
+@keyframes sv-skel-in { to { opacity: 1; } }
+@keyframes sv-skel-sweep { 0% { background-position: -100vw 0; } 100% { background-position: 100vw 0; } }
+/* Content that replaces a skeleton glides in instead of popping. */
+.sv-reveal { animation: sv-reveal .4s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes sv-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .sv-skeleton { animation: sv-skel-in .2s ease-out forwards; }
+  .sv-reveal { animation: sv-reveal-fade .2s ease-out both; }
 }
-@keyframes sv-skeleton-shine { to { transform: translateX(100%); } }
-@media (prefers-reduced-motion: reduce) { .sv-skeleton::after { animation: none; } }
+@keyframes sv-reveal-fade { from { opacity: 0; } to { opacity: 1; } }
 /* Free OSM fallback tiles tinted dark to match the theme */
 .sv-dark-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
 

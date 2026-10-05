@@ -53,12 +53,12 @@ export function InteractiveTasksMap({
     return Array.from(byKey.values());
   }, [tasks, organizations]);
 
-  if (!mounted) return <div className="h-[600px] w-full animate-pulse rounded-3xl bg-card/50" />;
+  if (!mounted) return <div data-skeleton="" className="sv-skeleton h-[600px] w-full rounded-3xl" />;
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
       <div className="h-[600px] w-full">
-        <Suspense fallback={<div className="h-full w-full animate-pulse bg-card" />}>
+        <Suspense fallback={<div data-skeleton="" className="sv-skeleton h-full w-full" />}>
           <LeafletMap
             lat={view.lat}
             lng={view.lng}

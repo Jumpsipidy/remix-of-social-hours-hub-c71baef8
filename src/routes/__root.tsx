@@ -21,6 +21,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
+import { SkeletonReveal } from "@/components/skeleton-reveal";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
 import { AdminErrorHud } from "@/components/admin-error-hud";
 import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
@@ -304,6 +305,7 @@ function RootComponent() {
           {import.meta.env.DEV && <MockTesterPanel />}
           <LockdownGate />
           <ErrorMonitor />
+          <SkeletonReveal />
           <AdminAlertMonitor />
           <AdminErrorHud />
           <LovableOverlayBridge />
