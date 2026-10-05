@@ -49,7 +49,7 @@ export const issueGateChallenge = createServerFn({ method: "POST" }).handler(asy
   const { uaHash, reasons } = await requestInfo();
   const nonce = crypto.randomUUID();
   const issuedAt = Date.now();
-  const difficulty = reasons.length ? 5 : 4; // leading hex zeros
+  const difficulty = reasons.length ? 4 : 3; // leading hex zeros
   const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}`);
   return { nonce, issuedAt, difficulty, sig, serverReasons: reasons };
 });
