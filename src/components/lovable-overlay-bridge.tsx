@@ -129,6 +129,11 @@ export function LovableOverlayBridge() {
 
     // 3) Parent frame bridge — Lovable preview forwards runtime errors via postMessage.
     const onMsg = (e: MessageEvent) => {
+      // Only trust messages from the embedding editor frame.
+      if (window.parent === window || e.source !== window.parent) return;
+      let host = "";
+      try { host = new URL(e.origin).hostname; } catch { return; }
+      if (!/(^|\.)lovable\.(app|dev)$/.test(host) && e.origin !== window.location.origin) return;
       const d = e.data as any;
       if (!d || typeof d !== "object") return;
       const type = String(d.type ?? d.event ?? "").toLowerCase();
