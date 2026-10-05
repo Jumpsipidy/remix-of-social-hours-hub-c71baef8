@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { PageShell } from "../components/layout";
 import { DashboardSkeleton } from "@/components/skeleton-loader";
+import { QuickTiles } from "@/components/quick-tiles";
 import { StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { useAuth } from "@/hooks/use-auth";
 import { listOrgStudents } from "@/lib/org-students.functions";
@@ -379,10 +380,10 @@ function OrgDashboard() {
               className="absolute inset-0 h-full w-full object-cover opacity-30"
             />
           )}
-          <div className="absolute inset-0 bg-[radial-gradient(900px_360px_at_12%_0%,hsl(var(--primary)/0.24),transparent_60%),linear-gradient(90deg,hsl(var(--background)/0.96),hsl(var(--background)/0.78),hsl(var(--background)/0.92))]" aria-hidden />
+          <div className="absolute inset-0 bg-background/85" aria-hidden />
           <div className="relative grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-end">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-primary">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
                 <ShieldCheck className="h-3.5 w-3.5" /> Organizacijos sritis
               </div>
               <div className="mt-4 flex items-center gap-4">
@@ -411,9 +412,6 @@ function OrgDashboard() {
                   onClick={() => openCreateTask()}
                 >
                   <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
-                </Button>
-                <Button variant="outline" size="sm" className="rounded-full border-primary/20 bg-primary/5 text-primary hover:bg-primary/10">
-                  <Sparkles className="mr-1.5 h-4 w-4" /> Reklamuoti skelbimą
                 </Button>
                 <Button asChild size="sm" variant="outline" className="rounded-full">
                   <Link to="/org/$id" params={{ id: user.id }} target="_blank">
@@ -475,6 +473,16 @@ function OrgDashboard() {
       )}
 
       {view === "dashboard" && <>
+      <section className="mx-auto mt-6 max-w-7xl px-4 sm:px-6">
+        <QuickTiles tiles={[
+          { label: "Sukurti užduotį", hint: "Naujas skelbimas", icon: Plus, tone: "primary", onClick: () => openCreateTask() },
+          { label: "Laukia sprendimo", value: pending.length, hint: pending.length ? "Peržiūrėk užklausas" : "Viskas apdorota", icon: Inbox, tone: pending.length ? "warning" : "default", onClick: () => document.getElementById("org-requests")?.scrollIntoView({ behavior: "smooth" }) },
+          { label: "Vykdoma", value: approved.length, hint: nextApproved ? `Kitas: ${String(nextApproved.reservation_date).slice(5, 10)}` : "Nėra suplanuotų", icon: PlayCircle },
+          { label: "Skenuoti QR", hint: "Atvykimo patvirtinimas", icon: ScanLine, to: "/organization/scan" },
+          { label: "Pokalbiai", hint: "Mokiniai ir mokyklos", icon: MessageSquare, to: "/chat" },
+          { label: "Valandų suteikta", value: hoursDelivered, hint: `${uniqueStudents} mokinių`, icon: Clock },
+        ]} />
+      </section>
 
 
       {/* Primary stats */}
