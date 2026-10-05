@@ -1,3 +1,4 @@
+import { QuickTiles } from "@/components/quick-tiles";
 import { WrongRole } from "@/components/wrong-role";
 import { MessageCircle } from "lucide-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -701,6 +702,18 @@ function SchoolDashboard() {
 
 
 
+          {tab === "overview" && (
+            <div className="mb-4">
+              <QuickTiles tiles={[
+                { label: "Peržiūros eilė", value: unreviewedCount, hint: "Nepatvirtintos rezervacijos", icon: ClipboardCheck, tone: unreviewedCount ? "warning" : "default", onClick: () => setTab("queue") },
+                { label: "Rizika", value: riskStudents.length, hint: "Reikia dėmesio", icon: ShieldCheck, onClick: () => setTab("risk") },
+                { label: "Mokiniai", value: students.length, hint: "Visi mokyklos", icon: Users, onClick: () => setTab("students") },
+                { label: "Pokalbiai", hint: "Su organizacijomis", icon: MessageCircle, to: "/chat" },
+                { label: "PDF / QR patikra", hint: "Pažymėjimų tikrinimas", icon: ShieldCheck, onClick: () => setTab("verify") },
+                { label: "Sukurti renginį", hint: "Mokyklos renginys", icon: CalendarPlus, tone: "primary", onClick: () => setTab("events") },
+              ]} />
+            </div>
+          )}
           {tab === "overview" && (
             <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
               <Panel title="Klasės progresas" subtitle="Greita priskirtų klasių sveikatos būsena">
