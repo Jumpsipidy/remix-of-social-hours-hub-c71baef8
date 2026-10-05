@@ -15,14 +15,10 @@ export function SkeletonLoader({ className, variant = "rect", delay = 0 }: Skele
   return (
     <div
       aria-hidden
-      style={{ animationDelay: `${delay * 90}ms`, ["--sk-delay" as string]: `${delay * 90}ms` }}
+      data-skeleton=""
+      style={{ ["--sk-delay" as string]: `${Math.min(delay, 6) * 40}ms` }}
       className={cn(
-        "relative overflow-hidden border border-border/40 bg-muted/30",
-        "animate-[skeleton-rise_.5s_both]",
-        "before:absolute before:inset-0 before:-translate-x-full",
-        "before:bg-gradient-to-r before:from-transparent before:via-foreground/[0.09] before:to-transparent",
-        "before:animate-[skeleton-sweep_1.5s_infinite]",
-        "after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-b after:from-foreground/[0.03] after:to-transparent",
+        "sv-skeleton",
         variant === "circle" ? "rounded-full" : variant === "text" ? "rounded-md" : "rounded-2xl",
         className,
       )}
