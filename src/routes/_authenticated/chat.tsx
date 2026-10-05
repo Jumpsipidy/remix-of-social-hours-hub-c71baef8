@@ -127,7 +127,8 @@ function ChatPage() {
   };
 
   const [picker, setPicker] = useState(false);
-  const [contacts, setContacts] = useState<{ id: string; name: string; role: string }[] | null>(null);
+  const [contacts, setContacts] = useState<{ id: string; name: string; role: string; class_year: string | null; org_id: string | null; org_name: string | null }[] | null>(null);
+  const [classF, setClassF] = useState<string | null>(null);
   const [contactQ, setContactQ] = useState("");
   async function openPicker() {
     setPicker(true);
@@ -136,8 +137,10 @@ function ChatPage() {
     if (error) { toast.error("Nepavyko įkelti kontaktų"); setContacts([]); return; }
     setContacts((data as any[]) ?? []);
   }
-  async function startWith(id: string) {
-    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: id });
+  async function startWith(id: string, orgId?: string | null) {
+    const { data, error } = orgId
+      ? await (supabase.rpc as any)("open_school_student_chat", { _student: id, _org: orgId })
+      : await (supabase.rpc as any)("open_chat_with", { _other: id });
     if (error) { toast.error(error.message); return; }
     setPicker(false);
     await loadConvs();
@@ -180,16 +183,46 @@ function ChatPage() {
                   <input autoFocus value={contactQ} onChange={(e) => setContactQ(e.target.value)} placeholder="Ieškoti…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div className="max-h-[55vh] overflow-y-auto p-2">
-                  {contacts === null ? (
-                    <div className="space-y-2 p-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}</div>
-                  ) : contacts.filter((c) => c.name?.toLowerCase().includes(contactQ.toLowerCase())).length === 0 ? (
-                    <p className="p-6 text-center text-sm text-muted-foreground">Kontaktų nerasta.</p>
-                  ) : contacts.filter((c) => c.name?.toLowerCase().includes(contactQ.toLowerCase())).map((c) => (
-                    <button key={c.id} type="button" onClick={() => startWith(c.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted active:scale-[0.99]">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">{c.role === "organization" ? <Building2 className="h-4 w-4" /> : c.role === "school_admin" ? <ShieldCheck className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}</span>
-                      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.name}</span><span className="text-xs text-muted-foreground">{c.role === "organization" ? "Organizacija" : c.role === "school_admin" ? "Mokyklos administracija" : "Mokinys"}</span></span>
-                    </button>
-                  ))}
+                  {(() => {
+                    if (contacts === null) return <div className="space-y-2 p-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>;
+                    const classes = Array.from(new Set(contacts.map((c) => c.class_year).filter(Boolean))) as string[];
+                    const list = contacts.filter((c) => (c.name + " " + (c.org_name ?? "")).toLowerCase().includes(contactQ.toLowerCase()) && (!classF || c.class_year === classF));
+                    const groups: [string, typeof list][] = [
+                      ["Organizacijos", list.filter((c) => c.role === "organization")],
+                      ["Mokyklos administracija", list.filter((c) => c.role === "school_admin")],
+                      [profile?.role === "school_admin" ? "Mano mokiniai organizacijose" : "Mokiniai", list.filter((c) => c.role === "student")],
+                    ];
+                    return (
+                      <>
+                        {classes.length > 0 && (
+                          <div className="flex gap-1.5 overflow-x-auto px-2 pb-2">
+                            <button type="button" onClick={() => setClassF(null)} className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${!classF ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>Visos klasės</button>
+                            {classes.sort().map((k) => (
+                              <button key={k} type="button" onClick={() => setClassF(k)} className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${classF === k ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{k}</button>
+                            ))}
+                          </div>
+                        )}
+                        {list.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Kontaktų nerasta.</p>}
+                        {groups.filter(([, g]) => g.length).map(([label, g]) => (
+                          <div key={label} className="mb-2">
+                            <p className="px-3 pb-1 pt-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                            {g.map((c) => (
+                              <button key={c.id + (c.org_id ?? "")} type="button" onClick={() => startWith(c.id, c.org_id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted active:scale-[0.99]">
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">{c.role === "organization" ? <Building2 className="h-4 w-4" /> : c.role === "school_admin" ? <ShieldCheck className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}</span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="block truncate text-sm font-semibold">{c.name}</span>
+                                  <span className="block truncate text-xs text-muted-foreground">
+                                    {c.role === "student" ? `${c.class_year ? c.class_year + " klasė" : "Mokinys"}${c.org_name ? " · " + c.org_name : ""}` : c.role === "organization" ? "Organizacija" : "Mokyklos administracija"}
+                                  </span>
+                                </span>
+                                {c.class_year && <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">{c.class_year}</span>}
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </motion.div>
