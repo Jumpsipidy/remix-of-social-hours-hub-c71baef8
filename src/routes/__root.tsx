@@ -1,3 +1,4 @@
+import { V25Banner } from "@/components/v25-banner";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import * as Sentry from "@sentry/tanstackstart-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -290,6 +291,7 @@ function RootComponent() {
         <SecurityGatewayProvider>
           {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
               atsiranda naujas ir matosi juodas blyksnis. */}
+          <V25Banner />
           <div className="flex-1 flex flex-col">
             <Outlet />
           </div>

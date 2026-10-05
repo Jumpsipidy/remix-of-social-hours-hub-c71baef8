@@ -136,12 +136,12 @@ function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
         <span>{q}</span>
         <motion.span 
           animate={{ 
-            rotate: isOpen ? 45 : 0,
-            scale: isOpen ? 1.2 : 1
+            rotate: isOpen ? 180 : 0,
+            scale: 1
           }}
           className="text-primary/60"
         >
-          <Sparkles className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </motion.span>
       </button>
       <AnimatePresence initial={false}>
