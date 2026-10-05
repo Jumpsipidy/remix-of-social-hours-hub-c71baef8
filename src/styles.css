@@ -562,8 +562,8 @@ html.school-eyes body {
 .school-eyes [class*="border-slate-8"],
 .school-eyes [class*="border-slate-7"] { border-color: #e1e6ed !important; }
 /* Mygtukai su primary fonu lieka kontrastingi */
-.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) { background-color: #2456c7 !important; color: #fff !important; }
-.school-eyes [class*="bg-primary"]:not([class*="bg-primary/"]) * { color: #fff !important; }
+.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) { background-color: #2456c7 !important; color: #fff !important; }
+.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) * { color: #fff !important; }
 .school-eyes [class*="bg-gradient-to"] { background-image: none !important; }
 .school-eyes .leaflet-tile-pane { filter: none !important; }
 .school-eyes img, .school-eyes video { filter: none !important; }
