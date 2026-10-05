@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell } from "../components/layout";
-import { supabase } from "@/integrations/supabase/client";
+import { getOrgPublicProfile } from "@/lib/orgs.functions";
 import { LeafletMap } from "@/components/leaflet-map";
 import { MapillaryPreview } from "@/components/mapillary-preview";
 import { ProfileSkeleton } from "@/components/skeleton-loader";
@@ -58,26 +58,10 @@ function OrgPublicPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select(
-          "id, organization_name, full_name, logo_url, cover_url, gallery_urls, bio, public_email, phone, website_url, facebook_url, instagram_url, address, city, latitude, longitude, activity_tags, profile_verified, role"
-        )
-        .eq("id", id)
-        .maybeSingle();
-      if (!data || (data as { role?: string }).role !== "organization") {
-        setLoading(false);
-        return;
-      }
-      setP(data as unknown as OrgPublic);
-      const { data: t } = await supabase
-        .from("tasks")
-        .select("id, title, task_date, available_hours, location, is_open")
-        .eq("organization_id", id)
-        .eq("is_open", true)
-        .order("task_date", { ascending: true })
-        .limit(6);
-      setTasks((t as OrgTask[]) ?? []);
+      try {
+        const r = await getOrgPublicProfile({ data: { id } });
+        if (r.profile) { setP(r.profile as unknown as OrgPublic); setTasks((r.tasks as OrgTask[]) ?? []); }
+      } catch { /* not found */ }
       setLoading(false);
     })();
   }, [id]);
