@@ -69,6 +69,7 @@ function makeMockUser(profile: Profile): User {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mock, setMock] = useState<MockSession | null>(null);
   const ensureProfile = useServerFn(ensureSignedInProfile);
