@@ -13,11 +13,11 @@ export function V25Banner() {
   }, []);
   if (!show || path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register") return null;
   return (
-    <div className="relative z-40 border-b border-primary/30 bg-primary text-primary-foreground">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2 text-sm">
+    <div className="fixed inset-x-3 bottom-3 z-40 overflow-hidden rounded-2xl bg-primary text-primary-foreground shadow-lg sm:left-4 sm:right-auto sm:max-w-md" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="flex items-center gap-3 px-4 py-2.5 text-sm">
         <PartyPopper className="h-4 w-4 shrink-0" />
         <p className="min-w-0 flex-1 truncate">
-          <b>V2.5 jau čia</b> <span className="hidden sm:inline">— didžiausias atnaujinimas: pokalbiai, žemėlapis, draugai, QR pažymėjimai.</span>
+          <b>V2.5 jau čia</b> <span className="opacity-90">— didžiausias atnaujinimas</span>
         </p>
         <Link to="/versijos" className="shrink-0 rounded-md bg-primary-foreground/15 px-2.5 py-1 text-xs font-semibold hover:bg-primary-foreground/25">Kas naujo</Link>
         <button type="button" aria-label="Uždaryti" onClick={() => { setShow(false); try { localStorage.setItem(KEY, "1"); } catch {} }} className="grid h-7 w-7 shrink-0 place-items-center rounded-md hover:bg-primary-foreground/15">
