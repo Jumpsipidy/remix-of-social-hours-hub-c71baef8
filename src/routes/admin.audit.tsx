@@ -1,3 +1,4 @@
+import { csvCell } from "@/lib/csv-safe";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -72,7 +73,7 @@ function AuditPage() {
     const lines = shown.map((r) => {
       const p = profiles[r.user_id];
       return [new Date(r.created_at).toISOString(), p?.full_name ?? p?.organization_name ?? "", p?.email ?? "", p?.role ?? "", r.action, r.entity_type ?? "", JSON.stringify(r.meta)]
-        .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+        .map(csvCell).join(",");
     });
     const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
