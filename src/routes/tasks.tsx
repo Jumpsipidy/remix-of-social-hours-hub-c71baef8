@@ -214,7 +214,11 @@ function TasksPage() {
       longitude: active.task.longitude ?? null,
     } as any).select("id").single();
     if (error) { toast.error(error.message); return; }
-    toast.success(`Užklausa išsiųsta: ${active.target.name}`);
+    toast.success(`Rezervacija išsiųsta: ${active.target.name}`, {
+      description: `${details.date} · ${details.hours} val. · laukia organizacijos patvirtinimo`,
+      duration: 8000,
+      action: { label: "Peržiūrėti", onClick: () => { window.location.href = "/student#mano-rezervacijos"; } },
+    });
     if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: active.task.organization_id, message: details.note || `Sveiki! Noriu prisijungti prie „${active.task.title}“ ${details.date}.` });
     logActivity("reservation.created", { entityType: "reservation", entityId: inserted?.id as string | undefined, meta: { hours: details.hours, org: active.target.name } });
     const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
