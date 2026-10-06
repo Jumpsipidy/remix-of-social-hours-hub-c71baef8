@@ -1,0 +1,2 @@
+ALTER POLICY schools_read_active ON public.schools TO anon, authenticated USING (is_active = true);
+COMMENT ON POLICY schools_read_active ON public.schools IS 'Public registration reads active schools only. Admin access, including inactive schools, is handled separately by schools_admin_write for authenticated users.';
