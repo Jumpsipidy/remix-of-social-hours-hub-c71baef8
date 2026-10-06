@@ -3,9 +3,9 @@ import { PageShell } from "@/components/layout";
 import { useState } from "react";
 import { ArrowRight, PartyPopper, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-const TITLE = "Versijų istorija — visi Socialinių Valandų atnaujinimai";
+const TITLE = "V2.5 naujienos ir versijų istorija — Socialinės Valandos";
 const DESC =
-  "Pilna Socialinės Valandos platformos versijų istorija: nuo pirmosios v0.1 iki naujausios versijos. Kiekvienas atnaujinimas, funkcija ir patobulinimas vienoje vietoje.";
+  "Socialinės Valandos V2.5: pokalbiai, žemėlapis, QR patikra, SOCI GUARD, mokyklos renginiai ir naujos temos. Visos naujovės ir pataisymai vienoje vietoje.";
 
 type Tag = "Nauja" | "Patobulinta" | "Sauga" | "Pataisyta" | "Dizainas";
 
@@ -57,6 +57,9 @@ const VERSIONS: Version[] = [
       { tag: "Patobulinta", text: "Sentry klaidų sekimas su „Siųsti testinę klaidą“ mygtuku ir apsaugotu sesijos įrašu." },
       { tag: "Patobulinta", text: "Lietuviškas SEO ir naujas privatumo puslapis." },
       // ── Dizainas ──
+      { tag: "Dizainas", text: "Temos pasirinkimas šiame įrenginyje: du šviesios ir tamsios svetainės pavyzdžiai, tolygus akcento spalvos slankiklis, sklandūs perėjimai ir nustatymų atkūrimas." },
+      { tag: "Dizainas", text: "Telefono šoninis meniu vietoj apatinės navigacijos; temos nustatymai pasiekiami meniu ir prisijungimo puslapyje." },
+      { tag: "Patobulinta", text: "Atnaujinta paieškos ir DI informacija apie V2.5 funkcijas, paskyrų kūrimą, sveikas valandas ir pokalbių saugojimą." },
       { tag: "Dizainas", text: "Pagrindinis puslapis atnaujintas, bet atpažįstamas; pašalinti „DI stiliaus“ ženkliukai ir blizgučiai." },
       { tag: "Dizainas", text: "Tikras šviesus režimas „Mokyklos akys“ — švelnus, akims malonus." },
       { tag: "Dizainas", text: "Užkrovimo šablonai kiekvienam puslapiui, atskiri telefonams." },

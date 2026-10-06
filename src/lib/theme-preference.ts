@@ -28,3 +28,8 @@ export function saveThemePreference(storage: Pick<Storage, "setItem">, theme: Si
   storage.setItem(THEME_KEY, theme === "light" ? "1" : "0");
   storage.setItem(THEME_PROMPT_KEY, "1");
 }
+
+export function resetThemePreference(storage: Pick<Storage, "setItem">) {
+  saveThemePreference(storage, "dark");
+  saveAccentPreference(storage, 0);
+}
