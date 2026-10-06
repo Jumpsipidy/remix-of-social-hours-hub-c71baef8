@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Lockdown screen redesign
-- [ ] Select palette, typography and layout, then choose a rendered direction
-- [ ] Redesign all visitor lockdown states and dialogs without changing their functionality
+- [x] Select palette, typography and layout, then choose a rendered direction
+- [x] Redesign all visitor lockdown states and dialogs without changing their functionality
 - [ ] Verify incident messaging, interactions, light/dark themes and mobile layout
 
 ## Latest search information and theme settings
