@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Moon, Sun, Heart, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, normalizeAccent, type SiteTheme } from "@/lib/theme-preference";
+import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, type SiteTheme } from "@/lib/theme-preference";
 
 const ThemeContext = createContext<{ theme: SiteTheme; choose: (theme: SiteTheme) => void; openSettings: () => void }>({
   theme: "dark", choose: () => {}, openSettings: () => {},
@@ -88,6 +88,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setAccent(next);
     try { saveAccentPreference(localStorage, next); } catch {}
   }
+  function reset() {
+    try { resetThemePreference(localStorage); } catch {}
+    setTheme("dark");
+    setAccent(0);
+    applyTheme("dark");
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, choose, openSettings: () => setAsk(true) }}>
@@ -107,6 +113,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             <div className="mb-3 flex items-center justify-between gap-2"><label htmlFor="theme-accent" className="text-xs font-medium text-muted-foreground">Akcento spalva</label><Button size="sm" variant="ghost" onClick={() => tune(0)} className="h-7 gap-1 px-1 text-xs text-muted-foreground"><RotateCcw className="size-3" />Numatytasis</Button></div>
             <div className="relative"><input id="theme-accent" aria-label="Akcento spalva" type="range" min={-100} max={100} step={1} value={accent} onChange={(event) => tune(Number(event.target.value))} className="theme-accent-slider block h-6 w-full cursor-pointer" /><span aria-hidden className="pointer-events-none absolute left-1/2 top-8 h-1.5 w-px bg-muted-foreground/60" /></div>
           </div>
+          <Button variant="ghost" onClick={reset} className="mb-3 h-9 justify-start px-0 text-xs text-muted-foreground"><RotateCcw /> Atkurti temos nustatymus</Button>
           <div className="flex items-center justify-between border-t border-border pt-5"><Button variant="ghost" onClick={finish} className="text-muted-foreground">Praleisti</Button><Button onClick={finish} className="theme-continue rounded-full px-6">Tęsti <ArrowRight /></Button></div>
         </DialogContent>
       </Dialog>

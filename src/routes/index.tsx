@@ -31,7 +31,9 @@ const HOME_FAQ: { q: string; a: string; id: string }[] = [
   { id: "what", q: "Kas yra socialinės valandos?", a: "Socialinės (savanorystės) valandos — neatlyginama veikla bendruomenei, kurią mokinys atlieka per mokslo metus. 5–7 klasėms reikia 20 valandų, 8–12 klasėms — bent 8 valandas." },
   { id: "price", q: "Kiek kainuoja Socialinės Valandos?", a: "Mokiniams, mokykloms ir organizacijoms platforma yra visiškai nemokama." },
   { id: "official", q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą HMAC parašą ir viešą patikros nuorodą socialinesvalandos.dev/verify." },
-  { id: "qr", q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys atėjęs į vietą parodo savo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Jei nėra interneto, veikia atsarginis 6 skaitmenų kodas." },
+  { id: "qr", q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys pasirenka šiandienos vizitą ir parodo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Galima naudoti ir atsarginį 6 skaitmenų kodą; patikrinimui reikalingas ryšys su serveriu." },
+  { id: "hours", q: "Kas pasirenka suteikiamas valandas?", a: "Užbaigdama rezervaciją organizacija pasirenka suteikiamas sveikas valandas. Mokyklos administratorius gali jas pasirinkti arba palikti planuotas. Dalinės valandos, pavyzdžiui, 1,5 ar 2,7, neleidžiamos." },
+  { id: "chat", q: "Kiek laiko saugomos žinutės?", a: "Pokalbių žinutės automatiškai ištrinamos po 12 dienų. Pokalbiuose matomi mokinio, organizacijos ir mokyklos administratoriaus vaidmenys." },
   { id: "pdf", q: "Kaip gauti PDF sertifikatą?", a: "Kai valandos patvirtintos, mokinys savo skydelyje spaudžia „Atsisiųsti sertifikatą“ — PDF su QR kodu ir parašu sugeneruojamas iškart, o mokykla gali jį patikrinti per „PDF / QR patikra“." },
   { id: "code", q: "Ką daryti, jei neturiu mokyklos kodo?", a: "Parašyk klasės auklėtojai arba mokyklos administracijai — kodą jie mato savo skydelyje. Šeduvos gimnazijos mokiniams kodą duoda auklėtoja." },
   { id: "teacher", q: "Ar klasės auklėtoja mato tik savo klasę?", a: "Taip. Auklėtoja mato tik jai priskirtas klases, direktorius — visą mokyklą. Duomenys tarp mokyklų niekada nesimaišo." },
@@ -44,9 +46,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Socialinės Valandos — socialinių valandų centras mokiniams" },
-      { name: "description", content: "Socialinės Valandos (socialinesvalandos.dev) — pagrindinis Lietuvos moksleivių savanorystės ir socialinių valandų centras. Rezervuok užduotis, rink socialines valandas ir gauk verifikuotus sertifikatus. Atvira visoms Lietuvos mokykloms." },
+      { name: "description", content: "Socialinės Valandos — savanorystė mokiniams: užduočių žemėlapis, rezervacijos, pokalbiai, QR atvykimo patikra ir PDF pažymėjimai. Atrask V2.5 naujienas." },
       { property: "og:title", content: "Socialinės Valandos — socialinių valandų centras mokiniams" },
-      { property: "og:description", content: "Pagrindinis Lietuvos moksleivių savanorystės centras. Rink socialines valandas, stebėk progresą ir gauk oficialius skaitmeninius sertifikatus internetu." },
+      { property: "og:description", content: "V2.5: savanorystės žemėlapis, pokalbiai, draugų rezervacijos, QR patikra ir mokyklos renginiai vienoje platformoje." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },

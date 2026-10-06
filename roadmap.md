@@ -1,5 +1,9 @@
 # Roadmap
 
+## Latest search information and theme settings
+- [ ] Update AI reference, homepage metadata and V2.5 release details
+- [ ] Add explicit theme settings/reset and verify saved defaults
+
 ## Current mobile and theme update
 - [x] Selected minimalist two-preview chooser, continuous accent slider and reopenable settings
 - [x] Verify gradual transitions, saved accent settings and white-mode typography (public desktop/mobile checked; six preference tests pass)
