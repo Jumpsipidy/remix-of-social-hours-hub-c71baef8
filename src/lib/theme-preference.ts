@@ -1,6 +1,19 @@
 export type SiteTheme = "dark" | "light";
 export const THEME_KEY = "sv_school_eyes_v1";
 export const THEME_PROMPT_KEY = "sv_theme_choice_seen_v1";
+export const ACCENT_KEY = "sv_theme_accent_v1";
+
+export function normalizeAccent(value: number) {
+  return Number.isFinite(value) ? Math.max(-100, Math.min(100, value)) : 0;
+}
+
+export function readAccentPreference(storage: Pick<Storage, "getItem">) {
+  return normalizeAccent(Number(storage.getItem(ACCENT_KEY) ?? "0"));
+}
+
+export function saveAccentPreference(storage: Pick<Storage, "setItem">, value: number) {
+  storage.setItem(ACCENT_KEY, String(normalizeAccent(value)));
+}
 
 export function readThemePreference(storage: Pick<Storage, "getItem">) {
   const saved = storage.getItem(THEME_KEY);

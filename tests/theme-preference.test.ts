@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { readThemePreference, saveThemePreference, THEME_KEY } from "@/lib/theme-preference";
+import { readThemePreference, saveThemePreference, THEME_KEY, readAccentPreference, saveAccentPreference } from "@/lib/theme-preference";
 
 function deviceStorage() {
   const values = new Map<string, string>();
   return { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
 }
 describe("device-level theme preferences", () => {
+  it("defaults the continuous accent slider to its centre", () => {
+    expect(readAccentPreference(deviceStorage())).toBe(0);
+  });
+  it("keeps intermediate slider values when reopening settings", () => {
+    const storage = deviceStorage();
+    saveAccentPreference(storage, 37);
+    expect(readAccentPreference(storage)).toBe(37);
+  });
   it("starts the first device visit in dark mode and asks once", () => {
     expect(readThemePreference(deviceStorage())).toEqual({ theme: "dark", ask: true });
   });
