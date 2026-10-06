@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Current mobile and theme update
+- [ ] Selected minimalist two-preview chooser, continuous accent slider and reopenable settings
+- [ ] Verify gradual transitions, saved accent settings and white-mode typography
 - [x] Replace bottom navigation with a role-aware mobile sidebar
 - [x] First-device dark/light chooser with visual preview and dismiss
 - [x] Smooth theme changes; restore animations and skeleton contrast in light mode
