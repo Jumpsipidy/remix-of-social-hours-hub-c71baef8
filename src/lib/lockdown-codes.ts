@@ -13,7 +13,7 @@ export const LOCKDOWN_CODES: LockdownCode[] = [
     title: "Planinė techninė priežiūra",
     short: "Vykdomi planiniai atnaujinimai",
     description:
-      "Šiuo metu vykdome planinius sistemos atnaujinimus. Nauji duomenys nebus prarasti — po darbų viskas veiks kaip įprasta.",
+      "Šiuo metu vyksta planinė techninė priežiūra. Platforma laikinai nepasiekiama — būseną gali patikrinti dar kartą.",
     severity: "info",
     eta: "5–30 min.",
   },
@@ -31,7 +31,7 @@ export const LOCKDOWN_CODES: LockdownCode[] = [
     title: "Netikėtas gedimas",
     short: "Aptiktas netikėtas gedimas",
     description:
-      "Aptikome netikėtą klaidą ir šiuo metu ją taisome. Bandyk vėliau — problema bus išspręsta artimiausiu metu.",
+      "Įvyko netikėtas sistemos sutrikimas. Platforma laikinai nepasiekiama. Pabandyk patikrinti būseną vėliau.",
     severity: "warn",
     eta: "iki 1 val.",
   },
@@ -40,7 +40,7 @@ export const LOCKDOWN_CODES: LockdownCode[] = [
     title: "Saugumo incidentas",
     short: "Ribojama prieiga dėl saugumo",
     description:
-      "Sistemos administratoriai tikrina galimą saugumo incidentą. Prieiga laikinai apribota, kad būtų apsaugoti vartotojų duomenys.",
+      "Dėl galimo saugumo incidento platforma laikinai nepasiekiama. Prieiga apribota saugumo sumetimais.",
     severity: "critical",
     eta: "nežinoma",
   },
