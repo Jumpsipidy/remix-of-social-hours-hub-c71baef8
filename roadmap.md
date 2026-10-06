@@ -1,5 +1,10 @@
 # Roadmap
 
+## Lockdown screen redesign
+- [ ] Select palette, typography and layout, then choose a rendered direction
+- [ ] Redesign all visitor lockdown states and dialogs without changing their functionality
+- [ ] Verify incident messaging, interactions, light/dark themes and mobile layout
+
 ## Latest search information and theme settings
 - [x] Update AI reference, homepage metadata and V2.5 release details
 - [x] Add explicit theme settings/reset and verify saved defaults (seven preference tests; public browser checks pass)
