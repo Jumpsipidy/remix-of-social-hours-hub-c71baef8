@@ -3,7 +3,7 @@
 ## Lockdown screen redesign
 - [x] Select palette, typography and layout, then choose a rendered direction
 - [x] Redesign all visitor lockdown states and dialogs without changing their functionality
-- [ ] Verify incident messaging, interactions, light/dark themes and mobile layout
+- [x] Verify incident messaging, guide/access dialogs, retry response and mobile layout (isolated browser preview; no live lockdown change)
 
 ## Latest search information and theme settings
 - [x] Update AI reference, homepage metadata and V2.5 release details
