@@ -533,6 +533,7 @@ html.school-eyes, .theme-sample-light {
   --lockdown-shadow: 0 25px 50px -12px #e7e5e480;
   --lockdown-button-shadow: 0 10px 24px -10px #fde68a;
   font-family: var(--font-sans);
+  color: var(--foreground);
 }
 .lockdown-ui :is(h1, h2, h3, button, p, span, a, input) { letter-spacing: 0; }
 .lockdown-ui :is(h1, h2, h3) { font-family: var(--font-sans); }
