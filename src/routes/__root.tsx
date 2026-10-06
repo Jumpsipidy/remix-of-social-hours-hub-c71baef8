@@ -22,6 +22,7 @@ import { SecurityGatewayProvider } from "@/components/security-gateway-provider"
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
 import { SkeletonReveal } from "@/components/skeleton-reveal";
+import { ThemeProvider } from "@/components/theme-provider";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
 import { AdminErrorHud } from "@/components/admin-error-hud";
 import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
@@ -247,11 +248,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="lt" className="dark" style={{ colorScheme: "dark", backgroundColor: "oklch(0.13 0.015 250)" }}>
+    <html lang="lt" className="dark" style={{ colorScheme: "dark" }}>
       <head>
         <HeadContent />
       </head>
-      <body style={{ backgroundColor: "oklch(0.13 0.015 250)", color: "oklch(0.96 0.006 250)" }}>
+      <body>
         {children}
         <Scripts />
       </body>
@@ -264,10 +265,6 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   
   useEffect(() => {
-    // App is dark-only. Clear any stale light-theme preference from earlier builds.
-    document.documentElement.classList.add("dark");
-    document.documentElement.classList.remove("light");
-    try { localStorage.removeItem("theme"); } catch {}
     // Slaptažodžio atkūrimo laiškas kartais grąžina į pagrindinį puslapį su
     // #access_token…&type=recovery. Nukreipiam į tikrą atkūrimo puslapį.
     const { hash, search, pathname } = window.location;
@@ -290,6 +287,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SecurityGatewayProvider>
+          <ThemeProvider>
           {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
               atsiranda naujas ir matosi juodas blyksnis. */}
           <V25Banner />
@@ -313,6 +311,7 @@ function RootComponent() {
           <PageViewTracker />
           <WebVitalsReporter />
           <AnalyticsLoader />
+          </ThemeProvider>
         </SecurityGatewayProvider>
       </AuthProvider>
     </QueryClientProvider>

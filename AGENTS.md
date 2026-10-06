@@ -16,3 +16,5 @@
 - Privileged profile fields (role, school, hours, assigned classes) change only via service role or SECURITY DEFINER functions; the `tg_profiles_guard_privileged` trigger blocks direct client writes to stop self-promotion.
 - The security gateway does not render the app while blocked; hiding the overlay must never expose content.
 - Maps use Leaflet with Mapbox raster tiles when VITE_MAPBOX_PUBLIC_TOKEN (pk.) is set, else OSM tiles; keeps one map component for both.
+- ThemeProvider owns device-level theme state inside the security gateway; one owner keeps controls synchronized without exposing blocked content.
+- Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.

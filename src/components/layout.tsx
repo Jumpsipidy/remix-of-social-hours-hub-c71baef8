@@ -1,12 +1,13 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Menu, X, LogOut } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History } from "lucide-react";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
-import { MobileTabBar } from "@/components/mobile-tab-bar";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AnimatePresence, motion } from "framer-motion";
 import { Magnetic } from "@/components/motion-kit";
 
@@ -98,10 +99,10 @@ export function Navbar() {
   // if (isAdminSection) return null;
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-background/70 backdrop-blur-xl group/header">
+    <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl group/header">
       {/* Animated gradient top border */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-30" />
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-3 sm:px-6 md:py-4 lg:py-5">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 md:flex md:justify-between md:gap-6 md:py-4 lg:py-5">
         <Link 
           to="/" 
           className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
@@ -166,7 +167,7 @@ export function Navbar() {
               )}
             </AnimatePresence>
           </motion.div>
-          <span className="font-display truncate whitespace-nowrap text-lg font-extrabold tracking-tighter sm:text-xl lg:text-2xl">
+          <span className="font-display truncate whitespace-nowrap text-sm font-extrabold sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
             <div 
               className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
@@ -210,7 +211,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <SchoolEyesToggle />
-          <div className="hidden sm:block">
+           <div className="shrink-0">
             <NotificationBell />
           </div>
 
@@ -246,79 +247,36 @@ export function Navbar() {
               </Magnetic>
             </div>
           )}
-          <motion.button
-            whileTap={{ scale: 0.92 }}
-            className="grid h-11 w-11 place-items-center rounded-2xl border border-border/80 bg-background/60 backdrop-blur-md active:scale-95 transition-all md:hidden"
+          <Button
+            variant="outline" size="icon"
+            className="h-11 w-11 shrink-0 md:hidden"
             onClick={() => setOpen(!open)}
             aria-label="Meniu"
             aria-expanded={open}
           >
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={open ? "x" : "m"} 
-                initial={{ rotate: -90, opacity: 0 }} 
-                animate={{ rotate: 0, opacity: 1 }} 
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </motion.div>
-            </AnimatePresence>
-          </motion.button>
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 top-[64px] z-40 bg-background/70 backdrop-blur-sm md:hidden"
-            />
-            <motion.div
-              key="drawer"
-              initial={{ y: -12, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -12, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 28 }}
-              className="fixed inset-x-0 top-[64px] z-50 border-y border-border bg-background/95 backdrop-blur-xl shadow-2xl md:hidden"
-              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-            >
-              <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
-                {links.map((l, i) => (
-                  <motion.div
-                    key={l.to}
-                    initial={{ x: -14, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.04 * i, duration: 0.25 }}
-                  >
-                    <Link
-                      to={l.to}
-                      onClick={() => setOpen(false)}
-                      className="block rounded-xl px-4 py-3 text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground active:scale-[0.98] transition"
-                    >
-                      {l.label}
-                    </Link>
-                  </motion.div>
-                ))}
-                <div className="mt-3 flex gap-2">
-                  {isAuthenticated ? (
-                    <button onClick={handleSignOut} className="flex-1 rounded-full border border-border px-4 py-3 text-center text-sm font-medium active:scale-95 transition">Atsijungti</button>
-                  ) : (
-                    <>
-                      <Link to="/login" onClick={() => setOpen(false)} className="flex-1 rounded-full border border-border px-4 py-3 text-center text-sm font-medium active:scale-95 transition">Prisijungti</Link>
-                      <Link to="/register" onClick={() => setOpen(false)} className="flex-1 rounded-full bg-gradient-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground active:scale-95 transition">Registruotis</Link>
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" className="mobile-sidebar flex w-[min(86vw,340px)] flex-col overflow-y-auto border-border bg-background px-4 pb-safe pt-12">
+          <SheetTitle className="text-left">Socialinės Valandos</SheetTitle>
+          <SheetDescription className="text-left">{profile?.full_name ?? "Tavo savanorystės erdvė"}</SheetDescription>
+          <nav aria-label="Šoninis meniu" className="mt-5 flex flex-1 flex-col gap-2">
+            {links.map((link) => {
+              const Icon = link.to === "/" ? Home : link.to === "/tasks" ? ListTodo : link.to === "/chat" ? MessageCircle : LayoutDashboard;
+              const active = isActive(link.to, link.to === "/");
+              return <Button key={link.to} variant={active ? "secondary" : "ghost"} asChild className="h-auto min-h-12 justify-start whitespace-normal px-3 py-3 text-left"><Link to={link.to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}><Icon /><span className="min-w-0">{link.label}</span></Link></Button>;
+            })}
+            <Button variant="ghost" asChild className="h-12 justify-start"><Link to="/versijos" onClick={() => setOpen(false)}><History /> Kas naujo</Link></Button>
+          </nav>
+          <div className="mt-6 space-y-4 border-t border-border pt-4">
+            <SchoolEyesToggle className="w-full justify-start [&_span]:inline" />
+            {isAuthenticated ? <Button variant="outline" className="h-12 w-full" onClick={handleSignOut}><LogOut /> Atsijungti</Button> : <div className="grid grid-cols-2 gap-2"><Button variant="outline" asChild><Link to="/login" onClick={() => setOpen(false)}>Prisijungti</Link></Button><Button asChild><Link to="/register" onClick={() => setOpen(false)}>Registruotis</Link></Button></div>}
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }
@@ -389,7 +347,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
+    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-safe md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
       <BackgroundFX isDashboard={isDashboard} />
       <Navbar />
       <main>
@@ -397,7 +355,6 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       </main>
       <Footer />
       <OnboardingTour />
-      <MobileTabBar />
     </div>
   );
 
