@@ -291,207 +291,66 @@ body {
   }
 }
 
-/* ==========================================================================
-   "Mokyklos akys" — perjungia visą sąsają iš futuristinio neon režimo
-   į ramų, profesionalų šviesų režimą (dokumentinis stilius).
-   Įjungiama pridedant .school-eyes ant <html> (ir nuimant .dark).
-   ========================================================================== */
-html.school-eyes {
+/* Light theme: semantic surfaces without suppressing motion or content. */
+html.school-eyes, .theme-sample-light {
   color-scheme: light;
-  --background: #f2f4f7;
-  --foreground: #1a2230;
-  --card: #ffffff;
-  --card-foreground: #1a2230;
-  --popover: #ffffff;
-  --popover-foreground: #1a2230;
-  --primary: #2456c7;
-  --primary-foreground: #ffffff;
-  --primary-glow: #4b7be0;
-  --secondary: #e9edf3;
-  --secondary-foreground: #1a2230;
-  --muted: #eef1f5;
-  --muted-foreground: #5a6474;
-  --accent: #e6eefc;
-  --accent-foreground: #1a2230;
-  --success: #10643c;
-  --success-foreground: #ffffff;
-  --warning: #7a4a05;
-  --warning-foreground: #ffffff;
-  --destructive: #a3161b;
-  --destructive-foreground: #ffffff;
-  --border: #e1e6ed;
-  --input: #ffffff;
-  --ring: #2456c7;
-  --radius: 0.85rem;
-  --gradient-hero: none;
-  --gradient-primary: none;
-  --gradient-accent: none;
-  --gradient-card: none;
+  --background: oklch(0.978 0.004 250);
+  --foreground: oklch(0.25 0.018 250);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.52 0.16 255);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.61 0.13 240);
+  --secondary: oklch(0.95 0.009 250);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.94 0.006 250);
+  --muted-foreground: oklch(0.49 0.017 250);
+  --accent: oklch(0.94 0.025 250);
+  --accent-foreground: var(--foreground);
+  --success: oklch(0.46 0.10 160);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.52 0.10 75);
+  --warning-foreground: oklch(1 0 0);
+  --destructive: oklch(0.51 0.18 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.88 0.009 250);
+  --input: var(--border);
+  --ring: var(--primary);
+  --gradient-hero: linear-gradient(135deg, var(--secondary), var(--card));
+  --gradient-primary: linear-gradient(120deg, var(--primary), var(--primary-glow));
+  --gradient-accent: linear-gradient(135deg, var(--accent), var(--secondary));
+  --gradient-card: linear-gradient(150deg, var(--card), var(--background));
   --gradient-mesh: none;
-  --shadow-sm: 0 1px 2px rgba(26, 34, 48, 0.05);
-  --shadow-md: 0 1px 2px rgba(26,34,48,.04), 0 4px 14px rgba(26, 34, 48, 0.06);
-  --shadow-lg: 0 8px 24px rgba(16, 21, 29, 0.08);
-  --shadow-elegant: 0 8px 24px rgba(16, 21, 29, 0.08);
-  --shadow-glow: none;
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 250 / 0.04);
+  --shadow-md: 0 4px 16px oklch(0.2 0.02 250 / 0.06);
+  --shadow-lg: 0 16px 40px -16px oklch(0.2 0.02 250 / 0.12);
+  --shadow-glow: 0 5px 18px -8px oklch(0.52 0.16 255 / 0.20);
 }
+html { background-color: var(--background); }
+.school-eyes .text-gradient { -webkit-text-fill-color: var(--primary); background-image: none; }
+.school-eyes .auth-shell aside { color: var(--primary-foreground); }
+.school-eyes .sv-dark-tiles { filter: none; }
+.school-eyes .sv-skeleton { background-color: var(--muted); }
 
-html.school-eyes,
-html.school-eyes body {
-  background: #f2f4f7 !important;
-  color: #1a2230 !important;
-}
-
-/* Stiklo / švytėjimo / judesio efektai — pagrindinis „AI slop" šaltinis. */
-.school-eyes *,
-.school-eyes *::before,
-.school-eyes *::after {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  text-shadow: none !important;
-  mix-blend-mode: normal !important;
-}
-
-.school-eyes [class*="blur-"],
-.school-eyes [class*="animate-"] {
-  filter: none !important;
-}
-
-/* Dekoratyviniai fono sluoksniai, dėmės, tinkleliai — pašalinami. */
-.school-eyes [aria-hidden="true"][class*="blur-["],
-.school-eyes [aria-hidden="true"][class*="bg-[radial"],
-.school-eyes [aria-hidden="true"][class*="bg-gradient"],
-.school-eyes [aria-hidden="true"][class*="rounded-full"][class*="bg-primary/"],
-.school-eyes canvas[aria-hidden="true"] {
-  display: none !important;
-}
-
-/* Tamsūs „aurora“ sluoksniai dažnai NEturi aria-hidden — naikinam pagal formą:
-   absoliutus, per visą plotą, tik dekoratyvus fonas / švytėjimas. */
-.school-eyes [class*="bg-[linear-gradient"],
-.school-eyes [class*="bg-[radial-gradient"],
-.school-eyes [class*="[background-image:"],
-.school-eyes [class*="absolute"][class*="inset-0"][class*="opacity-["],
-.school-eyes [class*="absolute"][class*="blur-2xl"],
-.school-eyes [class*="absolute"][class*="blur-3xl"],
-.school-eyes [class*="absolute"][class*="blur-["] {
-  display: none !important;
-}
-
-/* Bet kokie likę tamsūs inline gradientai / oklch fonai — nunulinam. */
-.school-eyes [style*="gradient"],
-.school-eyes [style*="oklch"] {
-  background-image: none !important;
-  box-shadow: none !important;
-}
-
-/* Turinio konteineriai lieka balti, tekstas tamsus. */
-.school-eyes main,
-.school-eyes section,
-.school-eyes header,
-.school-eyes footer,
-.school-eyes nav,
-.school-eyes aside {
-  background-color: transparent !important;
-  color: #1a2230 !important;
-}
-.school-eyes [class*="bg-background"],
-.school-eyes [class*="bg-card"],
-.school-eyes [class*="bg-muted"],
-.school-eyes [class*="bg-secondary"],
-.school-eyes [class*="bg-popover"] {
-  background-color: #ffffff !important;
-  color: #1a2230 !important;
-}
-.school-eyes [class*="shadow-glow"],
-.school-eyes [class*="drop-shadow"] {
-  box-shadow: var(--shadow-md) !important;
-  filter: none !important;
-}
-
-/* Permatomi „glass" paviršiai virsta tikromis baltomis kortelėmis. */
-.school-eyes [class*="bg-white/"] {
-  background-color: #ffffff !important;
-  border-color: #d3d9e2 !important;
-}
-.school-eyes [class*="border-white/"],
-.school-eyes [class*="border-border"] {
-  border-color: #d3d9e2 !important;
-}
-.school-eyes [class*="text-white"],
-.school-eyes [class*="text-slate-"],
-.school-eyes [class*="text-zinc-"],
-.school-eyes [class*="text-stone-"],
-.school-eyes [class*="text-neutral-"] {
-  color: #1a2230 !important;
-}
-.school-eyes .text-muted-foreground,
-.school-eyes [class*="text-white/6"],
-.school-eyes [class*="text-white/5"],
-.school-eyes [class*="text-white/7"] {
-  color: #4a5565 !important;
-}
-.school-eyes .text-gradient,
-.school-eyes [class*="bg-clip-text"] {
-  background: none !important;
-  -webkit-text-fill-color: #2456c7 !important;
-  color: #2456c7 !important;
-}
-
-/* Gradientiniai mygtukai / plokštės — vientisa firminė spalva. */
-.school-eyes [class*="bg-gradient"],
-.school-eyes [style*="linear-gradient"] {
-  background-image: none !important;
-  background-color: #2456c7 !important;
-}
-.school-eyes [class*="bg-gradient"],
-.school-eyes [class*="bg-gradient"] *,
-.school-eyes [style*="linear-gradient"],
-.school-eyes [style*="linear-gradient"] * {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  border-color: transparent !important;
-}
-/* …bet tik jei tai tikrai valdiklis, o ne visas puslapio konteineris. */
-.school-eyes main[class*="bg-gradient"],
-.school-eyes section[class*="bg-gradient"],
-.school-eyes div[class*="bg-gradient-card"] {
-  background-color: #ffffff !important;
-  color: #1a2230 !important;
-  -webkit-text-fill-color: #1a2230 !important;
-}
-.school-eyes div[class*="bg-gradient-card"] * {
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
-}
-
-/* Ramesnė, dokumentinė tipografija. */
-.school-eyes body {
-  font-size: 1.02rem;
-  letter-spacing: 0;
-}
-.school-eyes h1,
-.school-eyes h2,
-.school-eyes h3 {
-  letter-spacing: -0.015em;
-  font-weight: 700;
-}
-.school-eyes a:focus-visible,
-.school-eyes button:focus-visible,
-.school-eyes input:focus-visible,
-.school-eyes select:focus-visible,
-.school-eyes textarea:focus-visible {
-  outline: 3px solid #2456c7 !important;
-  outline-offset: 2px !important;
-}
-
+/* Only color properties crossfade; layout, shimmer and entrance motion remain intact. */
 @media (prefers-reduced-motion: no-preference) {
-  .school-eyes * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 90ms !important;
+  .sv-theme-changing, .sv-theme-changing body,
+  .sv-theme-changing :is(main, section, header, footer, nav, aside, div, a, button, input, label, p, span, h1, h2, h3, svg) {
+    transition: background-color 320ms ease, color 320ms ease, border-color 320ms ease, box-shadow 320ms ease, fill 320ms ease !important;
   }
 }
-
+.theme-welcome { --font-display: var(--font-sans); }
+.theme-sample-light { animation: theme-demo-light 6s ease-in-out infinite; }
+.theme-progress { transform-origin: left; animation: theme-demo-progress 6s ease-in-out infinite; }
+@keyframes theme-demo-light { 0%, 35%, 100% { opacity: 0; } 48%, 82% { opacity: 1; } }
+@keyframes theme-demo-progress { 0%, 50%, 100% { transform: scaleX(.55); } 25%, 75% { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .theme-sample-light { animation: none; clip-path: inset(0 0 0 50%); }
+  .theme-progress { animation: none; }
+}
+.mobile-sidebar { height: 100dvh; }
 
 /* Authentication pages keep readable type and native controls in both themes. */
 .auth-shell h1, .auth-shell h2, .auth-shell h3, .auth-shell h4,
@@ -535,48 +394,16 @@ html.school-eyes body {
 /* Free OSM fallback tiles tinted dark to match the theme */
 .sv-dark-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
 
-/* ==========================================================================
-   "Mokyklos akys" v2 — tikras šviesus režimas: perrašomos ir kietai
-   užkoduotos tamsios spalvos (bg-black, bg-slate-9xx, bg-[#0…], text-white).
-   ========================================================================== */
-.school-eyes [class*="bg-black"],
-.school-eyes [class*="bg-slate-9"],
-.school-eyes [class*="bg-zinc-9"],
-.school-eyes [class*="bg-neutral-9"],
-.school-eyes [class*="bg-gray-9"],
-.school-eyes [class*="bg-slate-8"],
-.school-eyes [class*="bg-zinc-8"],
-.school-eyes [class*="bg-[#0"],
-.school-eyes [class*="bg-[#1"],
-.school-eyes [class*="bg-[oklch(0.1"],
-.school-eyes [class*="bg-[oklch(0.2"],
-.school-eyes [class*="bg-background"],
-.school-eyes [class*="bg-card"] {
-  background-color: #ffffff !important;
-  background-image: none !important;
+/* Compatibility for remaining legacy dark-only surfaces. Semantic classes are never overridden. */
+.school-eyes :is([class*="bg-black"], [class*="bg-slate-9"], [class*="bg-zinc-9"], [class*="bg-neutral-9"]) {
+  background-color: var(--card) !important;
 }
-.school-eyes [class*="bg-background"] { background-color: #f2f4f7 !important; }
-.school-eyes [class*="text-white"],
-.school-eyes [class*="text-slate-1"],
-.school-eyes [class*="text-slate-2"],
-.school-eyes [class*="text-slate-3"],
-.school-eyes [class*="text-zinc-1"],
-.school-eyes [class*="text-zinc-2"],
-.school-eyes [class*="text-gray-2"],
-.school-eyes [class*="text-[#e"],
-.school-eyes [class*="text-[#f"] {
-  color: #1a2230 !important;
+.school-eyes :is([class*="text-white"], [class*="text-slate-1"], [class*="text-slate-2"]) {
+  color: var(--foreground) !important;
 }
-.school-eyes [class*="bg-card"] { box-shadow: 0 1px 2px rgba(26,34,48,.04), 0 4px 14px rgba(26,34,48,.05); }
-.school-eyes [class*="border-white"],
-.school-eyes [class*="border-slate-8"],
-.school-eyes [class*="border-slate-7"] { border-color: #e1e6ed !important; }
-/* Mygtukai su primary fonu lieka kontrastingi */
-.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) { background-color: #2456c7 !important; color: #fff !important; }
-.school-eyes :is(button,a,span,label)[class*="bg-primary"]:not([class*="bg-primary/"]):not([class*="bg-primary-"]) * { color: #fff !important; }
-.school-eyes [class*="bg-gradient-to"] { background-image: none !important; }
-.school-eyes .leaflet-tile-pane { filter: none !important; }
-.school-eyes img, .school-eyes video { filter: none !important; }
+.school-eyes [class*="bg-white/"] { background-color: var(--muted) !important; }
+.school-eyes [class*="border-white/"] { border-color: var(--border) !important; }
+.school-eyes .leaflet-tile-pane { filter: none; }
 
 /* ==========================================================================
    Telefonai: mažiau sunkių efektų → sklandus slinkimas ir greiti meniu.
