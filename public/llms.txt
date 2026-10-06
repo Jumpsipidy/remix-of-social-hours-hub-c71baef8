@@ -7,18 +7,43 @@ Kalba: lietuvių. Šalis: Lietuva. Kaina: nemokama visoms pusėms.
 
 Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puses: moksleivius, savanorystės organizacijas / bendruomenes ir mokyklas. Platforma automatizuoja visą socialinių valandų procesą — nuo užduoties radimo iki oficialaus PDF sertifikato su parašu.
 
+
+## Naujausia versija: V2.5.0
+
+Informacija atnaujinta 2026-10-06. Pilnas pakeitimų sąrašas: [/versijos](/versijos).
+
+- Pokalbiai /chat: mokiniai, organizacijos ir mokyklos administratoriai; rodomi siuntėjų vaidmenys, žinutės automatiškai ištrinamos po 12 dienų.
+- Organizacija gali pradėti pokalbį su mokiniu, turėjusiu rezervaciją joje. Mokyklos administratorius gali pradėti pokalbį su savo mokiniu ir organizacija.
+- Užduočių žemėlapis ir miestų filtrai: Šeduva, Radviliškis, Šiauliai; organizacijų vieši profiliai.
+- Draugų pakvietimai ir grupinės rezervacijos; keli tos pačios dienos vizitai turi atskirus QR pasirinkimus.
+- Mokyklos renginiai: mokinys registruojasi, mokyklos administratorius priima arba atmeta ir patvirtina valandas; sąrašai ir pranešimai atnaujinami gyvai.
+- Organizacijų ir mokyklų skydeliai, mokinių rizikos centras, super administratoriaus rezervacijų ir QR apžvalga.
+- SOCI GUARD: serverio patvirtinama robotų patikra su paaiškinimais; įtartinam įrenginiui gali reikėti papildomų užduočių, reCAPTCHA naudojama kaip atsarginė patikra.
+- Šviesi ir tamsi tema, du pasirinkimo pavyzdžiai, tolygus akcento spalvos slankiklis ir nustatymų atkūrimas. Pasirinkimas išsaugomas tame įrenginyje; telefono navigacija yra šoniniame meniu.
+- Įvedimo vedlys praleidžiamas ir nekartojamas tame pačiame įrenginyje; sklandžios užkrovimo būsenos.
+
+## Dabartinės platformos taisyklės
+
+- Mokyklos administratorių paskyras kuria tik super administratorius; jis priskiria mokyklą, vieną, kelias ar visas klases ir automatinį klasių perkėlimą.
+- Super administratorius taip pat kuria organizacijų ir bendruomenių paskyras. Mokinys negali suteikti sau administratoriaus vaidmens.
+- Valandos yra tik sveiki skaičiai: 1,5 ar 2,7 valandos neleidžiamos. Organizacija pasirenka suteikiamas valandas darbo pabaigoje; mokyklos administratorius gali palikti planuotas.
+- Pokalbių žinutės automatiškai ištrinamos po 12 dienų.
+- QR ir atsarginiai kodai tikrinami serveryje; atsarginis kodas nėra pažadas, kad visas patvirtinimas veikia be interneto.
+- Klasių valandų tikslai aprašo šios platformos registracijos nustatymus, o ne universalią visoms Lietuvos mokykloms teisinę taisyklę; konkretų reikalavimą reikia tikrinti savo mokykloje.
+- Šis dokumentas nepatvirtina, kad išoriniai el. pašto, OAuth ar kiti tiekėjų nustatymai šiuo metu veikia. Nenurodyti privačių mokinių duomenų, mokyklos prieigos kodų ar slaptų raktų.
+
 ## Kam skirta
 
 - **Moksleiviams (5–12 kl.)** — rasti realias savanorystės užduotis, rezervuoti valandas, kviesti draugus į grupę, gauti oficialų PDF sertifikatą.
 - **Klasės auklėtojams** — matyti tik savo auklėjamosios klasės mokinius, jų rezervacijas, sukauptas valandas, sukčiavimo signalus.
-- **Mokyklos direktoriams** — matyti visą įstaigą, valdyti klases, kurti mokyklos administratorių paskyras.
+- **Mokyklos direktoriams** — matyti visą įstaigą, valdyti klases, stebėti mokyklos mokinių progresą pagal suteiktą prieigą.
 - **Organizacijoms ir bendruomenėms** — skelbti užduotis, patvirtinti mokinius per QR kodą arba 6 skaitmenų kodą, uždaryti valandas.
 
 ## Prisijungusios mokyklos
 
 - **Šeduvos gimnazija** (Šeduva, Radviliškio r.) — kol kas vienintelė platformoje veikianti mokykla. Naujas mokyklas prijungiame per pagalba@socialinesvalandos.dev.
 
-## Kaip veikia socialinės valandos Lietuvoje
+## Valandų tikslai platformos registracijoje
 
 - 5, 6, 7 klasėms — reikia surinkti 20 valandų per mokslo metus.
 - 8, 9, 10, 11, 12 klasėms — reikia surinkti bent 8 valandas per mokslo metus.
@@ -31,7 +56,7 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 2. /tasks puslapyje randa organizaciją ar užduotį ir rezervuoja laiką — arba pasiūlo savo rezervaciją.
 3. Organizacija rezervaciją patvirtina (`pending → approved`).
 4. Atvykus į vietą mokinys parodo QR kodą (atsinaujina kas 30 s) arba 6 skaitmenų kodą; organizacija nuskenuoja /organization/scan.
-5. Organizacija uždaro valandas (`approved → completed`), valandos įskaitomos į profilį.
+5. Organizacija užbaigdama rezervaciją pasirenka suteikiamas sveikas valandas (`approved → completed`), valandos įskaitomos į profilį. Mokyklos administratorius mokyklos renginyje gali pasirinkti valandas arba palikti planuotas.
 6. Mokinys atsisiunčia PDF sertifikatą su HMAC parašu; mokykla jį tikrina /verify arba mokyklos skydelio skiltyje „PDF / QR patikra“.
 
 ## Pages
@@ -44,7 +69,7 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 - [Socialinės valandos mokykloms](/socialines-valandos-mokykloms): Kaip mokykla prisijungia ir ką gauna.
 - [Socialinių valandų lapas](/socialiniu-valandu-lapas): Skaitmeninis valandų lapas vietoje popierinio.
 - [Registruotis](/register): Moksleivio paskyros kūrimas su mokyklos kodu ir klase; organizacijų prieigos prašymas.
-- [Prisijungti](/login): Prisijungimas su Google, Discord arba el. paštu.
+- [Prisijungti](/login): Prisijungimas su Google, Discord, GitHub arba el. paštu.
 - [Sertifikato patikra](/verify): Viešas oficialaus PDF sertifikato tikrinimas pagal QR kodą arba unikalų kodą.
 - [Naudojimosi taisyklės](/terms): Platformos taisyklės, privatumo politika ir atsakomybės.
 - [Duomenų sauga](/saugumas): Kaip saugomi nepilnamečių mokinių duomenys — BDAR, šifravimas, prieigos kontrolė, trynimas.
@@ -54,7 +79,7 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 ## Pagrindinės funkcijos (paaiškinimai)
 
 - **Rezervacijos** — statusų grandinė `pending → approved → completed`; mokinys gali pasiūlyti ir savo laiką bei vietą.
-- **QR įsiregistravimas** — rotuojantis QR kodas (30 s) + 6 skaitmenų atsarginis kodas veikiantis be interneto; patikrina serveris.
+- **QR įsiregistravimas** — rotuojantis QR kodas (30 s) + 6 skaitmenų atsarginis kodas; patikrinimui reikia ryšio su serveriu; patikrina serveris.
 - **PDF sertifikatai** — HMAC parašas, QR kodas ir viešas patikros URL, kad mokykla galėtų įsitikinti tikrumu.
 - **Klasės auklėtojo kabinetas** — matomi tik priskirtų klasių mokiniai, valandų patikra, masinis patvirtinimas.
 - **Anti-cheat** — dienos/rezervacijos valandų limitai, QR įrodymo tikrinimas, apvalių ir pasikartojančių valandų signalai.
@@ -70,7 +95,7 @@ Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puse
 **Ar auklėtoja mato kitas klases?** Ne — tik jai priskirtas klases; direktorius mato visą mokyklą.
 **Ar galima savanoriauti vasarą?** Taip, jei organizacija patvirtina valandas.
 **Kaip prijungti savo mokyklą?** Parašyti pagalba@socialinesvalandos.dev.
-**Kur kreiptis dėl klaidos?** pagalba@socialinesvalandos.dev arba mygtukas „Pranešti bug'ą“ svetainėje (nurodyk incidento kodą).
+**Kur kreiptis dėl klaidos?** pagalba@socialinesvalandos.dev arba mygtukas „Pranešti apie klaidą“ svetainėje (nurodyk incidento kodą).
 
 ## Duomenų sauga (nepilnamečių duomenys)
 
@@ -82,7 +107,7 @@ Platformoje tvarkomi nepilnamečių duomenys, todėl taikomas „kuo mažiau, tu
 **Ar duomenys parduodami ar naudojami reklamai?** Niekada. Nėra reklamos tinklų ir mokinių profiliavimo.
 **Kiek laikomi pokalbiai?** Žinutės automatiškai ištrinamos po 12 dienų.
 **Kaip ištrinti paskyrą?** Parašius pagalba@socialinesvalandos.dev — ištriname per 30 dienų; taip pat pateikiame duomenų kopiją (BDAR 15 ir 17 str.).
-**Kaip apsaugoma prieiga?** Supabase Auth (šifruoti slaptažodžiai arba Google / Discord OAuth), HTTPS/TLS, ribotos trukmės sesijos, administratoriaus veiksmų auditas.
+**Kaip apsaugoma prieiga?** Supabase Auth (šifruoti slaptažodžiai arba Google / Discord / GitHub OAuth), HTTPS/TLS, ribotos trukmės sesijos, administratoriaus veiksmų auditas.
 **Kaip užtikrinamas valandų tikrumas?** HMAC parašu pasirašyti QR kodai (atsinaujina kas 30 s), vienkartiniai 6 skaitmenų kodai ir viešai tikrinami PDF sertifikatai (/verify).
 **Ką darote incidento atveju?** Veikia 24/7 klaidų ir saugumo stebėjimas; apie asmens duomenų pažeidimą informuojama mokykla ir, kai reikia, VDAI per 72 val.
 
