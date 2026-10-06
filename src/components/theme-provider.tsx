@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <ThemeContext.Provider value={{ theme, choose }}>
       {children}
       <Dialog open={ask} onOpenChange={(open) => { if (!open) choose(theme); }}>
-        <DialogContent className="theme-welcome dark w-[calc(100%-2rem)] max-w-lg rounded-lg border-border bg-background p-5 text-foreground sm:p-8" aria-describedby="theme-choice-description">
+        <DialogContent className="theme-welcome dark z-[10001] w-[calc(100%-2rem)] max-w-lg rounded-lg border-border bg-background p-5 text-foreground sm:p-8" aria-describedby="theme-choice-description">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><Heart className="size-4 text-primary" /> Socialinės Valandos</div>
           <DialogTitle className="mt-2 text-2xl leading-tight">Tavo erdvė. Tavo spalvos.</DialogTitle>
           <DialogDescription id="theme-choice-description">Kuri tema tau patinka?</DialogDescription>
