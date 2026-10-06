@@ -18,3 +18,4 @@
 - Maps use Leaflet with Mapbox raster tiles when VITE_MAPBOX_PUBLIC_TOKEN (pk.) is set, else OSM tiles; keeps one map component for both.
 - ThemeProvider owns device-level theme and continuous accent state inside the security gateway, animating a global numeric CSS tuning token; one owner synchronizes previews, settings and controls without exposing blocked content.
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.
+- Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
