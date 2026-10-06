@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Heart, Loader2, ShieldCheck, Clock, Award, Sparkles, GraduationCap, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 
 export type AuthMode = "login" | "register";
 type Provider = "google" | "discord" | "github";
@@ -42,8 +43,9 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
   const isLogin = mode === "login";
   return (
     <div className="relative auth-shell min-h-screen bg-background text-foreground">
+      <div className="absolute right-4 top-4 z-30"><SchoolEyesToggle /></div>
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-8 pt-20 sm:px-6">
         <div className={`relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
           {/* Sweep: a light band crosses the card when switching modes */}
           <motion.div

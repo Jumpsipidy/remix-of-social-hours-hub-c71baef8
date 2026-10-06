@@ -1,5 +1,6 @@
 import { Toaster as Sonner } from "sonner";
 import { CheckCircle2, AlertTriangle, XCircle, Info, Loader2 } from "lucide-react";
+import { useSiteTheme } from "@/components/theme-provider";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
@@ -11,9 +12,10 @@ const iconWrap =
   "grid h-8 w-8 shrink-0 place-items-center rounded-xl border shadow-inner";
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme } = useSiteTheme();
   return (
     <Sonner
-      theme="dark"
+      theme={theme}
       position="top-right"
       offset={16}
       gap={10}
