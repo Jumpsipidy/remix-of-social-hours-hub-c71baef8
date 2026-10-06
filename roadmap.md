@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current mobile and theme update
+- [ ] Replace bottom navigation with a role-aware mobile sidebar
+- [ ] First-device dark/light chooser with visual preview and dismiss
+- [ ] Smooth theme changes; restore animations and skeleton contrast in light mode
+- [ ] Verify chooser persistence, sidebar navigation, and login on desktop/mobile
+
 - [x] Fix post-login white screen (React hook order crash in `/student`)
 - [x] Remove black transition flashes between pages
 - [x] SEDUVA2026 school signup code + school admin linked to Šeduvos gimnazija
