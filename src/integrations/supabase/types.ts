@@ -1461,6 +1461,13 @@ export type Database = {
           unread: number
         }[]
       }
+      list_my_teachers: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       next_class_year: { Args: { _c: string }; Returns: string }
       open_chat_with: { Args: { _other: string }; Returns: string }
       open_dm_room: { Args: { _other: string }; Returns: string }

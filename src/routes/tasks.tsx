@@ -358,7 +358,7 @@ function TasksPage() {
         </section>
 
 
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <section className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-10">
         {tab === "map" ? (
           <InteractiveTasksMap 
             tasks={filteredTasks} 
@@ -377,14 +377,14 @@ function TasksPage() {
                 <p className="mt-1 text-sm text-muted-foreground">Pabandyk pakeisti filtrus arba pasiūlyk savo rezervaciją.</p>
               </div>
             )}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
               <AnimatePresence mode="popLayout">
                 {filteredTasks.map((t, i) => (
                   <motion.div key={t.id} layout
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.3, delay: (i % 6) * 0.03 }}
                   >
-                      <article onClick={() => setDetail(t)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
+                      <article onClick={() => setDetail(t)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-gradient-card/85 p-4 shadow-md sm:rounded-3xl sm:p-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
                         <div className="relative flex items-start justify-between gap-3">
                           <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
@@ -395,14 +395,14 @@ function TasksPage() {
                             {Number(t.available_hours)} val.
                           </span>
                         </div>
-                        <h2 className="relative mt-4 font-display text-lg font-bold leading-tight">{t.title}</h2>
+                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg">{t.title}</h2>
                         <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                           {CATEGORY_LABELS[guessCategory(t)]}
                         </span>
                         {t.description && (
-                          <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
+                          <p className="relative mt-1.5 line-clamp-2 text-[13px] text-muted-foreground sm:mt-2 sm:line-clamp-3 sm:text-sm">{t.description}</p>
                         )}
-                        <div className="relative mt-4 space-y-1.5 text-xs text-muted-foreground">
+                        <div className="relative mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground sm:mt-4 sm:block sm:space-y-1.5">
                           <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}{cityOf(t) ? ` · ${cityOf(t)}` : ""}</p>
                           {t.start_time && t.end_time && (
                             <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
@@ -410,7 +410,7 @@ function TasksPage() {
                           {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
                         </div>
                         {t.tags && t.tags.length > 0 && (
-                          <div className="relative mt-3 flex flex-wrap gap-1">
+                          <div className="relative mt-3 hidden flex-wrap gap-1 sm:flex">
                             {t.tags.slice(0, 5).map((tg) => (
                               <button
                                 key={tg}
