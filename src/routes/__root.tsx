@@ -1,3 +1,4 @@
+import { SiteContextMenu } from "@/components/site-context-menu";
 import { V25Banner } from "@/components/v25-banner";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import * as Sentry from "@sentry/tanstackstart-react";
@@ -308,6 +309,7 @@ function RootComponent() {
           </div>
 
           <Toaster />
+          <SiteContextMenu />
           <CelebrationStage />
 
           <BugReportWidget />

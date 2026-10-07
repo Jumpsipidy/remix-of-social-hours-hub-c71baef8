@@ -21,6 +21,7 @@ export function SchoolEyesToggle({ className = "" }: { className?: string }) {
       variant="outline"
       type="button"
       onClick={toggle}
+      data-theme-toggle=""
       aria-pressed={on}
       aria-label={on ? "Įjungti tamsią temą" : "Įjungti šviesią temą"}
       title={on ? "Tamsi tema" : "Mokyklos akys · šviesi tema"}

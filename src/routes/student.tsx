@@ -309,8 +309,22 @@ function StudentDashboard() {
           <a key={href} href={href} className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold active:scale-95">{label}</a>
         ))}
       </nav>
+      <div className="student-v4 dash-v3 mx-auto w-full max-w-[1400px] lg:grid lg:grid-cols-[230px_1fr] lg:gap-2 lg:px-4">
+      <aside aria-label="Mokinio meniu" className="hidden lg:block">
+        <div className="sticky top-20 mt-8 flex flex-col gap-1 rounded-2xl border border-border bg-card p-3">
+          <p className="px-3 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wider text-primary">Mokinio sritis</p>
+          {[["#pradzia","Pradžia"],["/tasks","Užduotys"],["#mano-rezervacijos","Mano rezervacijos"],["#pasiekimai","Pasiekimai"],["#draugai","Draugai"],["/chat","Žinutės"]].map(([href,label]) => (
+            <a key={href} href={href} className="student-nav-link rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-primary/10 hover:text-foreground">{label}</a>
+          ))}
+          <div className="mt-3 border-t border-border pt-3 px-1">
+            <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} /></div>
+            <p className="mt-2 text-xs text-muted-foreground">{completed} / {required} val. · {progress}%</p>
+          </div>
+        </div>
+      </aside>
+      <div className="min-w-0">
       <div className="flex flex-col lg:block">
-      <section className="order-1 mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+      <section id="pradzia" className="order-1 scroll-mt-20 mx-auto max-w-7xl px-4 pt-8 sm:px-6">
         <DashHero
           eyebrow="Mokinio sritis"
           icon={GraduationCap}
@@ -496,7 +510,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <AchievementsGrid unlocked={unlockedKeys} />
+          <div id="pasiekimai" className="scroll-mt-20"><AchievementsGrid unlocked={unlockedKeys} /></div>
 
         </div>
       </section>
@@ -600,6 +614,8 @@ function StudentDashboard() {
           </div>
         </div>
       </section>
+      </div>
+      </div>
       </div>
 
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
