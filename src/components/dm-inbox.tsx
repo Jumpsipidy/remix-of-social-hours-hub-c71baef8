@@ -6,7 +6,12 @@ import { DmDialog } from "@/components/dm-dialog";
 type Row = { room: string; other: string; name: string; last: string; at: string };
 
 /** Asmeninės žinutės (pvz. auklėtojos rekomendacijos) mokinio skydelyje. */
-export function DmInbox({ me }: { me: string }) {
+export function DmInbox({ me, showTeachers = false }: { me: string; showTeachers?: boolean }) {
+  const [teachers, setTeachers] = useState<{ id: string; full_name: string | null }[]>([]);
+  useEffect(() => {
+    if (!showTeachers) return;
+    (supabase.rpc as any)("list_my_teachers").then(({ data }: { data: unknown }) => setTeachers((data as never[]) ?? []));
+  }, [showTeachers]);
   const [rows, setRows] = useState<Row[] | null>(null);
   const [open, setOpen] = useState<{ id: string; name: string } | null>(null);
 
@@ -35,12 +40,23 @@ export function DmInbox({ me }: { me: string }) {
     return () => { alive = false; };
   }, [me, open]);
 
-  if (!rows || rows.length === 0) return null;
+  if (!rows || (rows.length === 0 && teachers.length === 0)) return null;
   return (
     <div className="rounded-3xl border border-border bg-card p-5 text-card-foreground">
       <h3 className="mb-3 flex items-center gap-2 font-bold"><MessageCircle className="h-4 w-4 text-primary" /> Asmeninės žinutės</h3>
+      {teachers.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {teachers.map((t) => (
+            <button key={t.id} onClick={() => setOpen({ id: t.id, name: `${t.full_name ?? "Auklėtoja"} · auklėtoja` })}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+              <MessageCircle className="h-3.5 w-3.5" /> Rašyti: {t.full_name ?? "auklėtojai"}
+            </button>
+          ))}
+        </div>
+      )}
+      {rows.length === 0 && <p className="text-xs text-muted-foreground">Žinučių dar nėra.</p>}
       <ul className="divide-y divide-border">
-        {rows.slice(0, 5).map((r) => (
+        {rows.slice(0, 8).map((r) => (
           <li key={r.room}>
             <button onClick={() => setOpen({ id: r.other, name: r.name })} className="flex w-full items-center gap-3 py-2.5 text-left">
               <span className="min-w-0 flex-1">
