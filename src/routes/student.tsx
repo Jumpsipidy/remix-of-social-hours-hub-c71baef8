@@ -1,3 +1,4 @@
+import { DmInbox } from "@/components/dm-inbox";
 import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -507,6 +508,7 @@ function StudentDashboard() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-4">
             <GroupInvitesInbox userId={user.id} />
+            <DmInbox me={user.id} />
             <PushToggle />
           </div>
           <div>
