@@ -67,3 +67,18 @@
 - [ ] Deeper school-admin dashboard redesign (open)
 
 - [x] Wrong-role dashboard access: "Oops, tai ne tavo" + redirect
+
+## Batch 2026-10-07 (school admin hub)
+- [ ] Theme: no flash of dark before saved theme; always persist
+- [ ] Redesign school admin dashboard (redesign skill)
+- [ ] School reservations hub (no QR check-in for school reservations)
+- [ ] Class view: everyone in a class; signup class letters (5A, 5B ... 12B)
+- [ ] Full history of all students: hours + verifications
+- [ ] Super Admin: create school-admin accounts locked to class (number+letter), editable only by Super Admin; auto +1 year
+- [ ] Better options for school admins to view students/organizations
+- [ ] New reservation-creation UI + task types (Dirbo, pasitarimo valandos, etc.)
+- [ ] School admin <-> student chat, recommendations, "Siųsti rezervaciją" link to specific task
+- [ ] Chat typing indicator "..."
+- [ ] Fix 400 on bug_reports insert
+- [ ] Fix unreadable text in white mode
+- [ ] /versijos: small "v25.1" entry under V2.5
