@@ -80,7 +80,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(next);
   }
   function finish() {
-    try { saveThemePreference(localStorage, theme); saveAccentPreference(localStorage, accent); } catch {}
+    // Read the theme actually on screen so a stale state value can never overwrite the saved choice.
+    const shown: SiteTheme = document.documentElement.classList.contains("school-eyes") ? "light" : "dark";
+    try { saveThemePreference(localStorage, shown); saveAccentPreference(localStorage, accent); } catch {}
+    setTheme(shown);
     setAsk(false);
   }
   function tune(value: number) {

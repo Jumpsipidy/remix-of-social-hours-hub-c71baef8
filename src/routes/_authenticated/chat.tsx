@@ -1,3 +1,5 @@
+import { useTypingIndicator } from "@/hooks/use-typing";
+import { TypingDots, LinkifiedText } from "@/components/typing-dots";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -135,6 +137,7 @@ function ChatPage() {
     return { label: "Mokyklos admin.", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300" };
   };
 
+  const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(activeId ? `room-${activeId}` : null, user?.id);
   const [picker, setPicker] = useState(false);
   const [contacts, setContacts] = useState<{ id: string; name: string; role: string; class_year: string | null; org_id: string | null; org_name: string | null }[] | null>(null);
   const [classF, setClassF] = useState<string | null>(null);
@@ -165,6 +168,7 @@ function ChatPage() {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     setText("");
+    notifyStop();
     setMsgs((p) => (p && data && !p.some((x) => x.id === (data as Msg).id) ? [...p, data as Msg] : p));
     notify({ data: { roomId: activeId } }).catch(() => {});
   }
@@ -318,7 +322,7 @@ function ChatPage() {
                                   <span>{mine ? "Tu" : nameOf(m.sender_id)}</span>
                                   {r && <span className={`rounded-full px-1.5 py-px text-[9px] font-bold ${mine ? "bg-primary-foreground/20 text-primary-foreground" : r.cls}`}>{r.label}</span>}
                                 </p>); })()}
-                              <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                              <LinkifiedText text={m.content} className="whitespace-pre-wrap break-words" />
                               <p className="mt-0.5 text-right text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}</p>
                             </div>
                           </motion.div>
@@ -326,10 +330,11 @@ function ChatPage() {
                       })}
                     </AnimatePresence>
                   )}
+                  <TypingDots show={othersTyping} />
                   <div ref={endRef} />
                 </div>
                 <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-3">
-                  <input value={text} onChange={(e) => setText(e.target.value.slice(0, 2000))} placeholder="Rašyk žinutę…" className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
+                  <input value={text} onChange={(e) => { setText(e.target.value.slice(0, 2000)); notifyTyping(); }} placeholder="Rašyk žinutę…" className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
                   <button disabled={!text.trim() || sending} className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-50" aria-label="Siųsti">
                     <Send className="h-4 w-4" />
                   </button>

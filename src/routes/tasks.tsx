@@ -32,6 +32,7 @@ export const Route = createFileRoute("/tasks")({
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/tasks" }],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({ task: typeof s.task === "string" ? s.task : undefined }) as { task?: string },
   component: TasksPage,
 });
 
@@ -94,6 +95,13 @@ function TasksPage() {
   const [cat, setCat] = useState<string>("");
   const [orgFilter, setOrgFilter] = useState<string>("");
   const [detail, setDetail] = useState<Task | null>(null);
+  const { task: linkedTask } = Route.useSearch();
+  const [linkedOpened, setLinkedOpened] = useState(false);
+  useEffect(() => {
+    if (!linkedTask || linkedOpened || !tasks.length) return;
+    const t = tasks.find((x) => x.id === linkedTask);
+    if (t) { setDetail(t); setLinkedOpened(true); }
+  }, [linkedTask, linkedOpened, tasks]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [active, setActive] = useState<{ task: Task; target: ReserveTarget } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);

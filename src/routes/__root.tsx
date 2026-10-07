@@ -254,8 +254,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="lt" className="dark" style={{ colorScheme: "dark" }}>
+    <html lang="lt" className="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
+        {/* Apply the saved theme before first paint so the page never flashes dark. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=document.documentElement,l=localStorage.getItem("sv_school_eyes_v1")==="1";d.classList.toggle("school-eyes",l);d.classList.toggle("dark",!l);d.style.colorScheme=l?"light":"dark";var a=Number(localStorage.getItem("sv_theme_accent_v1")||"0");if(isFinite(a))d.style.setProperty("--theme-tuning",String(Math.max(-100,Math.min(100,a))));}catch(e){}})();`,
+          }}
+        />
         <HeadContent />
       </head>
       <body>

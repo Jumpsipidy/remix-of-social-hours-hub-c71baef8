@@ -9,6 +9,7 @@ export type SchoolStudent = {
   hours_needed: number;
   hours_earned: number;
   class_year: string | null;
+  class_letter: string | null;
 };
 
 export type SchoolOrg = {
@@ -31,6 +32,11 @@ export type SchoolReservation = {
   created_at: string | null;
   checked_in_at: string | null;
   checked_in_by: string | null;
+  kind?: string | null;
+  source?: string | null;
+  requires_checkin?: boolean | null;
+  note?: string | null;
+  task_id?: string | null;
 };
 
 export type SchoolScope = {
@@ -38,6 +44,8 @@ export type SchoolScope = {
   school_id: string | null;
   /** Empty array = visos mokyklos klasės. */
   assigned_classes: string[];
+  /** null = abi raidės (A ir B). */
+  assigned_letter: string | null;
   /** true kai matomos tik priskirtos klasės (auklėtojo režimas). */
   class_restricted: boolean;
   /** true kai paskyrai nepriskirta mokykla – duomenys neprieinami. */
@@ -73,7 +81,8 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       role: meRow.role === "admin" ? "admin" : "school_admin",
       school_id: mySchoolId,
       assigned_classes: assigned,
-      class_restricted: meRow.role === "school_admin" && assigned.length > 0,
+      assigned_letter: meRow.role === "school_admin" ? (meRow.assigned_letter ?? null) : null,
+      class_restricted: meRow.role === "school_admin" && (assigned.length > 0 || !!meRow.assigned_letter),
       unscoped: meRow.role === "school_admin" && !mySchoolId,
     };
 
@@ -85,7 +94,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
 
     let studentQuery = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, hours_needed, hours_earned, class_year, school_id")
+      .select("id, full_name, email, hours_needed, hours_earned, class_year, class_letter, school_id")
       .eq("role", "student")
       .order("full_name", { ascending: true });
 
@@ -93,6 +102,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     if (meRow.role === "school_admin" && mySchoolId) {
       studentQuery = studentQuery.eq("school_id", mySchoolId);
       if (assigned.length) studentQuery = studentQuery.in("class_year", assigned);
+      if (meRow.assigned_letter) studentQuery = studentQuery.eq("class_letter", meRow.assigned_letter);
     }
 
 
@@ -108,7 +118,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     if (ogErr) throw new Error(ogErr.message);
 
     const students = (((st as (SchoolStudent & { school_id?: string | null })[]) ?? []).filter(
-      (s) => !scope.class_restricted || (s.class_year && assigned.includes(String(s.class_year))),
+      (s) => !assigned.length || (s.class_year && assigned.includes(String(s.class_year))),
     ) as SchoolStudent[]).map((s) => ({
       id: s.id,
       full_name: s.full_name ?? null,
@@ -116,6 +126,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       hours_needed: Number(s.hours_needed ?? 0),
       hours_earned: Number(s.hours_earned ?? 0),
       class_year: s.class_year ?? null,
+      class_letter: (s as { class_letter?: string | null }).class_letter ?? null,
     }));
 
     let reservations: SchoolReservation[] = [];
@@ -159,7 +170,7 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
     if (role === "school_admin") {
       const { data: stu } = await supabaseAdmin
         .from("profiles")
-        .select("id, role, school_id, class_year")
+        .select("id, role, school_id, class_year, class_letter")
         .eq("id", data.studentId)
         .maybeSingle();
       const s = stu as
@@ -167,7 +178,8 @@ export const getSchoolStudentReservations = createServerFn({ method: "GET" })
         | null;
       const assigned = (meRow?.assigned_classes ?? []).map(String).map((c: string) => c.trim()).filter(Boolean);
       const sameSchool = !!mySchoolId && s?.school_id === mySchoolId;
-      const inClass = !assigned.length || (!!s?.class_year && assigned.includes(String(s.class_year)));
+      const inClass = (!assigned.length || (!!s?.class_year && assigned.includes(String(s.class_year))))
+        && (!meRow?.assigned_letter || (s as { class_letter?: string | null } | null)?.class_letter === meRow.assigned_letter);
 
       if (!s || s.role !== "student" || !sameSchool || !inClass) {
         throw new Error("Šis mokinys nepriklauso jūsų klasei ar mokyklai.");

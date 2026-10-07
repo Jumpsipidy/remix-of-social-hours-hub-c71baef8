@@ -32,6 +32,7 @@ function CompleteProfilePage() {
   const [schools, setSchools] = useState<SchoolRow[]>([]);
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState<(typeof CLASS_YEARS)[number] | "">("");
+  const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
   const [fullName, setFullName] = useState("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
   const [code, setCode] = useState("");
@@ -56,10 +57,10 @@ function CompleteProfilePage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!classYear || !schoolId || busy) return;
+    if (!classYear || !classLetter || !schoolId || busy) return;
     setBusy(true);
     try {
-      await completeSetup({ data: { fullName, schoolId, classYear, hoursNeeded, code } });
+      await completeSetup({ data: { fullName, schoolId, classYear, classLetter, hoursNeeded, code } });
       toast.success("Mokykla patvirtinta.");
       window.location.assign("/student");
     } catch (error) {
@@ -87,9 +88,9 @@ function CompleteProfilePage() {
               </select>
             </label>
             <label className="block text-sm font-semibold">Klasė
-              <select className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 font-normal" value={classYear} onChange={(event) => setClassYear(event.target.value as typeof classYear)} required>
+              <select className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 font-normal" value={classYear && classLetter ? `${classYear}|${classLetter}` : ""} onChange={(event) => { const [y, l] = event.target.value.split("|"); setClassYear((y ?? "") as typeof classYear); setClassLetter((l as "A" | "B") ?? ""); }} required>
                 <option value="">Pasirink klasę</option>
-                {CLASS_YEARS.map((year) => <option key={year} value={year}>{year}</option>)}
+                {CLASS_YEARS.flatMap((c) => (["A", "B"] as const).map((l) => <option key={c + l} value={`${c}|${l}`}>{c.split(" / ")[0]}{l}{c.includes(" / ") ? ` (${c.split(" / ")[1]})` : ""}</option>))}
               </select>
             </label>
             {classYear && !["5", "6", "7"].includes(classYear) && <label className="block text-sm font-semibold">Reikalingos valandos

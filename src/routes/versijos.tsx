@@ -445,6 +445,25 @@ function VersionsPage() {
           </div>
         </section>
 
+        {/* Mažas pataisų leidimas — sąmoningai daug kuklesnis nei V2.5. */}
+        <details className="group mt-4 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
+          <summary className="flex cursor-pointer list-none items-center gap-2">
+            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-bold">v25.1</span>
+            <span className="text-muted-foreground">Mažas atnaujinimas mokykloms</span>
+            <span className="ml-auto text-xs text-muted-foreground group-open:hidden">Rodyti</span>
+          </summary>
+          <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+            <li>• Naujas mokyklos administratoriaus skydelis su šonine juosta</li>
+            <li>• „Mano klasė“, rezervacijų centras be QR ir visa mokinių istorija</li>
+            <li>• Klasės su raidėmis (5A, 5B…), užrakintos auklėtojų klasės</li>
+            <li>• Rekomendacijos ir „Siųsti rezervaciją“ mokiniui, „…“ rašymo indikatorius</li>
+            <li>• Veiklos tipai: Dirbo, Pasitarimo valandos, Renginys</li>
+            <li>• Tema nebemirksi kraunantis, šviesioje temoje įskaitomas tekstas, pataisytas klaidų pranešimas</li>
+          </ul>
+        </details>
+
+
+
         <section className="mt-10">
           <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.5</h2>
           <p className="mt-1 text-sm text-muted-foreground">Nuo didžiausių naujovių iki smulkmenų — žemiau visas sąrašas.</p>

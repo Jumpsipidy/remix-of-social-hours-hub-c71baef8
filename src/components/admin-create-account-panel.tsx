@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClassPicker } from "@/components/admin/class-picker";
+import { ClassPicker, LetterPicker } from "@/components/admin/class-picker";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -31,6 +31,7 @@ export function AdminCreateAccountPanel() {
   const [classes, setClasses] = useState<string[]>([]);
   const [schoolId, setSchoolId] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
+  const [letter, setLetter] = useState<string | null>(null);
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => { supabase.from("schools").select("id, name").order("name").then(({ data }) => setSchools(data ?? [])); }, []);
   const [busy, setBusy] = useState(false);
@@ -52,6 +53,7 @@ export function AdminCreateAccountPanel() {
           assigned_classes: isSchoolAdmin ? classes : null,
           school_id: isSchoolAdmin ? schoolId : null,
           auto_year_renewal: autoRenew,
+          assigned_letter: isSchoolAdmin ? letter : null,
         },
       });
       toast.success(res.updated ? "Paskyra atnaujinta" : "Paskyra sukurta. Perduok kredencialus asmeniškai.");
@@ -152,6 +154,7 @@ export function AdminCreateAccountPanel() {
               {schools.map((s) => <option key={s.id} value={s.id} className="text-black">{s.name}</option>)}
             </select>
             <ClassPicker value={classes} onChange={setClasses} />
+            <div className="mt-2"><LetterPicker value={letter} onChange={setLetter} /></div>
             <label className="flex items-center gap-2 text-sm text-white/80">
               <input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} />
               Automatiškai kelti klases kiekvienų mokslo metų pradžioje

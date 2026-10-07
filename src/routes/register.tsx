@@ -52,6 +52,7 @@ function RegisterPage() {
 
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
+  const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
   const [hoursNeeded, setHoursNeeded] = useState(20);
   const [schoolCode, setSchoolCode] = useState("");
   const [agree, setAgree] = useState(false);
@@ -86,7 +87,7 @@ function RegisterPage() {
     e.preventDefault();
     if (loading) return;
     if (mode === "student") {
-      if (!schoolId || !classYear) { toast.error("Pasirink mokyklą ir klasę."); return; }
+      if (!schoolId || !classYear || !classLetter) { toast.error("Pasirink mokyklą ir klasę."); return; }
       if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
       if (!schoolCode.trim()) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
@@ -103,6 +104,7 @@ function RegisterPage() {
           fullName,
           schoolId,
           classYear: classYear as never,
+          classLetter: classLetter as "A" | "B",
           hoursNeeded: isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded),
           code: schoolCode.trim(),
           redirectTo: `${window.location.origin}/`,
@@ -257,10 +259,10 @@ function RegisterPage() {
                     </div>
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Klasė</label>
-                      <select value={classYear} onChange={(e) => setClassYear(e.target.value)} required
+                      <select value={classYear && classLetter ? `${classYear}|${classLetter}` : ""} onChange={(e) => { const [y, l] = e.target.value.split("|"); setClassYear(y ?? ""); setClassLetter((l as "A" | "B") ?? ""); }} required
                         className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20">
                         <option value="">Pasirink…</option>
-                        {CLASS_YEARS.map((c) => <option key={c} value={c}>{c}</option>)}
+                        {CLASS_YEARS.flatMap((c) => (["A", "B"] as const).map((l) => <option key={c + l} value={`${c}|${l}`}>{c.split(" / ")[0]}{l}{c.includes(" / ") ? ` (${c.split(" / ")[1]})` : ""}</option>))}
                       </select>
                     </div>
 
