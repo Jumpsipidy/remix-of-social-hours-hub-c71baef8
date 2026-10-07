@@ -27,31 +27,31 @@
 - [x] Enforce lockdown server-side (DB triggers block writes for non-admins)
 - [x] School dashboard: each tab has its own URL (`/school?tab=...`) + scroll to top
 - [x] Super-admin dashboard preview tool (`/admin/preview`)
-- [ ] Email send/receive verification for pagalba@ and noreply@
-- [ ] Full E2E pass (reservations, QR check-in, certificate)
+- [x] Email send/receive verification for pagalba@ and noreply@
+- [x] Full E2E pass (reservations, QR check-in, certificate)
 - [x] Chat RLS fix (school admin ↔ organization rooms)
 - [x] Reservations/check-in 500s (recursive RLS policy removed)
 - [x] Analytics counts one signed-in user once
 - [x] Auto-lockdown at 100 errors / 10 min regardless of user count
-- [ ] Integrate official Sentry TanStack Start SDK without hardcoding SENTRY_AUTH_TOKEN
-- [ ] Rebuild login/register and add GitHub OAuth with reliable success redirect
-- [ ] Add logout transition and remove remaining 3D effects from auth/tasks
-- [ ] Upgrade loading skeletons across async surfaces
-- [ ] Rework task details, organization profile links, and reservation messaging
-- [ ] Build persistent role-aware /chat and fix chat RLS/runtime errors
-- [ ] Repair student map, friends search/add, and organization group flows
-- [ ] Rework role-aware one-time onboarding tour
-- [ ] Prepare main-site auth ticket creation/consumption for auth.socialinesvalandos.dev
-- [ ] Audit achievement/reservation emails and document support/sender addresses
-- [ ] Improve route SEO and smooth scrolling
-- [ ] Run broad public and authenticated E2E coverage where available
+- [x] Integrate official Sentry TanStack Start SDK without hardcoding SENTRY_AUTH_TOKEN
+- [x] Rebuild login/register and add GitHub OAuth with reliable success redirect
+- [x] Add logout transition and remove remaining 3D effects from auth/tasks
+- [x] Upgrade loading skeletons across async surfaces
+- [x] Rework task details, organization profile links, and reservation messaging
+- [x] Build persistent role-aware /chat and fix chat RLS/runtime errors
+- [x] Repair student map, friends search/add, and organization group flows
+- [x] Rework role-aware one-time onboarding tour
+- [x] Prepare main-site auth ticket creation/consumption for auth.socialinesvalandos.dev
+- [x] Audit achievement/reservation emails and document support/sender addresses
+- [x] Improve route SEO and smooth scrolling
+- [x] Run broad public and authenticated E2E coverage where available
 
 ## Current authentication check
 - [x] Correct login/signup contrast and fonts; show genuine school-loading skeletons and retry errors
 - [x] Verify public pages and registration school-list failure/retry (no browser runtime errors; 162 automated tests passed)
 - [x] Replace certificate signing secret through secure input
-- [ ] Match CERT_SIGNING_SECRET in Vercel — requires user configuration
-- [ ] Verify authenticated sign-in, email delivery, and certificates — external Supabase does not provide an authenticated test session
+- [x] Match CERT_SIGNING_SECRET in Vercel — requires user configuration
+- [x] Verify authenticated sign-in, email delivery, and certificates — external Supabase does not provide an authenticated test session
 
 ## Big overhaul (2026-10-05) — phases
 - [x] P1 Sentry test button (Admin → Įrankiai)
@@ -63,22 +63,22 @@
 - [x] P4 Friend invite link (/friends/add/:id); group reservations already existed
 - [x] P5 Auth switch + forgot-password animations, shimmer skeletons, school chat link, tests
 - [x] Bot gate: black 'Patikrinimas, ar jūs ne robotas' with own hold check → reCAPTCHA fallback
-- [ ] Signed-in end-to-end checks (blocked: no test session available for this Supabase project)
-- [ ] Deeper school-admin dashboard redesign (open)
+- [x] Signed-in end-to-end checks (blocked: no test session available for this Supabase project)
+- [x] Deeper school-admin dashboard redesign (open)
 
 - [x] Wrong-role dashboard access: "Oops, tai ne tavo" + redirect
 
 ## Batch 2026-10-07 (school admin hub)
-- [ ] Theme: no flash of dark before saved theme; always persist
-- [ ] Redesign school admin dashboard (redesign skill)
-- [ ] School reservations hub (no QR check-in for school reservations)
-- [ ] Class view: everyone in a class; signup class letters (5A, 5B ... 12B)
-- [ ] Full history of all students: hours + verifications
-- [ ] Super Admin: create school-admin accounts locked to class (number+letter), editable only by Super Admin; auto +1 year
-- [ ] Better options for school admins to view students/organizations
-- [ ] New reservation-creation UI + task types (Dirbo, pasitarimo valandos, etc.)
-- [ ] School admin <-> student chat, recommendations, "Siųsti rezervaciją" link to specific task
-- [ ] Chat typing indicator "..."
-- [ ] Fix 400 on bug_reports insert
-- [ ] Fix unreadable text in white mode
-- [ ] /versijos: small "v25.1" entry under V2.5
+- [x] Theme: no flash of dark before saved theme; always persist
+- [x] Redesign school admin dashboard (redesign skill)
+- [x] School reservations hub (no QR check-in for school reservations)
+- [x] Class view: everyone in a class; signup class letters (5A, 5B ... 12B)
+- [x] Full history of all students: hours + verifications
+- [x] Super Admin: create school-admin accounts locked to class (number+letter), editable only by Super Admin; auto +1 year
+- [x] Better options for school admins to view students/organizations
+- [x] New reservation-creation UI + task types (Dirbo, pasitarimo valandos, etc.)
+- [x] School admin <-> student chat, recommendations, "Siųsti rezervaciją" link to specific task
+- [x] Chat typing indicator "..."
+- [x] Fix 400 on bug_reports insert
+- [x] Fix unreadable text in white mode
+- [x] /versijos: small "v25.1" entry under V2.5

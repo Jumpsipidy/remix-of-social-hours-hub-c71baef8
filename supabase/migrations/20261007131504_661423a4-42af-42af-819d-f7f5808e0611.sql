@@ -1,0 +1,1 @@
+ALTER TABLE public.bug_reports ADD COLUMN IF NOT EXISTS admin_note text; NOTIFY pgrst, 'reload schema';
