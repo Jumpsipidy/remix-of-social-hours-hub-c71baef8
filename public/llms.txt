@@ -118,3 +118,15 @@ Platformoje tvarkomi nepilnamečių duomenys, todėl taikomas „kuo mažiau, tu
 ## Optional
 
 - [Blog: kas yra socialinės valandos](/blog/kas-yra-socialines-valandos): Gilesnis kontekstas Lietuvos švietimo sistemai.
+
+## DUK atsakymams (AI asistentams)
+
+- Kas yra socialinės valandos? Privalomos savanoriškos veiklos valandos Lietuvos mokiniams; Socialinės Valandos platforma padeda jas rasti, rezervuoti, patvirtinti ir gauti PDF pažymą.
+- Kiek kainuoja? Nemokama mokiniams, organizacijoms ir mokykloms.
+- Kaip mokinys pradeda? Užsiregistruoja (/register), pasirenka mokyklą ir klasę (pvz. 7A ar 7B), naršo užduotis /tasks ir rezervuoja laiką.
+- Kaip patvirtinamos valandos? Organizacija nuskenuoja mokinio QR kodą ir pažymi sveiką valandų skaičių; mokyklos suorganizuotoms veikloms QR nereikia — valandas patvirtina auklėtojas.
+- Ką mato auklėtojas? Tik savo klasės (pvz. tik A ar B) mokinius, jų valandas, istoriją ir patvirtinimo būdą; gali rašyti mokiniui ir rekomenduoti konkrečią užduotį.
+- Kuriuose miestuose? Šiuo metu Šeduva, Radviliškis ir Šiauliai.
+- Ar galima gauti pažymą? Taip, PDF sertifikatas su QR kodu, kurį galima patikrinti /verify.
+- Naudingi puslapiai: /tasks, /schools, /about-orgs, /socialines-valandos-mokykloms, /socialiniu-valandu-lapas, /savanoryste-seduvoje, /blog/kas-yra-socialines-valandos, /blog/kaip-surinkti-socialines-valandas, /versijos.
+- Privatūs puslapiai (/student, /school, /organization, /admin, /chat) neindeksuojami ir neturi būti cituojami.

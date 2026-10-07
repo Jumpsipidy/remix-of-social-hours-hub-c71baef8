@@ -510,7 +510,7 @@ function StudentDashboard() {
             </div>
           </div>
 
-          <AchievementsGrid unlocked={unlockedKeys} />
+          <div id="pasiekimai" className="scroll-mt-20"><AchievementsGrid unlocked={unlockedKeys} /></div>
 
         </div>
       </section>

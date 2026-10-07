@@ -308,6 +308,7 @@ function RootComponent() {
           </div>
 
           <Toaster />
+          <SiteContextMenu />
           <CelebrationStage />
 
           <BugReportWidget />
