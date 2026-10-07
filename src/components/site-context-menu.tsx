@@ -56,8 +56,10 @@ export function SiteContextMenu() {
     try { await navigator.clipboard.writeText(text); toast.success(msg); } catch { toast.error("Nepavyko nukopijuoti"); }
   };
   const run = (fn: () => void) => () => { setPos(null); fn(); };
-  const toggleTheme = () => document.querySelector<HTMLButtonElement>("[data-theme-toggle]")?.click()
-    ?? toast.message("Temą pakeisk viršutiniame meniu");
+  const toggleTheme = () => {
+    const b = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+    if (b) b.click(); else toast.message("Temą pakeisk viršutiniame meniu");
+  };
 
   const items: Array<{ icon: typeof Copy; label: string; on: () => void; hint?: string } | "sep"> = [
     { icon: ArrowLeft, label: "Atgal", on: () => router.history.back() },
