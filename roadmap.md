@@ -82,3 +82,11 @@
 - [x] Fix 400 on bug_reports insert
 - [x] Fix unreadable text in white mode
 - [x] /versijos: small "v25.1" entry under V2.5
+
+## Batch 2026-10-07 b
+- [ ] /chat: show school-admin DMs/recommendations for students; let students start a chat with their teacher
+- [ ] Tasks page: compact mobile layout (more fits on screen)
+- [ ] Redesign student dashboard (redesign skill)
+- [ ] SEO review
+- [ ] Stronger bot protection (PC + mobile)
+- [ ] "Better tasks" (scope to clarify)
