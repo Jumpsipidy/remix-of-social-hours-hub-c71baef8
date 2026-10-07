@@ -282,31 +282,37 @@ export type Database = {
       bug_reports: {
         Row: {
           created_at: string
+          diagnostics: Json | null
           id: string
           message: string
           page_url: string | null
           reporter_email: string | null
           reporter_user_id: string | null
+          session_id: string | null
           severity: string
           status: string
         }
         Insert: {
           created_at?: string
+          diagnostics?: Json | null
           id?: string
           message: string
           page_url?: string | null
           reporter_email?: string | null
           reporter_user_id?: string | null
+          session_id?: string | null
           severity?: string
           status?: string
         }
         Update: {
           created_at?: string
+          diagnostics?: Json | null
           id?: string
           message?: string
           page_url?: string | null
           reporter_email?: string | null
           reporter_user_id?: string | null
+          session_id?: string | null
           severity?: string
           status?: string
         }
@@ -753,10 +759,12 @@ export type Database = {
           activity_tags: string[] | null
           address: string | null
           assigned_classes: string[]
+          assigned_letter: string | null
           associated_school_id: string | null
           auto_year_renewal: boolean
           bio: string | null
           city: string | null
+          class_letter: string | null
           class_year: string | null
           cover_url: string | null
           created_at: string
@@ -788,10 +796,12 @@ export type Database = {
           activity_tags?: string[] | null
           address?: string | null
           assigned_classes?: string[]
+          assigned_letter?: string | null
           associated_school_id?: string | null
           auto_year_renewal?: boolean
           bio?: string | null
           city?: string | null
+          class_letter?: string | null
           class_year?: string | null
           cover_url?: string | null
           created_at?: string
@@ -823,10 +833,12 @@ export type Database = {
           activity_tags?: string[] | null
           address?: string | null
           assigned_classes?: string[]
+          assigned_letter?: string | null
           associated_school_id?: string | null
           auto_year_renewal?: boolean
           bio?: string | null
           city?: string | null
+          class_letter?: string | null
           class_year?: string | null
           cover_url?: string | null
           created_at?: string
@@ -965,13 +977,16 @@ export type Database = {
           end_time: string
           hours_to_earn: number
           id: string
+          kind: string
           latitude: number | null
           legal_disclosure: string | null
           location: string | null
           longitude: number | null
           note: string | null
           organization_id: string
+          requires_checkin: boolean
           reservation_date: string
+          source: string
           start_time: string
           status: Database["public"]["Enums"]["reservation_status"]
           student_id: string
@@ -988,13 +1003,16 @@ export type Database = {
           end_time: string
           hours_to_earn?: number
           id?: string
+          kind?: string
           latitude?: number | null
           legal_disclosure?: string | null
           location?: string | null
           longitude?: number | null
           note?: string | null
           organization_id: string
+          requires_checkin?: boolean
           reservation_date: string
+          source?: string
           start_time: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id: string
@@ -1011,13 +1029,16 @@ export type Database = {
           end_time?: string
           hours_to_earn?: number
           id?: string
+          kind?: string
           latitude?: number | null
           legal_disclosure?: string | null
           location?: string | null
           longitude?: number | null
           note?: string | null
           organization_id?: string
+          requires_checkin?: boolean
           reservation_date?: string
+          source?: string
           start_time?: string
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id?: string
@@ -1151,6 +1172,7 @@ export type Database = {
           id: string
           is_event: boolean
           is_open: boolean
+          kind: string
           latitude: number | null
           location: string
           longitude: number | null
@@ -1178,6 +1200,7 @@ export type Database = {
           id?: string
           is_event?: boolean
           is_open?: boolean
+          kind?: string
           latitude?: number | null
           location?: string
           longitude?: number | null
@@ -1205,6 +1228,7 @@ export type Database = {
           id?: string
           is_event?: boolean
           is_open?: boolean
+          kind?: string
           latitude?: number | null
           location?: string
           longitude?: number | null
@@ -1450,6 +1474,25 @@ export type Database = {
         Returns: boolean
       }
       run_deep_health_scan: { Args: never; Returns: Json }
+      school_admin_can_manage: { Args: { _student: string }; Returns: boolean }
+      school_complete_reservation: {
+        Args: { _decline?: boolean; _hours: number; _reservation_id: string }
+        Returns: boolean
+      }
+      school_create_reservations: {
+        Args: {
+          _date: string
+          _end: string
+          _hours: number
+          _kind: string
+          _note: string
+          _organization_id: string
+          _start: string
+          _student_ids: string[]
+          _task_id: string
+        }
+        Returns: number
+      }
       set_my_assigned_classes: {
         Args: { _classes: string[] }
         Returns: string[]

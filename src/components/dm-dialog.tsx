@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { X, Send, Trash2, Clock } from "lucide-react";
+import { useTypingIndicator } from "@/hooks/use-typing";
+import { TypingDots, LinkifiedText } from "@/components/typing-dots";
 import { openDmRoom, listDmMessages, sendDmMessage, subscribeDmMessages, type DmMessage } from "@/lib/dm";
 
 export function DmDialog({
@@ -17,6 +19,7 @@ export function DmDialog({
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(roomId ? `dm-${roomId}` : null, me);
 
   useEffect(() => {
     if (!friend) {
@@ -57,6 +60,7 @@ export function DmDialog({
     try {
       await sendDmMessage(roomId, me, text);
       setText("");
+      notifyStop();
     } catch (e: any) {
       toast.error(e?.message ?? "Nepavyko išsiųsti");
     }
@@ -93,7 +97,7 @@ export function DmDialog({
                     mine ? "bg-gradient-primary text-primary-foreground" : "bg-card border border-border"
                   }`}
                 >
-                  <p className="break-words whitespace-pre-wrap">{m.content}</p>
+                  <LinkifiedText text={m.content} className="break-words whitespace-pre-wrap" />
                   <p className={`mt-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                     {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -101,12 +105,13 @@ export function DmDialog({
               </div>
             );
           })}
+          <TypingDots show={othersTyping} name={friend.name} />
         </div>
 
         <div className="flex items-center gap-2 border-t border-border bg-card p-3">
           <input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); notifyTyping(); }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

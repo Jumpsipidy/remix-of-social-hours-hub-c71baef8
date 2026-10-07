@@ -24,6 +24,7 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     school_id?: string | null;
     assigned_classes?: string[] | null;
     auto_year_renewal?: boolean;
+    assigned_letter?: string | null;
   }) => input)
 
   .handler(async ({ data, context }) => {
@@ -93,6 +94,7 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
         associated_school_id: data.role === "school_admin" ? (data.school_id ?? (me as any)?.school_id ?? null) : null,
         assigned_classes: data.role === "school_admin" ? (data.assigned_classes ?? []) : [],
         auto_year_renewal: data.auto_year_renewal ?? true,
+        assigned_letter: data.role === "school_admin" && (data.assigned_letter === "A" || data.assigned_letter === "B") ? data.assigned_letter : null,
         hours_needed: 0,
         hours_earned: 0,
       },
@@ -131,7 +133,7 @@ export const adminListSchoolAdmins = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: admins, error }, { data: schools }] = await Promise.all([
       (supabaseAdmin.from("profiles") as any)
-        .select("id, full_name, email, associated_school_id, school_id, assigned_classes, auto_year_renewal, created_at")
+        .select("id, full_name, email, associated_school_id, school_id, assigned_classes, assigned_letter, auto_year_renewal, created_at")
         .eq("role", "school_admin")
         .order("created_at", { ascending: false }),
       supabaseAdmin.from("schools").select("id, name, city").order("name"),
@@ -143,7 +145,7 @@ export const adminListSchoolAdmins = createServerFn({ method: "GET" })
 /** Super Admin: change school, classes and auto renewal of a school admin. */
 export const adminUpdateSchoolAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: { id: string; school_id: string; assigned_classes: string[]; auto_year_renewal: boolean; full_name?: string }) => {
+  .validator((input: { id: string; school_id: string; assigned_classes: string[]; auto_year_renewal: boolean; full_name?: string; assigned_letter?: string | null }) => {
     if (!/^[0-9a-f-]{36}$/i.test(input.id) || !/^[0-9a-f-]{36}$/i.test(input.school_id)) throw new Error("Netinkami duomenys");
     return { ...input, assigned_classes: (input.assigned_classes ?? []).map((c) => String(c).trim()).filter(Boolean).slice(0, 40) };
   })
@@ -157,6 +159,7 @@ export const adminUpdateSchoolAdmin = createServerFn({ method: "POST" })
       associated_school_id: data.school_id,
       assigned_classes: data.assigned_classes,
       auto_year_renewal: data.auto_year_renewal,
+      assigned_letter: data.assigned_letter === "A" || data.assigned_letter === "B" ? data.assigned_letter : null,
     };
     if (data.full_name?.trim()) patch.full_name = data.full_name.trim().slice(0, 120);
     const { error } = await (supabaseAdmin.from("profiles") as any).update(patch).eq("id", data.id);

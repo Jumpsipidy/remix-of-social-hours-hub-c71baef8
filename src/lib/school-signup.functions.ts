@@ -6,6 +6,7 @@ const OAUTH_SETUP_SCHEMA = z.object({
   fullName: z.string().trim().min(3).max(120),
   schoolId: z.string().uuid(),
   classYear: z.enum(["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."]),
+  classLetter: z.enum(["A", "B"]),
   hoursNeeded: z.number().int().min(8).max(500),
   code: z.string().trim().min(2).max(64),
 });
@@ -55,6 +56,7 @@ export const completeOAuthStudentSetup = createServerFn({ method: "POST" })
         school_id: data.schoolId,
         associated_school_id: data.schoolId,
         class_year: data.classYear,
+        class_letter: data.classLetter,
         hours_needed: hoursNeeded,
       })
       .eq("id", context.userId)
@@ -69,6 +71,7 @@ const STUDENT_SIGNUP_SCHEMA = z.object({
   fullName: z.string().trim().min(3).max(120),
   schoolId: z.string().uuid(),
   classYear: z.enum(["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."]),
+  classLetter: z.enum(["A", "B"]),
   hoursNeeded: z.number().int().min(0).max(500),
   code: z.string().trim().min(2).max(64),
   redirectTo: z.string().url().max(300),
@@ -107,6 +110,7 @@ export const signUpStudentWithCode = createServerFn({ method: "POST" })
           hours_needed: hoursNeeded,
           school_id: data.schoolId,
           class_year: data.classYear,
+          class_letter: data.classLetter,
         },
       },
     });
@@ -114,7 +118,7 @@ export const signUpStudentWithCode = createServerFn({ method: "POST" })
     if (signUp.user) {
       await supabaseAdmin
         .from("profiles")
-        .update({ school_id: data.schoolId, class_year: data.classYear })
+        .update({ school_id: data.schoolId, class_year: data.classYear, class_letter: data.classLetter } as never)
         .eq("id", signUp.user.id)
         .eq("role", "student");
     }

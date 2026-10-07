@@ -1,7 +1,7 @@
 /** Server-only helpers for school dashboard data (kept out of *.functions.ts). */
 
 export const RES_COLUMNS =
-  "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by";
+  "id, student_id, organization_id, reservation_date, start_time, end_time, hours_to_earn, status, legal_disclosure, created_at, checked_in_at, checked_in_by, kind, source, requires_checkin, note, task_id";
 
 export function isMissingAssignedClasses(message?: string | null): boolean {
   const m = (message ?? "").toLowerCase();
@@ -17,6 +17,7 @@ export type AdminProfileRow = {
   school_id?: string | null;
   associated_school_id?: string | null;
   assigned_classes?: string[] | null;
+  assigned_letter?: string | null;
 };
 
 /**
@@ -28,6 +29,7 @@ export async function fetchAdminProfile(
   userId: string,
 ): Promise<AdminProfileRow | null> {
   const variants = [
+    "id, role, school_id, associated_school_id, assigned_classes, assigned_letter",
     "id, role, school_id, associated_school_id, assigned_classes",
     "id, role, school_id, assigned_classes",
     "id, role, school_id, associated_school_id",

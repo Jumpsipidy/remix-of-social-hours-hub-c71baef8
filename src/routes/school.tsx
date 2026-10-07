@@ -59,9 +59,12 @@ import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
 import { RiskCenter } from "@/components/school/risk-center";
 import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
+import { ClassRoster, ReservationHub, HistoryPanel, RecommendDialog, classLabel } from "@/components/school/school-hub";
+import { DmDialog } from "@/components/dm-dialog";
+import { CalendarCheck, History, LayoutList } from "lucide-react";
 
 const SCHOOL_TABS = [
-  "overview", "students", "classes", "queue", "risk", "verify", "orgs", "events", "accounts",
+  "overview", "roster", "hub", "history", "students", "classes", "queue", "risk", "verify", "orgs", "events", "accounts",
 ] as const;
 
 export const Route = createFileRoute("/school")({
@@ -93,6 +96,7 @@ type Student = {
   hours_needed: number;
   hours_earned: number;
   class_year?: string | null;
+  class_letter?: string | null;
 };
 
 type Reservation = {
@@ -118,6 +122,9 @@ type OrgProfile = {
 };
 type SchoolTab =
   | "overview"
+  | "roster"
+  | "hub"
+  | "history"
   | "students"
   | "classes"
   | "queue"
@@ -153,6 +160,8 @@ function SchoolDashboard() {
   const [auditing, setAuditing] = useState<Student | null>(null);
   const [auditRes, setAuditRes] = useState<Reservation[]>([]);
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [dmWith, setDmWith] = useState<{ id: string; name: string } | null>(null);
+  const [recommendFor, setRecommendFor] = useState<Student | null>(null);
   const { tab = "overview" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const setTab = useCallback(
@@ -491,8 +500,15 @@ function SchoolDashboard() {
     );
   }
 
+  const filteredStudentsForHub = q.trim()
+    ? students.filter((s) => `${s.full_name ?? ""} ${s.email ?? ""} ${s.class_year ?? ""}${s.class_letter ?? ""}`.toLowerCase().includes(q.trim().toLowerCase()))
+    : students;
+
   const nav = [
     { id: "overview", label: "Apžvalga", icon: BarChart3, badge: "live" },
+    { id: "roster", label: "Mano klasė", icon: LayoutList, badge: String(students.length) },
+    { id: "hub", label: "Rezervacijų centras", icon: CalendarCheck, badge: String(allRes.filter((r) => (r as { source?: string }).source === "school" && (r.status === "approved" || r.status === "pending")).length) },
+    { id: "history", label: "Istorija", icon: History, badge: String(allRes.length) },
     { id: "students", label: "Mokiniai", icon: Users, badge: String(students.length) },
     { id: "classes", label: "Klasės", icon: GraduationCap, badge: String(availableClasses.length) },
     { id: "queue", label: "Peržiūros eilė", icon: ClipboardCheck, badge: String(unreviewedCount) },
@@ -510,59 +526,56 @@ function SchoolDashboard() {
 
   return (
     <PageShell>
-      <section className="dash-v3 mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <header className="border-b border-border pb-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground">
-                {classRestricted ? "Klasės auklėtojo kabinetas" : "Mokyklos vadovo kabinetas"}
-              </p>
-              <h1 className="truncate font-display text-xl font-bold sm:text-2xl">
-                {profile.full_name ?? "Administratorius"}
-              </h1>
-            </div>
-            <div className="flex w-full items-center gap-2 rounded-lg border border-border bg-card px-3 sm:w-80">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Ieškoti mokinio, klasės, partnerio…"
-                className="h-10 w-full bg-transparent text-sm outline-none"
-              />
+      <section className="dash-v3 school-v4 mx-auto max-w-[96rem] px-0 sm:px-4 lg:flex lg:gap-0 lg:py-0">
+        <aside className="sticky top-16 z-20 border-b border-border bg-card lg:flex lg:h-[calc(100vh-4rem)] lg:w-72 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r" aria-label="Mokyklos skiltys">
+          <nav className="flex gap-1 overflow-x-auto px-3 py-2 lg:mt-4 lg:flex-1 lg:flex-col lg:overflow-y-auto lg:px-4 lg:py-0">
+            {nav.map((item, i) => (
+              <div key={item.id} className="contents">
+                {i === 4 && <div className="hidden py-2 lg:block"><div className="mx-3 h-px bg-border" /></div>}
+                <button
+                  onClick={() => setTab(item.id)}
+                  aria-current={tab === item.id ? "page" : undefined}
+                  className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all lg:w-full ${tab === item.id ? "bg-primary/10 text-primary" : item.id === "risk" ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {item.badge !== "live" && item.badge !== "0" && /^\d+$/.test(item.badge) && (
+                    <span className={`hidden min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold lg:inline ${tab === item.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{item.badge}</span>
+                  )}
+                </button>
+              </div>
+            ))}
+            <Link to="/chat" className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground lg:w-full">
+              <MessageCircle className="h-5 w-5" /> Pokalbiai
+            </Link>
+          </nav>
+          <div className="hidden border-t border-border p-4 lg:block">
+            <div className="flex items-center gap-3 rounded-2xl p-2">
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {(profile.full_name ?? "A").split(" ").map((x) => x[0]).slice(0, 2).join("")}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold">{profile.full_name ?? "Administratorius"}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {classRestricted ? `Auklėtoja (${assignedClasses.map((c) => classLabel({ class_year: c, class_letter: scope?.assigned_letter ?? null })).join(", ") || (scope?.assigned_letter ? `${scope.assigned_letter} klasės` : "")})` : "Visa mokykla"}
+                </p>
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground">Prieiga:</span>
-            {classRestricted ? (
-              assignedClasses.map((c) => (
-                <span key={c} className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">{c} kl.</span>
-              ))
-            ) : (
-              <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">Visa mokykla</span>
-            )}
+        </aside>
+
+        <div className="min-w-0 flex-1">
+        <header className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-4 backdrop-blur-md sm:px-8 lg:h-20 lg:py-0">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold">Sveiki sugrįžę, {(profile.full_name ?? "").split(" ")[0] || "administratoriau"}</h1>
+            <p className="text-sm text-muted-foreground">Šiandien {new Date().toLocaleDateString("lt-LT", { year: "numeric", month: "long", day: "numeric" })}</p>
+          </div>
+          <div className="flex w-full items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 sm:w-64">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti mokinio…" className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
           </div>
         </header>
-
-        <nav className="sticky top-16 z-20 -mx-4 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0" aria-label="Mokyklos skiltys">
-          {nav.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition-colors ${tab === item.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">{item.badge}</span>
-            </button>
-          ))}
-          <Link to="/chat" className="-mb-px flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground">
-            <MessageCircle className="h-4 w-4" /> Pokalbiai
-          </Link>
-        </nav>
-
+        <div className="px-4 py-6 sm:px-8">
         <main className="mt-6 min-w-0 space-y-6">
           {dataLoading && <DashboardSkeleton />}
 
@@ -745,6 +758,18 @@ function SchoolDashboard() {
                 </div>
               </Panel>
             </div>
+          )}
+
+          {tab === "roster" && (
+            <ClassRoster students={filteredStudentsForHub as never} reservations={allRes as never}
+              onMessage={(s) => setDmWith({ id: s.id, name: s.full_name ?? "Mokinys" })}
+              onRecommend={(s) => setRecommendFor(s as never)} />
+          )}
+          {tab === "hub" && (
+            <ReservationHub students={students as never} orgs={orgs as never} reservations={allRes as never} orgName={orgName} onChanged={() => void refresh()} />
+          )}
+          {tab === "history" && (
+            <HistoryPanel students={filteredStudentsForHub as never} reservations={allRes as never} orgName={orgName} />
           )}
 
           {tab === "students" && (
@@ -958,7 +983,11 @@ function SchoolDashboard() {
             </Panel>
           )}
         </main>
+        </div>
+        </div>
       </section>
+      <DmDialog friend={dmWith} me={user.id} onClose={() => setDmWith(null)} />
+      <RecommendDialog student={recommendFor as never} me={user.id} onClose={() => setRecommendFor(null)} />
 
       <AuditDrawer
         auditing={auditing}
