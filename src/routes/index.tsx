@@ -45,10 +45,10 @@ const HOME_FAQ: { q: string; a: string; id: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės Valandos — socialinių valandų centras mokiniams" },
-      { name: "description", content: "Socialinės Valandos — savanorystė mokiniams: užduočių žemėlapis, rezervacijos, pokalbiai, QR atvykimo patikra ir PDF pažymėjimai. Atrask V2.5 naujienas." },
-      { property: "og:title", content: "Socialinės Valandos — socialinių valandų centras mokiniams" },
-      { property: "og:description", content: "V2.5: savanorystės žemėlapis, pokalbiai, draugų rezervacijos, QR patikra ir mokyklos renginiai vienoje platformoje." },
+      { title: "Socialinės valandos mokiniams — rink internetu | Socialinių valandų centras" },
+      { name: "description", content: "Socialinės valandos be popierių: rask savanorystės užduotį, rezervuok, patvirtink QR kodu ir gauk PDF pažymėjimą. Nemokama visoms Lietuvos mokykloms." },
+      { property: "og:title", content: "Socialinės valandos mokiniams — rink internetu" },
+      { property: "og:description", content: "Rask savanorystės užduotį, rezervuok, patvirtink QR kodu ir gauk socialinių valandų pažymėjimą. Nemokama Lietuvos mokykloms." },
       { property: "og:url", content: "https://socialinesvalandos.dev/" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
@@ -260,7 +260,7 @@ function Home() {
     <PageShell>
       {/* SEO: crawlable brand H1 — visually hidden but present for Google to associate brand keywords with the domain */}
       <h1 className="sr-only">
-        Socialinės Valandos — oficiali moksleivių savanorystės platforma ir socialinių valandų centras Lietuvoje (socialinesvalandos.dev)
+        Socialinės valandos mokiniams — rink socialines valandas internetu socialinių valandų centre
       </h1>
 
       <div className="relative selection:bg-[#FF4D2D] selection:text-white">
@@ -592,6 +592,36 @@ function Home() {
                 ))}
               </ol>
             </div>
+          </div>
+        </section>
+
+        {/* SEO guide: visible text for the head term "socialinės valandos" */}
+        <section className="relative px-4 pb-16 sm:px-6 sm:pb-24" aria-labelledby="sv-guide">
+          <div className="mx-auto max-w-3xl space-y-4 text-foreground/85">
+            <h2 id="sv-guide" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Socialinės valandos: kas tai ir kaip jas surinkti
+            </h2>
+            <p>
+              Socialinės valandos (dar vadinamos socialine-pilietine veikla) yra savanoriška veikla,
+              kurią mokiniai atlieka bendruomenei: padeda organizacijoms, renginiams, gyvūnų
+              prieglaudoms ar mokyklai. Kiekviena mokykla nustato, kiek socialinių valandų reikia
+              surinkti per mokslo metus.
+            </p>
+            <p>
+              Socialinės Valandos platformoje socialines valandas rinkti galima internetu: išsirink
+              užduotį <Link to="/tasks" className="font-semibold text-primary underline-offset-4 hover:underline">užduočių žemėlapyje</Link>,
+              rezervuok laiką, atvykęs parodyk QR kodą, o patvirtintos valandos iškart atsiras tavo
+              paskyroje. Mokslo metų pabaigoje gali atsisiųsti{" "}
+              <Link to="/socialiniu-valandu-lapas" className="font-semibold text-primary underline-offset-4 hover:underline">socialinių valandų lapą</Link>{" "}
+              arba PDF pažymėjimą.
+            </p>
+            <p>
+              Daugiau skaityk:{" "}
+              <Link to="/blog/kas-yra-socialines-valandos" className="font-semibold text-primary underline-offset-4 hover:underline">kas yra socialinės valandos</Link>,{" "}
+              <Link to="/blog/kaip-surinkti-socialines-valandas" className="font-semibold text-primary underline-offset-4 hover:underline">kaip surinkti socialines valandas</Link>{" "}
+              ir{" "}
+              <Link to="/socialines-valandos-mokykloms" className="font-semibold text-primary underline-offset-4 hover:underline">socialinės valandos mokykloms</Link>.
+            </p>
           </div>
         </section>
 
