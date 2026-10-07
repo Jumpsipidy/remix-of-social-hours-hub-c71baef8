@@ -281,6 +281,7 @@ export type Database = {
       }
       bug_reports: {
         Row: {
+          admin_note: string | null
           created_at: string
           diagnostics: Json | null
           id: string
@@ -293,6 +294,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          admin_note?: string | null
           created_at?: string
           diagnostics?: Json | null
           id?: string
@@ -305,6 +307,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          admin_note?: string | null
           created_at?: string
           diagnostics?: Json | null
           id?: string
