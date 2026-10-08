@@ -96,6 +96,7 @@ const verifySchema = z.object({
   tapAnswer: z.array(z.number().int().min(0).max(5)).max(3).optional(),
   tapIntervals: z.array(z.number().min(0).max(120000)).max(3).optional(),
   inputMode: z.enum(["pointer", "keyboard"]).optional(),
+  decoy: z.boolean().optional(),
   samples: z.array(z.object({ x: z.number().finite().min(-100000).max(100000), y: z.number().finite().min(-100000).max(100000), t: z.number().finite().min(0).max(120000) })).max(128),
 });
 
