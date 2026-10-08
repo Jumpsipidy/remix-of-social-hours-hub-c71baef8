@@ -9,9 +9,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthShell, OAuthButtons } from "@/components/auth-shell";
+import { AuthSkeleton } from "@/components/auth-skeleton";
 
 export const Route = createFileRoute("/register")({
   ssr: false,
+  pendingComponent: () => <AuthSkeleton mode="register" />,
+  pendingMs: 120,
+  pendingMinMs: 0,
   head: () => ({
     meta: [
       { title: "Registruotis — Socialinės Valandos" },

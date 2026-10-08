@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Login/signup transition
+- [ ] Restore the blue sliding sweep and add fast matching login/signup loading placeholders
+- [ ] Verify animation and loading states, then list suggested next steps
 - [x] Synchronize panel movement, resizing, tab indicator and text changes without remount entrance effects
 - [x] Verify both navigation directions in Chromium and run route smoke tests (169 passed)
 

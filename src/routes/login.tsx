@@ -13,6 +13,7 @@ import { Captcha } from "@/components/captcha";
 import { AuthSuccessOverlay } from "@/components/auth-success-overlay";
 import { toast } from "sonner";
 import { AuthShell, OAuthButtons, OrDivider } from "@/components/auth-shell";
+import { AuthSkeleton } from "@/components/auth-skeleton";
 
 const FAIL_KEY = "sv_login_fails_v1";
 const FAIL_THRESHOLD = 3;
@@ -34,6 +35,9 @@ const ROLE_LABELS: Record<string, string> = {
 
 export const Route = createFileRoute("/login")({
   ssr: false,
+  pendingComponent: AuthSkeleton,
+  pendingMs: 120,
+  pendingMinMs: 0,
   head: () => ({
     meta: [
       { title: "Prisijungti — Socialinės Valandos" },
@@ -147,6 +151,8 @@ function LoginPage() {
 
     }
   }
+
+  if (loading) return <AuthSkeleton />;
 
   return (
     <AuthShell mode="login">

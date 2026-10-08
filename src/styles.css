@@ -405,6 +405,18 @@ html.school-eyes, .theme-sample-light {
   opacity: 1;
 }
 .auth-shell select option { background: var(--popover); color: var(--popover-foreground); }
+.auth-loading-block {
+  background: var(--muted);
+  animation: auth-loading-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes auth-loading-pulse {
+  from { opacity: .55; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-loading-block { animation: none; }
+  .auth-blue-slide { display: none; }
+}
 
 /* Named snapshots survive route replacement: panels move instead of remounting
    with independent entrance effects. Only the changing copy crossfades. */
