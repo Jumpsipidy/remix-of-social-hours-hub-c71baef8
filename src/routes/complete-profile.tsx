@@ -42,9 +42,20 @@ function CompleteProfilePage() {
     Promise.all([
       supabase.auth.getUser(),
       supabase.from("schools").select("id, name, city").eq("is_active", true).order("name"),
-    ]).then(([authResult, schoolResult]) => {
+    ]).then(async ([authResult, schoolResult]) => {
       if (!authResult.data.user) {
         navigate({ to: "/login", replace: true });
+        return;
+      }
+      // Already finished setup (or not a student) → go straight to the dashboard.
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role, school_id, class_year")
+        .eq("id", authResult.data.user.id)
+        .maybeSingle();
+      const p = prof as { role?: string; school_id?: string | null; class_year?: string | null } | null;
+      if (p && (p.role !== "student" || (p.school_id && p.class_year))) {
+        window.location.replace(p.role === "student" ? "/student" : "/");
         return;
       }
       const metadata = authResult.data.user.user_metadata;
