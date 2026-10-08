@@ -56,14 +56,18 @@ function randInt(n: number) {
 }
 
 export const issueGateChallenge = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ clientRisk: z.number().int().min(0).max(50) }).partial().parse(d ?? {}))
+  .inputValidator((d: unknown) => z.object({
+    clientRisk: z.number().int().min(0).max(50),
+    // Test mode may only make the check harder (force the extra step); never easier.
+    forceKind: z.enum(GATE_KINDS),
+  }).partial().parse(d ?? {}))
   .handler(async ({ data }) => {
     const { uaHash, reasons } = await requestInfo();
     const nonce = crypto.randomUUID();
     const issuedAt = Date.now();
     const difficulty = reasons.length ? 4 : 3; // leading hex zeros
     // Extra step when the server or the device itself looks suspicious.
-    const steps = reasons.length > 0 || (data.clientRisk ?? 0) >= 2 ? 2 : 1;
+    const steps = data.forceKind || reasons.length > 0 || (data.clientRisk ?? 0) >= 2 ? 2 : 1;
     // Build a 6-icon grid and ask for 3 of them in a given order.
     const pool = [...SYMBOLS];
     const grid: string[] = [];
@@ -72,7 +76,7 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     while (order.length < 3) { const i = randInt(6); if (!order.includes(i)) order.push(i); }
     const answer = order.join(",");
     // Second step varies so one script can't learn a single task.
-    const kind = GATE_KINDS[randInt(GATE_KINDS.length)];
+    const kind = data.forceKind ?? GATE_KINDS[randInt(GATE_KINDS.length)];
     const spot = 15 + randInt(70), tx = 12 + randInt(76), ty = 15 + randInt(70);
     const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}|${kind}|${spot}|${tx}|${ty}`);
     return {
