@@ -148,7 +148,7 @@ export function SecurityGatewayInternal() {
     }
   };
 
-  const submit = async (tapAnswer: number[]) => {
+  const submit = async (tapAnswer: number[], extra: { sliderValue?: number; hit?: { x: number; y: number } } = {}) => {
     setStage("checking");
     try {
       const pending = challenge.current;
@@ -157,12 +157,16 @@ export function SecurityGatewayInternal() {
       const { c, solution } = await pending;
       const t = tapTimes.current;
       const tapIntervals = t.slice(1).map((v, i) => Math.round(v - t[i]));
+      const stepMs = t.length ? Math.round(performance.now() - t[0]) : 0;
       const r = await verify({
         data: {
           nonce: c.nonce, issuedAt: c.issuedAt, difficulty: c.difficulty, sig: c.sig, solution,
           steps: c.steps, grid: c.grid, targets: c.targets,
-          tapAnswer: c.steps === 2 ? tapAnswer : undefined,
-          tapIntervals: c.steps === 2 ? tapIntervals : undefined,
+          kind: c.kind, spot: c.spot, tx: c.tx, ty: c.ty,
+          tapAnswer: c.steps === 2 && c.kind === "icons" ? tapAnswer : undefined,
+          tapIntervals: c.steps === 2 && c.kind === "icons" ? tapIntervals : undefined,
+          stepMs: c.steps === 2 ? stepMs : undefined,
+          ...extra,
           ...behavior,
         },
       });
@@ -211,6 +215,14 @@ export function SecurityGatewayInternal() {
             {stage === "captcha" ? (
               <motion.div key="cap" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} className="w-full">
                 <Captcha tone="dark" onVerify={() => { setStage("ok"); setTimeout(() => pass(), 600); }} />
+              </motion.div>
+            ) : stage === "tap" && current && current.kind === "slider" ? (
+              <motion.div key="slider" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+                <SliderStep spot={current.spot} onDone={(v, ok) => { if (!ok) trusted.current = false; if (holdData.current) holdData.current.trusted = trusted.current; void submit([], { sliderValue: v }); }} />
+              </motion.div>
+            ) : stage === "tap" && current && current.kind === "target" ? (
+              <motion.div key="target" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
+                <TargetStep tx={current.tx} ty={current.ty} onDone={(hit, ok) => { if (!ok) trusted.current = false; if (holdData.current) holdData.current.trusted = trusted.current; void submit([], { hit }); }} />
               </motion.div>
             ) : stage === "tap" && current ? (
               <motion.div key="tap" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
