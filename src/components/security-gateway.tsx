@@ -242,6 +242,7 @@ export function SecurityGatewayInternal() {
               <MotionButton
                 key="hold"
                 type="button"
+                variant="ghost"
                 onPointerDown={begin}
                 onPointerMove={move}
                 onPointerUp={() => void finish(false)}
@@ -265,19 +266,19 @@ export function SecurityGatewayInternal() {
                 onKeyUp={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); void finish(false); } }}
                 disabled={stage !== "hold"}
                 whileTap={{ scale: 0.96 }}
-                className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full"
+                className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full bg-transparent p-0 hover:bg-transparent [&_svg]:size-auto"
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
                 aria-label="Paspausk ir palaikyk"
                 aria-describedby="sv-hold-status"
               >
-                <svg className="absolute inset-0 -rotate-90" viewBox="0 0 120 120">
+                <svg className="absolute inset-0 !h-full !w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
                   <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="4" />
                   <circle cx="60" cy="60" r={R} fill="none" stroke={stage === "ok" ? "#22c55e" : "#fff"} strokeWidth="4" strokeLinecap="round"
                     strokeDasharray={C} strokeDashoffset={C * (1 - (stage === "hold" ? progress : 1))} style={{ transition: stage === "hold" ? "none" : "stroke-dashoffset .3s" }} />
                 </svg>
-                {stage === "ok" ? <ShieldCheck className="h-12 w-12" style={{ color: "#22c55e" }} />
-                  : stage === "checking" ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><Fingerprint className="h-12 w-12" style={{ color: "#fff" }} /></motion.div>
-                  : <Fingerprint className="h-12 w-12" style={{ color: "#fff", opacity: .5 + progress / 2 }} />}
+                {stage === "ok" ? <ShieldCheck className="!h-12 !w-12" style={{ color: "#22c55e" }} />
+                  : stage === "checking" ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><Fingerprint className="!h-12 !w-12" style={{ color: "#fff" }} /></motion.div>
+                  : <Fingerprint className="!h-12 !w-12" style={{ color: "#fff", opacity: .5 + progress / 2 }} />}
               </MotionButton>
             )}
           </AnimatePresence>
