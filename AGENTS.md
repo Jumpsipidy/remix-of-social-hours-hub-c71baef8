@@ -16,6 +16,10 @@
 - AuthSkeleton and the form render through the same AuthShell, which owns their handoff; the global skeleton observer skips that frame to avoid competing entrance animations.
 - Human chat uses a shared multiline MessageComposer and viewport-aware Radix dialogs; shared keyboard geometry keeps sending controls visible on phones.
 - Check-in presentation uses a stable canvas and authenticated server-issued tokens, refreshed while visible; rotating QR content never persists in browser storage.
+- Certificate verification recomputes the signed snapshot hash before HMAC verification, supports legacy snapshots and key rotation, and uses server-stamped approval identities; this detects altered history without inventing older approvers.
+- PDF generation and its libraries load only on download, paginate every activity and provide a clickable verification link; this keeps the student page light and exports complete history.
+- Certificate PDFs embed a bundled full-character sans-serif font; this preserves Lithuanian names without a remote font dependency.
+- Auxiliary root diagnostic widgets load behind independent Suspense boundaries; this keeps their loading from delaying the primary page.
 - City values live in src/lib/cities.ts and must match the DB `tg_validate_city` trigger; one list avoids filter/DB drift.
 - Privileged profile fields (role, school, hours, assigned classes) change only via service role or SECURITY DEFINER functions; the `tg_profiles_guard_privileged` trigger blocks direct client writes to stop self-promotion.
 - The security gateway does not render the app while blocked; hiding the overlay must never expose content.

@@ -89,7 +89,7 @@ export function DmDialog({
 
   return (
     <Dialog open={!!friend} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="dm-chat-dialog flex h-[85dvh] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:h-[70vh]">
+      <DialogContent className="dm-chat-dialog flex h-[calc(var(--visual-viewport-height,100dvh)-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:h-[70vh]">
         <DialogHeader className="shrink-0 border-b border-border px-4 py-3 pr-14">
           <DialogTitle className="truncate text-sm">{friend.name}</DialogTitle>
           <DialogDescription className="text-xs">Asmeninis pokalbis · žinutės ištrinamos po 2 dienų</DialogDescription>

@@ -19,8 +19,6 @@ export function SkeletonReveal() {
         if (!removedSkel) continue;
         m.addedNodes.forEach((n) => {
           if (n instanceof HTMLElement && !hasSkel(n) && !n.matches(".auth-shell") && !n.querySelector(".auth-shell")) {
-            n.classList.remove("sv-reveal");
-            void n.offsetWidth;
             n.classList.add("sv-reveal");
             n.addEventListener("animationend", () => n.classList.remove("sv-reveal"), { once: true });
           }

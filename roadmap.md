@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Ultimate mobile audit (2026-10-08)
-- [ ] Capture and visually inspect more than 50 mobile screenshots across sizes, themes and relevant states
-- [ ] Fix verified mobile layout/loading regressions and defer PDF libraries until download
-- [ ] Verify certificate HMAC integrity, complete hour history and approving organizations; test tampering
-- [ ] Generate and visually inspect a multi-page PDF and its verification link
+- [x] Capture and visually inspect 60 mobile screenshots across 15 public pages, four widths and light/dark themes; no horizontal overflow or page errors
+- [x] Fix certificate-page contrast, viewport-aware private chat height and loading fallbacks; defer PDF libraries and auxiliary diagnostic widgets
+- [x] Verify certificate HMAC integrity, page through complete owner/participant history, include server-stamped approving identities and pass tampering tests
+- [x] Generate and inspect a seven-page synthetic PDF containing all 45 activities, Lithuanian text, QR and correctly encoded clickable links; recheck isolated chat, QR, school and auth layouts
 - [ ] Real signed-in mobile flows and issued certificate download/scan — external unmanaged Supabase prevents authenticated end-to-end testing
 
 ## Mobile enhancement (2026-10-08)

@@ -978,6 +978,8 @@ export type Database = {
           city: string | null
           created_at: string
           end_time: string
+          hours_approved_at: string | null
+          hours_approved_by: string | null
           hours_to_earn: number
           id: string
           kind: string
@@ -1004,6 +1006,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           end_time: string
+          hours_approved_at?: string | null
+          hours_approved_by?: string | null
           hours_to_earn?: number
           id?: string
           kind?: string
@@ -1030,6 +1034,8 @@ export type Database = {
           city?: string | null
           created_at?: string
           end_time?: string
+          hours_approved_at?: string | null
+          hours_approved_by?: string | null
           hours_to_earn?: number
           id?: string
           kind?: string
@@ -1052,6 +1058,13 @@ export type Database = {
           {
             foreignKeyName: "reservations_checked_in_by_fkey"
             columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_hours_approved_by_fkey"
+            columns: ["hours_approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
