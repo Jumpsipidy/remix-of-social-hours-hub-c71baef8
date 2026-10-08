@@ -186,17 +186,17 @@ export function SecurityGatewayInternal() {
   const R = 54, C = 2 * Math.PI * R;
 
   return (
-    <div className="fixed inset-0 z-[2147483647] overflow-y-auto px-4 py-[max(2rem,env(safe-area-inset-top))]" style={{ background: "#000" }} role="dialog" aria-modal="true" aria-labelledby="sv-bot-title">
+    <div className="fixed inset-0 z-[2147483647] overflow-y-auto px-4 py-[max(2rem,env(safe-area-inset-top))]" style={{ background: "var(--background)", color: "var(--foreground)" }} role="dialog" aria-modal="true" aria-labelledby="sv-bot-title">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mx-auto flex min-h-full w-full max-w-sm flex-col justify-center text-center">
-        <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5" style={{ border: "1px solid rgba(255,255,255,.18)", background: "rgba(255,255,255,.06)" }}>
+        <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5" style={{ border: "1px solid color-mix(in oklab, var(--foreground) 18%, transparent)", background: "color-mix(in oklab, var(--foreground) 6%, transparent)" }}>
           <ShieldCheck className="h-4 w-4" style={{ color: "#60a5fa" }} />
-          <span className="text-xs font-black tracking-wide" style={{ color: "#fff" }}>SOCI GUARD</span>
-          <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,.5)" }}>· mūsų apsauga</span>
+          <span className="text-xs font-black tracking-wide" style={{ color: "var(--foreground)" }}>SOCI GUARD</span>
+          <span className="text-[10px] font-semibold" style={{ color: "color-mix(in oklab, var(--foreground) 50%, transparent)" }}>· mūsų apsauga</span>
         </div>
-        <h1 id="sv-bot-title" className="text-2xl font-black tracking-tight" style={{ color: "#fff" }}>
+        <h1 id="sv-bot-title" className="text-2xl font-black tracking-tight" style={{ color: "var(--foreground)" }}>
           Patikrinimas, ar jūs ne robotas
         </h1>
-        <p className="mt-2 text-sm" style={{ color: "rgba(255,255,255,.6)" }}>
+        <p className="mt-2 text-sm" style={{ color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }}>
           {stage === "captcha"
             ? "Papildoma patikra. Užbaik žemiau esančią užduotį."
             : stage === "tap"
@@ -214,7 +214,7 @@ export function SecurityGatewayInternal() {
           <AnimatePresence mode="wait">
             {stage === "captcha" ? (
               <motion.div key="cap" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} className="w-full">
-                <Captcha tone="dark" onVerify={() => { setStage("ok"); setTimeout(() => pass(), 600); }} />
+                <Captcha tone={typeof document !== "undefined" && document.documentElement.classList.contains("school-eyes") ? "light" : "dark"} onVerify={() => { setStage("ok"); setTimeout(() => pass(), 600); }} />
               </motion.div>
             ) : stage === "tap" && current && current.kind === "slider" ? (
               <motion.div key="slider" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
@@ -226,7 +226,7 @@ export function SecurityGatewayInternal() {
               </motion.div>
             ) : stage === "tap" && current ? (
               <motion.div key="tap" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
-                <p className="mb-3 text-sm font-semibold" style={{ color: "#fff" }}>
+                <p className="mb-3 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                   2 žingsnis iš 2: paspausk šiuos paveikslėlius tokia tvarka
                 </p>
                 <div className="mb-4 flex justify-center gap-2" aria-label="Tvarka">
@@ -234,7 +234,7 @@ export function SecurityGatewayInternal() {
                     const it = ICONS[t]; const done = taps.length > k;
                     return (
                       <span key={k} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-                        style={{ background: done ? "rgba(34,197,94,.2)" : "rgba(255,255,255,.1)", color: done ? "#86efac" : "#fff" }}>
+                        style={{ background: done ? "rgba(34,197,94,.2)" : "color-mix(in oklab, var(--foreground) 10%, transparent)", color: done ? "var(--sg-ok)" : "var(--foreground)" }}>
                         {k + 1}. {it && <it.Icon className="h-4 w-4" aria-hidden />} {it?.label}
                       </span>
                     );
@@ -246,15 +246,15 @@ export function SecurityGatewayInternal() {
                     return (
                       <Button key={i} type="button" variant="ghost" onClick={(e) => onTap(i, e.isTrusted)} aria-label={it?.label ?? g}
                         className="relative grid h-20 place-items-center rounded-2xl transition active:scale-95 focus-visible:outline focus-visible:outline-2"
-                        style={{ background: picked >= 0 ? "rgba(34,197,94,.2)" : "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)", color: "#fff" }}>
+                        style={{ background: picked >= 0 ? "rgba(34,197,94,.2)" : "color-mix(in oklab, var(--foreground) 8%, transparent)", border: "1px solid color-mix(in oklab, var(--foreground) 15%, transparent)", color: "var(--foreground)" }}>
                         {it && <it.Icon className="h-8 w-8" aria-hidden />}
-                        {picked >= 0 && <span className="absolute right-2 top-1.5 text-xs font-black" style={{ color: "#86efac" }}>{picked + 1}</span>}
+                        {picked >= 0 && <span className="absolute right-2 top-1.5 text-xs font-black" style={{ color: "var(--sg-ok)" }}>{picked + 1}</span>}
                       </Button>
                     );
                   })}
                 </div>
                 <button type="button" onClick={() => { setTaps([]); tapTimes.current = [performance.now()]; }}
-                  className="mt-3 text-xs underline" style={{ color: "rgba(255,255,255,.6)" }}>Pradėti iš naujo</button>
+                  className="mt-3 text-xs underline" style={{ color: "color-mix(in oklab, var(--foreground) 60%, transparent)" }}>Pradėti iš naujo</button>
               </motion.div>
             ) : (
               <MotionButton
@@ -290,16 +290,16 @@ export function SecurityGatewayInternal() {
                 aria-describedby="sv-hold-status"
               >
                 <svg className="absolute inset-0 !h-full !w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-                  <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="4" />
-                  <circle cx="60" cy="60" r={R} fill="none" stroke={stage === "ok" ? "#22c55e" : "#fff"} strokeWidth="4" strokeLinecap="round"
+                  <circle cx="60" cy="60" r={R} fill="none" stroke="color-mix(in oklab, var(--foreground) 12%, transparent)" strokeWidth="4" />
+                  <circle cx="60" cy="60" r={R} fill="none" stroke={stage === "ok" ? "#22c55e" : "var(--foreground)"} strokeWidth="4" strokeLinecap="round"
                     strokeDasharray={C} strokeDashoffset={C * (1 - (stage === "hold" ? progress : 1))} style={{ transition: stage === "hold" ? "none" : "stroke-dashoffset .3s" }} />
                 </svg>
                 {stage === "ok" ? <ShieldCheck className="!h-12 !w-12" style={{ color: "#22c55e" }} />
-                  : stage === "checking" ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><Fingerprint className="!h-12 !w-12" style={{ color: "#fff" }} /></motion.div>
+                  : stage === "checking" ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><Fingerprint className="!h-12 !w-12" style={{ color: "var(--foreground)" }} /></motion.div>
                   : (
                     <span className="flex flex-col items-center gap-1 px-4">
-                      <Fingerprint className="!h-9 !w-9" style={{ color: holding && moving ? "#86efac" : "#fff", opacity: .6 + progress / 2.5 }} />
-                      <span className="text-[11px] font-bold leading-tight" style={{ color: holding && moving ? "#86efac" : "#fff" }}>
+                      <Fingerprint className="!h-9 !w-9" style={{ color: holding && moving ? "var(--sg-ok)" : "var(--foreground)", opacity: .6 + progress / 2.5 }} />
+                      <span className="text-[11px] font-bold leading-tight" style={{ color: holding && moving ? "var(--sg-ok)" : "var(--foreground)" }}>
                         {coarsePointer ? "Palaikyk" : holding ? (moving || pointerType.current !== "mouse" ? "Laikyk…" : "Judink pelę!") : "Laikyk ir judink pelę"}
                       </span>
                     </span>
@@ -314,13 +314,13 @@ export function SecurityGatewayInternal() {
         </p>
 
         {failReasons.length > 0 && stage !== "ok" && (
-          <ul className="mt-3 space-y-1 rounded-lg p-3 text-left text-xs" style={{ background: "rgba(239,68,68,.12)", color: "#fca5a5" }}>
+          <ul className="mt-3 space-y-1 rounded-lg p-3 text-left text-xs" style={{ background: "rgba(239,68,68,.12)", color: "var(--sg-bad)" }}>
             {failReasons.map((r) => <li key={r}>• {reasonLabel(r)}</li>)}
           </ul>
         )}
 
         {allReasons.length > 0 && (
-          <div className="mt-6 rounded-lg text-left text-xs" style={{ border: "1px solid rgba(255,255,255,.12)", color: "rgba(255,255,255,.7)" }}>
+          <div className="mt-6 rounded-lg text-left text-xs" style={{ border: "1px solid color-mix(in oklab, var(--foreground) 12%, transparent)", color: "color-mix(in oklab, var(--foreground) 70%, transparent)" }}>
             <button type="button" onClick={() => setShowWhy((v) => !v)} className="flex w-full items-center justify-between px-3 py-2.5 font-semibold" aria-expanded={showWhy}>
               Kodėl matau šį puslapį? ({allReasons.length})
               <ChevronDown className="h-4 w-4 transition-transform" style={{ transform: showWhy ? "rotate(180deg)" : undefined }} />
@@ -333,7 +333,7 @@ export function SecurityGatewayInternal() {
           </div>
         )}
 
-        <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,.35)" }}>
+        <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "color-mix(in oklab, var(--foreground) 35%, transparent)" }}>
           <ShieldAlert className="h-3 w-3" /> Apsaugota Socialinės Valandos
         </div>
       </motion.div>
@@ -349,8 +349,8 @@ function SliderStep({ spot, onDone }: { spot: number; onDone: (v: number, truste
   const ok = useRef(true);
   return (
     <div>
-      <p className="mb-3 text-sm font-semibold" style={{ color: "#fff" }}>2 žingsnis iš 2: nustumk slankiklį iki žalios žymos</p>
-      <div className="relative h-12 rounded-full" style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)" }}>
+      <p className="mb-3 text-sm font-semibold" style={{ color: "var(--foreground)" }}>2 žingsnis iš 2: nustumk slankiklį iki žalios žymos</p>
+      <div className="relative h-12 rounded-full" style={{ background: "color-mix(in oklab, var(--foreground) 8%, transparent)", border: "1px solid color-mix(in oklab, var(--foreground) 15%, transparent)" }}>
         <span aria-hidden className="absolute top-1 bottom-1 w-2 -translate-x-1/2 rounded-full" style={{ left: `${spot}%`, background: "#22c55e" }} />
         <input type="range" min={0} max={100} value={v} aria-label="Slankiklis"
           onChange={(e) => { if (!e.nativeEvent.isTrusted) ok.current = false; setV(Number(e.target.value)); }}
@@ -372,8 +372,8 @@ function TargetStep({ tx, ty, onDone }: { tx: number; ty: number; onDone: (hit: 
   };
   return (
     <div>
-      <p className="mb-3 text-sm font-semibold" style={{ color: "#fff" }}>2 žingsnis iš 2: paspausk mėlyną apskritimą</p>
-      <div ref={box} className="relative h-56 w-full rounded-2xl" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.15)" }}>
+      <p className="mb-3 text-sm font-semibold" style={{ color: "var(--foreground)" }}>2 žingsnis iš 2: paspausk mėlyną apskritimą</p>
+      <div ref={box} className="relative h-56 w-full rounded-2xl" style={{ background: "color-mix(in oklab, var(--foreground) 6%, transparent)", border: "1px solid color-mix(in oklab, var(--foreground) 15%, transparent)" }}>
         <button type="button" onClick={click} aria-label="Taikinys"
           className="absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:outline focus-visible:outline-2"
           style={{ left: `${tx}%`, top: `${ty}%`, background: "#3b82f6", boxShadow: "0 0 0 6px rgba(59,130,246,.25)" }} />
