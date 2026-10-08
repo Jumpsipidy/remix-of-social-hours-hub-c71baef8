@@ -83,6 +83,7 @@ export function SecurityGatewayInternal() {
     const p = Math.min(1, (performance.now() - start.current) / HOLD_MS);
     const needsMotion = inputMode.current !== "keyboard" && pointerType.current === "mouse" && motionFeatures(points.current).jitter < 2;
     setProgress(needsMotion ? Math.min(.95, p) : p);
+    if (needsMotion && performance.now() - start.current > 6000) { setFailReasons(["no_motion"]); void finish(false); return; }
     if (performance.now() - start.current > 15000) { void finish(false); return; }
     if (p < 1 || needsMotion) raf.current = requestAnimationFrame(tick);
     else void finish(true);
@@ -117,7 +118,7 @@ export function SecurityGatewayInternal() {
     start.current = 0;
     setHolding(false);
     if (!wasHolding) return;
-    if (!complete) { setProgress(0); return; }
+    if (!complete) { setProgress(0); if (inputMode.current !== "keyboard" && pointerType.current === "mouse") setFailReasons((r) => r.length ? r : ["short_hold"]); return; }
     const m = motionFeatures(points.current);
     holdData.current = {
       holdMs: Math.round(performance.now() - holdStart.current), ...m,
