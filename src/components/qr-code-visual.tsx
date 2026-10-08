@@ -15,7 +15,12 @@ export function QrCodeVisual({ value }: { value: string }) {
     QRCode.toCanvas(node, value, {
       errorCorrectionLevel: "M", margin: 4, width: 512,
       color: { dark: styles.getPropertyValue("--qr-ink").trim() || "#000000", light: styles.getPropertyValue("--qr-paper").trim() || "#ffffff" },
-    }).then(() => { if (alive) { setReady(true); setFailed(false); } }).catch(() => { if (alive) setFailed(true); });
+    }).then(() => {
+      // qrcode writes pixel-sized inline styles; keep its resolution, not its layout size.
+      node.style.width = "100%";
+      node.style.height = "100%";
+      if (alive) { setReady(true); setFailed(false); }
+    }).catch(() => { if (alive) setFailed(true); });
     return () => { alive = false; };
   }, [value]);
   return <div className="qr-visual relative mx-auto aspect-square w-full max-w-72 overflow-hidden rounded-lg">

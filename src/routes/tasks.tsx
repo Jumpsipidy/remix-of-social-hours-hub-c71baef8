@@ -17,6 +17,7 @@ import { TAG_PRESETS } from "@/components/tags-input";
 import { logActivity } from "@/lib/activity-log";
 import { listOrganizations } from "@/lib/orgs.functions";
 import { InteractiveTasksMap } from "@/components/interactive-tasks-map";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/tasks")({
       { name: "description", content: "Raskite geriausias savanorystės galimybes Lietuvos moksleiviams. Filtruokite užduotis pagal kategoriją, miestą ir valandas. Pradėkite rinkti socialines valandas dabar." },
       { property: "og:title", content: "Savanorystės užduotys ir organizacijos" },
       { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
+      { property: "og:type", content: "website" },
       { property: "og:url", content: "https://socialinesvalandos.dev/tasks" },
       { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -395,7 +397,7 @@ function TasksPage() {
                             {Number(t.available_hours)} val.
                           </span>
                         </div>
-                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg"><button type="button" className="w-full min-w-0 text-left [overflow-wrap:anywhere]" onClick={(event) => { event.stopPropagation(); setDetail(t); }}>{t.title}</button></h2>
+                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg"><Button variant="ghost" type="button" className="h-auto w-full min-w-0 justify-start whitespace-normal p-0 text-left text-inherit font-inherit [overflow-wrap:anywhere]" onClick={(event) => { event.stopPropagation(); setDetail(t); }}>{t.title}</Button></h2>
                         <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                           {CATEGORY_LABELS[guessCategory(t)]}
                         </span>
