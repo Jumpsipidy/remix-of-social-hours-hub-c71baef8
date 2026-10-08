@@ -376,7 +376,10 @@ export function installGlobalErrorLogging() {
 
   window.addEventListener("unhandledrejection", (e) => {
     const reason = e.reason as unknown;
-    const msg = reason instanceof Error ? reason.message : String(reason ?? "unhandled rejection");
+    const r = reason as { message?: unknown; code?: unknown; details?: unknown } | null;
+    const msg = reason instanceof Error ? reason.message
+      : r && typeof r === "object" ? (typeof r.message === "string" ? `${r.code ? `[${String(r.code)}] ` : ""}${r.message}` : (() => { try { return JSON.stringify(r).slice(0, 300); } catch { return "unhandled rejection"; } })())
+      : String(reason ?? "unhandled rejection");
     if (shouldIgnore(msg)) return;
     void insert("client.error", {
       message: msg,
