@@ -12,6 +12,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 
 export const Route = createFileRoute("/_authenticated/organization/scan")({
+  head: () => ({ meta: [
+    { title: "Įregistruoti savanorį — Socialinės Valandos" },
+    { name: "description", content: "Organizacijos QR ir šešių skaitmenų atvykimo patikra." },
+    { property: "og:title", content: "Įregistruoti savanorį — Socialinės Valandos" },
+    { property: "og:description", content: "Patvirtink savanorio atvykimą organizacijoje." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+    { name: "robots", content: "noindex" },
+  ] }),
   component: ScanPage,
 });
 
@@ -160,7 +168,7 @@ function ScanPage() {
 
   return (
     <PageShell>
-      <div className="min-h-screen bg-background pb-16">
+      <div className="scan-page min-h-screen bg-background pb-8">
         <div className="mx-auto max-w-4xl px-4 pt-6">
           <Link to="/organization" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Atgal
@@ -177,7 +185,7 @@ function ScanPage() {
 
           <CheckinSetupBanner />
 
-          <div className="mb-4 inline-flex rounded-2xl border border-border bg-card p-1">
+          <div className="mb-4 grid grid-cols-2 rounded-lg border border-border bg-card p-1">
 
             {(["code", "camera"] as const).map((m) => (
               <button
@@ -202,9 +210,9 @@ function ScanPage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="rounded-3xl border border-border bg-card p-6 shadow-elegant"
               >
-                <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Kodas</label>
+                <label htmlFor="scan-code" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Kodas</label>
                 <input
-                  autoFocus
+                  id="scan-code"
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={7}
@@ -212,7 +220,7 @@ function ScanPage() {
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   onKeyDown={(e) => { if (e.key === "Enter" && code.length === 6) handleSubmit(code); }}
                   placeholder="000 000"
-                  className="mt-2 w-full rounded-2xl border-2 border-border bg-background px-6 py-5 text-center font-mono text-4xl font-bold tracking-[0.5em] outline-none transition focus:border-primary"
+                  className="mt-2 w-full rounded-2xl border-2 border-border bg-background px-3 py-4 text-center font-mono text-3xl font-bold tracking-normal sm:text-4xl outline-none transition focus:border-primary"
                 />
                 <button
                   onClick={() => handleSubmit(code)}
@@ -351,8 +359,8 @@ function TodayList({ refreshKey }: { refreshKey: number }) {
       <p className="mb-3 text-sm font-semibold">Šiandien laukiami · {done}/{rows.length} atvyko</p>
       <div className="space-y-2">
         {rows.map((r) => (
-          <div key={r.id} className={`flex items-center gap-3 rounded-2xl border p-3 text-sm ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
-            <span className="w-24 shrink-0 font-mono text-xs tabular-nums">{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</span>
+          <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border p-3 text-sm sm:flex ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+            <span className="col-span-2 sm:w-24 shrink-0 font-mono text-xs tabular-nums">{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</span>
             <span className="min-w-0 flex-1 truncate font-semibold">
               {names[r.student_id] ?? "Mokinys"}
               {counts[r.student_id] > 1 && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">{counts[r.student_id]} vizitai šiandien</span>}

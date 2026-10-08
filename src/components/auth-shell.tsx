@@ -5,6 +5,8 @@ import { Heart, Loader2, ShieldCheck, Clock, Award, Sparkles, GraduationCap, Key
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
+import { AuthLoadingContent } from "@/components/auth-loading-content";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 export type AuthMode = "login" | "register";
 type Provider = "google" | "discord" | "github";
@@ -38,24 +40,18 @@ const COPY: Record<AuthMode, { eyebrow: string; title: string; accent: string; b
  * Bendras prisijungimo / registracijos rėmas. Prekės ženklo skydelis
  * persikelia į kitą pusę perjungiant režimą per bendrą View Transition.
  */
-export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactNode }) {
+export function AuthShell({ mode, children, loading = false }: { mode: AuthMode; children?: ReactNode; loading?: boolean }) {
+  useVisualViewport();
   const c = COPY[mode];
   const isLogin = mode === "login";
   return (
-    <div className="relative auth-shell min-h-screen bg-background text-foreground">
+    <div data-auth-mode={mode} className="relative auth-shell min-h-screen bg-background text-foreground">
       <div className="absolute right-4 top-4 z-30"><SchoolEyesToggle /></div>
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-8 pt-20 sm:px-6">
-        <div className={`auth-transition-frame relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
+        <motion.div layout="size" transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }} className={`auth-transition-frame relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
           {/* Keep the original visible blue sweep alongside synchronized panels. */}
-          <motion.div
-            key={`blue-slide-${mode}`}
-            aria-hidden="true"
-            className="auth-blue-slide pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-gradient-to-r from-transparent via-primary/40 to-transparent"
-            initial={{ left: isLogin ? "100%" : "-33%" }}
-            animate={{ left: isLogin ? "-33%" : "100%" }}
-            transition={{ duration: 0.85, ease: [0.65, 0, 0.2, 1] }}
-          />
+          <div key={`blue-slide-${mode}`} aria-hidden="true" className="auth-blue-slide pointer-events-none absolute inset-0 z-20"><div className="auth-sweep-panel absolute inset-y-0 w-1/2 bg-gradient-primary" /></div>
           {/* Brand panel */}
           <aside
             className="auth-transition-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
@@ -98,13 +94,15 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
               <span className="font-display text-lg font-bold">Socialinės Valandos</span>
             </Link>
             <AuthModeSwitch mode={mode} />
-            <div
-              className="auth-transition-content mt-6"
-            >
-              {children}
+            <div className="auth-transition-content relative mt-6">
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.div key={loading ? "loading" : "form"} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.24, ease: "easeOut" }}>
+                  {loading ? <AuthLoadingContent mode={mode} /> : children}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

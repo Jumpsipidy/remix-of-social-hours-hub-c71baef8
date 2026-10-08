@@ -241,12 +241,12 @@ function TasksPage() {
 
   return (
     <PageShell>
-      <div className="relative">
+      <div className="tasks-page relative">
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
-          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-14">
           <span className="text-xs font-semibold uppercase tracking-wider text-primary">Atraskite galimybes</span>
-          <h1 className="mt-2 font-display text-4xl font-bold tracking-tight sm:text-5xl">Užduotys ir organizacijos</h1>
+          <h1 className="mt-2 font-display text-2xl font-bold sm:text-5xl">Užduotys ir organizacijos</h1>
           <p className="mt-3 max-w-2xl text-muted-foreground">
             {loadingTasks ? "Kraunamos užduotys…" : `${tasks.length} atvirų užduočių iš ${allOrgs.length} organizacijų.`} Filtruok pagal miestą, kategoriją arba raktinius žodžius.
           </p>
@@ -274,35 +274,35 @@ function TasksPage() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex flex-1 min-w-[240px] items-center gap-3 rounded-2xl border border-border bg-card/80 px-4 py-2 backdrop-blur">
+          <div className="task-filters mt-4 grid grid-cols-2 items-center gap-2 sm:mt-6 sm:flex sm:flex-wrap sm:gap-3">
+            <div className="col-span-2 flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-border bg-card/80 px-4 py-2 backdrop-blur">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input value={q} onChange={(e) => setQ(e.target.value)}
+              <input aria-label="Ieškoti užduoties ar organizacijos" value={q} onChange={(e) => setQ(e.target.value)}
                 placeholder={tab === "tasks" ? "Paieška: pavadinimas, vieta, organizacija…" : "Ieškoti organizacijos…"}
                 className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             </div>
             {(tab === "tasks" || tab === "map") && (
               <>
-                <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <select value={town} onChange={(e) => setTown(e.target.value)}
-                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                  <select aria-label="Miestas" value={town} onChange={(e) => setTown(e.target.value)}
+                    className="h-11 min-w-0 w-full rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
                     <option value="" className="bg-card text-foreground">Visi miestai</option>
                     {towns.map((t) => <option key={t} value={t} className="bg-card text-foreground">{t}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                   <select value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)} aria-label="Organizacija"
-                    className="h-9 max-w-[200px] rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                    className="h-11 min-w-0 w-full sm:max-w-[200px] rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
                     <option value="" className="bg-card text-foreground">Visos organizacijos ({orgOptions.length})</option>
                     {orgOptions.map((o) => <option key={o.id} value={o.id} className="bg-card text-foreground">{o.organization_name ?? o.full_name}</option>)}
                   </select>
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 backdrop-blur">
+                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
-                  <select value={cat} onChange={(e) => setCat(e.target.value)}
-                    className="h-9 rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
+                  <select aria-label="Kategorija" value={cat} onChange={(e) => setCat(e.target.value)}
+                    className="h-11 min-w-0 w-full rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
                     <option value="" className="bg-card text-foreground">Visos kategorijos</option>
                     {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card text-foreground">{v}</option>)}
                   </select>
@@ -319,7 +319,7 @@ function TasksPage() {
                 if (profile && profile.role !== "student") { toast.error("Tik moksleiviai gali rezervuoti"); return; }
                 setCustomOpen(true);
               }}
-              className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
+              className="col-span-2 inline-flex min-w-0 items-center justify-center gap-2 rounded-lg bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
               <Sparkles className="h-4 w-4" /> Pasiūlyk savo rezervaciją
             </button>
           </div>
@@ -386,16 +386,16 @@ function TasksPage() {
                   >
                       <article onClick={() => setDetail(t)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-gradient-card/85 p-4 shadow-md sm:rounded-3xl sm:p-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
                         <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
-                        <div className="relative flex items-start justify-between gap-3">
-                          <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
+                        <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <div className={`inline-flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
                             {t.is_event ? <CalendarHeart className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
-                            {t.is_event ? (t.event_host_name || "Vienkartinis renginys") : orgName(t.organization_id)}
+                            <span className="min-w-0 break-words">{t.is_event ? (t.event_host_name || "Vienkartinis renginys") : orgName(t.organization_id)}</span>
                           </div>
-                          <span className="rounded-full bg-success/15 px-3 py-1 text-xs font-semibold text-success">
+                          <span className="shrink-0 rounded-lg bg-success/15 px-2 py-1 text-xs font-semibold text-success">
                             {Number(t.available_hours)} val.
                           </span>
                         </div>
-                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg">{t.title}</h2>
+                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg"><button type="button" className="w-full min-w-0 text-left [overflow-wrap:anywhere]" onClick={(event) => { event.stopPropagation(); setDetail(t); }}>{t.title}</button></h2>
                         <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
                           {CATEGORY_LABELS[guessCategory(t)]}
                         </span>
@@ -428,7 +428,7 @@ function TasksPage() {
                         )}
                         <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
                           onClick={(e) => { e.stopPropagation(); handleReserve(t); }}
-                          className="relative mt-5 w-full rounded-full bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
+                          className="relative mt-3 w-full rounded-lg bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
                           Rezervuoti
                         </motion.button>
                       </article>

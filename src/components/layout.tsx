@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode } from "lucide-react";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
@@ -83,6 +84,8 @@ export function Navbar() {
     const dash = DASHBOARD_BY_ROLE[activeRole];
     if (dash) links.push(dash);
     if (activeRole !== "admin") links.push({ to: "/chat", label: "Pokalbiai" });
+    if (activeRole === "student") links.push({ to: "/checkin", label: "Mano QR kodas" });
+    if (activeRole === "organization") links.push({ to: "/organization/scan", label: "Skenuoti QR kodą" });
   }
 
   const handleSignOut = async () => {
@@ -99,7 +102,7 @@ export function Navbar() {
   // if (isAdminSection) return null;
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl group/header">
+    <header className="site-navbar fixed top-0 inset-x-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl group/header">
       {/* Animated gradient top border */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-30" />
       <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 md:flex md:justify-between md:gap-6 md:py-4 lg:py-5">
@@ -167,10 +170,10 @@ export function Navbar() {
               )}
             </AnimatePresence>
           </motion.div>
-          <span className="font-display truncate whitespace-nowrap text-sm font-extrabold sm:text-xl lg:text-2xl">
+          <span className="relative font-display truncate whitespace-nowrap text-sm font-extrabold sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
             <div 
-              className="absolute -right-6 -top-1 px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black tracking-widest text-primary border border-primary/20"
+              className="hidden px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black text-primary border border-primary/20 lg:inline-block"
             >
               BETA
             </div>
@@ -265,7 +268,7 @@ export function Navbar() {
           <SheetDescription className="text-left">{profile?.full_name ?? "Tavo savanorystės erdvė"}</SheetDescription>
           <nav aria-label="Šoninis meniu" className="mt-5 flex flex-1 flex-col gap-2">
             {links.map((link) => {
-              const Icon = link.to === "/" ? Home : link.to === "/tasks" ? ListTodo : link.to === "/chat" ? MessageCircle : LayoutDashboard;
+              const Icon = link.to === "/" ? Home : link.to === "/tasks" ? ListTodo : link.to === "/chat" ? MessageCircle : link.to === "/checkin" || link.to === "/organization/scan" ? QrCode : LayoutDashboard;
               const active = isActive(link.to, link.to === "/");
               return <Button key={link.to} variant={active ? "secondary" : "ghost"} asChild className="h-auto min-h-12 justify-start whitespace-normal px-3 py-3 text-left"><Link to={link.to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}><Icon /><span className="min-w-0">{link.label}</span></Link></Button>;
             })}
@@ -338,7 +341,9 @@ export function Footer() {
 }
 
 export function PageShell({ children }: { children: React.ReactNode }) {
+  useVisualViewport();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isFocused = pathname === "/chat" || pathname === "/checkin" || pathname === "/organization/scan";
   const isDashboard = pathname !== "/" && (
     pathname.startsWith("/student") || 
     pathname.startsWith("/organization") || 
@@ -347,13 +352,14 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden pt-[72px] pb-safe md:pb-0 selection:bg-primary/30 selection:text-primary-foreground">
+    <div className="page-shell relative min-h-screen pt-[72px] pb-safe md:pb-0 selection:bg-primary/30 selection:text-primary-foreground" data-page={pathname}>
+      <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:p-3 focus:text-foreground">Pereiti prie turinio</a>
       <BackgroundFX isDashboard={isDashboard} />
       <Navbar />
-      <main>
+      <main id="page-content" tabIndex={-1} className="min-w-0">
         {children}
       </main>
-      <Footer />
+      {!isFocused && <Footer />}
       <OnboardingTour />
     </div>
   );

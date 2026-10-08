@@ -28,6 +28,7 @@ import { StreakCard } from "@/components/streak-card";
 import { DashHero, StatTile, DASH_EMBER, DASH_GOLD, DASH_GREEN } from "@/components/dashboard-kit";
 import { celebrate, setCelebrationContext } from "@/lib/celebrate";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, Tooltip } from "recharts";
 
@@ -304,7 +305,7 @@ function StudentDashboard() {
 
   return (
     <PageShell>
-      <nav aria-label="Greitos nuorodos" className="sticky top-14 z-30 -mb-2 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 lg:hidden">
+      <nav aria-label="Greitos nuorodos" className="sticky top-[72px] z-30 -mb-2 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 lg:hidden">
         {[["#mano-rezervacijos","Mano rezervacijos"],["/tasks","Rasti užduotį"],["/chat","Pokalbiai"],["#draugai","Draugai"]].map(([href,label]) => (
           <a key={href} href={href} className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold active:scale-95">{label}</a>
         ))}
@@ -347,9 +348,7 @@ function StudentDashboard() {
                 <Sparkles className="h-4 w-4 text-primary" /> Pasiūlyk rezervaciją
               </button>
               <CertificateButton />
-              <Link to="/checkin" className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20">
-                <ShieldCheck className="h-4 w-4" /> Mano QR kodas
-              </Link>
+              <Button asChild className="h-12 min-w-0"><Link to="/checkin" preload="intent"><ShieldCheck /> Parodyti QR kodą</Link></Button>
             </>
           }
         />
@@ -414,7 +413,7 @@ function StudentDashboard() {
 
       {/* Stat cards */}
       <section className="order-4 mx-auto mt-6 max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {[
             { icon: Clock, label: "Užbaigtos valandos", value: completed, sub: `iš ${required} reikalingų`, accent: DASH_GREEN },
             { icon: Target, label: "Liko valandų", value: remaining, sub: `${progress}% iki tikslo`, accent: DASH_GOLD },
@@ -574,16 +573,17 @@ function StudentDashboard() {
               const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "Vykdoma" : "Laukia patvirtinimo";
               return (
                 <div key={r.id} className={`rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                  <div className="student-reservation-row grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
                     <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
-                      <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                      <p className="text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
                     </div>
-                    <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+                    <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 sm:col-span-1 sm:flex-row">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
                         <Icon className="h-3 w-3" /> {label}
                       </span>
+                      {isApproved && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
                       <button
                         onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
                         className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"

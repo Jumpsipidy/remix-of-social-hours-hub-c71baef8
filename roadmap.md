@@ -1,5 +1,13 @@
 # Roadmap
 
+## Mobile enhancement (2026-10-08)
+- [ ] Restore synchronized blue login/signup sweep and smooth matching skeleton-to-form transition, including mobile
+- [ ] Compact mobile navigation, dashboard rows, task filters and reservation dialogs without changing desktop layouts
+- [ ] Accessible chat contact picker, multiline composer, long-text wrapping, live private inbox and keyboard-safe conversation layout
+- [ ] Fast QR presentation, matching loading view, retry/offline/expired states and prominent student QR links
+- [ ] Mobile class roster/history and organization scanning controls
+- [ ] Verify public pages and isolated authenticated UI fixtures at narrow widths, run relevant regression tests
+
 ## Login/signup transition
 - [x] Restore the blue sliding sweep and add fast matching login/signup loading placeholders (no artificial minimum wait)
 - [x] Verify both navigation directions and isolated loading preview with no runtime errors; 169 smoke tests passed; suggested next steps listed in reply

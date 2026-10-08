@@ -64,19 +64,19 @@ export function ClassRoster({ students, reservations, onMessage, onRecommend }: 
           </div>
           <ul className="divide-y divide-border">
             {list.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-4 px-5 py-3">
+              <li key={s.id} className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3 px-3 py-3 sm:flex sm:flex-wrap sm:px-5">
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold text-foreground">
                   {(s.full_name ?? "?").split(" ").map((x) => x[0]).slice(0, 2).join("")}
                 </div>
-                <div className="min-w-[10rem] flex-1">
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{s.full_name ?? s.email ?? "Mokinys"}</p>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct(s)}%` }} /></div>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <div className="h-1.5 w-20 sm:w-32 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct(s)}%` }} /></div>
                     <span className="font-mono text-xs text-muted-foreground">{s.hours_earned}/{s.hours_needed} val.</span>
                     {pendingBy[s.id] ? <span className="rounded-md bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-foreground">{pendingBy[s.id]} vyksta</span> : null}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="col-span-2 grid grid-cols-2 gap-2 sm:flex">
                   <button onClick={() => onMessage(s)} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold hover:bg-muted"><MessageCircle className="h-3.5 w-3.5" /> Rašyti</button>
                   <button onClick={() => onRecommend(s)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"><Sparkles className="h-3.5 w-3.5" /> Rekomenduoti</button>
                 </div>
@@ -134,14 +134,14 @@ export function ReservationHub({ students, orgs, reservations, orgName, onChange
           <ul className="divide-y divide-border">
             {active.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
-                <div className="min-w-[12rem] flex-1">
+                <div className="min-w-0 basis-full sm:flex-1 sm:basis-auto">
                   <p className="text-sm font-semibold">{byId[r.student_id]?.full_name ?? "Mokinys"} <span className="font-normal text-muted-foreground">· {orgName(r.organization_id)}</span></p>
                   <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><KindBadge kind={r.kind} /> {r.reservation_date} {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}</p>
                 </div>
                 <label className="flex items-center gap-1 text-xs text-muted-foreground">Val.
-                  <input type="number" min={0} max={8} value={hoursFor[r.id] ?? Number(r.hours_to_earn)}
+                  <input aria-label="Patvirtinamos valandos" type="number" inputMode="numeric" min={0} max={8} value={hoursFor[r.id] ?? Number(r.hours_to_earn)}
                     onChange={(e) => setHoursFor((h) => ({ ...h, [r.id]: Math.max(0, Math.min(8, Math.round(Number(e.target.value)))) }))}
-                    className="h-8 w-14 rounded-lg border border-border bg-background px-2 text-sm text-foreground" />
+                    className="h-11 w-14 rounded-lg border border-border bg-background px-2 text-sm text-foreground" />
                 </label>
                 <button disabled={busy === r.id} onClick={() => finish(r, true)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-destructive disabled:opacity-50">Atšaukti</button>
                 <button disabled={busy === r.id} onClick={() => finish(r)} className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50">
@@ -207,12 +207,12 @@ function NewReservationDialog({ students, orgs, onClose, onDone }: { students: S
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Nauja rezervacija">
-      <div className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card text-card-foreground sm:rounded-3xl">
+      <div className="school-reservation-dialog flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-border bg-card text-card-foreground sm:rounded-3xl">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h3 className="text-lg font-bold">Nauja rezervacija</h3>
           <button onClick={onClose} aria-label="Uždaryti" className="rounded-full p-2 hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
-        <div className="space-y-5 overflow-y-auto p-5">
+        <div className="min-h-0 space-y-5 overflow-y-auto overscroll-contain p-4 sm:p-5">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Veiklos tipas</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -259,7 +259,7 @@ function NewReservationDialog({ students, orgs, onClose, onDone }: { students: S
               {["08:00", "10:00", "12:00", "14:00", "16:00", "18:00"].map((t) => (
                 <button key={t} type="button" onClick={() => setStart(t)} className={`rounded-lg border px-3 py-1.5 font-mono text-sm ${start === t ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"}`}>{t}</button>
               ))}
-              <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground" aria-label="Kitas laikas" />
+              <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className="h-11 min-w-0 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground sm:w-auto" aria-label="Kitas laikas" />
             </div>
           </div>
           <div>
@@ -274,7 +274,7 @@ function NewReservationDialog({ students, orgs, onClose, onDone }: { students: S
             <textarea value={note} onChange={(e) => setNote(e.target.value.slice(0, 1000))} rows={2} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm font-normal normal-case tracking-normal text-foreground" placeholder="Pvz. susitikimas prie bibliotekos" />
           </label>
         </div>
-        <div className="flex justify-end gap-2 border-t border-border p-4">
+        <div className="shrink-0 flex justify-end gap-2 border-t border-border p-4 pb-safe">
           <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-muted">Atšaukti</button>
           <button onClick={save} disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
             {busy && <Loader2 className="h-4 w-4 animate-spin" />} Sukurti
@@ -318,9 +318,18 @@ export function HistoryPanel({ students, reservations, orgName }: { students: Sc
             <option value="all">Visi mokiniai</option>
             {students.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
           </select>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti…" className="h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground" />
+          <input aria-label="Ieškoti istorijoje" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti…" className="h-11 min-w-0 w-full sm:w-auto rounded-lg border border-border bg-background px-3 text-sm text-foreground" />
         </div>
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-border sm:hidden" aria-label="Mokinių istorija">
+          {rows.slice(0, 300).map((r) => <li key={r.id} className="space-y-2 px-3 py-4">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2"><p className="min-w-0 break-words text-sm font-semibold">{byId[r.student_id]?.full_name ?? "—"}</p><span className="shrink-0 font-mono text-sm">{r.hours_to_earn} val.</span></div>
+            <p className="break-words text-xs text-muted-foreground">{orgName(r.organization_id)} · {r.reservation_date}</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs"><KindBadge kind={r.kind} /><span>{STATUS[r.status] ?? r.status}</span></div>
+            <p className="text-xs text-muted-foreground">{verif(r)}</p>
+          </li>)}
+          {rows.length === 0 && <li className="p-4 text-sm text-muted-foreground">Įrašų nėra.</li>}
+        </ul>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
               <tr><th className="px-5 py-3">Mokinys</th><th className="px-5 py-3">Veikla</th><th className="px-5 py-3">Data</th><th className="px-5 py-3">Val.</th><th className="px-5 py-3">Būsena</th><th className="px-5 py-3">Patvirtinimas</th></tr>
