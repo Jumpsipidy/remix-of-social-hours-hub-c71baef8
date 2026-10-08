@@ -53,8 +53,9 @@ export function SecurityGatewayInternal() {
   const raf = useRef<number | null>(null);
   const challenge = useRef<Promise<{ c: Challenge; solution: number }> | null>(null);
 
-  const loadChallenge = () => {
-    challenge.current = issueChallenge({ data: { clientRisk: Math.min(50, reasons.length) } }).then(async (c) => {
+  const testMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("patikra") === "testas";
+  const loadChallenge = (forceKind?: Challenge["kind"]) => {
+    challenge.current = issueChallenge({ data: { clientRisk: Math.min(50, reasons.length), forceKind } }).then(async (c) => {
       setServerReasons(c.serverReasons);
       setCurrent(c);
       setTaps([]);
@@ -204,6 +205,26 @@ export function SecurityGatewayInternal() {
               : coarsePointer ? "Paspausk ir palaikyk, kol ratas užsipildys. Piršto judinti nereikia."
               : "Paspausk ir palaikyk mygtuką. Laikydamas šiek tiek pajudink pelę. Arba pažymėk mygtuką ir palaikyk tarpo klavišą — pelės judinti nereikės."}
         </p>
+
+        {testMode && stage !== "ok" && stage !== "checking" && (
+          <div className="mt-5 rounded-xl p-3 text-left text-xs" style={{ border: "1px dashed color-mix(in oklab, var(--foreground) 30%, transparent)" }}>
+            <p className="mb-2 font-bold">Bandymo režimas</p>
+            <div className="flex flex-wrap gap-1.5">
+              <Button size="sm" variant="outline" onClick={() => { setFails(0); setFailReasons([]); setProgress(0); setStage("hold"); loadChallenge(); }}>Laikymas</Button>
+              {(["icons", "slider", "target"] as const).map((k) => (
+                <Button key={k} size="sm" variant="outline" onClick={() => { setProgress(0); setStage("hold"); setFailReasons([]); loadChallenge(k); }}>
+                  {k === "icons" ? "+ Paveikslėliai" : k === "slider" ? "+ Slankiklis" : "+ Taikinys"}
+                </Button>
+              ))}
+              <Button size="sm" variant="outline" onClick={() => setStage("captcha")}>reCAPTCHA</Button>
+              <Button size="sm" variant="destructive" onClick={() => {
+                const f = fails + 1; setFails(f); setFailReasons(["no_motion", "too_fast"]); setProgress(0);
+                setStage(f >= 2 ? "captcha" : "hold"); if (f < 2) loadChallenge();
+              }}>Imituoti nesėkmę ({fails}/2)</Button>
+            </div>
+            <p className="mt-2 opacity-70">„+“ reiškia: po laikymo bus ši papildoma užduotis.</p>
+          </div>
+        )}
 
         {/* Decoy for text-reading AI agents: invisible and unreachable for people and screen readers. */}
         <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", top: 0, width: 1, height: 1, overflow: "hidden" }}>
