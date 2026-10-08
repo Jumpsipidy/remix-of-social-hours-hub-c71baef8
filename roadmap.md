@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Soci Guard follow-up (2026-10-08)
-- [ ] Explain mouse movement while holding, show live movement feedback, and retain touch/keyboard access
-- [ ] Validate bounded hold samples on the server and safely recheck visitors when pass validation fails
-- [ ] Test automatic-browser detection, still-pointer guidance, keyboard/touch paths and student layout at phone widths
+- [x] Explain mouse movement while holding, show live movement feedback, and retain touch/keyboard access
+- [x] Validate bounded hold samples on the server and safely recheck visitors when pass validation fails
+- [x] Test automatic-browser detection (score 11), still-pointer guidance, keyboard hold, mobile instructions and student layout at 320/390/430/1280px in both themes; no overflow or page errors, 211 tests pass. Realistic automated actions can still solve the challenge; no universal bot-blocking claim.
 
 ## Ultimate mobile audit (2026-10-08)
 - [x] Capture and visually inspect 60 mobile screenshots across 15 public pages, four widths and light/dark themes; no horizontal overflow or page errors
