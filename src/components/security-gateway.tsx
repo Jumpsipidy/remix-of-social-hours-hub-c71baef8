@@ -50,6 +50,9 @@ export function SecurityGatewayInternal() {
   const pointerType = useRef<"mouse" | "touch" | "pen" | "">("");
   const trusted = useRef(true);
   const decoy = useRef(false);
+  // Test-mode scripted robot: skips straight to the server verdict.
+  const robotRun = useRef(false);
+  const c0Answer = () => [] as number[];
   const raf = useRef<number | null>(null);
   const challenge = useRef<Promise<{ c: Challenge; solution: number }> | null>(null);
 
@@ -128,14 +131,15 @@ export function SecurityGatewayInternal() {
       const pending = challenge.current;
       if (!pending) throw new Error("challenge_missing");
       const { c } = await pending;
-      if (c.steps === 2) {
+      if (c.steps === 2 && !robotRun.current) {
         setTaps([]);
         tapTimes.current = [performance.now()];
         setStage("tap");
         return;
       }
     } catch { setStage("captcha"); return; }
-    await submit([]);
+    robotRun.current = false;
+    await submit(c0Answer());
   };
 
   const onTap = (i: number, isTrusted: boolean) => {
@@ -218,6 +222,16 @@ export function SecurityGatewayInternal() {
                 </Button>
               ))}
               <Button size="sm" variant="outline" onClick={() => setStage("captcha")}>reCAPTCHA</Button>
+              <Button size="sm" variant="secondary" disabled={stage !== "hold"} onClick={() => {
+                // Plays a scripted bot: programmatic events + a perfectly straight, even mouse path.
+                const el = document.getElementById("sv-hold-btn"); if (!el) return;
+                robotRun.current = true;
+                const r = el.getBoundingClientRect(); const x0 = r.left + 20, y = r.top + r.height / 2;
+                const ev = (type: string, x: number) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1, pointerType: "mouse", clientX: x, clientY: y }));
+                ev("pointerdown", x0);
+                let i = 0;
+                const id = window.setInterval(() => { i++; ev("pointermove", x0 + i * 3); if (i >= 40) window.clearInterval(id); }, 45);
+              }}>Paleisti robotą</Button>
               <Button size="sm" variant="destructive" onClick={() => {
                 const f = fails + 1; setFails(f); setFailReasons(["no_motion", "too_fast"]); setProgress(0);
                 setStage(f >= 2 ? "captcha" : "hold"); if (f < 2) loadChallenge();
@@ -308,6 +322,7 @@ export function SecurityGatewayInternal() {
                 whileTap={{ scale: 0.96 }}
                 className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full bg-transparent p-0 hover:bg-transparent [&_svg]:size-auto"
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+                id="sv-hold-btn"
                 aria-label="Paspausk ir palaikyk"
                 aria-describedby="sv-hold-status"
               >
