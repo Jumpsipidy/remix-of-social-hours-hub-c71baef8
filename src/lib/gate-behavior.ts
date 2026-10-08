@@ -61,3 +61,32 @@ export function gateBehaviorFailures(data: GateBehavior, age: number): string[] 
   }
   return [...new Set(fail)];
 }
+
+export const GATE_KINDS = ["icons", "slider", "target"] as const;
+export type GateKind = (typeof GATE_KINDS)[number];
+export type ExtraStep = {
+  kind: GateKind; spot: number; tx: number; ty: number;
+  tapAnswer?: number[]; tapIntervals?: number[];
+  sliderValue?: number; hit?: { x: number; y: number }; stepMs?: number;
+};
+
+/** Second-step checks: icon order, slider to the marked spot, or tapping a moving-free target. */
+export function extraStepFailures(d: ExtraStep, derivedOrder: string): string[] {
+  if (d.kind === "slider") {
+    const f: string[] = [];
+    if (d.sliderValue === undefined || Math.abs(d.sliderValue - d.spot) > 5) f.push("wrong_slider");
+    if ((d.stepMs ?? 0) < 400) f.push("tap_too_fast");
+    return f;
+  }
+  if (d.kind === "target") {
+    const f: string[] = [];
+    if (!d.hit || Math.hypot(d.hit.x - d.tx, d.hit.y - d.ty) > 8) f.push("missed_target");
+    if ((d.stepMs ?? 0) < 250) f.push("tap_too_fast");
+    return f;
+  }
+  const f: string[] = [];
+  if ((d.tapAnswer ?? []).join(",") !== derivedOrder) f.push("wrong_order");
+  const iv = d.tapIntervals ?? [];
+  if (iv.length < 3 || iv.some((ms) => ms < 180)) f.push("tap_too_fast");
+  return f;
+}
