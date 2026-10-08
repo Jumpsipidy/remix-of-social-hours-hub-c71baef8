@@ -73,6 +73,8 @@ export function ClassRoster({ students, reservations, onMessage, onRecommend }: 
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     <div className="h-1.5 w-20 sm:w-32 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct(s)}%` }} /></div>
                     <span className="font-mono text-xs text-muted-foreground">{s.hours_earned}/{s.hours_needed} val.</span>
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-foreground" title={`Ilgiausia serija: ${s.longest_login_streak ?? 0} d.`}>🔥 {s.login_streak ?? 0} d.</span>
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-foreground">👥 {s.friends_count ?? 0} draug.</span>
                     {pendingBy[s.id] ? <span className="rounded-md bg-warning/15 px-1.5 py-0.5 text-[10px] font-bold text-foreground">{pendingBy[s.id]} vyksta</span> : null}
                   </div>
                 </div>

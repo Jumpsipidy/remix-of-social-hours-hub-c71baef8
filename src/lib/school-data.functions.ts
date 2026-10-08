@@ -10,6 +10,9 @@ export type SchoolStudent = {
   hours_earned: number;
   class_year: string | null;
   class_letter: string | null;
+  login_streak?: number;
+  longest_login_streak?: number;
+  friends_count?: number;
 };
 
 export type SchoolOrg = {
@@ -94,7 +97,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
 
     let studentQuery = supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, hours_needed, hours_earned, class_year, class_letter, school_id")
+      .select("id, full_name, email, hours_needed, hours_earned, class_year, class_letter, school_id, login_streak, longest_login_streak")
       .eq("role", "student")
       .order("full_name", { ascending: true });
 
@@ -127,10 +130,28 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       hours_earned: Number(s.hours_earned ?? 0),
       class_year: s.class_year ?? null,
       class_letter: (s as { class_letter?: string | null }).class_letter ?? null,
+      login_streak: Number((s as { login_streak?: number }).login_streak ?? 0),
+      longest_login_streak: Number((s as { longest_login_streak?: number }).longest_login_streak ?? 0),
+      friends_count: 0,
     }));
 
     let reservations: SchoolReservation[] = [];
     const ids = students.map((s) => s.id);
+    if (ids.length) {
+      // Accepted friendships per student (count only, no names leaked).
+      const idList = ids.join(",");
+      const { data: fr } = await supabaseAdmin
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted")
+        .or(`requester_id.in.(${idList}),addressee_id.in.(${idList})`);
+      const counts: Record<string, number> = {};
+      for (const f of (fr as { requester_id: string; addressee_id: string }[] | null) ?? []) {
+        counts[f.requester_id] = (counts[f.requester_id] ?? 0) + 1;
+        counts[f.addressee_id] = (counts[f.addressee_id] ?? 0) + 1;
+      }
+      for (const s of students) s.friends_count = counts[s.id] ?? 0;
+    }
     if (ids.length) {
       const { data: rs, error: rsErr } = await supabaseAdmin
         .from("reservations")
