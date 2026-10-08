@@ -218,6 +218,15 @@ export function SecurityGatewayInternal() {
                 </Button>
               ))}
               <Button size="sm" variant="outline" onClick={() => setStage("captcha")}>reCAPTCHA</Button>
+              <Button size="sm" variant="secondary" disabled={stage !== "hold"} onClick={() => {
+                // Plays a scripted bot: programmatic events + a perfectly straight, even mouse path.
+                const el = document.getElementById("sv-hold-btn"); if (!el) return;
+                const r = el.getBoundingClientRect(); const x0 = r.left + 20, y = r.top + r.height / 2;
+                const ev = (type: string, x: number) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1, pointerType: "mouse", clientX: x, clientY: y }));
+                ev("pointerdown", x0);
+                let i = 0;
+                const id = window.setInterval(() => { i++; ev("pointermove", x0 + i * 3); if (i >= 40) window.clearInterval(id); }, 45);
+              }}>Paleisti robotą</Button>
               <Button size="sm" variant="destructive" onClick={() => {
                 const f = fails + 1; setFails(f); setFailReasons(["no_motion", "too_fast"]); setProgress(0);
                 setStage(f >= 2 ? "captcha" : "hold"); if (f < 2) loadChallenge();
@@ -308,6 +317,7 @@ export function SecurityGatewayInternal() {
                 whileTap={{ scale: 0.96 }}
                 className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full bg-transparent p-0 hover:bg-transparent [&_svg]:size-auto"
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+                id="sv-hold-btn"
                 aria-label="Paspausk ir palaikyk"
                 aria-describedby="sv-hold-status"
               >
