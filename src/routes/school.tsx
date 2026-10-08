@@ -785,8 +785,13 @@ function SchoolDashboard() {
             </Panel>
           )}
 
-          {tab === "classes" && (
+          {tab === "classes" && profile?.role === "admin" && (
             <SchoolClassesPanel current={assignedClasses} onSaved={() => void refresh()} />
+          )}
+          {tab === "classes" && profile?.role !== "admin" && (
+            <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+              Tavo klasės: <b className="text-foreground">{assignedClasses.length ? assignedClasses.map((c) => classLabel({ class_year: c, class_letter: scope?.assigned_letter ?? null })).join(", ") : "visa mokykla"}</b>. Klases priskiria ir keisti gali tik sistemos administratorius.
+            </div>
           )}
 
           {tab === "classes" && (
