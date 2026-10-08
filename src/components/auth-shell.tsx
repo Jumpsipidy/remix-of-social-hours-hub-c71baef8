@@ -47,6 +47,15 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-8 pt-20 sm:px-6">
         <div className={`auth-transition-frame relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
+          {/* Keep the original visible blue sweep alongside synchronized panels. */}
+          <motion.div
+            key={`blue-slide-${mode}`}
+            aria-hidden="true"
+            className="auth-blue-slide pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-gradient-to-r from-transparent via-primary/40 to-transparent"
+            initial={{ left: isLogin ? "100%" : "-33%" }}
+            animate={{ left: isLogin ? "-33%" : "100%" }}
+            transition={{ duration: 0.85, ease: [0.65, 0, 0.2, 1] }}
+          />
           {/* Brand panel */}
           <aside
             className="auth-transition-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
