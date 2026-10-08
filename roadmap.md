@@ -1,12 +1,13 @@
 # Roadmap
 
 ## Mobile enhancement (2026-10-08)
-- [ ] Restore synchronized blue login/signup sweep and smooth matching skeleton-to-form transition, including mobile
-- [ ] Compact mobile navigation, dashboard rows, task filters and reservation dialogs without changing desktop layouts
-- [ ] Accessible chat contact picker, multiline composer, long-text wrapping, live private inbox and keyboard-safe conversation layout
-- [ ] Fast QR presentation, matching loading view, retry/offline/expired states and prominent student QR links
-- [ ] Mobile class roster/history and organization scanning controls
-- [ ] Verify public pages and isolated authenticated UI fixtures at narrow widths, run relevant regression tests
+- [x] Restore synchronized blue login/signup sweep and smooth matching skeleton-to-form transition, including mobile
+- [x] Compact mobile navigation, dashboard rows, task filters and reservation dialogs without changing desktop layouts
+- [x] Accessible chat contact picker, multiline composer, long-text wrapping, live private inbox and keyboard-safe conversation layout
+- [x] Fast QR presentation, matching loading view, retry/offline/expired states and prominent student QR links
+- [x] Mobile class roster/history and organization scanning controls
+- [x] Verify public pages at 320/390/768px and isolated chat, QR and school fixtures; multiline send and QR dialog pass; 190 tests pass
+- [ ] Verify real signed-in conversations, QR scanning/camera and phone software keyboard — blocked by external unmanaged Supabase session availability; isolated UI checks are not end-to-end authentication checks
 
 ## Login/signup transition
 - [x] Restore the blue sliding sweep and add fast matching login/signup loading placeholders (no artificial minimum wait)
