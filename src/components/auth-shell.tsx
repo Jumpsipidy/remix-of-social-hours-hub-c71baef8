@@ -36,7 +36,7 @@ const COPY: Record<AuthMode, { eyebrow: string; title: string; accent: string; b
 
 /**
  * Bendras prisijungimo / registracijos rėmas. Prekės ženklo skydelis
- * persikelia į kitą pusę perjungiant režimą, o forma įslysta iš priešingos.
+ * persikelia į kitą pusę perjungiant režimą per bendrą View Transition.
  */
 export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactNode }) {
   const c = COPY[mode];
@@ -46,58 +46,42 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
       <div className="absolute right-4 top-4 z-30"><SchoolEyesToggle /></div>
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-8 pt-20 sm:px-6">
-        <div className={`relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
-          {/* Sweep: a light band crosses the card when switching modes */}
-          <motion.div
-            key={`sweep-${mode}`}
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 z-20 w-1/3 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
-            initial={{ left: isLogin ? "100%" : "-33%" }}
-            animate={{ left: isLogin ? "-33%" : "100%" }}
-            transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
-          />
+        <div className={`auth-transition-frame relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
           {/* Brand panel */}
-          <motion.aside
-            key={`panel-${mode}`}
-            initial={{ clipPath: isLogin ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)", x: isLogin ? -24 : 24 }}
-            animate={{ clipPath: "inset(0 0% 0 0%)", x: 0 }}
-            transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
-            className="relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
+          <aside
+            className="auth-transition-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
           >
             <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary-foreground/10 blur-2xl" />
             <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-primary-foreground/10 blur-3xl" />
-            <Link to="/" className="relative inline-flex items-center gap-2">
+            <Link to="/" className="auth-transition-logo relative inline-flex items-center gap-2">
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary-foreground/15">
                 <Heart className="h-5 w-5" fill="currentColor" />
               </div>
               <span className="font-display text-xl font-bold">Socialinės Valandos</span>
             </Link>
             <div className="relative">
-              <p className="text-[11px] font-bold uppercase tracking-[0.25em] opacity-80">{c.eyebrow}</p>
-              <h1 className="mt-4 text-5xl font-black leading-[1.03] tracking-tight">
+              <p className="auth-transition-eyebrow text-[11px] font-bold uppercase tracking-[0.25em] opacity-80">{c.eyebrow}</p>
+              <h1 className="auth-transition-title mt-4 text-5xl font-black leading-[1.03] tracking-tight">
                 {c.title}<br />{c.accent}
               </h1>
-              <p className="mt-5 max-w-sm text-sm opacity-85">{c.body}</p>
-              <ul className="mt-8 space-y-3">
+              <p className="auth-transition-description mt-5 max-w-sm text-sm opacity-85">{c.body}</p>
+              <ul className="auth-transition-points mt-8 space-y-3">
                 {c.points.map((p, i) => (
-                  <motion.li
+                  <li
                     key={p.text}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 + i * 0.08 }}
                     className="flex items-center gap-3 text-sm"
                   >
                     <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary-foreground/15"><p.icon className="h-4 w-4" /></span>
                     {p.text}
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
             </div>
             <p className="relative text-[11px] opacity-70">Beta · Veikia</p>
-          </motion.aside>
+          </aside>
 
           {/* Form side */}
-          <div className="p-6 [direction:ltr] sm:p-10">
+          <div className="auth-transition-form-panel p-6 [direction:ltr] sm:p-10">
             <Link to="/" className="mb-6 inline-flex items-center gap-2 lg:hidden">
               <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary">
                 <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
@@ -105,15 +89,11 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
               <span className="font-display text-lg font-bold">Socialinės Valandos</span>
             </Link>
             <AuthModeSwitch mode={mode} />
-            <motion.div
-              key={`form-${mode}`}
-              initial={{ opacity: 0, x: isLogin ? 40 : -40, filter: "blur(8px)", scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, filter: "blur(0px)", scale: 1 }}
-              transition={{ duration: 0.55, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-6"
+            <div
+              className="auth-transition-content mt-6"
             >
               {children}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -127,18 +107,18 @@ function AuthModeSwitch({ mode }: { mode: AuthMode }) {
     { k: "register", label: "Registruotis", to: "/register" },
   ];
   return (
-    <div className="relative grid grid-cols-2 rounded-full border border-border bg-background/60 p-1">
-      <motion.span
+    <div className="auth-transition-switch relative grid grid-cols-2 rounded-full border border-border bg-background/60 p-1">
+      <span
         aria-hidden
-        className="absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-gradient-primary shadow-glow"
-        initial={false}
-        animate={{ left: mode === "login" ? 4 : "calc(50% + 0px)" }}
-        transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        className={`auth-transition-indicator absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-gradient-primary shadow-glow ${mode === "login" ? "left-1" : "left-1/2"}`}
       />
       {tabs.map((t) => (
         <Link
           key={t.k}
           to={t.to}
+          viewTransition
+          resetScroll={false}
+          aria-current={mode === t.k ? "page" : undefined}
           className={`relative z-10 py-2.5 text-center text-sm font-bold transition-colors ${mode === t.k ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
           {t.label}

@@ -406,6 +406,51 @@ html.school-eyes, .theme-sample-light {
 }
 .auth-shell select option { background: var(--popover); color: var(--popover-foreground); }
 
+/* Named snapshots survive route replacement: panels move instead of remounting
+   with independent entrance effects. Only the changing copy crossfades. */
+.auth-transition-frame { view-transition-name: auth-frame; }
+.auth-transition-brand { view-transition-name: auth-brand; }
+.auth-transition-logo { view-transition-name: auth-logo; }
+.auth-transition-eyebrow { view-transition-name: auth-eyebrow; }
+.auth-transition-title { view-transition-name: auth-title; }
+.auth-transition-description { view-transition-name: auth-description; }
+.auth-transition-points { view-transition-name: auth-points; }
+.auth-transition-form-panel { view-transition-name: auth-form-panel; }
+.auth-transition-switch { view-transition-name: auth-switch; }
+.auth-transition-indicator { view-transition-name: auth-indicator; }
+.auth-transition-content { view-transition-name: auth-content; }
+::view-transition-group(auth-frame),
+::view-transition-group(auth-brand),
+::view-transition-group(auth-logo),
+::view-transition-group(auth-eyebrow),
+::view-transition-group(auth-title),
+::view-transition-group(auth-description),
+::view-transition-group(auth-points),
+::view-transition-group(auth-form-panel),
+::view-transition-group(auth-switch),
+::view-transition-group(auth-indicator),
+::view-transition-group(auth-content) {
+  animation-duration: 650ms;
+  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+}
+::view-transition-old(auth-content),
+::view-transition-new(auth-content),
+::view-transition-old(auth-title),
+::view-transition-new(auth-title),
+::view-transition-old(auth-description),
+::view-transition-new(auth-description),
+::view-transition-old(auth-points),
+::view-transition-new(auth-points) {
+  height: 100%;
+  object-fit: none;
+  object-position: left top;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation-duration: 1ms !important; }
+}
+
 /* Shared skeleton — calm, synced shimmer.
    - Fades in after 180ms so fast loads never flash a skeleton.
    - background-attachment: fixed makes every block share ONE light sweep,

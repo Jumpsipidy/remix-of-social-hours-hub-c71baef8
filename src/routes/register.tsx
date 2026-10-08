@@ -315,7 +315,7 @@ function RegisterPage() {
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 Jau turi paskyrą?{" "}
-                <Link to="/login" className="font-semibold text-primary hover:underline">Prisijunk</Link>
+                <Link to="/login" viewTransition resetScroll={false} className="font-semibold text-primary hover:underline">Prisijunk</Link>
               </p>
               <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
                 Tęsdamas sutinki su{" "}
