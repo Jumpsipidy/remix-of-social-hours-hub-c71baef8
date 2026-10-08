@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X, Send, Trash2, Clock } from "lucide-react";
 import { useTypingIndicator } from "@/hooks/use-typing";
 import { TypingDots, LinkifiedText } from "@/components/typing-dots";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MessageComposer } from "@/components/message-composer";
+import { MessageThreadSkeleton } from "@/components/skeleton-loader";
 import { openDmRoom, listDmMessages, sendDmMessage, subscribeDmMessages, type DmMessage } from "@/lib/dm";
 
 export function DmDialog({
@@ -18,6 +20,9 @@ export function DmDialog({
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const sendLock = useRef(false);
+  const followLatest = useRef(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(roomId ? `dm-${roomId}` : null, me);
 
@@ -27,64 +32,71 @@ export function DmDialog({
       setMessages([]);
       return;
     }
+    let alive = true;
     let unsub: (() => void) | null = null;
+    setRoomId(null);
+    setMessages([]);
+    setText("");
+    followLatest.current = true;
     (async () => {
       setLoading(true);
       try {
         const rid = await openDmRoom(friend.id);
+        if (!alive) return;
         setRoomId(rid);
         const msgs = await listDmMessages(rid);
+        if (!alive) return;
         setMessages(msgs);
         unsub = subscribeDmMessages(rid, (m) => {
+          if (!alive) return;
           setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
         });
       } catch (e: any) {
+        if (!alive) return;
         toast.error(e?.message ?? "Nepavyko atverti DM");
         onClose();
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
     return () => {
+      alive = false;
       if (unsub) unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [friend?.id]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    if (followLatest.current) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "auto" });
   }, [messages.length]);
 
   const send = async () => {
-    if (!roomId || !text.trim()) return;
+    if (!roomId || !text.trim() || sendLock.current) return;
+    const content = text;
+    sendLock.current = true;
+    setSending(true);
     try {
-      await sendDmMessage(roomId, me, text);
-      setText("");
+      await sendDmMessage(roomId, me, content);
+      setText((current) => current === content ? "" : current);
+      followLatest.current = true;
       notifyStop();
     } catch (e: any) {
       toast.error(e?.message ?? "Nepavyko išsiųsti");
-    }
+    } finally { sendLock.current = false; setSending(false); }
   };
 
   if (!friend) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 backdrop-blur sm:items-center sm:p-4">
-      <div className="flex h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-xl sm:h-[70vh] sm:rounded-2xl">
-        <div className="flex items-center justify-between border-b border-border bg-gradient-card px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold">{friend.name}</p>
-            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Trash2 className="h-3 w-3" /> Žinutės ištrinamos po 2 dienų · <Clock className="h-3 w-3" /> saugumo priežastimis
-            </p>
-          </div>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-accent" aria-label="Uždaryti">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <Dialog open={!!friend} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="dm-chat-dialog flex h-[85dvh] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:h-[70vh]">
+        <DialogHeader className="shrink-0 border-b border-border px-4 py-3 pr-14">
+          <DialogTitle className="truncate text-sm">{friend.name}</DialogTitle>
+          <DialogDescription className="text-xs">Asmeninis pokalbis · žinutės ištrinamos po 2 dienų</DialogDescription>
+        </DialogHeader>
 
-        <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto bg-background/40 p-4">
-          {loading && <p className="text-center text-xs text-muted-foreground">Kraunama…</p>}
+        <div ref={scrollRef} role="log" aria-label="Asmeninės žinutės" aria-live="polite" aria-relevant="additions" aria-busy={loading} onScroll={() => { const node = scrollRef.current; if (node) followLatest.current = node.scrollHeight - node.scrollTop - node.clientHeight < 100; }} className="chat-transcript min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-background/40 p-3 sm:p-4">
+          {loading && <MessageThreadSkeleton />}
           {!loading && messages.length === 0 && (
             <p className="text-center text-xs text-muted-foreground">Dar nėra žinučių. Pasisveikink 👋</p>
           )}
@@ -93,11 +105,11 @@ export function DmDialog({
             return (
               <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                    mine ? "bg-gradient-primary text-primary-foreground" : "bg-card border border-border"
+                  className={`min-w-0 max-w-[88%] rounded-lg sm:max-w-[75%] px-3 py-2 text-sm shadow-sm ${
+                    mine ? "bg-primary text-primary-foreground" : "bg-card border border-border"
                   }`}
                 >
-                  <LinkifiedText text={m.content} className="break-words whitespace-pre-wrap" />
+                  <LinkifiedText text={m.content} className="message-text whitespace-pre-wrap [overflow-wrap:anywhere]" />
                   <p className={`mt-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                     {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
@@ -108,30 +120,8 @@ export function DmDialog({
           <TypingDots show={othersTyping} name={friend.name} />
         </div>
 
-        <div className="flex items-center gap-2 border-t border-border bg-card p-3">
-          <input
-            value={text}
-            onChange={(e) => { setText(e.target.value); notifyTyping(); }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder="Rašyk žinutę…"
-            maxLength={2000}
-            className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm outline-none focus:border-primary"
-          />
-          <button
-            onClick={send}
-            disabled={!text.trim() || !roomId}
-            className="rounded-full bg-gradient-primary p-2 text-primary-foreground shadow-glow disabled:opacity-40"
-            aria-label="Siųsti"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
+        <MessageComposer value={text} onChange={(value) => { setText(value); notifyTyping(); }} onSend={() => { void send(); }} sending={sending} disabled={loading || !roomId} />
+      </DialogContent>
+    </Dialog>
   );
 }

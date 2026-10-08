@@ -9,7 +9,7 @@ export function TypingDots({ show, name }: { show: boolean; name?: string }) {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 4 }}
-          className="flex items-center gap-2"
+          className="flex min-w-0 items-center gap-2"
           aria-live="polite"
         >
           <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-border bg-card px-3 py-2.5">
@@ -17,7 +17,7 @@ export function TypingDots({ show, name }: { show: boolean; name?: string }) {
               <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: `${i * 0.16}s` }} />
             ))}
           </div>
-          <span className="text-[11px] text-muted-foreground">{name ? `${name} rašo…` : "Rašo…"}</span>
+          <span className="min-w-0 truncate text-xs text-muted-foreground">{name ? `${name} rašo…` : "Rašo…"}</span>
         </motion.div>
       )}
     </AnimatePresence>
@@ -31,7 +31,7 @@ export function LinkifiedText({ text, className }: { text: string; className?: s
     <p className={className}>
       {parts.map((p, i) =>
         /^(https?:\/\/|\/tasks\?task=)/.test(p) ? (
-          <a key={i} href={p} className="font-semibold underline underline-offset-2">
+          <a key={i} href={p} className="message-link font-semibold underline underline-offset-2 [overflow-wrap:anywhere]">
             {p.includes("/tasks?task=") ? "Atidaryti užduotį →" : p}
           </a>
         ) : (

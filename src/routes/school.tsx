@@ -84,6 +84,10 @@ export const Route = createFileRoute("/school")({
           "Stebėk priskirtų klasių mokinių progresą, audituok rezervacijas ir valdyk mokyklos partnerius.",
       },
       { name: "robots", content: "noindex, nofollow" },
+      { property: "og:title", content: "Mokyklos sritis — Socialinės Valandos" },
+      { property: "og:description", content: "Priskirtų klasių progresas, rezervacijos ir mokyklos partneriai." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SchoolDashboard,
@@ -527,7 +531,7 @@ function SchoolDashboard() {
   return (
     <PageShell>
       <section className="dash-v3 school-v4 mx-auto max-w-[96rem] px-0 sm:px-4 lg:flex lg:gap-0 lg:py-0">
-        <aside className="sticky top-16 z-20 border-b border-border bg-card lg:flex lg:h-[calc(100vh-4rem)] lg:w-72 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r" aria-label="Mokyklos skiltys">
+        <aside className="sticky top-[72px] z-20 border-b border-border bg-card lg:flex lg:h-[calc(100vh-4rem)] lg:w-72 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r" aria-label="Mokyklos skiltys">
           <nav className="flex gap-1 overflow-x-auto px-3 py-2 lg:mt-4 lg:flex-1 lg:flex-col lg:overflow-y-auto lg:px-4 lg:py-0">
             {nav.map((item, i) => (
               <div key={item.id} className="contents">
@@ -565,14 +569,14 @@ function SchoolDashboard() {
         </aside>
 
         <div className="min-w-0 flex-1">
-        <header className="sticky top-16 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-4 backdrop-blur-md sm:px-8 lg:h-20 lg:py-0">
+        <header className="relative z-10 flex flex-wrap lg:sticky lg:top-[72px] items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-4 backdrop-blur-md sm:px-8 lg:h-20 lg:py-0">
           <div className="min-w-0">
             <h1 className="truncate text-xl font-bold">Sveiki sugrįžę, {(profile.full_name ?? "").split(" ")[0] || "administratoriau"}</h1>
             <p className="text-sm text-muted-foreground">Šiandien {new Date().toLocaleDateString("lt-LT", { year: "numeric", month: "long", day: "numeric" })}</p>
           </div>
           <div className="flex w-full items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 sm:w-64">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti mokinio…" className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
+            <input aria-label="Ieškoti mokinio" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškoti mokinio…" className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground" />
           </div>
         </header>
         <div className="px-4 py-6 sm:px-8">

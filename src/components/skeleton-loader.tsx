@@ -97,6 +97,26 @@ export function ChatSkeleton() {
   );
 }
 
+export function MessageThreadSkeleton() {
+  return <div role="status" aria-label="Kraunamos žinutės" className="space-y-4 p-3">
+    {["w-3/4", "ml-auto w-1/2", "w-2/3", "ml-auto w-3/4"].map((width, i) => (
+      <SkeletonLoader key={i} className={cn("h-16 rounded-lg", width)} delay={i} />
+    ))}
+  </div>;
+}
+
+export function CheckinSkeleton() {
+  return <div role="status" aria-label="Kraunamas QR kodas" className="mx-auto grid max-w-3xl gap-5 rounded-lg border border-border bg-card p-4 sm:grid-cols-[256px_minmax(0,1fr)] sm:p-6">
+    <SkeletonLoader className="mx-auto aspect-square w-full max-w-64 rounded-lg" />
+    <div className="min-w-0 space-y-4">
+      <SkeletonLoader className="h-5 w-2/3" />
+      <SkeletonLoader className="h-4 w-full" />
+      <SkeletonLoader className="h-20 w-full" />
+      <SkeletonLoader className="h-11 w-full" />
+    </div>
+  </div>;
+}
+
 /** Žemėlapio vieta: telefone žemesnė, kad tilptų sąrašas. */
 export function MapSkeleton({ className }: { className?: string }) {
   return <SkeletonLoader className={cn("h-64 w-full sm:h-[420px]", className)} />;

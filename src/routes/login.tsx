@@ -152,10 +152,8 @@ function LoginPage() {
     }
   }
 
-  if (loading) return <AuthSkeleton />;
-
   return (
-    <AuthShell mode="login">
+    <AuthShell mode="login" loading={loading}>
       {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
       <h2 className="text-2xl font-black tracking-tight">Prisijungti</h2>
       <p className="mt-1 text-sm text-muted-foreground">Sistema pati nukreips pagal rolę.</p>
@@ -167,7 +165,7 @@ function LoginPage() {
           <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">El. paštas</label>
           <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+            <input aria-label="El. paštas" autoComplete="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
           </div>
         </div>
         <div>
@@ -177,7 +175,7 @@ function LoginPage() {
           </div>
           <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
             <Lock className="h-4 w-4 text-muted-foreground" />
-            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+            <input aria-label="Slaptažodis" autoComplete="current-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Slėpti slaptažodį" : "Rodyti slaptažodį"}>
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

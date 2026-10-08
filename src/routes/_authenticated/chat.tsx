@@ -4,13 +4,17 @@ import { TypingDots, LinkifiedText } from "@/components/typing-dots";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, Search, ArrowLeft, Building2, GraduationCap, User as UserIcon, Clock, ShieldCheck } from "lucide-react";
+import { MessageCircle, Search, ArrowLeft, Building2, GraduationCap, User as UserIcon, Clock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { PageShell } from "@/components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MessageComposer } from "@/components/message-composer";
+import { MessageThreadSkeleton } from "@/components/skeleton-loader";
 import { notifyNewMessage } from "@/lib/chat.functions";
 
 type Search = { room?: string; org?: string };
@@ -51,6 +55,11 @@ function ChatPage() {
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [messageError, setMessageError] = useState(false);
+  const [reload, setReload] = useState(0);
+  const messageScroll = useRef<HTMLDivElement>(null);
+  const followLatest = useRef(true);
+  const sendLock = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const activeId = search.room ?? null;
 
@@ -78,12 +87,15 @@ function ChatPage() {
     if (!activeId || !user) { setMsgs(null); return; }
     let alive = true;
     setMsgs(null);
+    setMessageError(false);
+    setText("");
+    followLatest.current = true;
     supabase.from("messages").select("*").eq("chat_room_id", activeId).order("created_at", { ascending: true }).limit(500)
-      .then(({ data }) => { if (alive) setMsgs((data as Msg[]) ?? []); });
+      .then(({ data, error }) => { if (alive) { setMessageError(!!error); setMsgs((data as Msg[]) ?? []); } });
     void (supabase.from as any)("chat_reads").upsert({ room_id: activeId, user_id: user.id, last_read_at: new Date().toISOString() });
     setConvs((c) => c?.map((x) => (x.room_id === activeId ? { ...x, unread: 0 } : x)) ?? c);
     return () => { alive = false; };
-  }, [activeId, user]);
+  }, [activeId, user, reload]);
 
   // Realtime: new messages anywhere I can see.
   useEffect(() => {
@@ -107,7 +119,9 @@ function ChatPage() {
     return () => { supabase.removeChannel(ch); };
   }, [user, activeId, loadConvs]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs?.length]);
+  useEffect(() => {
+    if (followLatest.current) messageScroll.current?.scrollTo({ top: messageScroll.current.scrollHeight, behavior: "auto" });
+  }, [msgs?.length]);
 
   const active = convs?.find((c) => c.room_id === activeId) ?? null;
   const titleFor = (c: Conv) => {
@@ -160,15 +174,17 @@ function ChatPage() {
     navigate({ to: "/chat", search: { room: data as string } });
   }
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault();
+  async function send() {
     const content = text.trim();
-    if (!content || !activeId || !user || sending) return;
+    if (!content || !activeId || !user || sendLock.current) return;
+    sendLock.current = true;
     setSending(true);
     const { data, error } = await supabase.from("messages").insert({ chat_room_id: activeId, sender_id: user.id, content }).select("*").single();
+    sendLock.current = false;
     setSending(false);
     if (error) { toast.error(error.message); return; }
-    setText("");
+    setText((current) => current.trim() === content ? "" : current);
+    followLatest.current = true;
     notifyStop();
     setMsgs((p) => (p && data && !p.some((x) => x.id === (data as Msg).id) ? [...p, data as Msg] : p));
     notify({ data: { roomId: activeId } }).catch(() => {});
@@ -176,26 +192,22 @@ function ChatPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        {user && <div className="mb-5"><DmInbox me={user.id} showTeachers={profile?.role === "student"} /></div>}
-        <div className="mb-5 flex items-end justify-between gap-3">
-          <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight">Pokalbiai</h1>
+      <div className={`chat-page mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 ${activeId ? "chat-page-active" : ""}`}>
+        {user && <div className={`mb-4 ${activeId ? "hidden md:block" : ""}`}><DmInbox me={user.id} showTeachers={profile?.role === "student"} /></div>}
+        <div className={`chat-heading mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between ${activeId ? "hidden md:flex" : ""}`}>
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl">Pokalbiai</h1>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
               <Clock className="h-3.5 w-3.5" /> Žinutės saugomos 12 dienų{totalUnread ? ` · ${totalUnread} neperskaitytų` : ""}
             </p>
           </div>
-          <button type="button" onClick={openPicker} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition active:scale-95">
-            <MessageCircle className="h-4 w-4" /> Naujas pokalbis
-          </button>
+          <Button type="button" onClick={openPicker} className="h-11 shrink-0 px-3" aria-label="Naujas pokalbis"><MessageCircle /><span className="hidden sm:inline">Naujas pokalbis</span></Button>
         </div>
-        <AnimatePresence>
-          {picker && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 sm:items-center sm:p-4" onClick={() => setPicker(false)}>
-              <motion.div initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }} transition={{ duration: 0.2 }} onClick={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-md overflow-hidden rounded-t-3xl border border-border bg-card sm:rounded-3xl">
+        <Dialog open={picker} onOpenChange={setPicker}>
+          <DialogContent className="max-w-md gap-0 p-0">
                 <div className="border-b border-border p-4">
-                  <h2 className="font-display text-lg font-bold">Kam rašyti?</h2>
-                  <input autoFocus value={contactQ} onChange={(e) => setContactQ(e.target.value)} placeholder="Ieškoti…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
+                  <DialogHeader><DialogTitle>Kam rašyti?</DialogTitle><DialogDescription>Kontaktai</DialogDescription></DialogHeader>
+                  <input aria-label="Ieškoti kontakto" value={contactQ} onChange={(e) => setContactQ(e.target.value)} placeholder="Ieškoti…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div className="max-h-[55vh] overflow-y-auto p-2">
                   {(() => {
@@ -239,18 +251,16 @@ function ChatPage() {
                     );
                   })()}
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </DialogContent>
+        </Dialog>
 
-        <div className="grid h-[calc(100dvh-14rem)] min-h-[420px] md:h-[70vh] overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[320px_1fr]">
+        <div className="chat-workspace grid h-[calc(100dvh-14rem)] min-h-[320px] overflow-hidden rounded-lg border border-border bg-card md:h-[70vh] md:grid-cols-[320px_minmax(0,1fr)]">
           {/* List */}
           <aside className={`flex min-h-0 flex-col border-r border-border ${activeId ? "hidden md:flex" : "flex"}`}>
             <div className="border-b border-border p-3">
               <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3">
                 <Search className="h-4 w-4 text-muted-foreground" />
-                <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Ieškoti pokalbio…" className="h-10 w-full bg-transparent text-sm outline-none" />
+                <input aria-label="Ieškoti pokalbio" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Ieškoti pokalbio…" className="h-10 w-full bg-transparent text-sm outline-none" />
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -267,8 +277,8 @@ function ChatPage() {
               ) : shown.map((c) => {
                 const Icon = profile?.role === "student" ? Building2 : c.student_id === c.school_admin_id ? GraduationCap : UserIcon;
                 return (
-                  <button key={c.room_id} onClick={() => navigate({ to: "/chat", search: { room: c.room_id } })}
-                    className={`flex w-full items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition hover:bg-accent/50 ${c.room_id === activeId ? "bg-accent" : ""}`}>
+                  <Button variant="ghost" key={c.room_id} onClick={() => navigate({ to: "/chat", search: { room: c.room_id } })}
+                    className={`h-auto min-h-16 w-full justify-start whitespace-normal rounded-none gap-3 border-b border-border/50 px-3 py-3 text-left transition hover:bg-accent/50 ${c.room_id === activeId ? "bg-accent" : ""}`}>
                     <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary"><Icon className="h-4 w-4" /></div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
@@ -280,36 +290,37 @@ function ChatPage() {
                         {c.unread > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>}
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
           </aside>
 
           {/* Thread */}
-          <section className={`min-h-0 flex-col ${activeId ? "flex" : "hidden md:flex"}`}>
+          <section aria-label="Pokalbio žinutės" className={`min-h-0 min-w-0 flex-col ${activeId ? "flex" : "hidden md:flex"}`}>
             {!activeId ? (
               <div className="grid flex-1 place-items-center p-8 text-center text-muted-foreground">
                 <div><MessageCircle className="mx-auto mb-3 h-10 w-10" /><p className="text-sm">Pasirink pokalbį kairėje.</p></div>
               </div>
             ) : (
               <>
-                <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-                  <button className="md:hidden" onClick={() => navigate({ to: "/chat", search: {} })} aria-label="Atgal"><ArrowLeft className="h-5 w-5" /></button>
-                  <div className="min-w-0">
+                <header className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2">
+                  <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 md:hidden" onClick={() => navigate({ to: "/chat", search: {} })} aria-label="Atgal į pokalbius"><ArrowLeft /></Button>
+                  <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{active ? titleFor(active) : "Pokalbis"}</p>
-                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <ShieldCheck className="h-3 w-3" /> Mokyklos administracija gali matyti šį pokalbį
-                      {active?.reservation_date ? ` · rezervacija ${active.reservation_date}` : ""}
+                    <p className="flex items-start gap-1 text-xs text-muted-foreground">
+                      <ShieldCheck className="mt-0.5 h-3 w-3 shrink-0" /><span>Mokyklos administracija gali matyti šį pokalbį{active?.reservation_date ? ` · ${active.reservation_date}` : ""}</span>
                     </p>
                   </div>
                 </header>
-                <div className="flex items-center justify-center gap-1.5 border-b border-border bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                <div className="hidden shrink-0 items-center justify-center gap-1.5 border-b border-border bg-warning/10 px-3 py-1.5 text-xs font-medium text-foreground sm:flex">
                   <Clock className="h-3 w-3 shrink-0" /> Žinutės automatiškai ištrinamos po 12 dienų.
                 </div>
-                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-background/40 p-4">
+                <div ref={messageScroll} role="log" aria-label="Žinutės" aria-live="polite" aria-relevant="additions" aria-busy={msgs === null} onScroll={() => { const node = messageScroll.current; if (node) followLatest.current = node.scrollHeight - node.scrollTop - node.clientHeight < 100; }} className="chat-transcript min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-background/40 p-3 sm:p-4">
                   {msgs === null ? (
-                    <div className="space-y-3">{[60, 40, 70, 50].map((w, i) => <Skeleton key={i} className={`h-10 rounded-2xl ${i % 2 ? "ml-auto" : ""}`} style={{ width: `${w}%` }} />)}</div>
+                    <MessageThreadSkeleton />
+                  ) : messageError ? (
+                    <div role="alert" className="p-4 text-center"><p className="text-sm">Nepavyko įkelti žinučių.</p><Button variant="outline" className="mt-3" onClick={() => setReload((n) => n + 1)}>Bandyti dar kartą</Button></div>
                   ) : msgs.length === 0 ? (
                     <p className="pt-10 text-center text-sm text-muted-foreground">Parašyk pirmą žinutę 👋</p>
                   ) : (
@@ -318,13 +329,13 @@ function ChatPage() {
                         const mine = m.sender_id === user?.id;
                         return (
                           <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm ${mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card"}`}>
+                            <div className={`min-w-0 max-w-[88%] rounded-lg sm:max-w-[78%] px-3.5 py-2 text-sm ${mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card"}`}>
                               {(() => { const r = roleOf(m.sender_id); return (
                                 <p className={`mb-0.5 flex items-center gap-1.5 text-[10px] font-bold ${mine ? "justify-end opacity-80" : "opacity-80"}`}>
                                   <span>{mine ? "Tu" : nameOf(m.sender_id)}</span>
                                   {r && <span className={`rounded-full px-1.5 py-px text-[9px] font-bold ${mine ? "bg-primary-foreground/20 text-primary-foreground" : r.cls}`}>{r.label}</span>}
                                 </p>); })()}
-                              <LinkifiedText text={m.content} className="whitespace-pre-wrap break-words" />
+                              <LinkifiedText text={m.content} className="message-text whitespace-pre-wrap [overflow-wrap:anywhere]" />
                               <p className="mt-0.5 text-right text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}</p>
                             </div>
                           </motion.div>
@@ -335,12 +346,7 @@ function ChatPage() {
                   <TypingDots show={othersTyping} />
                   <div ref={endRef} />
                 </div>
-                <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-3">
-                  <input value={text} onChange={(e) => { setText(e.target.value.slice(0, 2000)); notifyTyping(); }} placeholder="Rašyk žinutę…" className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
-                  <button disabled={!text.trim() || sending} className="grid h-11 w-11 place-items-center rounded-xl bg-primary text-primary-foreground transition active:scale-90 disabled:opacity-50" aria-label="Siųsti">
-                    <Send className="h-4 w-4" />
-                  </button>
-                </form>
+                <MessageComposer value={text} onChange={(value) => { setText(value); notifyTyping(); }} onSend={() => { void send(); }} sending={sending} disabled={msgs === null || messageError} />
               </>
             )}
           </section>

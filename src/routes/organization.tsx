@@ -372,7 +372,7 @@ function OrgDashboard() {
 
   return (
     <PageShell>
-      <div className="dash-v3">
+      <div className="dash-v3 organization-mobile">
       <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
         {/* Top bar */}
         <div className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
@@ -386,7 +386,7 @@ function OrgDashboard() {
             <h1 className="truncate font-display text-xl font-bold sm:text-2xl">Labas, {orgLabel}</h1>
           </div>
           <div className="flex w-full gap-2 sm:w-auto">
-            <Button size="sm" className="flex-1 rounded-lg sm:flex-none" onClick={() => openCreateTask()}>
+            <Button size="sm" className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-lg py-2 text-left sm:flex-none" onClick={() => openCreateTask()}>
               <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
             </Button>
             <Button asChild size="sm" variant="outline" className="rounded-lg">
@@ -396,11 +396,11 @@ function OrgDashboard() {
         </div>
 
         {/* Bento overview */}
-        <div className="mt-5 grid gap-3 md:grid-cols-4 md:grid-rows-2">
+        <div className="org-overview mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 md:grid-rows-2">
           <button
             type="button"
             onClick={() => document.getElementById("org-requests")?.scrollIntoView({ behavior: "smooth" })}
-            className="dash-card flex flex-col justify-between p-5 text-left md:col-span-2 md:row-span-2"
+            className="dash-card col-span-2 flex flex-col justify-between p-4 text-left md:row-span-2 md:p-5"
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-muted-foreground">Laukia tavo sprendimo</span>
@@ -437,7 +437,7 @@ function OrgDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-16 z-20 -mx-4 mt-6 flex gap-1 border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0">
+        <div className="sticky top-[72px] z-20 -mx-4 mt-6 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0">
           {([["dashboard", "Ataskaita"], ["profile", "Mano profilis"]] as const).map(([id, label]) => (
             <button
               key={id}
@@ -447,7 +447,7 @@ function OrgDashboard() {
               {label}
             </button>
           ))}
-          <Link to="/org/$id" params={{ id: user.id }} target="_blank" className="ml-auto flex items-center gap-1.5 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
+          <Link to="/org/$id" params={{ id: user.id }} target="_blank" className="ml-auto flex shrink-0 items-center gap-1.5 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground">
             <Eye className="h-3.5 w-3.5" /> Viešas profilis
           </Link>
         </div>
