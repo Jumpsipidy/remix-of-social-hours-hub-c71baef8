@@ -655,11 +655,15 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 }
 ::view-transition-group(auth-sweep) { z-index: 100; animation-duration: 850ms; }
 ::view-transition-old(auth-sweep) { display: none; }
-::view-transition-new(auth-sweep) { animation: auth-snapshot-sweep 850ms cubic-bezier(.65,0,.2,1) both; }
+::view-transition-new(auth-sweep) {
+  background: var(--gradient-primary);
+  animation: auth-snapshot-sweep 850ms cubic-bezier(.65,0,.2,1) both;
+}
+:root:has([data-auth-mode="register"])::view-transition-new(auth-sweep) { animation-direction: reverse; }
 @keyframes auth-snapshot-sweep {
-  0% { opacity: 0; }
-  8%, 82% { opacity: 1; }
-  100% { opacity: 0; }
+  0% { clip-path: inset(0 0 0 100%); opacity: .9; }
+  50% { clip-path: inset(0 25% 0 25%); opacity: .9; }
+  100% { clip-path: inset(0 100% 0 0); opacity: .9; }
 }
 @media (max-width: 767px) {
   .page-shell { width: 100%; }
