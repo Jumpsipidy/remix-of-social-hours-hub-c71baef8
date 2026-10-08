@@ -23,6 +23,7 @@
 - City values live in src/lib/cities.ts and must match the DB `tg_validate_city` trigger; one list avoids filter/DB drift.
 - Privileged profile fields (role, school, hours, assigned classes) change only via service role or SECURITY DEFINER functions; the `tg_profiles_guard_privileged` trigger blocks direct client writes to stop self-promotion.
 - The security gateway does not render the app while blocked; hiding the overlay must never expose content.
+- Soci Guard verifies bounded, monotonic hold samples on the server; mouse guidance and keyboard/touch alternatives avoid treating stationary assistive input as automation. Client telemetry remains advisory, not an authorization boundary.
 - Maps use Leaflet with Mapbox raster tiles when VITE_MAPBOX_PUBLIC_TOKEN (pk.) is set, else OSM tiles; keeps one map component for both.
 - ThemeProvider owns device-level theme and continuous accent state inside the security gateway, animating a global numeric CSS tuning token; one owner synchronizes previews, settings and controls without exposing blocked content.
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.

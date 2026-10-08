@@ -76,7 +76,7 @@ export function SecurityGatewayProvider({ children }: { children: ReactNode }) {
         if (r.ok) setIsVerifying(false);
         else { sessionStorage.removeItem(STORAGE_KEY); runChecks(); }
       })
-      .catch(() => { if (!cancelled) setIsVerifying(false); });
+      .catch(() => { if (!cancelled) runChecks(); });
     return () => { cancelled = true; };
   }, []);
 
