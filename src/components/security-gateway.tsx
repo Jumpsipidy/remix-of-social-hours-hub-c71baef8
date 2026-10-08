@@ -50,6 +50,9 @@ export function SecurityGatewayInternal() {
   const pointerType = useRef<"mouse" | "touch" | "pen" | "">("");
   const trusted = useRef(true);
   const decoy = useRef(false);
+  // Test-mode scripted robot: skips straight to the server verdict.
+  const robotRun = useRef(false);
+  const c0Answer = () => [] as number[];
   const raf = useRef<number | null>(null);
   const challenge = useRef<Promise<{ c: Challenge; solution: number }> | null>(null);
 
@@ -128,14 +131,15 @@ export function SecurityGatewayInternal() {
       const pending = challenge.current;
       if (!pending) throw new Error("challenge_missing");
       const { c } = await pending;
-      if (c.steps === 2) {
+      if (c.steps === 2 && !robotRun.current) {
         setTaps([]);
         tapTimes.current = [performance.now()];
         setStage("tap");
         return;
       }
     } catch { setStage("captcha"); return; }
-    await submit([]);
+    robotRun.current = false;
+    await submit(c0Answer());
   };
 
   const onTap = (i: number, isTrusted: boolean) => {
@@ -221,6 +225,7 @@ export function SecurityGatewayInternal() {
               <Button size="sm" variant="secondary" disabled={stage !== "hold"} onClick={() => {
                 // Plays a scripted bot: programmatic events + a perfectly straight, even mouse path.
                 const el = document.getElementById("sv-hold-btn"); if (!el) return;
+                robotRun.current = true;
                 const r = el.getBoundingClientRect(); const x0 = r.left + 20, y = r.top + r.height / 2;
                 const ev = (type: string, x: number) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 1, pointerType: "mouse", clientX: x, clientY: y }));
                 ev("pointerdown", x0);
