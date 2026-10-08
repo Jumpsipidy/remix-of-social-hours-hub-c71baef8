@@ -5,8 +5,12 @@ import { Captcha } from "./captcha";
 import { useSecurityGateway } from "./security-gateway-provider";
 import { motionFeatures, reasonLabel, solvePow } from "@/lib/bot-signals";
 import { issueGateChallenge, verifyGate } from "@/lib/bot-gate.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import type { GateBehavior } from "@/lib/gate-behavior";
 
 const HOLD_MS = 1600;
+const MotionButton = motion.create(Button);
 type Challenge = Awaited<ReturnType<typeof issueGateChallenge>>;
 
 const ICONS: Record<string, { Icon: LucideIcon; label: string }> = {
@@ -28,9 +32,14 @@ export function SecurityGatewayInternal() {
   const [current, setCurrent] = useState<Challenge | null>(null);
   const [taps, setTaps] = useState<number[]>([]);
   const tapTimes = useRef<number[]>([]);
-  const holdData = useRef<Record<string, unknown> | null>(null);
+  const holdData = useRef<(GateBehavior & ReturnType<typeof motionFeatures>) | null>(null);
+  const issueChallenge = useServerFn(issueGateChallenge);
+  const verify = useServerFn(verifyGate);
   const inputMode = useRef<"pointer" | "keyboard">("pointer");
   const [progress, setProgress] = useState(0);
+  const [moving, setMoving] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [coarsePointer, setCoarsePointer] = useState(false);
   const [fails, setFails] = useState(0);
   const [failReasons, setFailReasons] = useState<string[]>([]);
   const [serverReasons, setServerReasons] = useState<string[]>([]);
@@ -44,7 +53,7 @@ export function SecurityGatewayInternal() {
   const challenge = useRef<Promise<{ c: Challenge; solution: number }> | null>(null);
 
   const loadChallenge = () => {
-    challenge.current = issueGateChallenge({ data: { clientRisk: Math.min(50, reasons.length) } }).then(async (c) => {
+    challenge.current = issueChallenge({ data: { clientRisk: Math.min(50, reasons.length) } }).then(async (c) => {
       setServerReasons(c.serverReasons);
       setCurrent(c);
       setTaps([]);
@@ -54,44 +63,68 @@ export function SecurityGatewayInternal() {
   };
 
   useEffect(() => { if (isBlocked) loadChallenge(); }, [isBlocked]);
+  useEffect(() => {
+    setCoarsePointer(window.matchMedia("(pointer: coarse)").matches);
+    const cancel = () => { if (document.hidden || !document.hasFocus()) void finish(false); };
+    document.addEventListener("visibilitychange", cancel);
+    window.addEventListener("blur", cancel);
+    return () => {
+      if (raf.current) cancelAnimationFrame(raf.current);
+      document.removeEventListener("visibilitychange", cancel);
+      window.removeEventListener("blur", cancel);
+    };
+  }, []);
 
   if (!isBlocked) return null;
 
   const tick = () => {
     const p = Math.min(1, (performance.now() - start.current) / HOLD_MS);
-    setProgress(p);
-    if (p < 1) raf.current = requestAnimationFrame(tick);
+    const needsMotion = inputMode.current !== "keyboard" && pointerType.current === "mouse" && motionFeatures(points.current).jitter < 2;
+    setProgress(needsMotion ? Math.min(.95, p) : p);
+    if (performance.now() - start.current > 15000) { void finish(false); return; }
+    if (p < 1 || needsMotion) raf.current = requestAnimationFrame(tick);
     else void finish(true);
   };
   const begin = (e: React.PointerEvent) => {
     if (stage !== "hold") return;
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setHolding(true);
+    setMoving(false);
+    setFailReasons([]);
     trusted.current = e.isTrusted;
     inputMode.current = "pointer";
     pointerType.current = (e.pointerType as typeof pointerType.current) || "";
-    points.current = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+    points.current = [{ x: e.clientX, y: e.clientY, t: 0 }];
     start.current = holdStart.current = performance.now();
     raf.current = requestAnimationFrame(tick);
   };
   const move = (e: React.PointerEvent) => {
     if (!start.current) return;
     if (!e.isTrusted) trusted.current = false;
-    points.current.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+    const t = performance.now() - holdStart.current;
+    const last = points.current[points.current.length - 1];
+    if (points.current.length < 128 && (!last || t - last.t >= 12)) {
+      points.current.push({ x: e.clientX, y: e.clientY, t });
+      setMoving(motionFeatures(points.current).jitter >= 2);
+    }
   };
   const finish = async (complete: boolean) => {
     if (raf.current) cancelAnimationFrame(raf.current);
     raf.current = null;
     const wasHolding = start.current !== 0;
     start.current = 0;
+    setHolding(false);
     if (!wasHolding) return;
     if (!complete) { setProgress(0); return; }
     const m = motionFeatures(points.current);
     holdData.current = {
       holdMs: Math.round(performance.now() - holdStart.current), ...m,
-      pointerType: pointerType.current, trusted: trusted.current, inputMode: inputMode.current,
+      pointerType: pointerType.current, trusted: trusted.current, inputMode: inputMode.current, samples: points.current,
     };
     try {
-      const { c } = await challenge.current!;
+      const pending = challenge.current;
+      if (!pending) throw new Error("challenge_missing");
+      const { c } = await pending;
       if (c.steps === 2) {
         setTaps([]);
         tapTimes.current = [performance.now()];
@@ -117,17 +150,20 @@ export function SecurityGatewayInternal() {
   const submit = async (tapAnswer: number[]) => {
     setStage("checking");
     try {
-      const { c, solution } = await challenge.current!;
+      const pending = challenge.current;
+      const behavior = holdData.current;
+      if (!pending || !behavior) throw new Error("challenge_missing");
+      const { c, solution } = await pending;
       const t = tapTimes.current;
       const tapIntervals = t.slice(1).map((v, i) => Math.round(v - t[i]));
-      const r = await verifyGate({
+      const r = await verify({
         data: {
           nonce: c.nonce, issuedAt: c.issuedAt, difficulty: c.difficulty, sig: c.sig, solution,
           steps: c.steps, grid: c.grid, targets: c.targets,
           tapAnswer: c.steps === 2 ? tapAnswer : undefined,
           tapIntervals: c.steps === 2 ? tapIntervals : undefined,
-          ...(holdData.current as object),
-        } as never,
+          ...behavior,
+        },
       });
       if (r.ok) { setStage("ok"); setTimeout(() => pass(r.token), 700); return; }
       const f = fails + 1;
@@ -160,7 +196,8 @@ export function SecurityGatewayInternal() {
             ? "Papildoma patikra. Užbaik žemiau esančią užduotį."
             : stage === "tap"
               ? "Dar vienas trumpas žingsnis — tavo įrenginys atrodo neįprastai."
-              : "Mūsų sistema pastebėjo neįprastą įrenginį. Paspausk ir palaikyk mygtuką (kompiuteryje galima laikyti tarpo klavišą)."}
+              : coarsePointer ? "Paspausk ir palaikyk, kol ratas užsipildys. Piršto judinti nereikia."
+              : "Paspausk ir palaikyk mygtuką. Laikydamas šiek tiek pajudink pelę. Arba pažymėk mygtuką ir palaikyk tarpo klavišą — pelės judinti nereikės."}
         </p>
 
         <div className="mt-8 flex justify-center">
@@ -189,12 +226,12 @@ export function SecurityGatewayInternal() {
                   {current.grid.map((g, i) => {
                     const it = ICONS[g]; const picked = taps.indexOf(i);
                     return (
-                      <button key={i} type="button" onClick={(e) => onTap(i, e.isTrusted)} aria-label={it?.label ?? g}
+                      <Button key={i} type="button" variant="ghost" onClick={(e) => onTap(i, e.isTrusted)} aria-label={it?.label ?? g}
                         className="relative grid h-20 place-items-center rounded-2xl transition active:scale-95 focus-visible:outline focus-visible:outline-2"
                         style={{ background: picked >= 0 ? "rgba(34,197,94,.2)" : "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)", color: "#fff" }}>
                         {it && <it.Icon className="h-8 w-8" aria-hidden />}
                         {picked >= 0 && <span className="absolute right-2 top-1.5 text-xs font-black" style={{ color: "#86efac" }}>{picked + 1}</span>}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -202,7 +239,7 @@ export function SecurityGatewayInternal() {
                   className="mt-3 text-xs underline" style={{ color: "rgba(255,255,255,.6)" }}>Pradėti iš naujo</button>
               </motion.div>
             ) : (
-              <motion.button
+              <MotionButton
                 key="hold"
                 type="button"
                 onPointerDown={begin}
@@ -216,6 +253,9 @@ export function SecurityGatewayInternal() {
                     e.preventDefault();
                     trusted.current = e.isTrusted;
                     inputMode.current = "keyboard";
+                    setHolding(true);
+                    setMoving(false);
+                    setFailReasons([]);
                     pointerType.current = "";
                     points.current = [];
                     start.current = holdStart.current = performance.now();
@@ -228,6 +268,7 @@ export function SecurityGatewayInternal() {
                 className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full"
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
                 aria-label="Paspausk ir palaikyk"
+                aria-describedby="sv-hold-status"
               >
                 <svg className="absolute inset-0 -rotate-90" viewBox="0 0 120 120">
                   <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="4" />
@@ -237,13 +278,13 @@ export function SecurityGatewayInternal() {
                 {stage === "ok" ? <ShieldCheck className="h-12 w-12" style={{ color: "#22c55e" }} />
                   : stage === "checking" ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><Fingerprint className="h-12 w-12" style={{ color: "#fff" }} /></motion.div>
                   : <Fingerprint className="h-12 w-12" style={{ color: "#fff", opacity: .5 + progress / 2 }} />}
-              </motion.button>
+              </MotionButton>
             )}
           </AnimatePresence>
         </div>
 
-        <p className="mt-6 min-h-4 text-xs" style={{ color: "rgba(255,255,255,.5)" }}>
-          {stage === "checking" ? "Tikrinama serveryje…" : stage === "ok" ? "Patvirtinta. Įleidžiame…" : fails > 0 && stage === "hold" ? "Nepavyko. Pabandyk dar kartą, laikyk ilgiau." : stage === "hold" ? "Laikyk paspaudęs, kol ratas užsipildys" : ""}
+        <p id="sv-hold-status" role="status" className="mt-6 min-h-10 text-xs text-muted-foreground">
+          {stage === "checking" ? "Tikrinama serveryje…" : stage === "ok" ? "Patvirtinta. Įleidžiame…" : stage === "hold" && holding && pointerType.current === "mouse" ? moving ? "Judesys užfiksuotas. Laikyk toliau…" : "Neatleisk mygtuko — šiek tiek pajudink pelę" : fails > 0 && stage === "hold" ? "Pabandyk dar kartą. Gali naudoti ir tarpo klavišą." : stage === "hold" ? "Laikyk paspaudęs, kol ratas užsipildys" : ""}
         </p>
 
         {failReasons.length > 0 && stage !== "ok" && (

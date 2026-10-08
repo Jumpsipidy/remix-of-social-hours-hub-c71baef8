@@ -80,7 +80,8 @@ export const REASON_LABELS: Record<string, string> = {
   short_hold: "Mygtukas laikytas per trumpai",
   wrong_order: "Paveikslėliai paspausti ne ta tvarka",
   tap_too_fast: "Paveikslėliai paspausti per greitai (ne žmogaus greičiu)",
-  no_motion: "Pelė visiškai nejudėjo — būdinga robotams",
+  no_motion: "Laikydamas mygtuką šiek tiek pajudink pelę arba naudok tarpo klavišą",
+  invalid_motion: "Judesio duomenys neatitiko laikymo laiko. Pradėk patikrą iš naujo",
   robotic_timing: "Judesiai per tolygūs, kaip mašinos",
 };
 

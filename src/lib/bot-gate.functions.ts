@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { gateBehaviorFailures } from "./gate-behavior";
 
 /**
  * Server-side half of the "ar jūs ne robotas" check.
@@ -95,6 +96,7 @@ const verifySchema = z.object({
   tapAnswer: z.array(z.number().int().min(0).max(5)).max(3).optional(),
   tapIntervals: z.array(z.number().min(0).max(120000)).max(3).optional(),
   inputMode: z.enum(["pointer", "keyboard"]).optional(),
+  samples: z.array(z.object({ x: z.number().finite().min(-100000).max(100000), y: z.number().finite().min(-100000).max(100000), t: z.number().finite().min(0).max(120000) })).max(128),
 });
 
 export const verifyGate = createServerFn({ method: "POST" })
@@ -108,21 +110,15 @@ export const verifyGate = createServerFn({ method: "POST" })
     const expected = await hmac(`c|${data.nonce}|${data.issuedAt}|${data.difficulty}|${uaHash}|${data.steps}|${data.grid.join(",")}|${derived}`);
     if (!safeEqual(expected, data.sig)) fail.push("bad_signature");
     const age = Date.now() - data.issuedAt;
-    if (age > 5 * 60_000) fail.push("expired");
-    if (age < 1400) fail.push("too_fast");
+    fail.push(...gateBehaviorFailures(data, age));
     const hash = await sha256Hex(`${data.nonce}:${data.solution}`);
     if (!hash.startsWith("0".repeat(data.difficulty))) fail.push("bad_pow");
-    if (!data.trusted) fail.push("synthetic_event");
-    if (data.holdMs < 1500) fail.push("short_hold");
-    // Touch screens barely move while held; mice always wobble a little.
-    if (data.inputMode !== "keyboard" && data.pointerType === "mouse" && data.jitter < 2) fail.push("no_motion");
     if (data.steps === 2) {
       const ans = (data.tapAnswer ?? []).join(",");
       if (ans !== derived) fail.push("wrong_order");
       const iv = data.tapIntervals ?? [];
       if (iv.length < 3 || iv.some((ms) => ms < 180)) fail.push("tap_too_fast");
     }
-    if (data.points >= 6 && data.distinctIntervals <= 1) fail.push("robotic_timing");
     if (fail.length) return { ok: false as const, reasons: fail };
     const exp = Date.now() + 6 * 3600_000;
     const token = `${exp}.${uaHash}.${await hmac(`p|${exp}|${uaHash}`)}`;
