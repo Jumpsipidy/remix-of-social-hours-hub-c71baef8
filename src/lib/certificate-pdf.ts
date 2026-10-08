@@ -38,7 +38,7 @@ export async function buildCertificatePdf(cert: PdfCertificate, verifyUrl: strin
     if (y-height < 190) { page=pdf.addPage([595.28,841.89]);y=785;write(`Veiklų tęsinys · ${cert.code}`,left,y,11);y-=30;header(); }
     write(visit.date,left,y,9);write(`${visit.start_time?.slice(0,5) || "—"}–${visit.end_time?.slice(0,5) || "—"}`,left,y-14,8);
     lines.forEach((line,i)=>write(line,165,y-i*13,i===0?9:8));write(String(visit.hours),520,y,10);y-=height;
-    page.drawLine({start:{x:left,y:y+6},end:{x:right,y:y+6},color:hair,thickness:.3});
+    page.drawLine({start:{x:left,y:y+14},end:{x:right,y:y+14},color:hair,thickness:.3});
   }
   const qr = await pdf.embedPng(await QRCode.toDataURL(verifyUrl,{width:240,margin:4}));
   const pages=pdf.getPages();
