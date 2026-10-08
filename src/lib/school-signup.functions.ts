@@ -49,7 +49,18 @@ export const completeOAuthStudentSetup = createServerFn({ method: "POST" })
     if (!valid) throw new Error("Neteisingas mokyklos kodas.");
 
     const hoursNeeded = ["5", "6", "7"].includes(data.classYear) ? 20 : data.hoursNeeded;
-    const { error } = await context.supabase
+    // Privileged fields are locked for client writes (tg_profiles_guard_privileged);
+    // the code was verified above, so write them with the service role.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("profiles")
+      .select("school_id")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (existing?.school_id && existing.school_id !== data.schoolId) {
+      throw new Error("Mokykla jau priskirta. Kreipkis į administratorių.");
+    }
+    const { error } = await supabaseAdmin
       .from("profiles")
       .update({
         full_name: data.fullName,
@@ -58,7 +69,7 @@ export const completeOAuthStudentSetup = createServerFn({ method: "POST" })
         class_year: data.classYear,
         class_letter: data.classLetter,
         hours_needed: hoursNeeded,
-      })
+      } as never)
       .eq("id", context.userId)
       .eq("role", "student");
     if (error) throw new Error(error.message);
