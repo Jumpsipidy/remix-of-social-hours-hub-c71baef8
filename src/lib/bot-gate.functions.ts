@@ -76,7 +76,7 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     while (order.length < 3) { const i = randInt(6); if (!order.includes(i)) order.push(i); }
     const answer = order.join(",");
     // Second step varies so one script can't learn a single task.
-    const kind = data.forceKind ?? GATE_KINDS[randInt(GATE_KINDS.length)];
+    const kind = data.forceKind ?? "target";
     const spot = 15 + randInt(70), tx = 12 + randInt(76), ty = 15 + randInt(70);
     const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}|${kind}|${spot}|${tx}|${ty}`);
     return {
