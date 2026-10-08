@@ -1,5 +1,9 @@
 # Roadmap
 
+## Login/signup transition
+- [x] Synchronize panel movement, resizing, tab indicator and text changes without remount entrance effects
+- [x] Verify both navigation directions in Chromium and run route smoke tests (169 passed)
+
 ## Lockdown screen redesign
 - [x] Select palette, typography and layout, then choose a rendered direction
 - [x] Redesign all visitor lockdown states and dialogs without changing their functionality
