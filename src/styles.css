@@ -714,3 +714,7 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .auth-sweep-panel, ::view-transition-new(auth-sweep) { animation: none; }
   .auth-blue-slide { display: none; }
 }
+
+/* Soci Guard status colours follow the saved theme. */
+:root { --sg-ok: #86efac; --sg-bad: #fca5a5; }
+:root.school-eyes { --sg-ok: #15803d; --sg-bad: #b91c1c; }
