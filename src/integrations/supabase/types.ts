@@ -1527,6 +1527,17 @@ export type Database = {
         }
         Returns: number
       }
+      search_classmates: {
+        Args: { _q: string }
+        Returns: {
+          class_year: string
+          full_name: string
+          hours_earned: number
+          id: string
+          public_email: string
+          school_id: string
+        }[]
+      }
       set_my_assigned_classes: {
         Args: { _classes: string[] }
         Returns: string[]
