@@ -40,38 +40,16 @@ export const completeOAuthStudentSetup = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => OAUTH_SETUP_SCHEMA.parse(input))
   .handler(async ({ data, context }) => {
-    const normalizedCode = data.code.toUpperCase();
-    const { data: valid, error: codeError } = await context.supabase.rpc("verify_school_signup_code", {
+    // complete_student_setup (SECURITY DEFINER) verifies the code, refuses to
+    // move a student to another school and writes the locked fields in one step.
+    const { error } = await (context.supabase.rpc as any)("complete_student_setup", {
       _school_id: data.schoolId,
-      _code: normalizedCode,
+      _code: data.code.trim().toUpperCase(),
+      _full_name: data.fullName,
+      _class_year: data.classYear,
+      _class_letter: data.classLetter,
+      _hours_needed: data.hoursNeeded,
     });
-    if (codeError) throw new Error(codeError.message);
-    if (!valid) throw new Error("Neteisingas mokyklos kodas.");
-
-    const hoursNeeded = ["5", "6", "7"].includes(data.classYear) ? 20 : data.hoursNeeded;
-    // Privileged fields are locked for client writes (tg_profiles_guard_privileged);
-    // the code was verified above, so write them with the service role.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: existing } = await supabaseAdmin
-      .from("profiles")
-      .select("school_id")
-      .eq("id", context.userId)
-      .maybeSingle();
-    if (existing?.school_id && existing.school_id !== data.schoolId) {
-      throw new Error("Mokykla jau priskirta. Kreipkis į administratorių.");
-    }
-    const { error } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        full_name: data.fullName,
-        school_id: data.schoolId,
-        associated_school_id: data.schoolId,
-        class_year: data.classYear,
-        class_letter: data.classLetter,
-        hours_needed: hoursNeeded,
-      } as never)
-      .eq("id", context.userId)
-      .eq("role", "student");
     if (error) throw new Error(error.message);
     return { ok: true };
   });
