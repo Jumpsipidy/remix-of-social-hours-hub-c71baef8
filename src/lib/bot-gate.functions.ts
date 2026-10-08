@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { gateBehaviorFailures } from "./gate-behavior";
+import { gateBehaviorFailures, extraStepFailures, GATE_KINDS } from "./gate-behavior";
 
 /**
  * Server-side half of the "ar jūs ne robotas" check.
