@@ -1,6 +1,6 @@
 import { DmInbox } from "@/components/dm-inbox";
 import { WrongRole } from "@/components/wrong-role";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
@@ -286,7 +286,9 @@ function StudentDashboard() {
 
   if (profile.role !== "student" && profile.role !== "admin") return <WrongRole role={profile.role} />;
   if (profile.role === "student" && (!profile.school_id || !profile.class_year || !profile.hours_needed)) {
-    return <StudentProfileSetup userId={user.id} />;
+    // One setup flow only: /complete-profile asks for school, 5A/5B… class and the code.
+    void StudentProfileSetup;
+    return <Navigate to="/complete-profile" replace />;
   }
 
   const completed = Number(profile.hours_earned ?? 0);
