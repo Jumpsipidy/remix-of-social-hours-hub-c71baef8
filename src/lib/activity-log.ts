@@ -100,8 +100,22 @@ export async function insertActivityLogRow(row: ActivityLogRow) {
     ...(row.entity_id ? { entity_id: row.entity_id } : {}),
   };
 
+  // Signed-in visitors may only insert rows owned by themselves (RLS), so fill
+  // in the session user instead of sending null (which caused 403s).
+  let userId = row.user_id ?? null;
+  if (!userId) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      userId = data.session?.user.id ?? null;
+    } catch {
+      /* ignore */
+    }
+  }
+  // Anonymous visitors may only log page views.
+  if (!userId && row.action !== "page.view") return;
+
   await supabase.from("activity_log").insert({
-    user_id: row.user_id ?? null,
+    user_id: userId,
     action: row.action,
     meta: meta as any,
   } as any);
