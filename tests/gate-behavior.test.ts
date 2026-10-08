@@ -30,3 +30,12 @@ describe("Soci Guard AI-agent defences", () => {
     expect(gateBehaviorFailures({ ...base, inputMode: "keyboard", pointerType: "", samples: [], decoy: true }, 3000)).toContain("decoy_followed");
   });
 });
+import { extraStepFailures } from "@/lib/gate-behavior";
+describe("Soci Guard extra steps", () => {
+  const b = { spot: 40, tx: 30, ty: 60 };
+  it("accepts slider within 5 of the mark", () => expect(extraStepFailures({ ...b, kind: "slider", sliderValue: 44, stepMs: 900 }, "")).toEqual([]));
+  it("rejects slider far from the mark", () => expect(extraStepFailures({ ...b, kind: "slider", sliderValue: 60, stepMs: 900 }, "")).toContain("wrong_slider"));
+  it("rejects target miss", () => expect(extraStepFailures({ ...b, kind: "target", hit: { x: 70, y: 10 }, stepMs: 900 }, "")).toContain("missed_target"));
+  it("rejects instant target tap", () => expect(extraStepFailures({ ...b, kind: "target", hit: { x: 30, y: 60 }, stepMs: 50 }, "")).toContain("tap_too_fast"));
+  it("keeps icon order check", () => expect(extraStepFailures({ ...b, kind: "icons", tapAnswer: [2, 1, 0], tapIntervals: [400, 400, 400] }, "0,1,2")).toContain("wrong_order"));
+});

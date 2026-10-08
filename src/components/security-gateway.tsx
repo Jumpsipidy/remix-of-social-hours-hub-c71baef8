@@ -342,3 +342,42 @@ export function SecurityGatewayInternal() {
 }
 
 export const SecurityGateway = SecurityGatewayInternal;
+
+/** Drag the slider onto the marked notch (keyboard arrows work too). */
+function SliderStep({ spot, onDone }: { spot: number; onDone: (v: number, trusted: boolean) => void }) {
+  const [v, setV] = useState(0);
+  const ok = useRef(true);
+  return (
+    <div>
+      <p className="mb-3 text-sm font-semibold" style={{ color: "#fff" }}>2 žingsnis iš 2: nustumk slankiklį iki žalios žymos</p>
+      <div className="relative h-12 rounded-full" style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)" }}>
+        <span aria-hidden className="absolute top-1 bottom-1 w-2 -translate-x-1/2 rounded-full" style={{ left: `${spot}%`, background: "#22c55e" }} />
+        <input type="range" min={0} max={100} value={v} aria-label="Slankiklis"
+          onChange={(e) => { if (!e.nativeEvent.isTrusted) ok.current = false; setV(Number(e.target.value)); }}
+          className="absolute inset-0 h-full w-full cursor-grab accent-[#60a5fa]" />
+      </div>
+      <Button type="button" className="mt-4 w-full" onClick={(e) => onDone(v, ok.current && e.isTrusted)}>Patvirtinti</Button>
+    </div>
+  );
+}
+
+/** Tap the circle that appears in a random place. */
+function TargetStep({ tx, ty, onDone }: { tx: number; ty: number; onDone: (hit: { x: number; y: number }, trusted: boolean) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const click = (e: React.MouseEvent) => {
+    const r = box.current!.getBoundingClientRect();
+    // Keyboard activation has no pointer position: use the button centre.
+    const hit = e.detail === 0 ? { x: tx, y: ty } : { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 };
+    onDone(hit, e.isTrusted);
+  };
+  return (
+    <div>
+      <p className="mb-3 text-sm font-semibold" style={{ color: "#fff" }}>2 žingsnis iš 2: paspausk mėlyną apskritimą</p>
+      <div ref={box} className="relative h-56 w-full rounded-2xl" style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.15)" }}>
+        <button type="button" onClick={click} aria-label="Taikinys"
+          className="absolute h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:outline focus-visible:outline-2"
+          style={{ left: `${tx}%`, top: `${ty}%`, background: "#3b82f6", boxShadow: "0 0 0 6px rgba(59,130,246,.25)" }} />
+      </div>
+    </div>
+  );
+}
