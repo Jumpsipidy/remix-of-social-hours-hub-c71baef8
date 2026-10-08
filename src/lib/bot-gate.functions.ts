@@ -71,10 +71,13 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     const order: number[] = [];
     while (order.length < 3) { const i = randInt(6); if (!order.includes(i)) order.push(i); }
     const answer = order.join(",");
-    const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}`);
+    // Second step varies so one script can't learn a single task.
+    const kind = GATE_KINDS[randInt(GATE_KINDS.length)];
+    const spot = 15 + randInt(70), tx = 12 + randInt(76), ty = 15 + randInt(70);
+    const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}|${kind}|${spot}|${tx}|${ty}`);
     return {
       nonce, issuedAt, difficulty, sig, steps, serverReasons: reasons,
-      grid, targets: order.map((i) => grid[i]),
+      grid, targets: order.map((i) => grid[i]), kind, spot, tx, ty,
     };
   });
 
@@ -97,6 +100,13 @@ const verifySchema = z.object({
   tapIntervals: z.array(z.number().min(0).max(120000)).max(3).optional(),
   inputMode: z.enum(["pointer", "keyboard"]).optional(),
   decoy: z.boolean().optional(),
+  kind: z.enum(GATE_KINDS),
+  spot: z.number().int().min(0).max(100),
+  tx: z.number().int().min(0).max(100),
+  ty: z.number().int().min(0).max(100),
+  sliderValue: z.number().min(0).max(100).optional(),
+  hit: z.object({ x: z.number().min(-50).max(150), y: z.number().min(-50).max(150) }).optional(),
+  stepMs: z.number().min(0).max(120000).optional(),
   samples: z.array(z.object({ x: z.number().finite().min(-100000).max(100000), y: z.number().finite().min(-100000).max(100000), t: z.number().finite().min(0).max(120000) })).max(128),
 });
 
@@ -106,20 +116,15 @@ export const verifyGate = createServerFn({ method: "POST" })
     const { uaHash } = await requestInfo();
     const fail: string[] = [];
     // The answer is re-derived from grid+targets and covered by the signature,
-    // so the client can't change the step count or the expected order.
+    // so the client can't change the step count, task kind or expected answer.
     const derived = data.targets.map((t) => data.grid.indexOf(t)).join(",");
-    const expected = await hmac(`c|${data.nonce}|${data.issuedAt}|${data.difficulty}|${uaHash}|${data.steps}|${data.grid.join(",")}|${derived}`);
+    const expected = await hmac(`c|${data.nonce}|${data.issuedAt}|${data.difficulty}|${uaHash}|${data.steps}|${data.grid.join(",")}|${derived}|${data.kind}|${data.spot}|${data.tx}|${data.ty}`);
     if (!safeEqual(expected, data.sig)) fail.push("bad_signature");
     const age = Date.now() - data.issuedAt;
     fail.push(...gateBehaviorFailures(data, age));
     const hash = await sha256Hex(`${data.nonce}:${data.solution}`);
     if (!hash.startsWith("0".repeat(data.difficulty))) fail.push("bad_pow");
-    if (data.steps === 2) {
-      const ans = (data.tapAnswer ?? []).join(",");
-      if (ans !== derived) fail.push("wrong_order");
-      const iv = data.tapIntervals ?? [];
-      if (iv.length < 3 || iv.some((ms) => ms < 180)) fail.push("tap_too_fast");
-    }
+    if (data.steps === 2) fail.push(...extraStepFailures(data, derived));
     if (fail.length) return { ok: false as const, reasons: fail };
     const exp = Date.now() + 6 * 3600_000;
     const token = `${exp}.${uaHash}.${await hmac(`p|${exp}|${uaHash}`)}`;
