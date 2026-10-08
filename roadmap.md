@@ -1,5 +1,12 @@
 # Roadmap
 
+## Ultimate mobile audit (2026-10-08)
+- [ ] Capture and visually inspect more than 50 mobile screenshots across sizes, themes and relevant states
+- [ ] Fix verified mobile layout/loading regressions and defer PDF libraries until download
+- [ ] Verify certificate HMAC integrity, complete hour history and approving organizations; test tampering
+- [ ] Generate and visually inspect a multi-page PDF and its verification link
+- [ ] Real signed-in mobile flows and issued certificate download/scan — external unmanaged Supabase prevents authenticated end-to-end testing
+
 ## Mobile enhancement (2026-10-08)
 - [x] Restore synchronized blue login/signup sweep and smooth matching skeleton-to-form transition, including mobile
 - [x] Compact mobile navigation, dashboard rows, task filters and reservation dialogs without changing desktop layouts
