@@ -82,6 +82,8 @@ export const REASON_LABELS: Record<string, string> = {
   tap_too_fast: "Paveikslėliai paspausti per greitai (ne žmogaus greičiu)",
   no_motion: "Laikydamas mygtuką šiek tiek pajudink pelę arba naudok tarpo klavišą",
   invalid_motion: "Judesio duomenys neatitiko laikymo laiko. Pradėk patikrą iš naujo",
+  robotic_path: "Pelė judėjo per tiesiai ar per tolygiai — pajudink ją laisvai, kaip įprastai",
+  decoy_followed: "Buvo atlikta paslėpta, žmonėms nematoma instrukcija",
   robotic_timing: "Judesiai per tolygūs, kaip mašinos",
 };
 

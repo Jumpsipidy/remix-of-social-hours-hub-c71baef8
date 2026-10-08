@@ -14,3 +14,19 @@ describe("Soci Guard hold validation", () => {
   it("rejects holds shorter than 1500ms", () => expect(gateBehaviorFailures({ ...mouse, holdMs: 1499 }, 2000)).toContain("short_hold"));
   it("expires a challenge after five minutes", () => expect(gateBehaviorFailures(mouse, 300001)).toContain("expired"));
 });
+import { isRoboticPath } from "@/lib/gate-behavior";
+describe("Soci Guard AI-agent defences", () => {
+  const base = { holdMs: 1700, pointerType: "mouse" as const, inputMode: "pointer" as const, trusted: true };
+  it("rejects perfectly straight constant-speed paths", () => {
+    const samples = Array.from({ length: 20 }, (_, i) => ({ x: i * 5, y: i * 5, t: i * 20 }));
+    expect(isRoboticPath(samples)).toBe(true);
+    expect(gateBehaviorFailures({ ...base, samples }, 3000)).toContain("robotic_path");
+  });
+  it("accepts wobbly human-like paths", () => {
+    const samples = Array.from({ length: 20 }, (_, i) => ({ x: i * 4 + Math.sin(i) * 3, y: i * 2 + Math.cos(i * 1.7) * 4, t: i * 20 + (i % 3) * 5 }));
+    expect(isRoboticPath(samples)).toBe(false);
+  });
+  it("rejects when the hidden decoy was followed", () => {
+    expect(gateBehaviorFailures({ ...base, inputMode: "keyboard", pointerType: "", samples: [], decoy: true }, 3000)).toContain("decoy_followed");
+  });
+});
