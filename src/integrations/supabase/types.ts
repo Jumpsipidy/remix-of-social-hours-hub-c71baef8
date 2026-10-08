@@ -1396,6 +1396,17 @@ export type Database = {
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       check_in_by_code: { Args: { _code: string }; Returns: Json }
+      complete_student_setup: {
+        Args: {
+          _class_letter: string
+          _class_year: string
+          _code: string
+          _full_name: string
+          _hours_needed: number
+          _school_id: string
+        }
+        Returns: boolean
+      }
       ensure_check_in_code: {
         Args: { _participant_id?: string; _reservation_id?: string }
         Returns: string
