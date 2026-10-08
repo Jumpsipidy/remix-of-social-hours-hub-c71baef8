@@ -66,7 +66,7 @@ export function AuthShell({ mode, children }: { mode: AuthMode; children: ReactN
               </h1>
               <p className="auth-transition-description mt-5 max-w-sm text-sm opacity-85">{c.body}</p>
               <ul className="auth-transition-points mt-8 space-y-3">
-                {c.points.map((p, i) => (
+                {c.points.map((p) => (
                   <li
                     key={p.text}
                     className="flex items-center gap-3 text-sm"
