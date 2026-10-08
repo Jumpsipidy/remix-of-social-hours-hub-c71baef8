@@ -52,7 +52,7 @@ export async function syncAchievements(userId: string, ctx: AchievementCtx): Pro
     const already = new Set(((data as { key: string }[] | null) ?? []).map((r) => r.key));
     const newly = [...unlockedNow].filter((k) => !already.has(k));
     if (newly.length) {
-      await supabase.from("user_achievements").insert(newly.map((k) => ({ user_id: userId, key: k })) as any);
+      await supabase.from("user_achievements").upsert(newly.map((k) => ({ user_id: userId, key: k })) as any, { onConflict: "user_id,key", ignoreDuplicates: true });
       newly.forEach((k) => {
         const a = ACHIEVEMENTS.find((x) => x.key === k);
         if (a) celebrate({ kind: "achievement", label: a.label, description: a.description, iconKey: a.key });

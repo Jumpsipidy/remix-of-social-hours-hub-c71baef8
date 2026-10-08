@@ -5,10 +5,15 @@ export async function startReservationChat(opts: { reservationId: string; studen
   try {
     let { data: room } = await supabase.from("chat_rooms").select("id").eq("reservation_id", opts.reservationId).maybeSingle();
     if (!room) {
+      // Direct inserts are blocked by RLS for some roles; fall back to the secure RPC.
       const res = await supabase.from("chat_rooms")
         .insert({ reservation_id: opts.reservationId, student_id: opts.studentId, organization_id: opts.organizationId })
-        .select("id").single();
+        .select("id").maybeSingle();
       room = res.data;
+      if (!room) {
+        const again = await supabase.from("chat_rooms").select("id").eq("reservation_id", opts.reservationId).maybeSingle();
+        room = again.data;
+      }
     }
     if (room && opts.message?.trim()) {
       const { data: auth } = await supabase.auth.getUser();
