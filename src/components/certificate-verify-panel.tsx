@@ -23,7 +23,7 @@ type VerifyResult = {
   total_hours_at_generation?: number;
   current_hours_in_system?: number;
   hours_needed?: number;
-  reservations?: Array<{ date: string; hours: number; organization: string }>;
+  reservations?: Array<{ date: string; hours: number; organization: string; start_time?: string; end_time?: string; approved_by?: string | null; source?: string }>;
   generated_at?: string;
   revoked_at?: string;
   revoked_reason?: string;
@@ -214,7 +214,7 @@ export function CertificateVerifyPanel() {
 
             {result.valid && result.reservations && result.reservations.length > 0 && (
               <div className="mt-4 overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-left text-xs">
+                <table className="w-full table-fixed text-left text-xs">
                   <thead className="bg-background/60 text-muted-foreground">
                     <tr>
                       <th className="p-2">Data</th>
@@ -226,7 +226,7 @@ export function CertificateVerifyPanel() {
                     {result.reservations.map((r, i) => (
                       <tr key={`${r.date}-${i}`} className="border-t border-border/60">
                         <td className="p-2">{r.date}</td>
-                        <td className="p-2">{r.organization}</td>
+                        <td className="min-w-0 break-words p-2">{r.organization}<p className="mt-1 text-muted-foreground">{r.start_time?.slice(0,5)}–{r.end_time?.slice(0,5)}</p><p className="mt-1 text-muted-foreground">Patvirtino: {r.approved_by || "Asmuo neužfiksuotas"}</p></td>
                         <td className="p-2 text-right font-semibold">{r.hours}</td>
                       </tr>
                     ))}

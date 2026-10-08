@@ -21,7 +21,7 @@ function DefaultError({ error, reset }: ErrorComponentProps) {
     }
     Sentry.captureException(error, { tags: { boundary: "router.default" } });
   }, [error]);
-  if (!visible) return <div className="min-h-[60vh]" aria-busy="true" />;
+  if (!visible) return <DefaultPending />;
   return <FriendlyErrorScreen error={error} onRetry={reset} source="router.default" />;
 }
 
@@ -48,7 +48,7 @@ export const getRouter = () => {
     defaultErrorComponent: DefaultError,
     defaultPendingComponent: DefaultPending,
     defaultPendingMs: 250,
-    defaultPendingMinMs: 300,
+    defaultPendingMinMs: 0,
     defaultNotFoundComponent: () => (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="max-w-md text-center space-y-4">

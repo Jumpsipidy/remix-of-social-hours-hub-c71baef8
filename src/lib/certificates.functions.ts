@@ -1,35 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { certificateHash, signCertificateHash, checkCertificateIntegrity, type CertificateSnapshot } from "@/lib/certificate-integrity";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 function b64url(bytes: Uint8Array): string {
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-async function hmacHex(secret: string, msg: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg)));
-  return Array.from(sig).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function sha256Hex(msg: string): Promise<string> {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function safeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
 }
 
 function makeCode(): string {
@@ -55,7 +32,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
     // Fetch student profile
     const { data: profile, error: pErr } = await supabase
       .from("profiles")
-      .select("id, full_name, class_year, school_id, hours_earned, hours_needed, role")
+      .select("id, full_name, class_year, class_letter, school_id, hours_earned, hours_needed, role")
       .eq("id", userId)
       .maybeSingle();
     if (pErr || !profile) throw new Error("Profilis nerastas");
@@ -101,8 +78,8 @@ export const generateCertificate = createServerFn({ method: "POST" })
       const payload = JSON.stringify({
         code, student_id: userId, student_name: fakeName, total_hours: totalHours, reservations,
       });
-      const content_hash = await sha256Hex(payload);
-      const signature = await hmacHex(secret, code + "|" + content_hash);
+      const content_hash = await certificateHash(JSON.parse(payload), 1);
+      const signature = await signCertificateHash(secret, code, content_hash);
       return {
         code, content_hash, signature,
         generated_at: new Date().toISOString(),
@@ -128,45 +105,39 @@ export const generateCertificate = createServerFn({ method: "POST" })
       schoolName = sch?.name ?? null;
     }
 
-    // Fetch completed reservations
-    const { data: rs } = await supabase
-      .from("reservations")
-      .select("id, reservation_date, start_time, end_time, hours_to_earn, note, organization_id")
-      .eq("student_id", userId)
-      .eq("status", "completed")
-      .order("reservation_date", { ascending: false });
-
-    const rows = (rs ?? []) as Array<{
-      id: string;
-      reservation_date: string;
-      start_time: string | null;
-      end_time: string | null;
-      hours_to_earn: number | null;
-      note: string | null;
-      organization_id: string | null;
-    }>;
-
-    const orgIds = Array.from(new Set(rows.map((r) => r.organization_id).filter(Boolean))) as string[];
-    const orgMap: Record<string, string> = {};
-    if (orgIds.length) {
-      const { data: orgs } = await supabase
-        .from("profiles")
-        .select("id, organization_name, full_name")
-        .in("id", orgIds);
-      (orgs ?? []).forEach((o) => {
-        orgMap[o.id] = o.organization_name ?? o.full_name ?? "Organizacija";
-      });
+    // Page through both owner and accepted-participant history; never silently cap exports.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const rows: Array<{ id: string; reservation_date: string; start_time: string | null; end_time: string | null; hours_to_earn: number; note: string | null; organization_id: string; source: string; hours_approved_by: string | null; hours_approved_at: string | null }> = [];
+    for (let offset = 0; ; offset += 500) {
+      const { data: batch, error } = await supabase.from("reservations").select("id,reservation_date,start_time,end_time,hours_to_earn,note,organization_id,source,hours_approved_by,hours_approved_at").eq("student_id", userId).eq("status", "completed").order("id").range(offset, offset + 499);
+      if (error) throw error;
+      rows.push(...(batch ?? []).map(r => ({ ...r, hours_to_earn: Number(r.hours_to_earn) })));
+      if (!batch || batch.length < 500) break;
     }
-
-    const reservations = rows.map((r) => ({
-      date: r.reservation_date,
-      start_time: r.start_time ?? "",
-      end_time: r.end_time ?? "",
-      hours: Number(r.hours_to_earn ?? 0),
-      notes: r.note ?? "",
-      organization: (r.organization_id && orgMap[r.organization_id]) || "Organizacija",
+    for (let offset = 0; ; offset += 500) {
+      const { data: batch, error } = await supabase.from("reservation_participants").select("reservation_id,hours_awarded").eq("student_id", userId).eq("status", "accepted").order("id").range(offset, offset + 499);
+      if (error) throw error;
+      if (batch?.length) {
+        const { data: visits, error: visitError } = await supabase.from("reservations").select("id,reservation_date,start_time,end_time,hours_to_earn,note,organization_id,source,hours_approved_by,hours_approved_at").in("id", batch.map(p => p.reservation_id)).eq("status", "completed");
+        if (visitError) throw visitError;
+        for (const visit of visits ?? []) if (!rows.some(r => r.id === visit.id)) rows.push({ ...visit, hours_to_earn: Number(batch.find(p => p.reservation_id === visit.id)?.hours_awarded ?? 0) });
+      }
+      if (!batch || batch.length < 500) break;
+    }
+    const ids = Array.from(new Set(rows.flatMap(r => [r.organization_id, r.hours_approved_by]).filter((id): id is string => !!id)));
+    const names: Record<string, string> = {};
+    for (let offset = 0; offset < ids.length; offset += 300) {
+      // Only names attached to this authenticated student's own completed visits.
+      const { data: people, error } = await supabaseAdmin.from("profiles").select("id,organization_name,full_name").in("id", ids.slice(offset, offset + 300));
+      if (error) throw error;
+      for (const person of people ?? []) names[person.id] = person.organization_name || person.full_name || "Organizacija";
+    }
+    const reservations = rows.sort((a, b) => b.reservation_date.localeCompare(a.reservation_date)).map(r => ({
+      date: r.reservation_date, start_time: r.start_time ?? "", end_time: r.end_time ?? "",
+      hours: Number(r.hours_to_earn), notes: r.note ?? "", organization: names[r.organization_id] || "Organizacija",
+      approved_by: r.hours_approved_by ? names[r.hours_approved_by] ?? null : null,
+      approved_at: r.hours_approved_at, source: r.source,
     }));
-
 
     const totalHours = reservations.reduce((s, r) => s + Number(r.hours ?? 0), 0);
     const hoursNeeded = Number(profile.hours_needed ?? 0);
@@ -177,15 +148,15 @@ export const generateCertificate = createServerFn({ method: "POST" })
       );
     }
     const code = debugMode ? `DBG-${makeCode().slice(3)}` : makeCode();
-    const payload = JSON.stringify({
-      code,
-      student_id: userId,
-      student_name: profile.full_name ?? "",
-      total_hours: totalHours,
-      reservations,
-    });
-    const content_hash = await sha256Hex(payload);
-    const signature = await hmacHex(secret, code + "|" + content_hash);
+    const generatedAt = new Date().toISOString();
+    const studentClass = [profile.class_year, profile.class_letter].filter(Boolean).join("") || null;
+    const snapshot: CertificateSnapshot = {
+      code, student_id: userId, student_name: profile.full_name ?? "", student_class: studentClass,
+      school_id: profile.school_id, school_name: schoolName, total_hours: totalHours,
+      hours_needed: hoursNeeded, generated_at: generatedAt, reservations,
+    };
+    const content_hash = await certificateHash(snapshot, 2);
+    const signature = "v2:" + await signCertificateHash(secret, code, content_hash);
 
     if (!debugMode) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -193,7 +164,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
         code,
         student_id: userId,
         student_name: profile.full_name ?? "",
-        student_class: profile.class_year ?? null,
+        student_class: studentClass,
         school_id: profile.school_id ?? null,
         school_name: schoolName,
         total_hours: totalHours,
@@ -201,6 +172,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
         reservations_json: reservations,
         content_hash,
         signature,
+        generated_at: generatedAt,
       });
       if (insErr) throw new Error(insErr.message);
     }
@@ -209,9 +181,9 @@ export const generateCertificate = createServerFn({ method: "POST" })
       code,
       content_hash,
       signature,
-      generated_at: new Date().toISOString(),
+      generated_at: generatedAt,
       student_name: profile.full_name ?? "",
-      student_class: profile.class_year ?? null,
+      student_class: studentClass,
       school_name: schoolName,
       total_hours: totalHours,
       hours_needed: profile.hours_needed ?? 0,
@@ -232,18 +204,22 @@ export const verifyCertificatePublic = createServerFn({ method: "POST" })
     // Re-verify the HMAC signature so a row edited directly in the database
     // (without the signing secret) is reported as forged.
     if (result.valid) {
-      const { data: row } = await supabaseAdmin.from("certificates").select("code, content_hash, signature").eq("code", data.code.trim().toUpperCase()).maybeSingle();
-      const secrets = [process.env.CERT_SIGNING_SECRET, process.env.CERT_SIGNING_SECRET_OLD].filter(Boolean) as string[];
-      if (!row || !secrets.length) return { valid: false, reason: "unverifiable" } as typeof result;
-      let ok = false;
-      for (const sec of secrets) {
-        const expected = await hmacHex(sec, row.code + "|" + row.content_hash);
-        if (safeEqual(expected, row.signature)) { ok = true; break; }
-      }
-      if (!ok || row.content_hash !== result.content_hash) return { valid: false, reason: "tampered" } as typeof result;
+      const { data: row, error: rowError } = await supabaseAdmin.from("certificates").select("*").eq("code", data.code.trim().toUpperCase()).maybeSingle();
+      const secrets = [process.env.CERT_SIGNING_SECRET, process.env.CERT_SIGNING_SECRET_OLD].filter((secret): secret is string => !!secret);
+      if (rowError || !row || !secrets.length) return { valid: false, reason: "unverifiable" };
+      const snapshot = { ...row, reservations: row.reservations_json } as unknown as CertificateSnapshot;
+      // The signed object is deliberately projected: database bookkeeping isn't part of the snapshot.
+      const signedSnapshot: CertificateSnapshot = {
+        code: snapshot.code, student_id: snapshot.student_id, student_name: snapshot.student_name,
+        student_class: snapshot.student_class, school_id: snapshot.school_id, school_name: snapshot.school_name,
+        total_hours: snapshot.total_hours, hours_needed: snapshot.hours_needed,
+        generated_at: row.generated_at ? new Date(row.generated_at).toISOString() : undefined, reservations: snapshot.reservations,
+      };
+      if (!await checkCertificateIntegrity(signedSnapshot, row.content_hash, row.signature, secrets)) return { valid: false, reason: "tampered" };
       result.signature_verified = true;
     }
     return result as {
+      signature_verified?: boolean;
       valid: boolean;
       reason?: string;
       code?: string;
@@ -253,7 +229,7 @@ export const verifyCertificatePublic = createServerFn({ method: "POST" })
       total_hours_at_generation?: number;
       current_hours_in_system?: number;
       hours_needed?: number;
-      reservations?: Array<{ date: string; hours: number; organization: string; start_time?: string; end_time?: string; notes?: string }>;
+      reservations?: Array<{ date: string; hours: number; organization: string; start_time?: string; end_time?: string; notes?: string; approved_by?: string | null; approved_at?: string | null; source?: string }>;
       generated_at?: string;
       content_hash?: string;
       revoked_at?: string;

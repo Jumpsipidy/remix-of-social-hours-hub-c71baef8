@@ -666,6 +666,9 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   100% { clip-path: inset(0 100% 0 0); opacity: .9; }
 }
 @media (max-width: 767px) {
+  .sv-skeleton { background-attachment: scroll; opacity: .7; animation: sv-skel-in .2s ease-out forwards; }
+  .chat-transcript { scrollbar-gutter: auto; }
+  .certificate-page :is(h1,h2,p,dd,code) { overflow-wrap: anywhere; }
   .page-shell { width: 100%; }
   .site-navbar > div:nth-child(2) { min-height: 72px; padding-inline: .75rem; }
   .site-navbar > div:nth-child(2) > a { gap: .5rem; }

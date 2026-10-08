@@ -11,12 +11,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "../components/ui/sonner";
-import { MockTesterPanel } from "../components/mock-tester-panel";
-import { BugReportWidget } from "../components/bug-report-widget";
+const MockTesterPanel = lazy(() => import("../components/mock-tester-panel").then(m => ({ default: m.MockTesterPanel })));
+const BugReportWidget = lazy(() => import("../components/bug-report-widget").then(m => ({ default: m.BugReportWidget })));
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
@@ -25,7 +25,7 @@ import { ErrorMonitor } from "@/components/error-monitor";
 import { SkeletonReveal } from "@/components/skeleton-reveal";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
-import { AdminErrorHud } from "@/components/admin-error-hud";
+const AdminErrorHud = lazy(() => import("@/components/admin-error-hud").then(m => ({ default: m.AdminErrorHud })));
 import { LovableOverlayBridge } from "@/components/lovable-overlay-bridge";
 import { AnalyticsLoader } from "@/components/analytics-loader";
 import { CelebrationStage } from "@/components/celebration-overlay";
@@ -312,14 +312,14 @@ function RootComponent() {
           <SiteContextMenu />
           <CelebrationStage />
 
-          <BugReportWidget />
+          <Suspense fallback={null}><BugReportWidget /></Suspense>
           <CookieConsent />
-          {import.meta.env.DEV && <MockTesterPanel />}
+          {import.meta.env.DEV && <Suspense fallback={null}><MockTesterPanel /></Suspense>}
           <LockdownGate />
           <ErrorMonitor />
           <SkeletonReveal />
           <AdminAlertMonitor />
-          <AdminErrorHud />
+          <Suspense fallback={null}><AdminErrorHud /></Suspense>
           <LovableOverlayBridge />
 
           <PageViewTracker />
