@@ -49,6 +49,7 @@ import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
 import { Route as AdminErrorsRouteImport } from './routes/admin.errors'
 import { Route as AdminIncidentLookupRouteImport } from './routes/admin.incident-lookup'
 import { Route as AdminIncidentsRouteImport } from './routes/admin.incidents'
+import { Route as AdminInvitesRouteImport } from './routes/admin.invites'
 import { Route as AdminLeaderboardRouteImport } from './routes/admin.leaderboard'
 import { Route as AdminLockdownRouteImport } from './routes/admin.lockdown'
 import { Route as AdminManageRouteImport } from './routes/admin.manage'
@@ -64,6 +65,7 @@ import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
 import { Route as BlogKasYraSocialinesValandosRouteImport } from './routes/blog.kas-yra-socialines-valandos'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OrgIdRouteImport } from './routes/org.$id'
 import { Route as OrganizationWelcomeRouteImport } from './routes/organization.welcome'
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
@@ -273,6 +275,11 @@ const AdminIncidentsRoute = AdminIncidentsRouteImport.update({
   path: '/incidents',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminInvitesRoute = AdminInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLeaderboardRoute = AdminLeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -350,6 +357,11 @@ const BlogKasYraSocialinesValandosRoute =
     path: '/blog/kas-yra-socialines-valandos',
     getParentRoute: () => rootRouteImport,
   } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrgIdRoute = OrgIdRouteImport.update({
   id: '/org/$id',
   path: '/org/$id',
@@ -432,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
@@ -447,6 +460,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/org/$id': typeof OrgIdRoute
   '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -495,6 +509,7 @@ export interface FileRoutesByTo {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
@@ -510,6 +525,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/org/$id': typeof OrgIdRoute
   '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -561,6 +577,7 @@ export interface FileRoutesById {
   '/admin/errors': typeof AdminErrorsRoute
   '/admin/incident-lookup': typeof AdminIncidentLookupRoute
   '/admin/incidents': typeof AdminIncidentsRoute
+  '/admin/invites': typeof AdminInvitesRoute
   '/admin/leaderboard': typeof AdminLeaderboardRoute
   '/admin/lockdown': typeof AdminLockdownRoute
   '/admin/manage': typeof AdminManageRoute
@@ -576,6 +593,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
   '/blog/kas-yra-socialines-valandos': typeof BlogKasYraSocialinesValandosRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/org/$id': typeof OrgIdRoute
   '/organization/welcome': typeof OrganizationWelcomeRoute
   '/verify/$code': typeof VerifyCodeRoute
@@ -627,6 +645,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/incident-lookup'
     | '/admin/incidents'
+    | '/admin/invites'
     | '/admin/leaderboard'
     | '/admin/lockdown'
     | '/admin/manage'
@@ -642,6 +661,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
+    | '/invite/$token'
     | '/org/$id'
     | '/organization/welcome'
     | '/verify/$code'
@@ -690,6 +710,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/incident-lookup'
     | '/admin/incidents'
+    | '/admin/invites'
     | '/admin/leaderboard'
     | '/admin/lockdown'
     | '/admin/manage'
@@ -705,6 +726,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
+    | '/invite/$token'
     | '/org/$id'
     | '/organization/welcome'
     | '/verify/$code'
@@ -755,6 +777,7 @@ export interface FileRouteTypes {
     | '/admin/errors'
     | '/admin/incident-lookup'
     | '/admin/incidents'
+    | '/admin/invites'
     | '/admin/leaderboard'
     | '/admin/lockdown'
     | '/admin/manage'
@@ -770,6 +793,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
     | '/blog/kas-yra-socialines-valandos'
+    | '/invite/$token'
     | '/org/$id'
     | '/organization/welcome'
     | '/verify/$code'
@@ -810,6 +834,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogKaipSurinktiSocialinesValandasRoute: typeof BlogKaipSurinktiSocialinesValandasRoute
   BlogKasYraSocialinesValandosRoute: typeof BlogKasYraSocialinesValandosRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   OrgIdRoute: typeof OrgIdRoute
   VerifyCodeRoute: typeof VerifyCodeRoute
   VerifyIndexRoute: typeof VerifyIndexRoute
@@ -1099,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIncidentsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/invites': {
+      id: '/admin/invites'
+      path: '/invites'
+      fullPath: '/admin/invites'
+      preLoaderRoute: typeof AdminInvitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/leaderboard': {
       id: '/admin/leaderboard'
       path: '/leaderboard'
@@ -1204,6 +1236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogKasYraSocialinesValandosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/org/$id': {
       id: '/org/$id'
       path: '/org/$id'
@@ -1293,6 +1332,7 @@ interface AdminRouteChildren {
   AdminErrorsRoute: typeof AdminErrorsRoute
   AdminIncidentLookupRoute: typeof AdminIncidentLookupRoute
   AdminIncidentsRoute: typeof AdminIncidentsRoute
+  AdminInvitesRoute: typeof AdminInvitesRoute
   AdminLeaderboardRoute: typeof AdminLeaderboardRoute
   AdminLockdownRoute: typeof AdminLockdownRoute
   AdminManageRoute: typeof AdminManageRoute
@@ -1321,6 +1361,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminErrorsRoute: AdminErrorsRoute,
   AdminIncidentLookupRoute: AdminIncidentLookupRoute,
   AdminIncidentsRoute: AdminIncidentsRoute,
+  AdminInvitesRoute: AdminInvitesRoute,
   AdminLeaderboardRoute: AdminLeaderboardRoute,
   AdminLockdownRoute: AdminLockdownRoute,
   AdminManageRoute: AdminManageRoute,
@@ -1380,6 +1421,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogKaipSurinktiSocialinesValandasRoute:
     BlogKaipSurinktiSocialinesValandasRoute,
   BlogKasYraSocialinesValandosRoute: BlogKasYraSocialinesValandosRoute,
+  InviteTokenRoute: InviteTokenRoute,
   OrgIdRoute: OrgIdRoute,
   VerifyCodeRoute: VerifyCodeRoute,
   VerifyIndexRoute: VerifyIndexRoute,
