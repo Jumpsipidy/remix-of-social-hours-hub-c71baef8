@@ -62,6 +62,7 @@ const NAV_GROUPS = [
     label: "Vartotojai",
     items: [
       { to: "/admin/accounts", label: "Kurti paskyras", icon: UserPlus },
+      { to: "/admin/invites", label: "Kvietimų nuorodos", icon: Send },
       { to: "/admin/manage", label: "Valdyti paskyras", icon: Users },
       { to: "/admin/messages", label: "Žinučių auditas", icon: MessageSquare },
       { to: "/admin/preview", label: "Skydelių peržiūra", icon: Eye },
