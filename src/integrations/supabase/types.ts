@@ -680,6 +680,69 @@ export type Database = {
         }
         Relationships: []
       }
+      invite_links: {
+        Row: {
+          audience: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          label: string
+          max_uses: number | null
+          message: string | null
+          opens: number
+          revoked_at: string | null
+          school_id: string | null
+          token_hash: string
+          uses: number
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label: string
+          max_uses?: number | null
+          message?: string | null
+          opens?: number
+          revoked_at?: string | null
+          school_id?: string | null
+          token_hash: string
+          uses?: number
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label?: string
+          max_uses?: number | null
+          message?: string | null
+          opens?: number
+          revoked_at?: string | null
+          school_id?: string | null
+          token_hash?: string
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_links_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chat_room_id: string
@@ -1414,6 +1477,7 @@ export type Database = {
       expire_stale_reservations: { Args: never; Returns: number }
       generate_check_in_code: { Args: never; Returns: string }
       generate_recurring_tasks: { Args: never; Returns: number }
+      get_invite: { Args: { _accept?: boolean; _token: string }; Returns: Json }
       get_lockdown_public: {
         Args: never
         Returns: {
