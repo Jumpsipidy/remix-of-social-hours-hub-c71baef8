@@ -35,6 +35,9 @@
 - [x] Replace the overlapping bug-report button with a compact bottom-right trigger and accessible reporting dialog
 
 ## Bug report remake (2026-10-12)
+- [x] Fix screenshot attachment timeout/missing assets and provide compressed image upload fallback
+- [x] Remove public platform/beta/generation labels and refine report-dialog motion; retain genuine admin analysis tools
+- [x] Confirm Admin → Klaidų pranešimai and verify automatic capture, upload and JPEG insert payload without sending real alerts; 179 tests pass, no browser errors
 - [x] Redesign the report form, optional reproduction steps, impact choices, screenshot preview/removal and inline delivery states
 - [x] Verify reporting dialog on desktop/mobile, Escape/reopen with retained draft, impact choice and intercepted success/error states; 177 smoke tests pass, no browser errors
 - [ ] Verify real admin delivery and authenticated report detail viewing — blocked by external unmanaged Supabase session and production-only alert credentials

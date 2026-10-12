@@ -33,4 +33,4 @@
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
 - Class letters live in profiles.class_letter (students) and profiles.assigned_letter (teachers, Super Admin only via tg_profiles_guard_privileged); class_year stays the canonical grade so yearly promotion keeps working.
 - Theme is applied by an inline script in the root <head> before paint; ThemeProvider must read the on-screen class when saving so a stale state can't overwrite the choice.
-- Bug reporting uses a shared portaled, viewport-aware dialog with an explicit screenshot opt-in and the existing storage/alert pipeline; this keeps reporting accessible without capturing personal screens automatically.
+- Bug reporting uses a shared portaled, viewport-aware dialog with opt-in bounded JPEG capture/upload; success requires a saved report rather than an alert-only response so the administrator's board remains the source of truth.
