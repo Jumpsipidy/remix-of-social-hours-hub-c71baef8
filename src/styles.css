@@ -405,62 +405,119 @@ html.school-eyes, .theme-sample-light {
   opacity: 1;
 }
 .auth-shell select option { background: var(--popover); color: var(--popover-foreground); }
-.auth-loading-block {
-  background: var(--muted);
-  animation: auth-loading-pulse 1.2s ease-in-out infinite alternate;
-}
-@keyframes auth-loading-pulse {
-  from { opacity: .55; }
-  to { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-loading-block { animation: none; }
-  .auth-blue-slide { display: none; }
-}
 
-/* Named snapshots survive route replacement: panels move instead of remounting
-   with independent entrance effects. Only the changing copy crossfades. */
-.auth-transition-frame { view-transition-name: auth-frame; }
-.auth-transition-brand { view-transition-name: auth-brand; }
-.auth-transition-logo { view-transition-name: auth-logo; }
-.auth-transition-eyebrow { view-transition-name: auth-eyebrow; }
-.auth-transition-title { view-transition-name: auth-title; }
-.auth-transition-description { view-transition-name: auth-description; }
-.auth-transition-points { view-transition-name: auth-points; }
-.auth-transition-form-panel { view-transition-name: auth-form-panel; }
-.auth-transition-switch { view-transition-name: auth-switch; }
-.auth-transition-indicator { view-transition-name: auth-indicator; }
-.auth-transition-content { view-transition-name: auth-content; }
-::view-transition-group(auth-frame),
-::view-transition-group(auth-brand),
-::view-transition-group(auth-logo),
-::view-transition-group(auth-eyebrow),
-::view-transition-group(auth-title),
-::view-transition-group(auth-description),
-::view-transition-group(auth-points),
-::view-transition-group(auth-form-panel),
-::view-transition-group(auth-switch),
-::view-transition-group(auth-indicator),
-::view-transition-group(auth-content) {
-  animation-duration: 650ms;
-  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+/* ===== Login / register: one persistent frame =====
+   First open: the blue panel slides in from its own side carrying its text.
+   Switching: the panel glides to the other side, the form glides the other way,
+   only the copy changes. Mobile: the panel is a top band that drops in. */
+.auth-shell { --auth-split: 44%; --auth-move: 860ms; --auth-ease: cubic-bezier(.76,0,.24,1); --auth-out: cubic-bezier(.22,1,.36,1); }
+.auth-brand {
+  position: relative; z-index: 20; overflow: hidden; isolation: isolate;
+  margin: .75rem .75rem 0; padding: 1.25rem 1.25rem 1.5rem; border-radius: 1.5rem;
+  background: var(--gradient-primary); color: var(--primary-foreground);
 }
-::view-transition-old(auth-content),
-::view-transition-new(auth-content),
-::view-transition-old(auth-title),
-::view-transition-new(auth-title),
-::view-transition-old(auth-description),
-::view-transition-new(auth-description),
-::view-transition-old(auth-points),
-::view-transition-new(auth-points) {
-  height: 100%;
-  object-fit: none;
-  object-position: left top;
+.auth-brand-grid {
+  position: absolute; inset: 0; z-index: -1; opacity: .55; pointer-events: none;
+  background-image: radial-gradient(color-mix(in oklab, var(--primary-foreground) 24%, transparent) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 80% 70% at 30% 45%, #000 15%, transparent 75%);
 }
+.auth-brand-orb {
+  position: absolute; z-index: -1; border-radius: 9999px; filter: blur(56px); pointer-events: none;
+  background: color-mix(in oklab, var(--primary-foreground) 18%, transparent);
+  animation: auth-orb 18s ease-in-out infinite alternate;
+}
+.auth-brand-orb-a { width: 20rem; height: 20rem; top: -9rem; right: -7rem; }
+.auth-brand-orb-b { width: 24rem; height: 24rem; bottom: -13rem; left: -9rem; animation-duration: 23s; animation-direction: alternate-reverse; }
+@keyframes auth-orb { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(2.5rem,1.75rem,0) scale(1.14); } }
+.auth-brand-note {
+  background: color-mix(in oklab, var(--primary-foreground) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary-foreground) 18%, transparent);
+}
+.auth-live-dot { width: .5rem; height: .5rem; border-radius: 9999px; background: currentColor; animation: auth-live 2.2s ease-out infinite; }
+@keyframes auth-live { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 55%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+
+/* Mobile intro: band drops in, then its lines rise. */
+.auth-brand.is-intro { animation: auth-band-in 720ms var(--auth-out) backwards; }
+@keyframes auth-band-in { from { transform: translateY(-112%); } to { transform: none; } }
+.auth-brand.is-intro .auth-brand-copy > * { animation: auth-rise 560ms var(--auth-out) backwards; }
+.auth-brand.is-intro .auth-brand-copy > :nth-child(1) { animation-delay: 300ms; }
+.auth-brand.is-intro .auth-brand-copy > :nth-child(2) { animation-delay: 360ms; }
+.auth-brand.is-intro .auth-brand-copy > :nth-child(3) { animation-delay: 420ms; }
+.auth-brand.is-intro .auth-brand-copy > :nth-child(4) { animation-delay: 480ms; }
+.auth-brand.is-intro .auth-brand-copy > :nth-child(n+5) { animation-delay: 540ms; }
+.auth-top { animation: auth-fade 400ms ease-out 250ms backwards; }
+
+@media (min-width: 1024px) {
+  .auth-brand {
+    position: fixed; inset-block: 0; left: 0; width: var(--auth-split);
+    margin: 0; padding: 2.5rem 3rem; border-radius: 0 2rem 2rem 0;
+    transition: transform var(--auth-move) var(--auth-ease), border-radius var(--auth-move) var(--auth-ease);
+  }
+  .auth-shell[data-auth-mode="register"] .auth-brand { transform: translateX(127.2727%); border-radius: 2rem 0 0 2rem; }
+  .auth-form-side { margin-left: var(--auth-split); width: calc(100% - var(--auth-split)); transition: transform var(--auth-move) var(--auth-ease); }
+  .auth-shell[data-auth-mode="register"] .auth-form-side { transform: translateX(-78.5714%); }
+  .auth-brand.is-intro { animation: auth-brand-in-left 980ms var(--auth-out) backwards; }
+  .auth-shell[data-auth-mode="register"] .auth-brand.is-intro { animation-name: auth-brand-in-right; }
+  .auth-brand.is-intro .auth-brand-copy > :nth-child(1) { animation-delay: 420ms; }
+  .auth-brand.is-intro .auth-brand-copy > :nth-child(2) { animation-delay: 490ms; }
+  .auth-brand.is-intro .auth-brand-copy > :nth-child(3) { animation-delay: 560ms; }
+  .auth-brand.is-intro .auth-brand-copy > :nth-child(4) { animation-delay: 630ms; }
+  .auth-brand.is-intro .auth-brand-copy > :nth-child(n+5) { animation-delay: 700ms; }
+  .auth-top { animation: none; }
+}
+@keyframes auth-brand-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes auth-brand-in-right { from { transform: translateX(227.2727%); } to { transform: translateX(127.2727%); } }
+
+/* Mode switch pill follows the active tab. */
+.auth-switch-indicator { transition: transform 560ms var(--auth-ease); }
+.auth-shell[data-auth-mode="register"] .auth-switch-indicator { transform: translateX(100%); }
+
+/* Controls */
+.auth-input { transition: border-color .2s, box-shadow .2s, background-color .2s; }
+.auth-input:hover { border-color: color-mix(in oklab, var(--primary) 35%, var(--border)); }
+.auth-input:focus-within, select.auth-input:focus, textarea.auth-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+.auth-input:focus-within > svg:first-child { color: var(--primary); }
+.auth-oauth { transition: transform .2s var(--auth-out), border-color .2s, background-color .2s; }
+.auth-oauth:hover:not(:disabled) { transform: translateY(-1px); border-color: color-mix(in oklab, var(--primary) 45%, var(--border)); background: var(--muted); }
+.auth-choice { transition: border-color .25s, background-color .25s, transform .2s var(--auth-out); }
+.auth-choice:hover { transform: translateY(-1px); }
+.auth-check { transition: border-color .2s; }
+.auth-check:has(input:checked) { border-color: color-mix(in oklab, var(--primary) 50%, var(--border)); }
+.auth-submit-shine {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, color-mix(in oklab, var(--primary-foreground) 30%, transparent) 50%, transparent 70%);
+  transform: translateX(-120%); transition: transform .9s var(--auth-out);
+}
+.auth-submit:hover .auth-submit-shine { transform: translateX(120%); }
+
+/* Skeleton → form: placeholders shimmer, real fields rise in one after another. */
+.auth-skeleton { animation: auth-fade 220ms ease-out backwards; }
+.auth-loading-block {
+  background: linear-gradient(100deg, var(--muted) 35%, color-mix(in oklab, var(--primary) 16%, var(--muted)) 50%, var(--muted) 65%);
+  background-size: 260% 100%;
+  animation: auth-shimmer 1.5s linear infinite;
+}
+@keyframes auth-shimmer { from { background-position: 100% 0; } to { background-position: -60% 0; } }
+.auth-reveal > *, .auth-reveal form > * { animation: auth-rise 520ms var(--auth-out) backwards; }
+.auth-reveal > :nth-child(2) { animation-delay: 50ms; }
+.auth-reveal > :nth-child(3) { animation-delay: 100ms; }
+.auth-reveal > :nth-child(4) { animation-delay: 150ms; }
+.auth-reveal > :nth-child(n+5) { animation-delay: 200ms; }
+.auth-reveal form > :nth-child(1) { animation-delay: 160ms; }
+.auth-reveal form > :nth-child(2) { animation-delay: 210ms; }
+.auth-reveal form > :nth-child(3) { animation-delay: 260ms; }
+.auth-reveal form > :nth-child(n+4) { animation-delay: 310ms; }
+@keyframes auth-rise { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes auth-fade { from { opacity: 0; } to { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) { animation-duration: 1ms !important; }
+  .auth-brand, .auth-form-side, .auth-switch-indicator, .auth-submit-shine { transition: none !important; }
+  .auth-brand.is-intro, .auth-brand.is-intro *, .auth-top, .auth-skeleton, .auth-reveal > *, .auth-reveal form > *,
+  .auth-loading-block, .auth-brand-orb, .auth-live-dot { animation: none !important; }
 }
 
 /* Shared skeleton — calm, synced shimmer.
@@ -642,24 +699,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .message-link { min-width: 0; min-height: auto; display: inline; }
 .chat-transcript { scrollbar-gutter: stable; }
 .message-composer { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
-/* First open: brand panel (with its text) slides in from its own side. */
-.auth-brand-intro-left { animation: auth-brand-in-left 700ms cubic-bezier(.22,1,.36,1) both; }
-.auth-brand-intro-right { animation: auth-brand-in-right 700ms cubic-bezier(.22,1,.36,1) both; }
-.auth-brand-intro-left > *, .auth-brand-intro-right > * { animation: auth-rise .5s cubic-bezier(.22,1,.36,1) 280ms both; }
-@keyframes auth-brand-in-left { from { clip-path: inset(0 100% 0 0); transform: translateX(-24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
-@keyframes auth-brand-in-right { from { clip-path: inset(0 0 0 100%); transform: translateX(24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
-/* Skeleton: one travelling shimmer; form fields rise in one after another. */
-.auth-loading-block {
-  background: linear-gradient(100deg, var(--muted) 30%, color-mix(in oklab, var(--primary) 18%, var(--muted)) 50%, var(--muted) 70%) !important;
-  background-size: 300% 100% !important;
-  animation: auth-shimmer 1.4s linear infinite !important;
-}
-@keyframes auth-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
-.auth-reveal > *, .auth-reveal form > * { animation: auth-rise .42s cubic-bezier(.22,1,.36,1) both; }
-.auth-reveal > *:nth-child(2) { animation-delay: 40ms; } .auth-reveal > *:nth-child(3) { animation-delay: 80ms; }
-.auth-reveal > *:nth-child(4) { animation-delay: 120ms; } .auth-reveal > *:nth-child(n+5) { animation-delay: 160ms; }
-.auth-reveal form > *:nth-child(2) { animation-delay: 200ms; } .auth-reveal form > *:nth-child(n+3) { animation-delay: 240ms; }
-@keyframes auth-rise { from { opacity: 0; transform: translateY(10px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 @media (max-width: 767px) {
   .sv-skeleton { background-attachment: scroll; opacity: .7; animation: sv-skel-in .2s ease-out forwards; }
   .chat-transcript { scrollbar-gutter: auto; }
@@ -695,19 +734,9 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .tasks-page article h2 button { min-height: 0; }
   .task-filters select { text-overflow: ellipsis; }
   .scan-page input#scan-code { font-size: 28px !important; letter-spacing: 0; }
-  .auth-shell > div.relative.z-10 { align-items: flex-start; padding: 4.75rem .75rem 1.5rem; }
-  .auth-transition-frame { border-radius: .75rem; }
-  .auth-transition-form-panel { padding: 1.25rem; }
-  .auth-transition-content { margin-top: 1.25rem; }
   .auth-shell form :is(input,select) { min-width: 0; max-width: 100%; }
   .auth-shell form svg { flex-shrink: 0; }
-  .auth-shell .auth-transition-switch a { display: grid; place-items: center; }
-  .auth-shell [class*="sm:grid-cols-2"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .auth-shell :is(h1,h2,h3) { letter-spacing: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-brand-intro-left, .auth-brand-intro-right, .auth-brand-intro-left > *, .auth-brand-intro-right > *, .auth-reveal > *, .auth-reveal form > *, .auth-loading-block { animation: none !important; }
-  .auth-blue-slide { display: none; }
 }
 
 /* Soci Guard status colours follow the saved theme. */

@@ -27,6 +27,13 @@
 - [x] Synchronize panel movement, resizing, tab indicator and text changes without remount entrance effects
 - [x] Verify both navigation directions in Chromium and run route smoke tests (169 passed)
 
+## Login/signup full remake (2026-10-12)
+- [ ] Persistent shared layout: blue panel slides in from its side (with text) on first open; switching only moves the panel and swaps text
+- [ ] Rebuild login and register forms (fields, OAuth, mode cards, sections) with matching skeletons and staggered reveal
+- [ ] Mobile band layout, both themes, reduced motion
+- [ ] Verify desktop + mobile, both directions, both themes; run tests (smoke + e2e)
+
+
 ## Lockdown screen redesign
 - [x] Select palette, typography and layout, then choose a rendered direction
 - [x] Redesign all visitor lockdown states and dialogs without changing their functionality

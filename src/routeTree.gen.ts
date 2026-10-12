@@ -10,17 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutOrgsRouteImport } from './routes/about-orgs'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CompleteProfileRouteImport } from './routes/complete-profile'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as OrganizationRouteImport } from './routes/organization'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivatumasRouteImport } from './routes/privatumas'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SaugumasRouteImport } from './routes/saugumas'
 import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
 import { Route as SchoolRouteImport } from './routes/school'
@@ -34,6 +33,8 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UpdatePasswordRouteImport } from './routes/update-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as VersijosRouteImport } from './routes/versijos'
+import { Route as AuthLoginRouteImport } from './routes/_auth.login'
+import { Route as AuthRegisterRouteImport } from './routes/_auth.register'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedCheckinRouteImport } from './routes/_authenticated/checkin'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -80,6 +81,10 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -109,11 +114,6 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OrganizationRoute = OrganizationRouteImport.update({
   id: '/organization',
   path: '/organization',
@@ -127,11 +127,6 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PrivatumasRoute = PrivatumasRouteImport.update({
   id: '/privatumas',
   path: '/privatumas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SaugumasRoute = SaugumasRouteImport.update({
@@ -199,6 +194,16 @@ const VersijosRoute = VersijosRouteImport.update({
   id: '/versijos',
   path: '/versijos',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
@@ -412,11 +417,9 @@ export interface FileRoutesByFullPath {
   '/complete-profile': typeof CompleteProfileRoute
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
-  '/register': typeof RegisterRoute
   '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
@@ -430,6 +433,8 @@ export interface FileRoutesByFullPath {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
   '/chat': typeof AuthenticatedChatRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
@@ -477,11 +482,9 @@ export interface FileRoutesByTo {
   '/complete-profile': typeof CompleteProfileRoute
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
-  '/register': typeof RegisterRoute
   '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
@@ -495,6 +498,8 @@ export interface FileRoutesByTo {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
   '/chat': typeof AuthenticatedChatRoute
   '/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
@@ -540,16 +545,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_auth': typeof AuthRouteWithChildren
   '/about-orgs': typeof AboutOrgsRoute
   '/admin': typeof AdminRouteWithChildren
   '/complete-profile': typeof CompleteProfileRoute
   '/cookies': typeof CookiesRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/login': typeof LoginRoute
   '/organization': typeof OrganizationRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/privatumas': typeof PrivatumasRoute
-  '/register': typeof RegisterRoute
   '/saugumas': typeof SaugumasRoute
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
@@ -563,6 +567,8 @@ export interface FileRoutesById {
   '/update-password': typeof UpdatePasswordRoute
   '/verify-email': typeof VerifyEmailRoute
   '/versijos': typeof VersijosRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/register': typeof AuthRegisterRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/checkin': typeof AuthenticatedCheckinRoute
   '/admin/accounts': typeof AdminAccountsRoute
@@ -613,11 +619,9 @@ export interface FileRouteTypes {
     | '/complete-profile'
     | '/cookies'
     | '/forgot-password'
-    | '/login'
     | '/organization'
     | '/privacy'
     | '/privatumas'
-    | '/register'
     | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
@@ -631,6 +635,8 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/login'
+    | '/register'
     | '/chat'
     | '/checkin'
     | '/admin/accounts'
@@ -678,11 +684,9 @@ export interface FileRouteTypes {
     | '/complete-profile'
     | '/cookies'
     | '/forgot-password'
-    | '/login'
     | '/organization'
     | '/privacy'
     | '/privatumas'
-    | '/register'
     | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
@@ -696,6 +700,8 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/login'
+    | '/register'
     | '/chat'
     | '/checkin'
     | '/admin/accounts'
@@ -740,16 +746,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_auth'
     | '/about-orgs'
     | '/admin'
     | '/complete-profile'
     | '/cookies'
     | '/forgot-password'
-    | '/login'
     | '/organization'
     | '/privacy'
     | '/privatumas'
-    | '/register'
     | '/saugumas'
     | '/savanoryste-seduvoje'
     | '/school'
@@ -763,6 +768,8 @@ export interface FileRouteTypes {
     | '/update-password'
     | '/verify-email'
     | '/versijos'
+    | '/_auth/login'
+    | '/_auth/register'
     | '/_authenticated/chat'
     | '/_authenticated/checkin'
     | '/admin/accounts'
@@ -808,16 +815,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
   AboutOrgsRoute: typeof AboutOrgsRoute
   AdminRoute: typeof AdminRouteWithChildren
   CompleteProfileRoute: typeof CompleteProfileRoute
   CookiesRoute: typeof CookiesRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  LoginRoute: typeof LoginRoute
   OrganizationRoute: typeof OrganizationRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   PrivatumasRoute: typeof PrivatumasRoute
-  RegisterRoute: typeof RegisterRoute
   SaugumasRoute: typeof SaugumasRoute
   SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
@@ -849,6 +855,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -893,13 +906,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/organization': {
       id: '/organization'
       path: '/organization'
@@ -919,13 +925,6 @@ declare module '@tanstack/react-router' {
       path: '/privatumas'
       fullPath: '/privatumas'
       preLoaderRoute: typeof PrivatumasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saugumas': {
@@ -1018,6 +1017,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/versijos'
       preLoaderRoute: typeof VersijosRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/chat': {
       id: '/_authenticated/chat'
@@ -1319,6 +1332,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 interface AdminRouteChildren {
   AdminAccountsRoute: typeof AdminAccountsRoute
   AdminActivityRoute: typeof AdminActivityRoute
@@ -1394,16 +1419,15 @@ const OrganizationRouteWithChildren = OrganizationRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
   AboutOrgsRoute: AboutOrgsRoute,
   AdminRoute: AdminRouteWithChildren,
   CompleteProfileRoute: CompleteProfileRoute,
   CookiesRoute: CookiesRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  LoginRoute: LoginRoute,
   OrganizationRoute: OrganizationRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   PrivatumasRoute: PrivatumasRoute,
-  RegisterRoute: RegisterRoute,
   SaugumasRoute: SaugumasRoute,
   SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,

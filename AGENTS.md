@@ -12,8 +12,9 @@
 - Use the official Sentry TanStack Start SDK at client, router, middleware, and server-entry boundaries; this preserves full-stack traces and private source-map uploads.
 
 - Authentication pages use scoped sans-serif typography and semantic theme colors; this keeps forms legible without restyling unrelated pages.
-- Login/register navigation uses scoped named View Transitions plus the decorative blue sweep; lightweight AuthSkeleton pending views share the page geometry without artificial minimum waits.
-- AuthSkeleton and the form render through the same AuthShell, which owns their handoff; the global skeleton observer skips that frame to avoid competing entrance animations.
+- Login and register live under the pathless `_auth` layout (AuthLayout in auth-shell.tsx) so the brand panel persists; CSS transforms move it between sides and only its copy swaps, avoiding remount and View Transition conflicts.
+- AuthSkeleton renders only form placeholders inside that frame and AuthStage owns the skeleton-to-form handoff; the global skeleton observer skips `.auth-shell` to avoid competing entrance animations.
+- Fixed overlays rendered from the auth form side portal to document.body, because the moving form side uses a transform that would trap them.
 - Human chat uses a shared multiline MessageComposer and viewport-aware Radix dialogs; shared keyboard geometry keeps sending controls visible on phones.
 - Check-in presentation uses a stable canvas and authenticated server-issued tokens, refreshed while visible; rotating QR content never persists in browser storage.
 - Certificate verification recomputes the signed snapshot hash before HMAC verification, supports legacy snapshots and key rotation, and uses server-stamped approval identities; this detects altered history without inventing older approvers.

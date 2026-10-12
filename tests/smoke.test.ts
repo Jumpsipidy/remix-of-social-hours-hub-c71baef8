@@ -42,7 +42,7 @@ describe("lib modules load", () => {
 
 describe("critical flow exports exist", () => {
   it("login route exports Route", async () => {
-    const mod: any = await import("../src/routes/login");
+    const mod: any = await import("../src/routes/_auth.login");
     expect(mod.Route).toBeDefined();
   });
   it("student (hours) route exports Route", async () => {
