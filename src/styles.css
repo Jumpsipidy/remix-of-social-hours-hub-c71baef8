@@ -750,3 +750,4 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 @media (prefers-reduced-motion: reduce) {
   .bug-report-dialog { animation: none !important; }
 }
+.bug-report-dialog :is(h2, h3) { font-family: var(--font-sans); letter-spacing: 0; }
