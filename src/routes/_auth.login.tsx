@@ -33,7 +33,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Super administratorius",
 };
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/_auth/login")({
   ssr: false,
   pendingComponent: AuthSkeleton,
   pendingMs: 120,

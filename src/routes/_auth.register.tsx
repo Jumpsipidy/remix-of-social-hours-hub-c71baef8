@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AuthShell, OAuthButtons } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 
-export const Route = createFileRoute("/register")({
+export const Route = createFileRoute("/_auth/register")({
   ssr: false,
   pendingComponent: () => <AuthSkeleton mode="register" />,
   pendingMs: 120,
