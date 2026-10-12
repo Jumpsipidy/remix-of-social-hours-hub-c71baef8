@@ -120,7 +120,7 @@ function BrandPanel({ mode, intro, ref }: { mode: AuthMode; intro: boolean; ref:
       <div className="auth-brand-inner relative flex h-full flex-col">
         <Link to="/" className="relative inline-flex h-11 items-center gap-2.5 self-start lg:gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20 lg:h-11 lg:w-11 lg:rounded-2xl"><Heart className="h-4 w-4 lg:h-5 lg:w-5" fill="currentColor" /></span>
-          <span className="text-sm font-bold lg:text-xl">Socialinės Valandos</span>
+          <span className="text-sm font-bold max-[379px]:sr-only lg:text-xl">Socialinės Valandos</span>
         </Link>
         <div className="relative mt-4 flex flex-1 flex-col justify-center lg:mt-0 lg:py-10">
           <AnimatePresence mode="wait" initial={false}>
@@ -131,7 +131,7 @@ function BrandPanel({ mode, intro, ref }: { mode: AuthMode; intro: boolean; ref:
                 exit: { transition: { staggerChildren: 0.03 } },
               }}>
               <BrandLine className="text-[11px] font-bold uppercase tracking-[0.25em] opacity-80">{c.eyebrow}</BrandLine>
-              <BrandLine as="h1" className="mt-3 text-[28px] font-black leading-[1.05] tracking-tight sm:text-4xl lg:mt-5 lg:text-[3.25rem]">
+              <BrandLine as="h1" className="mt-3 text-[28px] font-black leading-[1.05] tracking-tight sm:text-4xl lg:mt-5 lg:text-[clamp(2.5rem,3.7vw,3.5rem)]">
                 {c.title}<br /><span className="opacity-75">{c.accent}</span>
               </BrandLine>
               <BrandLine className="mt-5 hidden max-w-sm text-[15px] leading-relaxed opacity-85 lg:block">{c.body}</BrandLine>

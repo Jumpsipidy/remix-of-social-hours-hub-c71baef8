@@ -28,10 +28,11 @@
 - [x] Verify both navigation directions in Chromium and run route smoke tests (169 passed)
 
 ## Login/signup full remake (2026-10-12)
-- [ ] Persistent shared layout: blue panel slides in from its side (with text) on first open; switching only moves the panel and swaps text
-- [ ] Rebuild login and register forms (fields, OAuth, mode cards, sections) with matching skeletons and staggered reveal
-- [ ] Mobile band layout, both themes, reduced motion
-- [ ] Verify desktop + mobile, both directions, both themes; run tests (smoke + e2e)
+- [x] Persistent shared layout: blue panel slides in from its side (with text) on first open; switching only moves the panel and swaps text
+- [x] Rebuild login and register forms (fields, OAuth, mode cards, sections) with matching skeletons and staggered reveal
+- [x] Mobile band layout, both themes, reduced motion
+- [x] Verify 320/390/768/1024/1280/1440, both directions, both themes, slow-CPU skeleton handoff; 224 tests + 2 e2e pass
+- [ ] Bug-report floating button overlaps form fields on small phones (global widget, outside the auth remake scope)
 
 
 ## Lockdown screen redesign
