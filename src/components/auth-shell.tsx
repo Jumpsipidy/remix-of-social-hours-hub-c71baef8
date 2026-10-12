@@ -92,18 +92,14 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div data-auth-mode={mode} className="auth-shell relative min-h-dvh overflow-x-clip bg-background text-foreground">
       <BrandPanel ref={brandRef} mode={mode} intro={intro} />
-      <main className="auth-form-side relative flex min-h-dvh flex-col">
-        <header className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-8 sm:pt-6">
-          <Link to="/" className="auth-back hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground lg:inline-flex">
+      <main className="auth-form-side flex flex-col lg:relative lg:min-h-dvh">
+        <header className="auth-top absolute right-0 top-0 z-30 flex items-center pr-6 pt-6 lg:static lg:justify-between lg:px-8 lg:pt-6">
+          <Link to="/" className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:inline-flex">
             <ArrowLeft className="h-4 w-4" /> Į pradžią
-          </Link>
-          <Link to="/" className="inline-flex items-center gap-2 lg:hidden" aria-label="Socialinės Valandos — pradžia">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-primary text-primary-foreground"><Heart className="h-4 w-4" fill="currentColor" /></span>
-            <span className="text-base font-bold">Socialinės Valandos</span>
           </Link>
           <SchoolEyesToggle />
         </header>
-        <div className="auth-column mx-auto flex w-full max-w-[460px] flex-1 flex-col justify-center px-4 pb-10 pt-6 sm:px-6 lg:pt-4">
+        <div className="mx-auto flex w-full max-w-[460px] flex-1 flex-col justify-center px-4 pb-12 pt-6 sm:px-6 lg:pt-2">
           <AuthModeSwitch mode={mode} />
           <div className="mt-7">{children}</div>
         </div>
@@ -120,11 +116,11 @@ function BrandPanel({ mode, intro, ref }: { mode: AuthMode; intro: boolean; ref:
       <div aria-hidden className="auth-brand-orb auth-brand-orb-a" />
       <div aria-hidden className="auth-brand-orb auth-brand-orb-b" />
       <div className="auth-brand-inner relative flex h-full flex-col">
-        <Link to="/" className="auth-brand-logo relative hidden items-center gap-3 lg:inline-flex">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20"><Heart className="h-5 w-5" fill="currentColor" /></span>
-          <span className="text-xl font-bold">Socialinės Valandos</span>
+        <Link to="/" className="relative inline-flex h-11 items-center gap-2.5 self-start lg:gap-3">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20 lg:h-11 lg:w-11 lg:rounded-2xl"><Heart className="h-4 w-4 lg:h-5 lg:w-5" fill="currentColor" /></span>
+          <span className="text-sm font-bold lg:text-xl">Socialinės Valandos</span>
         </Link>
-        <div className="relative flex flex-1 flex-col justify-center lg:py-10">
+        <div className="relative mt-4 flex flex-1 flex-col justify-center lg:mt-0 lg:py-10">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div key={mode} className="auth-brand-copy" initial="hidden" animate="show" exit="exit"
               variants={{
