@@ -5,7 +5,7 @@ import { deviceMeta, sessionId } from "@/lib/device-meta";
 import { getActionBreadcrumbs } from "@/lib/user-breadcrumbs";
 import { insertWithSchemaFallback } from "@/lib/schema-safe-insert";
 import { escalateAppError } from "@/lib/error-escalation.functions";
-import { captureScreenshot } from "@/lib/screenshot";
+import { captureScreenshot, prepareReportImage } from "@/lib/screenshot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +47,7 @@ export function BugReportWidget() {
   const [shot, setShot] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
   const captureId = useRef(0);
+  const fileInput = useRef<HTMLInputElement>(null);
   const diagPreview = useMemo(() => open ? collectDiagnostics() : null, [open]);
 
   function changeOpen(next: boolean) {
@@ -63,7 +64,18 @@ export function BugReportWidget() {
     if (id !== captureId.current) return;
     setCapturing(false);
     if (image) { setShot(image); setError(""); }
-    else setError("Ekrano nuotraukos pridėti nepavyko. Pranešimą gali siųsti ir be jos.");
+    else setError("Naršyklė neleido nufotografuoti puslapio. Pasirink ekrano nuotrauką iš savo įrenginio arba siųsk be jos.");
+  }
+
+  async function addFile(file: File | undefined) {
+    if (!file) return;
+    const id = ++captureId.current;
+    setCapturing(true);
+    const image = await prepareReportImage(file).catch(() => null);
+    if (id !== captureId.current) return;
+    setCapturing(false);
+    if (image) { setShot(image); setError(""); }
+    else setError("Pasirink PNG, JPG arba WebP nuotrauką iki 10 MB.");
   }
 
   async function submit(e: React.FormEvent) {
@@ -97,7 +109,8 @@ export function BugReportWidget() {
         } });
         reachedAdmin = true;
       } catch { /* Retain the existing notification fallback. */ }
-      if (!reachedAdmin) throw new Error("delivery-failed");
+      // Alert delivery is not proof that the report appears in the admin board.
+      if (insertError || !reachedAdmin) throw new Error("delivery-failed");
       setSent(true);
       setMessage(""); setSteps(""); setExpected(""); setEmail(""); setSeverity("normal"); setShot(null);
     } catch {
@@ -133,8 +146,10 @@ export function BugReportWidget() {
               <div className="space-y-2"><Label>Kiek tai trukdo?</Label><div role="radiogroup" aria-label="Problemos svarbumas" className="grid grid-cols-2 gap-2">{impacts.map((impact) => <label key={impact.value} className={`relative flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors ${severity === impact.value ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}><input type="radio" name="bug-impact" value={impact.value} checked={severity === impact.value} onChange={() => setSeverity(impact.value)} className="peer sr-only" /><span className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border peer-focus-visible:ring-2 peer-focus-visible:ring-ring ${severity === impact.value ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}>{severity === impact.value && <Check className="h-3 w-3" />}</span><span><span className="block text-sm font-medium">{impact.label}</span><span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{impact.detail}</span></span></label>)}</div></div>
               <div className="space-y-2"><Label htmlFor="bug-email">El. paštas atsakymui <span className="font-normal text-muted-foreground">(nebūtina)</span></Label><Input id="bug-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} placeholder="tavo@pastas.lt" className="h-11 text-base sm:text-sm" /></div>
               <div className="border-t border-border pt-4">
+                <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Pridėti ekrano nuotraukos failą" className="sr-only" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = ""; }} />
                 {shot ? <div className="flex items-center gap-3"><img src={shot} alt="Pridedama ekrano nuotrauka" className="h-16 w-24 rounded-md border border-border object-cover" /><div className="min-w-0 flex-1"><p className="text-sm font-medium">Ekrano nuotrauka pridėta</p><p className="text-xs text-muted-foreground">Prieš siųsdamas patikrink jos turinį.</p></div><Button type="button" variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Pašalinti ekrano nuotrauką" title="Pašalinti ekrano nuotrauką" onClick={() => setShot(null)}><Trash2 /></Button></div> : <><Button type="button" variant="outline" className="h-11 w-full" disabled={capturing} onClick={() => void addScreenshot()}>{capturing ? <Loader2 className="animate-spin" /> : <ImagePlus />}{capturing ? "Ruošiama nuotrauka…" : "Pridėti šio puslapio nuotrauką"}</Button><p className="mt-2 text-xs leading-relaxed text-muted-foreground">Nebūtina. Nuotraukoje gali matytis asmeniniai duomenys.</p></>}
               </div>
+              {!shot && <Button type="button" variant="secondary" className="h-11 w-full" disabled={capturing} onClick={() => fileInput.current?.click()}><ImagePlus /> Pasirinkti nuotrauką iš įrenginio</Button>}
               <div><Button type="button" variant="ghost" className="h-auto w-full justify-start whitespace-normal px-0 py-2 text-left text-xs text-muted-foreground" aria-expanded={showDiag} aria-controls="bug-diagnostics" onClick={() => setShowDiag(!showDiag)}><ShieldCheck className="text-success" /><span className="flex-1">Pridedama puslapio ir įrenginio informacija</span><ChevronDown className={showDiag ? "rotate-180" : ""} /></Button>{showDiag && diagPreview && <dl id="bug-diagnostics" className="mt-2 space-y-2 border-l-2 border-border pl-3 text-xs text-muted-foreground"><div><dt className="font-medium text-foreground">Puslapis</dt><dd className="break-all">{diagPreview.url?.split("?")[0]}</dd></div><div><dt className="font-medium text-foreground">Įrenginys</dt><dd>{String(diagPreview.device["browser"] ?? "—")} · {String(diagPreview.device["os"] ?? "—")} · {diagPreview.viewport}</dd></div><div><dt className="font-medium text-foreground">Paskutiniai veiksmai</dt><dd>{diagPreview.breadcrumbs.length}</dd></div></dl>}</div>
             </fieldset>
             <div className="space-y-3 border-t border-border bg-muted/20 px-5 py-4 sm:px-7">

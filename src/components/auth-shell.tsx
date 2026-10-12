@@ -159,7 +159,7 @@ function BrandPanel({ mode, intro, ref }: { mode: AuthMode; intro: boolean; ref:
           </AnimatePresence>
         </div>
         <p className="relative hidden items-center gap-2 text-[11px] font-semibold opacity-75 lg:flex">
-          <span className="auth-live-dot" aria-hidden /> Beta · Veikia
+          <span className="auth-live-dot" aria-hidden /> Veikia
         </p>
       </div>
     </aside>

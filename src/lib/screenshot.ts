@@ -58,7 +58,8 @@ export async function captureScreenshot(opts: { force?: boolean } = {}): Promise
       const shot = await Promise.race([
         toJpeg(node, {
           quality: 0.62,
-          backgroundColor: "#0b1020",
+          backgroundColor: getComputedStyle(document.documentElement).getPropertyValue("--background").trim(),
+          imagePlaceholder: "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=",
           cacheBust: false,
           // Cross-origin stylesheets throw on sheet.cssRules; font embedding
           // is what triggers that read, so skip it entirely.
@@ -75,7 +76,7 @@ export async function captureScreenshot(opts: { force?: boolean } = {}): Promise
           },
           style: { transform: "none" },
         }),
-        new Promise<null>((r) => setTimeout(() => r(null), TIMEOUT_MS)),
+        new Promise<null>((r) => setTimeout(() => r(null), opts.force ? 10_000 : TIMEOUT_MS)),
       ]);
 
       if (!shot || typeof shot !== "string" || !shot.startsWith("data:image")) return null;
@@ -93,4 +94,17 @@ export async function captureScreenshot(opts: { force?: boolean } = {}): Promise
   })();
 
   return await inFlight;
+}
+
+/** Convert a user-selected image to the same bounded JPEG used in reports. */
+export async function prepareReportImage(file: File): Promise<string | null> {
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) return null;
+  const url = URL.createObjectURL(file);
+  try {
+    let image = await shrink(url, 1280, 0.65);
+    if (!image.startsWith("data:image/jpeg;base64,")) return null;
+    if (tooBig(image)) image = await shrink(image, 900, 0.5);
+    if (tooBig(image)) image = await shrink(image, 640, 0.42);
+    return tooBig(image) ? null : image;
+  } finally { URL.revokeObjectURL(url); }
 }

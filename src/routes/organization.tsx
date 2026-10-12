@@ -164,7 +164,7 @@ function OrgDashboard() {
   };
 
   const promoteTask = (t: TaskRow) => {
-    toast.success(`Užduotis „${t.title}“ iškelta į sąrašo viršų! (BETA)`, {
+    toast.success(`Užduotis „${t.title}“ iškelta į sąrašo viršų!`, {
       icon: <Sparkles className="h-4 w-4 text-primary" />,
       description: "Dabar mokiniai matys šį skelbimą pirmiau už kitus."
     });

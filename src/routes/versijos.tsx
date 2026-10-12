@@ -59,8 +59,8 @@ const VERSIONS: Version[] = [
       // ── Dizainas ──
       { tag: "Dizainas", text: "Temos pasirinkimas šiame įrenginyje: du šviesios ir tamsios svetainės pavyzdžiai, tolygus akcento spalvos slankiklis, sklandūs perėjimai ir nustatymų atkūrimas." },
       { tag: "Dizainas", text: "Telefono šoninis meniu vietoj apatinės navigacijos; temos nustatymai pasiekiami meniu ir prisijungimo puslapyje." },
-      { tag: "Patobulinta", text: "Atnaujinta paieškos ir DI informacija apie V2.5 funkcijas, paskyrų kūrimą, sveikas valandas ir pokalbių saugojimą." },
-      { tag: "Dizainas", text: "Pagrindinis puslapis atnaujintas, bet atpažįstamas; pašalinti „DI stiliaus“ ženkliukai ir blizgučiai." },
+      { tag: "Patobulinta", text: "Atnaujinta paieškos informacija apie V2.5 funkcijas, paskyrų kūrimą, sveikas valandas ir pokalbių saugojimą." },
+      { tag: "Dizainas", text: "Atnaujintas pagrindinis puslapis: aiškesnis turinys ir mažiau nereikalingų puošmenų." },
       { tag: "Dizainas", text: "Tikras šviesus režimas „Mokyklos akys“ — švelnus, akims malonus." },
       { tag: "Dizainas", text: "Užkrovimo šablonai kiekvienam puslapiui, atskiri telefonams." },
       { tag: "Dizainas", text: "Šventinė V2.5 juosta ir šis puslapis 🎉" },
@@ -75,7 +75,6 @@ const VERSIONS: Version[] = [
       { tag: "Pataisyta", text: "Neteisingas skydelis po prisijungimo ir klaidos langas, kuris dingdavo po užkrovimo." },
       { tag: "Pataisyta", text: "Slaptažodžio atkūrimas ir prisijungimas, kai ryšys su serveriu lėtas." },
       { tag: "Pataisyta", text: "Pranešimų centro klaida po prisijungimo ir „Pranešti apie klaidą“ mygtukas, uždengdavęs šventinę juostą." },
-      { tag: "Pataisyta", text: "Žodis „Lovable“ pašalintas iš viso puslapio."  },
     ],
   },
   {

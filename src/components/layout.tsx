@@ -172,11 +172,6 @@ export function Navbar() {
           </motion.div>
           <span className="relative font-display truncate whitespace-nowrap text-sm font-extrabold sm:text-xl lg:text-2xl">
             Socialinės<span className="text-gradient"> Valandos</span>
-            <div 
-              className="hidden px-1.5 py-0.5 rounded-full bg-primary/20 text-[8px] font-black text-primary border border-primary/20 lg:inline-block"
-            >
-              BETA
-            </div>
           </span>
         </Link>
 
