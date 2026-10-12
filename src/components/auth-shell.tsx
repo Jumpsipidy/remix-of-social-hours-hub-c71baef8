@@ -96,7 +96,7 @@ export function AuthShell({ mode, children, loading = false }: { mode: AuthMode;
             <AuthModeSwitch mode={mode} />
             <div className="auth-transition-content relative mt-6">
               <AnimatePresence initial={loading} mode="popLayout">
-                <motion.div key={loading ? "loading" : "form"} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.24, ease: "easeOut" }}>
+                <motion.div key={loading ? "loading" : "form"} layout className={loading ? undefined : "auth-reveal"} initial={{ opacity: loading ? 0 : 1 }} animate={{ opacity: 1 }} exit={{ opacity: 0, filter: "blur(4px)", scale: 0.99 }} transition={{ duration: 0.22, ease: "easeOut" }}>
                   {loading ? <AuthLoadingContent mode={mode} /> : children}
                 </motion.div>
               </AnimatePresence>
