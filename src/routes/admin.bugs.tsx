@@ -3,10 +3,22 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Bug, ExternalLink, Flame, GripVertical, Trash2 } from "lucide-react";
+import { Bug, ExternalLink, Flame, GripVertical, Trash2, FileText } from "lucide-react";
 import { ListSkeleton } from "@/components/skeleton-loader";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/admin/bugs")({ component: BugsPage });
+export const Route = createFileRoute("/admin/bugs")({
+  head: () => ({ meta: [
+    { title: "Klaidų pranešimai · Socialinės Valandos" },
+    { name: "description", content: "Socialinių Valandų administratoriaus klaidų pranešimai ir diagnostika." },
+    { property: "og:title", content: "Klaidų pranešimai · Socialinės Valandos" },
+    { property: "og:description", content: "Gautų problemų peržiūra, diagnostika ir sprendimo būsena." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
+  component: BugsPage,
+});
 
 type BugRow = {
   id: string;
@@ -18,6 +30,12 @@ type BugRow = {
   status: string | null;
   admin_note: string | null;
   created_at: string;
+  diagnostics?: {
+    screenshot?: string | null;
+    viewport?: string;
+    device?: { browser?: string; os?: string; device?: string };
+    breadcrumbs?: { t?: number; kind?: string; label?: string; path?: string }[];
+  } | null;
 };
 
 type Col = "open" | "in_progress" | "resolved";
@@ -32,6 +50,7 @@ function BugsPage() {
   const [rows, setRows] = useState<BugRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<BugRow | null>(null);
 
   async function load() {
     setLoading(true);
@@ -154,6 +173,7 @@ function BugsPage() {
                             </span>
                           </div>
                           <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-sm leading-snug">{r.message}</p>
+                          <Button variant="ghost" size="sm" className="mt-1 px-0 text-primary" onClick={() => setSelected(r)}><FileText /> Visas pranešimas</Button>
                           <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
                             <span className="tabular-nums">{new Date(r.created_at).toLocaleString("lt-LT")}</span>
                             {r.reporter_email && <span>· {r.reporter_email}</span>}
@@ -203,6 +223,22 @@ function BugsPage() {
           );
         })}
       </div>
+      <Dialog open={selected !== null} onOpenChange={(value) => { if (!value) setSelected(null); }}>
+        <DialogContent className="max-w-2xl font-sans">
+          <DialogHeader><DialogTitle className="tracking-normal">{selected ? bugId(selected) : "Pranešimas"}</DialogTitle><DialogDescription>Problemos aprašymas ir pridedama informacija</DialogDescription></DialogHeader>
+          {selected && <div className="min-w-0 space-y-5">
+            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{selected.message}</p>
+            <dl className="grid grid-cols-1 gap-3 border-y border-border py-4 text-sm sm:grid-cols-2">
+              <div><dt className="text-xs text-muted-foreground">Siuntėjas</dt><dd className="break-all">{selected.reporter_email || "Nenurodytas"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Gauta</dt><dd>{new Date(selected.created_at).toLocaleString("lt-LT")}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Įrenginys</dt><dd>{selected.diagnostics?.device?.browser || "—"} · {selected.diagnostics?.device?.os || "—"} · {selected.diagnostics?.viewport || "—"}</dd></div>
+              <div><dt className="text-xs text-muted-foreground">Puslapis</dt><dd className="break-all">{selected.page_url || "—"}</dd></div>
+            </dl>
+            {selected.diagnostics?.screenshot?.startsWith("data:image/jpeg;base64,") && <div className="space-y-2"><h3 className="text-sm font-semibold">Ekrano nuotrauka</h3><img src={selected.diagnostics.screenshot} alt="Pranešėjo pridėta ekrano nuotrauka" className="h-auto w-full rounded-md border border-border" /></div>}
+            {!!selected.diagnostics?.breadcrumbs?.length && <div className="space-y-3"><h3 className="text-sm font-semibold">Paskutiniai veiksmai</h3><ol className="space-y-3 border-l border-border pl-4">{selected.diagnostics.breadcrumbs.map((crumb, index) => <li key={index} className="break-words text-xs"><span className="font-medium">{crumb.label || crumb.kind || "Veiksmas"}</span>{crumb.path && <span className="mt-1 block break-all text-muted-foreground">{crumb.path}</span>}</li>)}</ol></div>}
+          </div>}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
