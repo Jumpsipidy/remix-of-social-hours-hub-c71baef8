@@ -642,28 +642,12 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .message-link { min-width: 0; min-height: auto; display: inline; }
 .chat-transcript { scrollbar-gutter: stable; }
 .message-composer { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
-/* Blue wall sweep: grows out of the wall, covers the card, settles onto the brand panel. */
-.auth-sweep-panel { width: 100% !important; animation: auth-wall-login 900ms cubic-bezier(.7,0,.2,1) both; }
-[data-auth-mode="register"] .auth-sweep-panel { animation-name: auth-wall-register; }
-@keyframes auth-wall-login {
-  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
-  48% { clip-path: inset(0 0 0 0); opacity: 1; }
-  85% { clip-path: inset(0 52% 0 0); opacity: 1; }
-  100% { clip-path: inset(0 52% 0 0); opacity: 0; }
-}
-@keyframes auth-wall-register {
-  0% { clip-path: inset(0 0 0 100%); opacity: 1; }
-  48% { clip-path: inset(0 0 0 0); opacity: 1; }
-  85% { clip-path: inset(0 0 0 48%); opacity: 1; }
-  100% { clip-path: inset(0 0 0 48%); opacity: 0; }
-}
-@media (max-width: 1023px) {
-  .auth-sweep-panel { animation-name: auth-wall-mobile; }
-  [data-auth-mode="register"] .auth-sweep-panel { animation-name: auth-wall-mobile; animation-direction: reverse; }
-  @keyframes auth-wall-mobile {
-    0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); }
-  }
-}
+/* First open: brand panel (with its text) slides in from its own side. */
+.auth-brand-intro-left { animation: auth-brand-in-left 700ms cubic-bezier(.22,1,.36,1) both; }
+.auth-brand-intro-right { animation: auth-brand-in-right 700ms cubic-bezier(.22,1,.36,1) both; }
+.auth-brand-intro-left > *, .auth-brand-intro-right > * { animation: auth-rise .5s cubic-bezier(.22,1,.36,1) 280ms both; }
+@keyframes auth-brand-in-left { from { clip-path: inset(0 100% 0 0); transform: translateX(-24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
+@keyframes auth-brand-in-right { from { clip-path: inset(0 0 0 100%); transform: translateX(24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
 /* Skeleton: one travelling shimmer; form fields rise in one after another. */
 .auth-loading-block {
   background: linear-gradient(100deg, var(--muted) 30%, color-mix(in oklab, var(--primary) 18%, var(--muted)) 50%, var(--muted) 70%) !important;
@@ -722,7 +706,7 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .auth-shell :is(h1,h2,h3) { letter-spacing: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-sweep-panel, .auth-reveal > *, .auth-reveal form > *, .auth-loading-block { animation: none !important; }
+  .auth-brand-intro-left, .auth-brand-intro-right, .auth-brand-intro-left > *, .auth-brand-intro-right > *, .auth-reveal > *, .auth-reveal form > *, .auth-loading-block { animation: none !important; }
   .auth-blue-slide { display: none; }
 }
 

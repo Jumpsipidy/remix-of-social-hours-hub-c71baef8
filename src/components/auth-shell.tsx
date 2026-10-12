@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Heart, Loader2, ShieldCheck, Clock, Award, Sparkles, GraduationCap, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,17 +44,18 @@ export function AuthShell({ mode, children, loading = false }: { mode: AuthMode;
   useVisualViewport();
   const c = COPY[mode];
   const isLogin = mode === "login";
+  // First open only: the blue panel slides in from its side; switching modes uses the view transition.
+  const [intro] = useState(() => !(window as { __svAuthIntro?: boolean }).__svAuthIntro);
+  useEffect(() => { (window as { __svAuthIntro?: boolean }).__svAuthIntro = true; }, []);
   return (
     <div data-auth-mode={mode} className="relative auth-shell min-h-screen bg-background text-foreground">
       <div className="absolute right-4 top-4 z-30"><SchoolEyesToggle /></div>
       <div className="pointer-events-none absolute inset-0 bg-primary/5" aria-hidden />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center px-4 pb-8 pt-20 sm:px-6">
         <motion.div layout="size" transition={{ duration: 0.48, ease: [0.22, 1, 0.36, 1] }} className={`auth-transition-frame relative grid w-full overflow-hidden rounded-[2rem] border border-border/60 bg-card/70 shadow-elegant backdrop-blur lg:grid-cols-[1fr_1.1fr] ${isLogin ? "" : "lg:[direction:rtl]"}`}>
-          {/* Keep the original visible blue sweep alongside synchronized panels. */}
-          <div key={`blue-slide-${mode}`} aria-hidden="true" className="auth-blue-slide pointer-events-none absolute inset-0 z-20 [direction:ltr]"><div className="auth-sweep-panel absolute inset-y-0 left-0 w-1/2 bg-gradient-primary" /></div>
           {/* Brand panel */}
           <aside
-            className="auth-transition-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex"
+            className={`${intro ? (isLogin ? "auth-brand-intro-left" : "auth-brand-intro-right") : ""} auth-transition-brand relative hidden flex-col justify-between overflow-hidden bg-gradient-primary p-10 text-primary-foreground [direction:ltr] lg:flex`}
           >
             <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary-foreground/10 blur-2xl" />
             <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-primary-foreground/10 blur-3xl" />
