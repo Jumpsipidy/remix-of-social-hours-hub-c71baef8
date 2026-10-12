@@ -1,6 +1,6 @@
-import { AuthShell } from "@/components/auth-shell";
+import { AuthLoadingContent } from "@/components/auth-loading-content";
 
-/** Same frame, brand and switch as the form, with genuine pending placeholders. */
+/** Pending view rendered inside the persistent auth frame; mirrors the form geometry. */
 export function AuthSkeleton({ mode = "login" }: { mode?: "login" | "register" }) {
-  return <AuthShell mode={mode} loading />;
+  return <AuthLoadingContent mode={mode} />;
 }
