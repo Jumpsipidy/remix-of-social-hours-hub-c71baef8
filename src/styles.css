@@ -751,3 +751,9 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .bug-report-dialog { animation: none !important; }
 }
 .bug-report-dialog :is(h2, h3) { font-family: var(--font-sans); letter-spacing: 0; }
+/* Reporting opens with a short physical shift, not a page-wide fade or zoom. */
+@keyframes report-enter { from { transform: translate(-50%, calc(-50% + 12px)); } to { transform: translate(-50%, -50%); } }
+@keyframes report-leave { from { transform: translate(-50%, -50%); } to { transform: translate(-50%, calc(-50% + 8px)); } }
+.bug-report-dialog[data-state="open"] { animation: report-enter 180ms ease-out; }
+.bug-report-dialog[data-state="closed"] { animation: report-leave 120ms ease-in; }
+@media (prefers-reduced-motion: reduce) { .bug-report-dialog[data-state] { animation: none; } }
