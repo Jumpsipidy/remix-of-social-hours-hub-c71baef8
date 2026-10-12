@@ -32,7 +32,11 @@
 - [x] Rebuild login and register forms (fields, OAuth, mode cards, sections) with matching skeletons and staggered reveal
 - [x] Mobile band layout, both themes, reduced motion
 - [x] Verify 320/390/768/1024/1280/1440, both directions, both themes, slow-CPU skeleton handoff; 224 tests + 2 e2e pass
-- [ ] Bug-report floating button overlaps form fields on small phones (global widget, outside the auth remake scope)
+- [x] Replace the overlapping bug-report button with a compact bottom-right trigger and accessible reporting dialog
+
+## Bug report remake (2026-10-12)
+- [x] Redesign the report form, optional reproduction steps, impact choices, screenshot preview/removal and inline delivery states
+- [ ] Verify reporting dialog on desktop/mobile, keyboard focus and delivery/error states; live admin delivery depends on external Supabase and alert credentials
 
 
 ## Lockdown screen redesign
