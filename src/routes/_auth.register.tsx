@@ -1,14 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
-import { Heart, Mail, Lock, User, GraduationCap, School as SchoolIcon, Building2, Clock, Send, Sparkles, Rocket, Award, ArrowRight, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Mail, Lock, User, GraduationCap, Building2, Clock, KeyRound, Phone, Globe, Check, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpStudentWithCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AuthShell, OAuthButtons } from "@/components/auth-shell";
+import { AuthField, AuthHeading, AuthLegal, AuthSelect, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 
 export const Route = createFileRoute("/_auth/register")({
@@ -163,186 +162,150 @@ function RegisterPage() {
     } finally { setLoading(false); }
   }
 
+  const rule = classYear ? hoursRuleFor(classYear) : { locked: false, min: 8, default: 20 };
+  const canSubmitStudent = !(loading || schoolsLoading || schoolsError || !schools.length);
+
   return (
-    <AuthShell mode="register">
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-black tracking-tighter">Sukurk paskyrą</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Pasirink kas esi.</p>
-                </div>
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-primary">
-                  <Sparkles className="h-5 w-5 text-primary-foreground" />
-                </div>
-              </div>
+    <AuthStage mode="register">
+      <AuthHeading title="Sukurk paskyrą" subtitle="Pirmiausia pasirink, kas esi." />
 
-              {/* Mode switch */}
-              <div className="mt-6 grid gap-2 sm:grid-cols-2">
-                {([
-                  { k: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk valandas" },
-                  { k: "org_request", label: "Organizacija", icon: Building2, hint: "Pateik prašymą" },
-                ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
-                  const active = mode === opt.k;
-                  return (
-                    <Button variant="outline" key={opt.k} type="button" onClick={() => setMode(opt.k)}
-                      className={`group/mode h-auto relative flex flex-col items-start gap-1 overflow-hidden rounded-2xl border p-3 text-left transition-all ${active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background/60 backdrop-blur hover:-translate-y-0.5 hover:border-primary/50"}`}>
-                      <opt.icon className="h-5 w-5" />
-                      <span className="text-sm font-semibold">{opt.label}</span>
-                      <span className={`text-[11px] ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{opt.hint}</span>
-                    </Button>
-                  );
-                })}
-              </div>
+      <div role="radiogroup" aria-label="Paskyros tipas" className="mt-6 grid grid-cols-2 gap-2">
+        {([
+          { k: "student", label: "Moksleivis", icon: GraduationCap, hint: "Kaupk valandas" },
+          { k: "org_request", label: "Organizacija", icon: Building2, hint: "Pateik prašymą" },
+        ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
+          const active = mode === opt.k;
+          return (
+            <button key={opt.k} type="button" role="radio" aria-checked={active} onClick={() => setMode(opt.k)}
+              className={`auth-choice relative flex items-center gap-3 rounded-2xl border p-3 text-left ${active ? "is-active border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"}`}>
+              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${active ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}><opt.icon className="h-5 w-5" /></span>
+              <span className="min-w-0">
+                <span className="block text-sm font-bold">{opt.label}</span>
+                <span className="block truncate text-[11px] text-muted-foreground">{opt.hint}</span>
+              </span>
+              <span aria-hidden className={`absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full transition-all ${active ? "scale-100 bg-primary text-primary-foreground opacity-100" : "scale-50 opacity-0"}`}><Check className="h-3 w-3" /></span>
+            </button>
+          );
+        })}
+      </div>
 
-              {mode === "org_request" ? (
-                <>
-                  <motion.div 
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="mt-4 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-xs text-foreground leading-relaxed shadow-lg"
-                  >
-                    <div className="flex items-center gap-2 mb-1 text-foreground font-bold uppercase tracking-wider">
-                      <Clock className="h-3 w-3" /> Svarbu
-                    </div>
-                    Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins tavo organizaciją ir sukurs paskyrą rankiniu būdu.
-                  </motion.div>
-                  <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
-                    <Field label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={setOrgName} placeholder="VšĮ „Žalioji Karta“" required />
-                    <Field label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={setLegalCode} placeholder="123456789" />
-                    <Field label="Kontaktinis asmuo" icon={User} value={fullName} onChange={setFullName} placeholder="Jonas Jonaitis" required />
-                    <Field label="Kontaktinis el. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="info@organizacija.lt" required />
-                    <Field label="Telefonas" icon={Mail} value={contactPhone} onChange={setContactPhone} placeholder="+370 6xx xxxxx" />
-                    <Field label="Interneto svetainė" icon={Mail} value={website} onChange={setWebsite} placeholder="https://…" />
-                    <div>
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Trumpas veiklos aprašymas (min. 30 simb.)</label>
-                      <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
-                        placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
-                        className="mt-1.5 w-full rounded-xl border border-border bg-background/60 p-3 text-sm outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20" />
-                    </div>
-                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-                      <input type="checkbox" checked={confirmReal} onChange={(e) => setConfirmReal(e.target.checked)} className="mt-0.5" />
-                      <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi.</span>
-                    </label>
-                    <Button
-                      type="submit" disabled={loading}
-                      className="group/submit relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
-                    >
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
-                      {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Siunčiama…</> : <><Send className="h-4 w-4" /> Pateikti prašymą</>}
-                    </Button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <div className="mt-6"><OAuthButtons /></div>
-                  <div className="my-6 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
-                    arba el. paštu
-                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border" />
-                  </div>
-
-                  <form className="space-y-4" onSubmit={handleAccountSignup}>
-                    <Field label="Vardas Pavardė" icon={User} value={fullName} onChange={setFullName} placeholder="Emilija Kazlauskaitė" required />
-
-                    <div>
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokykla</label>
-                      {schoolsLoading ? (
-                        <div role="status" aria-label="Kraunamos mokyklos" className="mt-1.5">
-                          <Skeleton className="h-11 w-full rounded-xl" />
-                        </div>
-                      ) : schoolsError ? (
-                        <div role="alert" className="mt-2 flex items-center justify-between gap-2 text-sm text-destructive">
-                          Nepavyko įkelti mokyklų.
-                          <Button type="button" variant="outline" size="sm" onClick={() => void loadSchools()}>Bandyti dar kartą</Button>
-                        </div>
-                      ) : <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20">
-                        {schools.length === 0 && <option value="">Mokyklų nėra</option>}
-                        {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
-                      </select>}
-                    </div>
-                    <div>
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Klasė</label>
-                      <select value={classYear && classLetter ? `${classYear}|${classLetter}` : ""} onChange={(e) => { const [y, l] = e.target.value.split("|"); setClassYear(y ?? ""); setClassLetter((l as "A" | "B") ?? ""); }} required
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm text-foreground outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20">
-                        <option value="">Pasirink…</option>
-                        {CLASS_YEARS.flatMap((c) => (["A", "B"] as const).map((l) => <option key={c + l} value={`${c}|${l}`}>{c.split(" / ")[0]}{l}{c.includes(" / ") ? ` (${c.split(" / ")[1]})` : ""}</option>))}
-                      </select>
-                    </div>
-
-                    <div className="rounded-2xl border border-success/30 bg-success/10 p-4 backdrop-blur">
-                      <label className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-success">
-                        <Clock className="h-4 w-4" /> Kiek valandų turi atlikti?
-                      </label>
-                      {classYear && isLowerClass(classYear) ? (
-                        <div className="mt-3 flex items-center gap-3">
-                          <div className="grid h-11 w-24 place-items-center rounded-xl border border-success/40 bg-success/10 text-sm font-bold text-foreground">20</div>
-                          <span className="text-xs text-muted-foreground">val. — <b>5–7 klasėms</b> fiksuota.</span>
-                        </div>
-                      ) : (
-                        <div className="mt-3 flex items-center gap-3">
-                          <input type="number" min={classYear ? hoursRuleFor(classYear).min : 8} max={500}
-                            value={hoursNeeded} required
-                            onChange={(e) => setHoursNeeded(Math.max(classYear ? hoursRuleFor(classYear).min : 8, Number(e.target.value)))}
-                            className="h-11 w-24 rounded-xl border border-border bg-background px-3 text-center text-sm font-bold outline-none focus:border-primary" />
-                          <span className="text-xs text-muted-foreground">val. per metus (min. {classYear ? hoursRuleFor(classYear).min : 8}).</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Mokyklos kodas</label>
-                      <input type="text" value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
-                        autoComplete="off" placeholder="Mokyklos registracijos kodas"
-                        className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background/60 px-3 text-sm tracking-wider outline-none backdrop-blur transition-all focus:border-primary focus:bg-background focus:ring-2 focus:ring-ring/20" />
-                      <p className="mt-1 text-[11px] text-muted-foreground">🔑 Iš klasės auklėtojo / mokyklos administratoriaus.</p>
-                    </div>
-
-                    <Field label="El. paštas" icon={Mail} type="email" value={email} onChange={setEmail} placeholder="vardas@mokykla.lt" required />
-                    <Field label="Slaptažodis" icon={Lock} type="password" value={password} onChange={setPassword} placeholder="Bent 8 simboliai" required />
-
-                    <label className="flex items-start gap-2 rounded-xl border border-border bg-background/60 p-3 text-[11px] text-muted-foreground backdrop-blur">
-                      <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-                      <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje. Melagingi duomenys — paskyros pašalinimas.</span>
-                    </label>
-
-                    <Button
-                      type="submit" disabled={loading || schoolsLoading || schoolsError || !schools.length}
-                      className="group/submit relative mt-1 flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 disabled:opacity-60"
-                    >
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-foreground/20 to-transparent transition-transform duration-1000 group-hover/submit:translate-x-full" />
-                      {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Kuriama…</> : <>Sukurti paskyrą <ArrowRight className="h-4 w-4 transition-transform group-hover/submit:translate-x-1" /></>}
-                    </Button>
-                  </form>
-                </>
-              )}
-
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Jau turi paskyrą?{" "}
-                <Link to="/login" viewTransition resetScroll={false} className="font-semibold text-primary hover:underline">Prisijunk</Link>
-              </p>
-              <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Tęsdamas sutinki su{" "}
-                <Link to="/terms" className="font-semibold underline underline-offset-2 hover:text-foreground">Naudojimosi taisyklėmis</Link>{" "}ir{" "}
-                <Link to="/privacy" className="font-semibold underline underline-offset-2 hover:text-foreground">Privatumo politika</Link>.
-              </p>
+      <AnimatePresence mode="wait" initial={false}>
+        {mode === "org_request" ? (
+          <motion.div key="org" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+            <div className="mt-5 flex gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-xs leading-relaxed text-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+              <p>Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins organizaciją ir sukurs paskyrą.</p>
             </div>
-    </AuthShell>
+            <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
+              <AuthField id="org-name" label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="VšĮ „Žalioji Karta“" required />
+              <AuthField id="org-code" label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={(e) => setLegalCode(e.target.value)} placeholder="123456789" />
+              <AuthField id="org-contact" label="Kontaktinis asmuo" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jonas Jonaitis" required autoComplete="name" />
+              <AuthField id="org-email" label="Kontaktinis el. paštas" icon={Mail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="info@organizacija.lt" required autoComplete="email" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AuthField id="org-phone" label="Telefonas" icon={Phone} type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+370 6xx xxxxx" autoComplete="tel" />
+                <AuthField id="org-web" label="Interneto svetainė" icon={Globe} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" />
+              </div>
+              <div className="auth-field">
+                <label htmlFor="org-desc" className="text-xs font-semibold text-foreground/80">Trumpas veiklos aprašymas <span className="font-normal text-muted-foreground">(min. 30 simb.)</span></label>
+                <textarea id="org-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
+                  placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
+                  className="auth-input mt-1.5 w-full rounded-xl border border-border bg-background p-3.5 text-sm outline-none" />
+                <p className="mt-1 text-right text-[11px] text-muted-foreground">{description.trim().length}/30+</p>
+              </div>
+              <label className="auth-check flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3 text-xs text-muted-foreground">
+                <input type="checkbox" checked={confirmReal} onChange={(e) => setConfirmReal(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
+                <span>Patvirtinu, kad organizacija egzistuoja realiai, o pateikti duomenys yra teisingi.</span>
+              </label>
+              <AuthSubmit busy={loading} busyLabel="Siunčiama…">Pateikti prašymą</AuthSubmit>
+            </form>
+          </motion.div>
+        ) : (
+          <motion.div key="student" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+            <div className="mt-6"><OAuthButtons /></div>
+            <OrDivider />
+            <form className="space-y-6" onSubmit={handleAccountSignup}>
+              <Section n={1} title="Apie tave">
+                <AuthField id="reg-name" label="Vardas Pavardė" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Emilija Kazlauskaitė" required autoComplete="name" />
+              </Section>
+
+              <Section n={2} title="Mokykla ir klasė">
+                {schoolsLoading ? (
+                  <div role="status" aria-label="Kraunamos mokyklos">
+                    <div className="auth-loading-block h-3 w-20 rounded-lg" />
+                    <div className="auth-loading-block mt-2 h-12 w-full rounded-xl" />
+                  </div>
+                ) : schoolsError ? (
+                  <div role="alert" className="flex items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    Nepavyko įkelti mokyklų.
+                    <Button type="button" variant="outline" size="sm" onClick={() => void loadSchools()}>Bandyti dar kartą</Button>
+                  </div>
+                ) : (
+                  <AuthSelect id="reg-school" label="Mokykla" value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required>
+                    {schools.length === 0 && <option value="">Mokyklų nėra</option>}
+                    {schools.map((s) => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>)}
+                  </AuthSelect>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <AuthSelect id="reg-class" label="Klasė" required
+                    value={classYear && classLetter ? `${classYear}|${classLetter}` : ""}
+                    onChange={(e) => { const [y, l] = e.target.value.split("|"); setClassYear(y ?? ""); setClassLetter((l as "A" | "B") ?? ""); }}>
+                    <option value="">Pasirink…</option>
+                    {CLASS_YEARS.flatMap((c) => (["A", "B"] as const).map((l) => <option key={c + l} value={`${c}|${l}`}>{c.split(" / ")[0]}{l}{c.includes(" / ") ? ` (${c.split(" / ")[1]})` : ""}</option>))}
+                  </AuthSelect>
+                  {classYear && rule.locked ? (
+                    <div className="auth-field">
+                      <span className="text-xs font-semibold text-foreground/80">Valandų tikslas</span>
+                      <div className="mt-1.5 flex h-12 items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3.5 text-sm font-bold">
+                        <Clock className="h-4 w-4 text-success" /> 20 val.
+                      </div>
+                    </div>
+                  ) : (
+                    <AuthField id="reg-hours" label="Valandų tikslas" icon={Clock} type="number" inputMode="numeric" min={rule.min} max={500} required
+                      value={hoursNeeded} onChange={(e) => setHoursNeeded(Math.max(rule.min, Number(e.target.value)))} trailing={<span className="text-xs text-muted-foreground">val.</span>} />
+                  )}
+                </div>
+                <p className="-mt-2 text-[11px] text-muted-foreground">
+                  {classYear && rule.locked ? <>5–7 klasėms tikslas fiksuotas — <b>20 val.</b></> : <>Valandos per metus, mažiausiai {rule.min}.</>}
+                </p>
+                <AuthField id="reg-code" label="Mokyklos kodas" icon={KeyRound} value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
+                  autoComplete="off" placeholder="Mokyklos registracijos kodas" className="tracking-wider"
+                  hint="Gausi iš klasės auklėtojo arba mokyklos administratoriaus." />
+              </Section>
+
+              <Section n={3} title="Prisijungimo duomenys">
+                <AuthField id="reg-email" label="El. paštas" icon={Mail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vardas@mokykla.lt" required autoComplete="email" />
+                <AuthField id="reg-password" label="Slaptažodis" icon={Lock} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Bent 8 simboliai" required autoComplete="new-password" />
+              </Section>
+
+              <div className="space-y-4">
+                <label className="auth-check flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3 text-xs text-muted-foreground">
+                  <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--primary)]" />
+                  <span>Patvirtinu, kad esu tikras mokinys pasirinktoje mokykloje. Melagingi duomenys — paskyros pašalinimas.</span>
+                </label>
+                <AuthSubmit busy={loading} busyLabel="Kuriama…" disabled={!canSubmitStudent}>Sukurti paskyrą</AuthSubmit>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Jau turi paskyrą?{" "}
+        <Link to="/login" className="font-semibold text-primary hover:underline">Prisijunk</Link>
+      </p>
+      <AuthLegal />
+    </AuthStage>
   );
 }
 
-function Field({ label, icon: Icon, value, onChange, placeholder, type = "text", required }: {
-  label: string; icon: typeof User; value: string; onChange: (v: string) => void;
-  placeholder?: string; type?: string; required?: boolean;
-}) {
+function Section({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
-      <div className="group/f mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 backdrop-blur transition-all focus-within:border-primary focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/20">
-        <Icon className="h-4 w-4 text-muted-foreground transition-colors group-focus-within/f:text-success" />
-        <input type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required}
-          className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" placeholder={placeholder} />
-      </div>
-    </div>
+    <fieldset className="space-y-4">
+      <legend className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+        <span className="grid h-5 w-5 place-items-center rounded-full bg-primary/15 text-[10px] font-black text-primary">{n}</span>
+        {title}
+      </legend>
+      {children}
+    </fieldset>
   );
 }

@@ -154,7 +154,7 @@ function LoginPage() {
   return (
     <AuthStage mode="login" loading={loading}>
       {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
-      <AuthHeading title="Sveikas sugrįžęs" subtitle="Prisijunk — sistema pati nukreips pagal tavo rolę." />
+      <AuthHeading title="Prisijungti" subtitle="Sistema pati nukreips į tavo skydelį pagal rolę." />
       <div className="mt-6"><OAuthButtons disabled={busy} beforeStart={clearImpersonation} /></div>
       <div className="mt-3"><AuthProvidersStatus /></div>
       <OrDivider />
