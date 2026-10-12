@@ -742,3 +742,12 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 /* Soci Guard status colours follow the saved theme. */
 :root { --sg-ok: #86efac; --sg-bad: #fca5a5; }
 :root.school-eyes { --sg-ok: #15803d; --sg-bad: #b91c1c; }
+
+/* Bug reporting stays reachable without covering a phone's main form controls. */
+.sv-bug-widget { margin-bottom: env(safe-area-inset-bottom); }
+.bug-report-dialog { max-height: calc(var(--visual-viewport-height, 100dvh) - 1.5rem); }
+.bug-report-scroll { max-height: calc(var(--visual-viewport-height, 100dvh) - 19rem); }
+@media (prefers-reduced-motion: reduce) {
+  .bug-report-dialog { animation: none !important; }
+}
+.bug-report-dialog :is(h2, h3) { font-family: var(--font-sans); letter-spacing: 0; }
