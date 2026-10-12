@@ -36,7 +36,8 @@
 
 ## Bug report remake (2026-10-12)
 - [x] Redesign the report form, optional reproduction steps, impact choices, screenshot preview/removal and inline delivery states
-- [ ] Verify reporting dialog on desktop/mobile, keyboard focus and delivery/error states; live admin delivery depends on external Supabase and alert credentials
+- [x] Verify reporting dialog on desktop/mobile, Escape/reopen with retained draft, impact choice and intercepted success/error states; 177 smoke tests pass, no browser errors
+- [ ] Verify real admin delivery and authenticated report detail viewing — blocked by external unmanaged Supabase session and production-only alert credentials
 
 
 ## Lockdown screen redesign
