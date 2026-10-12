@@ -1,8 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
-import { Mail, Lock, ShieldCheck, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
@@ -12,7 +11,7 @@ import { AuthProvidersStatus } from "@/components/auth-providers-status";
 import { Captcha } from "@/components/captcha";
 import { AuthSuccessOverlay } from "@/components/auth-success-overlay";
 import { toast } from "sonner";
-import { AuthShell, OAuthButtons, OrDivider } from "@/components/auth-shell";
+import { AuthField, AuthHeading, AuthLegal, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 
 const FAIL_KEY = "sv_login_fails_v1";
@@ -153,51 +152,39 @@ function LoginPage() {
   }
 
   return (
-    <AuthShell mode="login" loading={loading}>
+    <AuthStage mode="login" loading={loading}>
       {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
-      <h2 className="text-2xl font-black tracking-tight">Prisijungti</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Sistema pati nukreips pagal rolę.</p>
+      <AuthHeading title="Sveikas sugrįžęs" subtitle="Prisijunk — sistema pati nukreips pagal tavo rolę." />
       <div className="mt-6"><OAuthButtons disabled={busy} beforeStart={clearImpersonation} /></div>
       <div className="mt-3"><AuthProvidersStatus /></div>
       <OrDivider />
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <div>
-          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">El. paštas</label>
-          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            <input aria-label="El. paštas" autoComplete="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-          </div>
-        </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Slaptažodis</label>
-            <Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">Pamiršai?</Link>
-          </div>
-          <div className="mt-1.5 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/20">
-            <Lock className="h-4 w-4 text-muted-foreground" />
-            <input aria-label="Slaptažodis" autoComplete="current-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-            <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Slėpti slaptažodį" : "Rodyti slaptažodį"}>
+        <AuthField id="login-email" label="El. paštas" icon={Mail} type="email" autoComplete="email" value={email}
+          onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" />
+        <AuthField id="login-password" label="Slaptažodis" icon={Lock} type={showPassword ? "text" : "password"} autoComplete="current-password"
+          value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••"
+          labelAside={<Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">Pamiršai slaptažodį?</Link>}
+          trailing={
+            <button type="button" onClick={() => setShowPassword((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={showPassword ? "Slėpti slaptažodį" : "Rodyti slaptažodį"}>
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
-          </div>
-        </div>
+          } />
         {captchaRequired && (
-          <div>
-            <p className="mb-2 flex items-center gap-1 text-[11px] font-semibold text-primary"><ShieldCheck className="h-3.5 w-3.5" /> Per daug nesėkmingų bandymų. Įrodyk, kad esi žmogus.</p>
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-primary"><ShieldCheck className="h-3.5 w-3.5" /> Per daug nesėkmingų bandymų. Įrodyk, kad esi žmogus.</p>
             <Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} />
           </div>
         )}
-        <motion.button type="submit" disabled={busy || (captchaRequired && !captchaProof)} whileTap={{ scale: 0.98 }}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-primary py-3.5 text-sm font-bold text-primary-foreground shadow-glow transition-all hover:opacity-95 disabled:opacity-60">
-          {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Jungiama...</> : <>Prisijungti <ArrowRight className="h-4 w-4" /></>}
-        </motion.button>
+        <div className="pt-1">
+          <AuthSubmit busy={busy} busyLabel="Jungiama…" disabled={captchaRequired && !captchaProof}>Prisijungti</AuthSubmit>
+        </div>
       </form>
-      <p className="mt-6 text-center text-[11px] text-muted-foreground/80">Organizacijų ir mokyklos administratorių paskyras kuria sistemos administratorius.</p>
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-muted-foreground">
-        Tęsdamas sutinki su{" "}
-        <Link to="/terms" className="font-semibold underline underline-offset-2 hover:text-foreground">Naudojimosi taisyklėmis</Link>{" "}ir{" "}
-        <Link to="/privacy" className="font-semibold underline underline-offset-2 hover:text-foreground">Privatumo politika</Link>.
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Dar neturi paskyros?{" "}
+        <Link to="/register" className="font-semibold text-primary hover:underline">Registruokis</Link>
       </p>
-    </AuthShell>
+      <p className="mt-3 text-center text-[11px] text-muted-foreground">Organizacijų ir mokyklų administratorių paskyras kuria sistemos administratorius.</p>
+      <AuthLegal />
+    </AuthStage>
   );
 }
