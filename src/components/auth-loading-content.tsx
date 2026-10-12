@@ -15,6 +15,12 @@ export function AuthLoadingContent({ mode }: { mode: "login" | "register" }) {
         <div className={`${b} mt-2.5 h-4 w-64 max-w-full`} />
         {register && <div className="mt-6 grid grid-cols-2 gap-2"><div className={`${b} h-[76px] rounded-2xl`} /><div className={`${b} h-[76px] rounded-2xl`} /></div>}
         <div className="mt-6 grid grid-cols-3 gap-2">{[0, 1, 2].map((i) => <div key={i} className={`${b} h-11 rounded-xl`} />)}</div>
+        {!register && (
+          <div className="mt-3 flex flex-col items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2">{[0, 1, 2, 3].map((i) => <div key={i} className={`${b} h-6 w-20 rounded-full`} />)}</div>
+            <div className={`${b} h-3 w-36`} />
+          </div>
+        )}
         <div className="my-6 flex h-4 items-center gap-3"><div className="h-px flex-1 bg-border" /><div className={`${b} h-3 w-24`} /><div className="h-px flex-1 bg-border" /></div>
         {register ? (
           <div className="space-y-6">
