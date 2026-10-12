@@ -43,6 +43,9 @@ async def main():
 
         # Login form: wrong password shows error, stays on /login
         await page.goto(BASE + "/login", wait_until="domcontentloaded")
+        await page.wait_for_timeout(1500)
+        await page.keyboard.press("Escape")  # first-visit theme chooser
+        await page.wait_for_timeout(400)
         await page.get_by_label("El. paštas").fill("nera-tokio@example.com")
         await page.get_by_label("Slaptažodis").fill("blogas-slaptazodis-123")
         await page.get_by_role("button", name="Prisijungti", exact=False).last.click()
