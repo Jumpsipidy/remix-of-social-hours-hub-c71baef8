@@ -642,29 +642,40 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .message-link { min-width: 0; min-height: auto; display: inline; }
 .chat-transcript { scrollbar-gutter: stable; }
 .message-composer { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
-.auth-blue-slide { view-transition-name: auth-sweep; }
-.auth-sweep-panel { animation: auth-blue-enter 850ms cubic-bezier(.65,0,.2,1) both; }
-[data-auth-mode="register"] .auth-sweep-panel { animation-name: auth-blue-enter-reverse; }
-@keyframes auth-blue-enter {
-  0% { transform: translateX(200%); opacity: .95; }
-  100% { transform: translateX(-105%); opacity: .95; }
+/* Blue wall sweep: grows out of the wall, covers the card, settles onto the brand panel. */
+.auth-sweep-panel { width: 100% !important; animation: auth-wall-login 900ms cubic-bezier(.7,0,.2,1) both; }
+[data-auth-mode="register"] .auth-sweep-panel { animation-name: auth-wall-register; }
+@keyframes auth-wall-login {
+  0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+  48% { clip-path: inset(0 0 0 0); opacity: 1; }
+  85% { clip-path: inset(0 52% 0 0); opacity: 1; }
+  100% { clip-path: inset(0 52% 0 0); opacity: 0; }
 }
-@keyframes auth-blue-enter-reverse {
-  0% { transform: translateX(-105%); opacity: .95; }
-  100% { transform: translateX(200%); opacity: .95; }
+@keyframes auth-wall-register {
+  0% { clip-path: inset(0 0 0 100%); opacity: 1; }
+  48% { clip-path: inset(0 0 0 0); opacity: 1; }
+  85% { clip-path: inset(0 0 0 48%); opacity: 1; }
+  100% { clip-path: inset(0 0 0 48%); opacity: 0; }
 }
-::view-transition-group(auth-sweep) { z-index: 100; animation-duration: 850ms; }
-::view-transition-old(auth-sweep) { display: none; }
-::view-transition-new(auth-sweep) {
-  background: var(--gradient-primary);
-  animation: auth-snapshot-sweep 850ms cubic-bezier(.65,0,.2,1) both;
+@media (max-width: 1023px) {
+  .auth-sweep-panel { animation-name: auth-wall-mobile; }
+  [data-auth-mode="register"] .auth-sweep-panel { animation-name: auth-wall-mobile; animation-direction: reverse; }
+  @keyframes auth-wall-mobile {
+    0% { clip-path: inset(0 100% 0 0); } 50% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); }
+  }
 }
-:root:has([data-auth-mode="register"])::view-transition-new(auth-sweep) { animation-direction: reverse; }
-@keyframes auth-snapshot-sweep {
-  0% { clip-path: inset(0 0 0 100%); opacity: .9; }
-  50% { clip-path: inset(0 25% 0 25%); opacity: .9; }
-  100% { clip-path: inset(0 100% 0 0); opacity: .9; }
+/* Skeleton: one travelling shimmer; form fields rise in one after another. */
+.auth-loading-block {
+  background: linear-gradient(100deg, var(--muted) 30%, color-mix(in oklab, var(--primary) 18%, var(--muted)) 50%, var(--muted) 70%) !important;
+  background-size: 300% 100% !important;
+  animation: auth-shimmer 1.4s linear infinite !important;
 }
+@keyframes auth-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.auth-reveal > *, .auth-reveal form > * { animation: auth-rise .42s cubic-bezier(.22,1,.36,1) both; }
+.auth-reveal > *:nth-child(2) { animation-delay: 40ms; } .auth-reveal > *:nth-child(3) { animation-delay: 80ms; }
+.auth-reveal > *:nth-child(4) { animation-delay: 120ms; } .auth-reveal > *:nth-child(n+5) { animation-delay: 160ms; }
+.auth-reveal form > *:nth-child(2) { animation-delay: 200ms; } .auth-reveal form > *:nth-child(n+3) { animation-delay: 240ms; }
+@keyframes auth-rise { from { opacity: 0; transform: translateY(10px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 @media (max-width: 767px) {
   .sv-skeleton { background-attachment: scroll; opacity: .7; animation: sv-skel-in .2s ease-out forwards; }
   .chat-transcript { scrollbar-gutter: auto; }
@@ -711,7 +722,7 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .auth-shell :is(h1,h2,h3) { letter-spacing: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-sweep-panel, ::view-transition-new(auth-sweep) { animation: none; }
+  .auth-sweep-panel, .auth-reveal > *, .auth-reveal form > *, .auth-loading-block { animation: none !important; }
   .auth-blue-slide { display: none; }
 }
 
