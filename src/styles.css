@@ -405,63 +405,6 @@ html.school-eyes, .theme-sample-light {
   opacity: 1;
 }
 .auth-shell select option { background: var(--popover); color: var(--popover-foreground); }
-.auth-loading-block {
-  background: var(--muted);
-  animation: auth-loading-pulse 1.2s ease-in-out infinite alternate;
-}
-@keyframes auth-loading-pulse {
-  from { opacity: .55; }
-  to { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .auth-loading-block { animation: none; }
-  .auth-blue-slide { display: none; }
-}
-
-/* Named snapshots survive route replacement: panels move instead of remounting
-   with independent entrance effects. Only the changing copy crossfades. */
-.auth-transition-frame { view-transition-name: auth-frame; }
-.auth-transition-brand { view-transition-name: auth-brand; }
-.auth-transition-logo { view-transition-name: auth-logo; }
-.auth-transition-eyebrow { view-transition-name: auth-eyebrow; }
-.auth-transition-title { view-transition-name: auth-title; }
-.auth-transition-description { view-transition-name: auth-description; }
-.auth-transition-points { view-transition-name: auth-points; }
-.auth-transition-form-panel { view-transition-name: auth-form-panel; }
-.auth-transition-switch { view-transition-name: auth-switch; }
-.auth-transition-indicator { view-transition-name: auth-indicator; }
-.auth-transition-content { view-transition-name: auth-content; }
-::view-transition-group(auth-frame),
-::view-transition-group(auth-brand),
-::view-transition-group(auth-logo),
-::view-transition-group(auth-eyebrow),
-::view-transition-group(auth-title),
-::view-transition-group(auth-description),
-::view-transition-group(auth-points),
-::view-transition-group(auth-form-panel),
-::view-transition-group(auth-switch),
-::view-transition-group(auth-indicator),
-::view-transition-group(auth-content) {
-  animation-duration: 650ms;
-  animation-timing-function: cubic-bezier(.65, 0, .2, 1);
-}
-::view-transition-old(auth-content),
-::view-transition-new(auth-content),
-::view-transition-old(auth-title),
-::view-transition-new(auth-title),
-::view-transition-old(auth-description),
-::view-transition-new(auth-description),
-::view-transition-old(auth-points),
-::view-transition-new(auth-points) {
-  height: 100%;
-  object-fit: none;
-  object-position: left top;
-}
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) { animation-duration: 1ms !important; }
-}
 
 /* Shared skeleton — calm, synced shimmer.
    - Fades in after 180ms so fast loads never flash a skeleton.
@@ -642,24 +585,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .message-link { min-width: 0; min-height: auto; display: inline; }
 .chat-transcript { scrollbar-gutter: stable; }
 .message-composer { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
-/* First open: brand panel (with its text) slides in from its own side. */
-.auth-brand-intro-left { animation: auth-brand-in-left 700ms cubic-bezier(.22,1,.36,1) both; }
-.auth-brand-intro-right { animation: auth-brand-in-right 700ms cubic-bezier(.22,1,.36,1) both; }
-.auth-brand-intro-left > *, .auth-brand-intro-right > * { animation: auth-rise .5s cubic-bezier(.22,1,.36,1) 280ms both; }
-@keyframes auth-brand-in-left { from { clip-path: inset(0 100% 0 0); transform: translateX(-24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
-@keyframes auth-brand-in-right { from { clip-path: inset(0 0 0 100%); transform: translateX(24px); } to { clip-path: inset(0 0 0 0); transform: none; } }
-/* Skeleton: one travelling shimmer; form fields rise in one after another. */
-.auth-loading-block {
-  background: linear-gradient(100deg, var(--muted) 30%, color-mix(in oklab, var(--primary) 18%, var(--muted)) 50%, var(--muted) 70%) !important;
-  background-size: 300% 100% !important;
-  animation: auth-shimmer 1.4s linear infinite !important;
-}
-@keyframes auth-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
-.auth-reveal > *, .auth-reveal form > * { animation: auth-rise .42s cubic-bezier(.22,1,.36,1) both; }
-.auth-reveal > *:nth-child(2) { animation-delay: 40ms; } .auth-reveal > *:nth-child(3) { animation-delay: 80ms; }
-.auth-reveal > *:nth-child(4) { animation-delay: 120ms; } .auth-reveal > *:nth-child(n+5) { animation-delay: 160ms; }
-.auth-reveal form > *:nth-child(2) { animation-delay: 200ms; } .auth-reveal form > *:nth-child(n+3) { animation-delay: 240ms; }
-@keyframes auth-rise { from { opacity: 0; transform: translateY(10px); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 @media (max-width: 767px) {
   .sv-skeleton { background-attachment: scroll; opacity: .7; animation: sv-skel-in .2s ease-out forwards; }
   .chat-transcript { scrollbar-gutter: auto; }
@@ -695,19 +620,11 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .tasks-page article h2 button { min-height: 0; }
   .task-filters select { text-overflow: ellipsis; }
   .scan-page input#scan-code { font-size: 28px !important; letter-spacing: 0; }
-  .auth-shell > div.relative.z-10 { align-items: flex-start; padding: 4.75rem .75rem 1.5rem; }
-  .auth-transition-frame { border-radius: .75rem; }
-  .auth-transition-form-panel { padding: 1.25rem; }
-  .auth-transition-content { margin-top: 1.25rem; }
   .auth-shell form :is(input,select) { min-width: 0; max-width: 100%; }
   .auth-shell form svg { flex-shrink: 0; }
-  .auth-shell .auth-transition-switch a { display: grid; place-items: center; }
-  .auth-shell [class*="sm:grid-cols-2"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .auth-shell :is(h1,h2,h3) { letter-spacing: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-brand-intro-left, .auth-brand-intro-right, .auth-brand-intro-left > *, .auth-brand-intro-right > *, .auth-reveal > *, .auth-reveal form > *, .auth-loading-block { animation: none !important; }
-  .auth-blue-slide { display: none; }
 }
 
 /* Soci Guard status colours follow the saved theme. */
