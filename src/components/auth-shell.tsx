@@ -81,7 +81,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   // The intro is CSS-only so it plays before hydration; drop it once it has finished.
   useEffect(() => {
     const el = brandRef.current;
-    const running = el?.getAnimations?.().filter((a) => a.playState === "running") ?? [];
+    // Only the finite intro animations (panel + copy); orbs and the live dot loop forever.
+    const running = el?.getAnimations?.({ subtree: true }).filter((a) =>
+      a.playState !== "finished" && a.effect?.getTiming().iterations !== Infinity) ?? [];
     if (!running.length) { setIntro(false); return; }
     let alive = true;
     void Promise.allSettled(running.map((a) => a.finished)).then(() => { if (alive) setIntro(false); });
