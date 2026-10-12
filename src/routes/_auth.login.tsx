@@ -163,7 +163,7 @@ function LoginPage() {
           onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" />
         <AuthField id="login-password" label="Slaptažodis" icon={Lock} type={showPassword ? "text" : "password"} autoComplete="current-password"
           value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••"
-          labelAside={<Link to="/forgot-password" className="text-xs font-semibold text-primary hover:underline">Pamiršai slaptažodį?</Link>}
+          labelAside={<Link to="/forgot-password" className="inline-flex items-center text-xs font-semibold leading-4 text-primary hover:underline">Pamiršai slaptažodį?</Link>}
           trailing={
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label={showPassword ? "Slėpti slaptažodį" : "Rodyti slaptažodį"}>
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

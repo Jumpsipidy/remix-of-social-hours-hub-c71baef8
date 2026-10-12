@@ -95,7 +95,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
     <div data-auth-mode={mode} className="auth-shell relative min-h-dvh overflow-x-clip bg-background text-foreground">
       <BrandPanel ref={brandRef} mode={mode} intro={intro} />
       <main className="auth-form-side flex flex-col lg:relative lg:min-h-dvh">
-        <header className="auth-top absolute right-0 top-0 z-30 flex items-center pr-6 pt-6 lg:static lg:justify-between lg:px-8 lg:pt-6">
+        <header className="auth-top absolute right-0 top-0 z-30 flex items-center pr-8 pt-8 lg:static lg:justify-between lg:px-8 lg:pt-6">
           <Link to="/" className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:inline-flex">
             <ArrowLeft className="h-4 w-4" /> Į pradžią
           </Link>
@@ -229,8 +229,8 @@ type FieldProps = InputHTMLAttributes<HTMLInputElement> & { id: string; label: s
 export function AuthField({ id, label, icon: Icon, trailing, hint, labelAside, className = "", ...input }: FieldProps) {
   return (
     <div className="auth-field">
-      <div className="flex items-center justify-between gap-2">
-        <label htmlFor={id} className="text-xs font-semibold text-foreground/80">{label}</label>
+      <div className="flex min-h-4 items-center justify-between gap-2">
+        <label htmlFor={id} className="block text-xs font-semibold leading-4 text-foreground/80">{label}</label>
         {labelAside}
       </div>
       <div className="auth-input mt-1.5 flex h-12 items-center gap-2.5 rounded-xl border border-border bg-background px-3.5">
@@ -246,7 +246,7 @@ export function AuthField({ id, label, icon: Icon, trailing, hint, labelAside, c
 export function AuthSelect({ id, label, children, ...select }: SelectHTMLAttributes<HTMLSelectElement> & { id: string; label: string }) {
   return (
     <div className="auth-field">
-      <label htmlFor={id} className="text-xs font-semibold text-foreground/80">{label}</label>
+      <label htmlFor={id} className="block text-xs font-semibold leading-4 text-foreground/80">{label}</label>
       <select id={id} className="auth-input mt-1.5 h-12 w-full min-w-0 rounded-xl border border-border bg-background px-3.5 text-sm outline-none" {...select}>
         {children}
       </select>

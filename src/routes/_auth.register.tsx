@@ -206,7 +206,7 @@ function RegisterPage() {
                 <AuthField id="org-web" label="Interneto svetainė" icon={Globe} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://…" />
               </div>
               <div className="auth-field">
-                <label htmlFor="org-desc" className="text-xs font-semibold text-foreground/80">Trumpas veiklos aprašymas <span className="font-normal text-muted-foreground">(min. 30 simb.)</span></label>
+                <label htmlFor="org-desc" className="block text-xs font-semibold leading-4 text-foreground/80">Trumpas veiklos aprašymas <span className="font-normal text-muted-foreground">(min. 30 simb.)</span></label>
                 <textarea id="org-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} maxLength={2000} required
                   placeholder="Kokia veikla užsiimate, kokias užduotis norite pasiūlyti moksleiviams…"
                   className="auth-input mt-1.5 w-full rounded-xl border border-border bg-background p-3.5 text-sm outline-none" />
@@ -254,7 +254,7 @@ function RegisterPage() {
                   </AuthSelect>
                   {classYear && rule.locked ? (
                     <div className="auth-field">
-                      <span className="text-xs font-semibold text-foreground/80">Valandų tikslas</span>
+                      <span className="block text-xs font-semibold leading-4 text-foreground/80">Valandų tikslas</span>
                       <div className="mt-1.5 flex h-12 items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3.5 text-sm font-bold">
                         <Clock className="h-4 w-4 text-success" /> 20 val.
                       </div>
