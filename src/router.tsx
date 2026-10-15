@@ -50,7 +50,7 @@ export const getRouter = () => {
     defaultPendingComponent: DefaultPending,
     defaultPendingMs: 250,
     defaultPendingMinMs: 0,
-    defaultNotFoundComponent: NotFoundScreen,
+    defaultNotFoundComponent: () => <NotFoundScreen />,
   });
 
   if (!router.isServer) {
