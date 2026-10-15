@@ -12,15 +12,12 @@ import {
   KineticHeadline,
   Magnetic,
   Reveal,
-  TricolorRail,
-  TricolorRibbons,
   useCalmMotion,
-  useLowPowerDevice,
   LT_GREEN,
   LT_RED,
   LT_YELLOW,
 } from "@/components/motion-kit";
-import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock, ChevronDown } from "lucide-react";
+import { ArrowRight, Users, Building2, GraduationCap, ChevronDown } from "lucide-react";
 
 
 /**
@@ -106,8 +103,6 @@ export const Route = createFileRoute("/")({
 // Vibrant accent palette — sits on top of the site's dark navy BackgroundFX
 const EMBER = "oklch(0.62 0.22 30)"; 
 const GOLD = "oklch(0.85 0.16 85)";  
-const TEAL = "oklch(0.75 0.12 180)";  
-const PURPLE = "oklch(0.65 0.18 280)";
 
 function FaqItem({ q, a, i }: { q: string; a: string; i: number }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -195,9 +190,8 @@ function SpotlightCard({
 
 
 function Home() {
-  const { profile, isAuthenticated, loading: authLoading } = useAuth();
+  const { profile, isAuthenticated } = useAuth();
   const calm = useCalmMotion();
-  const isMobile = useLowPowerDevice();
 
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
     queryKey: ["public-stats"],
@@ -211,9 +205,6 @@ function Home() {
     ? (DASHBOARD_BY_ROLE as Record<string, { to: string; label: string } | null>)[profile.role]
     : null;
 
-  const isStudent = isAuthenticated && profile?.role === "student";
-  const primaryCta = dash?.to ?? "/register";
-  const primaryLabel = dash ? dash.label : "Pradėti savanorystę";
 
 
 
