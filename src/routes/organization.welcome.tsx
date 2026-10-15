@@ -16,6 +16,10 @@ export const Route = createFileRoute("/organization/welcome")({
     meta: [
       { title: "Sveiki — organizacijos pradžia — Socialinės Valandos" },
       { name: "description", content: "Pirmieji žingsniai: sukurk organizacijos profilį, paskelbk pirmąją užduotį ir paruošk QR registraciją." },
+      { property: "og:title", content: "Sveiki — organizacijos pradžia — Socialinės Valandos" },
+      { property: "og:description", content: "Pirmieji žingsniai: sukurk organizacijos profilį, paskelbk pirmąją užduotį ir paruošk QR registraciją." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/organization/welcome" }],
   }),

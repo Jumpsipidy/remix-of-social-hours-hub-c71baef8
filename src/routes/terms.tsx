@@ -10,6 +10,8 @@ export const Route = createFileRoute("/terms")({
       { property: "og:title", content: "Naudojimosi taisyklės — Socialinės Valandos" },
       { property: "og:description", content: "Perskaityk Socialinių Valandų platformos taisykles, privatumo politiką ir duomenų tvarkymo principus." },
       { property: "og:url", content: "https://socialinesvalandos.dev/terms" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/terms" }],
   }),

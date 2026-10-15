@@ -10,6 +10,8 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:title", content: "Privatumo ir saugumo politika — Socialinės Valandos" },
       { property: "og:description", content: "Aiškus paaiškinimas, kaip Socialinės Valandos tvarko ir saugo tavo duomenis." },
       { property: "og:url", content: "https://socialinesvalandos.dev/privacy" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/privacy" }],
   }),
