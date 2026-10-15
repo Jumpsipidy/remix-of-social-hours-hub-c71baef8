@@ -8,6 +8,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -38,6 +39,7 @@ import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { NotFoundScreen } from "@/components/not-found-screen";
 
 function NotFoundComponent() {
+  const path = useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
     if (typeof window === "undefined") return;
     const path = window.location.pathname;
@@ -55,7 +57,7 @@ function NotFoundComponent() {
       }).catch(() => {});
     });
   }, []);
-  return <NotFoundScreen path={typeof window !== "undefined" ? window.location.pathname : undefined} />;
+  return <NotFoundScreen path={path} />;
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
