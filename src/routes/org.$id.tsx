@@ -41,30 +41,55 @@ type OrgTask = {
 };
 
 export const Route = createFileRoute("/org/$id")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Organizacija — Socialinės Valandos` },
-      { name: "description", content: `Organizacijos profilis (ID ${params.id}) Socialinės Valandos platformoje.` },
-    ],
-  }),
+  loader: async ({ params }) => {
+    try {
+      const r = await getOrgPublicProfile({ data: { id: params.id } });
+      return { profile: (r.profile as unknown as OrgPublic) ?? null, tasks: ((r.tasks as OrgTask[]) ?? []) };
+    } catch {
+      return { profile: null as OrgPublic | null, tasks: [] as OrgTask[] };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const p = loaderData?.profile;
+    const name = p?.organization_name || p?.full_name || "Organizacija";
+    const title = `${name} — savanorystė ir socialinės valandos`;
+    const desc = (p?.bio?.slice(0, 150) || `${name}${p?.city ? ` (${p.city})` : ""} siūlo savanorystės užduotis mokiniams. Rezervuok ir rink socialines valandas.`).trim();
+    const url = `https://socialinesvalandos.dev/org/${params.id}`;
+    const img = p?.cover_url || p?.logo_url;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:type", content: "profile" },
+        { property: "og:url", content: url },
+        { name: "twitter:card", content: img ? "summary_large_image" : "summary" },
+        ...(img && /^https:\/\//.test(img) ? [{ property: "og:image", content: img }, { name: "twitter:image", content: img }] : []),
+        ...(!p ? [{ name: "robots", content: "noindex" }] : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: p ? [{
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "NGO",
+          name, url, description: desc,
+          ...(p.logo_url ? { logo: p.logo_url } : {}),
+          ...(p.website_url ? { sameAs: [p.website_url, p.facebook_url, p.instagram_url].filter(Boolean) } : {}),
+          ...(p.address || p.city ? { address: { "@type": "PostalAddress", streetAddress: p.address ?? undefined, addressLocality: p.city ?? undefined, addressCountry: "LT" } } : {}),
+        }),
+      }] : [],
+    };
+  },
   component: OrgPublicPage,
 });
 
 function OrgPublicPage() {
-  const { id } = Route.useParams();
-  const [p, setP] = useState<OrgPublic | null>(null);
-  const [tasks, setTasks] = useState<OrgTask[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await getOrgPublicProfile({ data: { id } });
-        if (r.profile) { setP(r.profile as unknown as OrgPublic); setTasks((r.tasks as OrgTask[]) ?? []); }
-      } catch { /* not found */ }
-      setLoading(false);
-    })();
-  }, [id]);
+  const data = Route.useLoaderData();
+  const p = data.profile;
+  const tasks = data.tasks;
+  const loading = false;
 
   if (loading) return <PageShell><ProfileSkeleton /></PageShell>;
   if (!p) {
