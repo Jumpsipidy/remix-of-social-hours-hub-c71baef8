@@ -8,6 +8,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -38,6 +39,7 @@ import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { NotFoundScreen } from "@/components/not-found-screen";
 
 function NotFoundComponent() {
+  const path = useRouterState({ select: (state) => state.location.pathname });
   useEffect(() => {
     if (typeof window === "undefined") return;
     const path = window.location.pathname;
@@ -55,7 +57,7 @@ function NotFoundComponent() {
       }).catch(() => {});
     });
   }, []);
-  return <NotFoundScreen path={typeof window !== "undefined" ? window.location.pathname : undefined} />;
+  return <NotFoundScreen path={path} />;
 }
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
@@ -84,8 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#0a0819" },
       { name: "application-name", content: "Socialinės Valandos" },
       { name: "apple-mobile-web-app-title", content: "Soc. Valandos" },
-      { name: "author", content: "Socialinės Valandos (VšĮ Savanorystės Inovacijos)" },
-      { name: "publisher", content: "Šeduvos gimnazija" },
+      { name: "author", content: "Socialinės Valandos" },
 
       { name: "language", content: "Lithuanian" },
       { httpEquiv: "content-language", content: "lt" },
@@ -101,9 +102,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "lt_LT" },
       { property: "og:site_name", content: "Socialinės Valandos" },
-      { property: "og:image:alt", content: "Socialinės Valandos — oficiali moksleivių savanorystės platforma" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@socialinesvalandos" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -117,8 +116,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/favicon.png?v=8" },
       { rel: "shortcut icon", href: "/favicon.ico?v=8" },
 
-      { rel: "alternate", hrefLang: "lt", href: "https://socialinesvalandos.dev/" },
-      { rel: "alternate", hrefLang: "x-default", href: "https://socialinesvalandos.dev/" },
     ],
 
     scripts: [
@@ -183,12 +180,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           url: "https://socialinesvalandos.dev/",
           logo: "https://socialinesvalandos.dev/favicon.png?v=8",
           image: "https://socialinesvalandos.dev/favicon.png?v=8",
-          foundingDate: "2025",
           areaServed: { "@type": "Country", name: "Lithuania" },
           knowsLanguage: "lt",
           slogan: "Moksleivių savanorystės valandų platforma",
           description:
-            "Lietuvos moksleiviams skirta oficiali socialinių (savanorystės) valandų platforma, jungianti mokinius, savanorystės organizacijas ir mokyklas. Naudojama Šeduvos gimnazijoje ir atvira visai Lietuvai.",
+            "Lietuvos moksleiviams skirta socialinių (savanorystės) valandų sistema, jungianti mokinius, savanorystės organizacijas ir mokyklas. Naudojama Šeduvos gimnazijoje ir atvira visai Lietuvai.",
 
           contactPoint: {
             "@type": "ContactPoint",
@@ -199,52 +195,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           },
           sameAs: [
             "https://socialinesvalandos.dev/",
-            "https://socialinesvalandos.lovable.app/",
           ],
         }),
       },
 
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: [
-            {
-              "@type": "Question",
-              name: "Kas yra socialinės valandos?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Socialinės valandos — tai savanoriška, neatlyginama veikla, kurią moksleiviai atlieka bendruomenei. Lietuvoje 5–7 klasių mokiniams reikia surinkti 20 valandų, o 8+ klasėms — bent 8 valandas per mokslo metus.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Kur galima atlikti socialines valandas?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Socialinės Valandos platformoje mokiniai randa patvirtintas organizacijas ir bendruomenes, rezervuoja laiką ir gauna oficialius patvirtinimus tiesiai savo mokyklos administratoriui.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Kaip patvirtinamos surinktos valandos?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Organizacija patvirtina valandas per QR įsiregistravimą arba 6 skaitmenų kodą. Mokinys iškart gauna oficialų PDF sertifikatą su parašu, o klasės auklėtoja(s) matomas rezultatas realiu laiku.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Ar klasės auklėtoja gali stebėti savo klasės mokinius?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Taip. Kiekvienai klasei priskirtas mokyklos administratorius (auklėtoja) mato tik savo klasių mokinius, jų rezervacijas ir surinktas valandas. Direktorius mato visą mokyklą.",
-              },
-            },
-          ],
-        }),
-      },
+
     ],
   }),
   shellComponent: RootShell,

@@ -10,6 +10,8 @@ export const Route = createFileRoute("/status")({
       { name: "description", content: "Visų sistemos klaidų kodų gidas: ką reiškia kiekvienas kodas ir kada tikėtis, kad viskas vėl veiks." },
       { property: "og:title", content: "Sistemos būsena — Socialinės Valandos" },
       { property: "og:description", content: "Klaidų kodų gidas ir sistemos būsena." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: StatusPage,

@@ -5,7 +5,7 @@ import { PageShell } from "@/components/layout";
 
 const URL = "https://socialinesvalandos.dev/blog/kas-yra-socialines-valandos";
 const TITLE = "Kas yra socialinės valandos? Pilnas gidas moksleiviams (2026)";
-const DESC = "Socialinės-pilietinės valandos Lietuvos mokyklose: kiek valandų reikia, kaip jas surinkti, kodėl svarbu stojant į universitetą ir kaip viską sekti vienoje vietoje.";
+const DESC = "Kas yra socialinės valandos? Sužinok, kokios veiklos gali tikti, kaip pasitikrinti mokyklos reikalavimus ir kaip registruoti patvirtintas valandas.";
 
 export const Route = createFileRoute("/blog/kas-yra-socialines-valandos")({
   head: () => ({
@@ -45,12 +45,12 @@ export const Route = createFileRoute("/blog/kas-yra-socialines-valandos")({
             {
               "@type": "Question",
               name: "Kiek socialinių valandų reikia Lietuvos mokykloje?",
-              acceptedAnswer: { "@type": "Answer", text: "Priklauso nuo klasės ir mokyklos, dažniausiai nuo 10 iki 30 valandų per mokslo metus. Konkretų skaičių nustato mokyklos administracija." },
+              acceptedAnswer: { "@type": "Answer", text: "Tikslų socialinės-pilietinės veiklos valandų reikalavimą ir užskaitymo tvarką pasitikrink savo mokykloje." },
             },
             {
               "@type": "Question",
               name: "Ar socialinės valandos svarbios stojant į universitetą?",
-              acceptedAnswer: { "@type": "Answer", text: "Taip. Savanorystės patirtis pridedama prie stojimo motyvacinių laiškų ir vertinama daugelio Lietuvos bei užsienio universitetų kaip papildomas privalumas." },
+              acceptedAnswer: { "@type": "Answer", text: "Savanorystės istoriją gali aprašyti paraiškoje, tačiau konkrečią jos reikšmę reikia tikrinti pasirinktos studijų programos taisyklėse." },
             },
             {
               "@type": "Question",
@@ -92,7 +92,7 @@ function Page() {
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Pilnas gidas apie socialines-pilietines valandas Lietuvos mokyklose — kiek jų reikia, kaip surinkti,
-            kodėl jos svarbios stojant į universitetą ir kaip viską sekti nesukant galvos.
+            kaip dokumentuoti veiklą ir sekti patvirtintas valandas.
           </p>
         </motion.div>
 
@@ -114,7 +114,7 @@ function Page() {
             <ol className="space-y-1.5 text-sm">
               <li><a href="#kiek-valandu" className="hover:text-primary">1. Kiek valandų reikia?</a></li>
               <li><a href="#kur-atlikti" className="hover:text-primary">2. Kur galima jas atlikti?</a></li>
-              <li><a href="#universitetas" className="hover:text-primary">3. Kodėl svarbu stojant į universitetą</a></li>
+              <li><a href="#universitetas" className="hover:text-primary">3. Kaip išsaugoti savanorystės patirtį</a></li>
               <li><a href="#kaip-sekti" className="hover:text-primary">4. Kaip sekti valandas platformoje</a></li>
               <li><a href="#duk" className="hover:text-primary">5. Dažniausiai užduodami klausimai</a></li>
             </ol>
@@ -123,21 +123,8 @@ function Page() {
           <section id="kiek-valandu">
             <h2 className="text-2xl font-bold tracking-tight">1. Kiek socialinių valandų reikia?</h2>
             <p>
-              Konkretų valandų skaičių nustato kiekviena mokykla, tačiau dažniausiai tai yra <strong>10–30 valandų per mokslo metus</strong>.
-              Vyresnėse klasėse (11–12 klasė) reikalavimas dažnai didesnis, nes valandos yra vienas iš baigimo kriterijų.
+              Tikslų socialinės-pilietinės veiklos valandų reikalavimą pasitikrink savo mokykloje. Prieš pradėdamas veiklą su klasės auklėtoju suderink, kas patvirtins valandas ir kokį dokumentą reikės pateikti.
             </p>
-            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[
-                { grade: "5–8 klasė", hours: "10–15 val." },
-                { grade: "9–10 klasė", hours: "15–20 val." },
-                { grade: "11–12 klasė", hours: "20–30 val." },
-              ].map((r) => (
-                <div key={r.grade} className="rounded-xl border border-border/60 bg-card/60 p-4">
-                  <div className="text-xs uppercase tracking-widest text-muted-foreground">{r.grade}</div>
-                  <div className="mt-1 text-xl font-bold text-primary">{r.hours}</div>
-                </div>
-              ))}
-            </div>
             <p className="mt-3 text-sm text-muted-foreground">
               * Tikslų skaičių tvirtina tavo mokyklos administracija. Klausk klasės auklėtojo arba pasitikslink Socialinės Valandos platformoje.
             </p>
@@ -170,23 +157,8 @@ function Page() {
           </section>
 
           <section id="universitetas">
-            <h2 className="text-2xl font-bold tracking-tight">3. Kodėl socialinės valandos svarbios stojant į universitetą</h2>
-            <p>
-              Nors socialinės valandos oficialiai neprideda balų prie stojimo konkursinio balo, jos atlieka
-              <strong> tris esmines funkcijas</strong>:
-            </p>
-            <ul className="mt-3 space-y-2">
-              {[
-                "Motyvacinis laiškas — savanorystės patirtis parodo iniciatyvą ir pilietinį sąmoningumą.",
-                "Stipendijos ir programos — daugelis fondų reikalauja įrodytos savanoriškos veiklos.",
-                "Užsienio universitetai — JAV, JK ir Nyderlandų universitetuose 'community service' yra svarbus stojimo kriterijus.",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
+            <h2 className="text-2xl font-bold">3. Kaip išsaugoti savanorystės patirtį?</h2>
+            <p>Užrašyk, kur savanoriavai, ką atlikai ir kas patvirtino veiklą. Pažymėjimas padeda pateikti savo veiklos istoriją; konkrečių stojimo programų reikalavimus tikrink jų oficialiose taisyklėse.</p>
           </section>
 
           <section id="kaip-sekti">
@@ -215,6 +187,12 @@ function Page() {
               ))}
             </ol>
           </section>
+
+          <nav aria-label="Susiję socialinių valandų gidai" className="flex flex-wrap gap-4 border-y border-border py-5 text-sm text-primary">
+            <Link to="/blog/kaip-surinkti-socialines-valandas" className="underline underline-offset-4">Kaip surinkti socialines valandas</Link>
+            <Link to="/socialiniu-valandu-lapas" className="underline underline-offset-4">Socialinių valandų lapas</Link>
+            <Link to="/socialines-valandos-mokykloms" className="underline underline-offset-4">Socialinės valandos mokykloms</Link>
+          </nav>
 
           <section id="duk">
             <h2 className="text-2xl font-bold tracking-tight">5. Dažniausiai užduodami klausimai</h2>

@@ -1,75 +1,10 @@
-// SSR fallback page — served when a request throws before React can render.
-// Kept as raw HTML (no React) so it works even if the bundle failed to boot.
-// Copy is Lithuanian and calm: „mes jau žinome, taisom".
+// Dependency-free fallback when React cannot boot; honor the same saved theme.
 export function renderErrorPage(): string {
-  const incident = `SC-${Math.floor(Math.random() * 900000) + 100000}`;
-  return `<!doctype html>
-<html lang="lt">
-  <head>
-    <meta charset="utf-8" />
-    <title>Trumpas trikdis — Socialinės Valandos</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="robots" content="noindex" />
-    <style>
-      :root { color-scheme: dark; }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0; min-height: 100vh; padding: 1.5rem;
-        font: 15px/1.55 -apple-system, "Inter", system-ui, sans-serif;
-        color: #f5f3ff;
-        background:
-          radial-gradient(1200px 600px at 50% -10%, rgba(244,63,94,.22), transparent 60%),
-          radial-gradient(900px 500px at 50% 110%, rgba(139,92,246,.18), transparent 60%),
-          #0a0819;
-        display: grid; place-items: center;
-      }
-      .card {
-        width: 100%; max-width: 30rem; text-align: center;
-        padding: 2rem; border-radius: 24px;
-        background: rgba(255,255,255,.04);
-        border: 1px solid rgba(255,255,255,.08);
-        backdrop-filter: blur(18px);
-        box-shadow: 0 30px 80px rgba(244,63,94,.25);
-      }
-      .badge {
-        display:inline-flex; align-items:center; gap:.5rem;
-        padding:.4rem .85rem; border-radius:999px;
-        background: rgba(16,185,129,.12);
-        border:1px solid rgba(16,185,129,.35);
-        color:#a7f3d0; font-size:12px; font-weight:600;
-        margin: 1rem 0 .25rem;
-      }
-      .dot { width:8px; height:8px; border-radius:999px; background:#34d399; box-shadow:0 0 12px #34d399; animation: pulse 1.2s infinite; }
-      @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
-      h1 { margin: 0; font-size: 22px; }
-      p { color: rgba(245,243,255,.7); margin: .5rem 0 0; }
-      .id { margin-top: 1.25rem; padding: .75rem; border-radius: 14px; background: rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.08); text-align:left; }
-      .id small { color: rgba(255,255,255,.4); letter-spacing:.15em; font-size:10px; text-transform:uppercase; }
-      .id code { display:block; font: 600 14px "SF Mono", ui-monospace, monospace; margin-top:2px; }
-      .actions { display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem; }
-      button, a.btn { padding:.6rem 1.1rem; border-radius:999px; font: 600 14px inherit; cursor:pointer; text-decoration:none; border:1px solid transparent; transition: transform .15s; }
-      button:hover, a.btn:hover { transform: scale(1.03); }
-      .primary { background:#fff; color:#0f172a; }
-      .secondary { background: rgba(255,255,255,.06); color:#fff; border-color: rgba(255,255,255,.15); }
-      .tiny { margin-top: 1rem; font-size: 11px; color: rgba(255,255,255,.4); }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <div style="font-size:38px">🛠️</div>
-      <h1>Kažkas trumpai sulūžo</h1>
-      <p>Nesijaudink — mūsų sistema jau <b>automatiškai pranešė adminui</b>. Taisymas prasidėjo.</p>
-      <div class="badge"><span class="dot"></span> Taisoma…</div>
-      <div class="id">
-        <small>Incidento ID</small>
-        <code>${incident}</code>
-      </div>
-      <div class="actions">
-        <button class="primary" onclick="location.reload()">Bandyti dar</button>
-        <a class="btn secondary" href="/">Į pradžią</a>
-      </div>
-      <div class="tiny">Duomenys saugūs. Jei kartojasi — nusiųsk kodą ${incident} adminui.</div>
-    </div>
-  </body>
-</html>`;
+  return `<!doctype html><html lang="lt"><head><meta charset="utf-8"><title>Puslapio nepavyko atidaryti — Socialinės Valandos</title><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+  <script>(function(){try{if(localStorage.getItem('sv_school_eyes_v1')!=='1')document.documentElement.classList.add('dark')}catch(e){document.documentElement.classList.add('dark')}})()</script>
+  <style>
+  :root{color-scheme:light;--bg:oklch(.98 .002 90);--surface:oklch(1 0 0);--ink:oklch(.24 .006 70);--muted:oklch(.46 .008 70);--line:oklch(.90 .004 90);--header:oklch(.24 .006 70);--header-ink:oklch(.94 .004 90);--accent:oklch(.55 .14 65);--accent-ink:oklch(1 0 0)}
+  .dark{color-scheme:dark;--bg:oklch(.16 .004 90);--surface:oklch(.21 .005 90);--ink:oklch(.95 .004 90);--muted:oklch(.75 .008 90);--line:oklch(.34 .006 90);--header:oklch(.26 .006 90);--accent:oklch(.80 .13 75);--accent-ink:oklch(.20 .03 60)}
+  *{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:1rem;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}section{width:100%;max-width:42rem;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}header{padding:1rem 1.5rem;background:var(--header);color:var(--header-ink);font-size:12px;font-weight:600}.content{padding:2rem 1.5rem}h1{font-size:30px;line-height:1.2;margin:0}p{color:var(--muted)}.status{border-block:1px solid var(--line);padding:1rem 0;margin:1.5rem 0;font-size:14px}.actions{display:flex;flex-wrap:wrap;gap:.75rem}button,a.action{display:inline-flex;justify-content:center;align-items:center;min-height:48px;padding:.75rem 1rem;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:600 14px/1.4 inherit;text-decoration:none;cursor:pointer}button{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}footer{border-top:1px solid var(--line);padding:1rem 1.5rem;font-size:14px}footer a{color:var(--muted);overflow-wrap:anywhere}a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  </style></head><body><section><header>Socialinės Valandos · Sistemos pranešimas</header><div class="content"><h1>Puslapio nepavyko atidaryti</h1><p>Įvyko netikėtas sutrikimas. Pabandyk atnaujinti puslapį arba grįžk į pradžią.</p><div class="status">Jei klaida kartojasi, pagalbai nurodyk puslapio adresą ir laiką.</div><div class="actions"><button onclick="location.reload()">Bandyti dar kartą</button><a class="action" href="/">Į pradžią</a></div></div><footer><a href="mailto:pagalba@socialinesvalandos.dev">pagalba@socialinesvalandos.dev</a></footer></section></body></html>`;
 }

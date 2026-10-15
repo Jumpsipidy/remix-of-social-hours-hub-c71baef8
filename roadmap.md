@@ -1,5 +1,12 @@
 # Roadmap
 
+## SEO and first-visit clarity (2026-10-15)
+- [x] Create and review a standalone Lithuanian motion-graphics video with music; reservation, approval and certificate-code overlays are illustrative, not authenticated captures
+- [x] Strengthen existing public search pages, visible homepage wording and internal links using Lithuanian search evidence
+- [x] Remake error, missing-page and emergency fallback screens with selected-theme incident presentation
+- [x] Reduce first-visit interruptions and keep purposeful homepage motion
+- [x] Verify public navigation, error actions, themes and relevant tests; explain realistic SEO timing (226 tests passed with one worker; critical public-flow E2E passed)
+
 ## Soci Guard follow-up (2026-10-08)
 - [x] Explain mouse movement while holding, show live movement feedback, and retain touch/keyboard access
 - [x] Validate bounded hold samples on the server and safely recheck visitors when pass validation fails

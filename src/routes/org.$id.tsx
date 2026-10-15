@@ -73,7 +73,7 @@ export const Route = createFileRoute("/org/$id")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "NGO",
+          "@type": "Organization",
           name, url, description: desc,
           ...(p.logo_url ? { logo: p.logo_url } : {}),
           ...(p.website_url ? { sameAs: [p.website_url, p.facebook_url, p.instagram_url].filter(Boolean) } : {}),
@@ -118,7 +118,7 @@ function OrgPublicPage() {
         {/* Cover + logo */}
         <div className="mt-4 overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
           <div className="relative h-40 sm:h-64 bg-gradient-to-br from-slate-800 to-slate-950">
-            {p.cover_url && <img src={p.cover_url} alt="" className="h-full w-full object-cover opacity-90" />}
+            {p.cover_url && <img src={p.cover_url} alt={`${name} — viršelio nuotrauka`} className="h-full w-full object-cover opacity-90" />}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           </div>
           <div className="flex flex-wrap items-end gap-4 px-6 pb-6">
@@ -182,7 +182,7 @@ function OrgPublicPage() {
                 <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {p.gallery_urls.map((url) => (
                     <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="group aspect-square overflow-hidden rounded-2xl border border-border bg-muted">
-                      <img src={url} alt="" className="h-full w-full object-cover transition group-hover:scale-105" />
+                      <img src={url} alt={`${name} — veiklos nuotrauka`} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
                     </a>
                   ))}
                 </div>
