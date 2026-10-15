@@ -7,7 +7,6 @@ import { NotificationBell } from "@/components/notification-bell";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
-import { FirstVisitGuide } from "@/components/first-visit-guide";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AnimatePresence, motion } from "framer-motion";
@@ -357,7 +356,6 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       </main>
       {!isFocused && <Footer />}
       <OnboardingTour />
-      <FirstVisitGuide />
     </div>
   );
 

@@ -757,3 +757,35 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .bug-report-dialog[data-state="open"] { animation: report-enter 180ms ease-out; }
 .bug-report-dialog[data-state="closed"] { animation: report-leave 120ms ease-in; }
 @media (prefers-reduced-motion: reduce) { .bug-report-dialog[data-state] { animation: none; } }
+
+/* Error boundaries mirror the incident layout, but never override the chosen theme. */
+.incident-ui {
+  --background: oklch(0.98 0.002 90); --card: oklch(1 0 0);
+  --foreground: oklch(0.24 0.006 70); --muted: oklch(0.97 0.003 90);
+  --muted-foreground: oklch(0.46 0.008 70); --border: oklch(0.90 0.004 90);
+  --primary: oklch(0.55 0.14 65); --primary-foreground: oklch(1 0 0);
+  --accent: oklch(0.96 0.04 85); --accent-foreground: oklch(0.40 0.10 65);
+  --input: var(--border); --ring: var(--primary);
+  --incident-header: oklch(0.24 0.006 70); --incident-header-text: oklch(0.94 0.004 90);
+  --incident-shadow: 0 20px 60px oklch(0.24 0.006 70 / 0.07);
+  font-family: var(--font-sans); color-scheme: light;
+}
+.dark .incident-ui {
+  --background: oklch(0.16 0.004 90); --card: oklch(0.21 0.005 90);
+  --foreground: oklch(0.95 0.004 90); --muted: oklch(0.24 0.005 90);
+  --muted-foreground: oklch(0.75 0.008 90); --border: oklch(0.34 0.006 90);
+  --primary: oklch(0.80 0.13 75); --primary-foreground: oklch(0.20 0.03 60);
+  --accent: oklch(0.29 0.035 75); --accent-foreground: var(--primary);
+  --incident-header: oklch(0.26 0.006 90); --incident-shadow: 0 20px 60px oklch(0 0 0 / 0.15);
+  color-scheme: dark;
+}
+.incident-ui :is(h1,h2,p,a,button) { letter-spacing: 0; font-family: var(--font-sans); }
+.incident-header { background: var(--incident-header); color: var(--incident-header-text); }
+.incident-panel { box-shadow: var(--incident-shadow); }
+.home-calm :is(h1,h2,h3) { letter-spacing: 0; }
+@keyframes journey-confirm { 0% { transform: translateY(0); } 40% { transform: translateY(-5px); background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); } 100% { transform: translateY(0); } }
+.is-playing .journey-icon { animation: journey-confirm 1.1s ease-in-out both; }
+.is-playing .journey-step:nth-child(2) .journey-icon { animation-delay: .6s; }
+.is-playing .journey-step:nth-child(3) .journey-icon { animation-delay: 1.2s; }
+.is-playing .journey-step:nth-child(4) .journey-icon { animation-delay: 1.8s; }
+@media (prefers-reduced-motion: reduce) { .is-playing .journey-icon { animation: none; } }

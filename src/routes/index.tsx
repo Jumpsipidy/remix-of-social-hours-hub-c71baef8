@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
-import { PreLaunchBanner } from "@/components/prelaunch-banner";
+import { HourJourney } from "@/components/hour-journey";
+import { Button } from "@/components/ui/button";
 import {
   CountUp,
   KineticHeadline,
@@ -28,7 +29,7 @@ import { ArrowRight, Sparkles, Users, Building2, GraduationCap, Clock, ChevronDo
  * our own wording, including the support contact.
  */
 const HOME_FAQ: { q: string; a: string; id: string }[] = [
-  { id: "what", q: "Kas yra socialinės valandos?", a: "Socialinės (savanorystės) valandos — neatlyginama veikla bendruomenei, kurią mokinys atlieka per mokslo metus. 5–7 klasėms reikia 20 valandų, 8–12 klasėms — bent 8 valandas." },
+  { id: "what", q: "Kas yra socialinės valandos?", a: "Socialinės-pilietinės valandos — mokinio veikla bendruomenei. Reikiamą valandų skaičių ir užskaitymo tvarką pasitikrink savo mokykloje." },
   { id: "price", q: "Kiek kainuoja Socialinės Valandos?", a: "Mokiniams, mokykloms ir organizacijoms platforma yra visiškai nemokama." },
   { id: "official", q: "Ar valandos galioja oficialiai?", a: "Taip — jas patvirtina organizacija, o mokykla užskaito sistemoje. Sertifikatas turi patikrinamą HMAC parašą ir viešą patikros nuorodą socialinesvalandos.dev/verify." },
   { id: "qr", q: "Kaip veikia QR įsiregistravimas?", a: "Mokinys pasirenka šiandienos vizitą ir parodo QR kodą, kuris atsinaujina kas 30 sekundžių. Organizacija jį nuskenuoja telefonu. Galima naudoti ir atsarginį 6 skaitmenų kodą; patikrinimui reikalingas ryšys su serveriu." },
@@ -45,7 +46,7 @@ const HOME_FAQ: { q: string; a: string; id: string }[] = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Socialinės valandos mokiniams — rink internetu | Socialinių valandų centras" },
+      { title: "Socialinės valandos — savanorystė mokiniams internetu" },
       { name: "description", content: "Socialinės valandos be popierių: rask savanorystės užduotį, rezervuok, patvirtink QR kodu ir gauk PDF pažymėjimą. Nemokama visoms Lietuvos mokykloms." },
       { property: "og:title", content: "Socialinės valandos mokiniams — rink internetu" },
       { property: "og:description", content: "Rask savanorystės užduotį, rezervuok, patvirtink QR kodu ir gauk socialinių valandų pažymėjimą. Nemokama Lietuvos mokykloms." },
@@ -66,7 +67,7 @@ export const Route = createFileRoute("/")({
           name: "Socialinės Valandos",
           alternateName: ["Soc. Valandos", "Socialinesvalandos.dev", "Savanorystės Centras"],
           url: "https://socialinesvalandos.dev/",
-          description: "Oficiali Lietuvos moksleivių savanorystės ir socialinių valandų valdymo platforma. Atvira visoms Lietuvos mokykloms.",
+          description: "Mokinių savanorystės ir socialinių valandų apskaita: veiklos, rezervacijos ir patvirtinti pažymėjimai.",
           potentialAction: {
             "@type": "SearchAction",
             target: "https://socialinesvalandos.dev/tasks?q={search_term_string}",
@@ -90,21 +91,11 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
-          "@type": "EducationalOrganization",
+          "@type": "Organization",
           name: "Socialinės Valandos",
           url: "https://socialinesvalandos.dev/",
-          logo: "https://socialinesvalandos.dev/favicon.png?v=7",
-          sameAs: ["https://www.seduvosgimnazija.lt"],
-          parentOrganization: {
-            "@type": "HighSchool",
-            name: "Šeduvos gimnazija",
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: "Šeduva",
-              addressRegion: "Radviliškio r.",
-              addressCountry: "LT",
-            },
-          },
+          logo: "https://socialinesvalandos.dev/favicon.png?v=8",
+
         }),
       },
     ],
@@ -258,14 +249,7 @@ function Home() {
 
   return (
     <PageShell>
-      {/* SEO: crawlable brand H1 — visually hidden but present for Google to associate brand keywords with the domain */}
-      <h1 className="sr-only">
-        Socialinės valandos mokiniams — rink socialines valandas internetu socialinių valandų centre
-      </h1>
-
-      <div className="relative selection:bg-[#FF4D2D] selection:text-white">
-        <PreLaunchBanner />
-
+      <div className="home-calm relative selection:bg-primary/20">
         {/* Quick shortcut for signed-in users */}
         {isAuthenticated && dash && (
           <div className="mx-auto mt-4 flex max-w-4xl flex-wrap items-center justify-center gap-3 px-4">
@@ -281,95 +265,22 @@ function Home() {
           </div>
         )}
 
-        {/* HERO ─────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden px-4 pt-10 pb-20 sm:px-6 sm:pt-20 sm:pb-32 md:pt-32 md:pb-44">
-          <TricolorRibbons />
-
-          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <div className="absolute -top-[10%] -left-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-primary/10" />
-            <div className="absolute -bottom-[10%] -right-[10%] h-[40%] w-[40%] rounded-full blur-2xl bg-emerald-500/5" />
-          </div>
-
-          <div className="relative mx-auto max-w-4xl text-center">
-
-
-            <div className="mb-6 flex justify-center">
-              <Link to="/versijos" className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition active:scale-95">
-                <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">NAUJA</span>
-                V2.5 — didžiausias atnaujinimas <ArrowRight className="h-3 w-3" />
-              </Link>
+        <section className="relative px-4 pb-10 pt-10 sm:px-6 sm:pb-12 sm:pt-16" aria-labelledby="home-title">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="mb-4 text-sm font-semibold text-primary">Mokiniams · organizacijoms · mokykloms</p>
+            <h1 id="home-title" className="font-display text-4xl font-bold leading-tight text-foreground sm:text-6xl">Socialinės valandos</h1>
+            <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">Socialinės valandos be popierių: rask savanorystės veiklą, rezervuok laiką ir sek organizacijos patvirtintas valandas savo paskyroje.</p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild size="lg" className="min-h-12"><Link to={isAuthenticated && dash ? dash.to : "/tasks"}>{dash ? dash.label : "Rasti savanorystės veiklą"}<ArrowRight /></Link></Button>
+              <Button asChild variant="outline" size="lg" className="min-h-12"><Link to={isAuthenticated ? "/tasks" : "/register"}>{isAuthenticated ? "Naršyti veiklas" : "Sukurti paskyrą"}</Link></Button>
             </div>
-
-            <KineticHeadline
-              as="h2"
-              text="Kiekviena valanda — žingsnis pokyčio link"
-              accentWords={["valanda"]}
-              className="mb-6 sm:mb-8 leading-[1.05] text-[34px] sm:text-5xl md:text-7xl lg:text-[104px] font-display font-black text-white"
-            />
-
-            <p
-              className="mx-auto mb-8 sm:mb-12 max-w-2xl text-lg sm:text-xl md:text-2xl leading-[1.6] text-white/70 font-medium"
-            >
-              Vienintelė Lietuvoje platforma, sujungianti ambicingus mokinius su prasmingomis
-              savanorystės galimybėmis. <span className="text-primary font-bold">Atvira visai Lietuvai.</span>
-            </p>
-
-            <div
-              className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-            >
-              <Magnetic className="w-full sm:w-auto">
-                <Link
-                  to={primaryCta}
-                  className="group relative flex w-full min-h-12 sm:w-auto items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-bold text-white overflow-hidden active:scale-95 transition-all"
-                  style={{ background: `linear-gradient(135deg, ${EMBER}, #D43A1F)` }}
-                >
-                  <span className="relative z-10">{primaryLabel}</span>
-                  <ArrowRight className="relative z-10 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  <span
-                    aria-hidden
-                    className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                    style={{ background: `linear-gradient(135deg, ${GOLD}, ${EMBER})` }}
-                  />
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/30 blur-md transition-transform duration-700 group-hover:translate-x-full motion-reduce:hidden"
-                  />
-                </Link>
-              </Magnetic>
-              <Magnetic className="w-full sm:w-auto" strength={10}>
-                <Link
-                  to="/tasks"
-                  className="flex w-full min-h-12 sm:w-auto items-center justify-center rounded-full px-8 py-4 text-base font-bold border border-white/20 bg-white/5 text-white backdrop-blur-xl transition-all hover:bg-white/10 hover:border-white/40 active:scale-95"
-                >
-                  Naršyti užduotis
-                </Link>
-              </Magnetic>
+            <HourJourney />
+            <div className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+              <Link to="/blog/kas-yra-socialines-valandos" className="underline underline-offset-4 hover:text-primary">Kas yra socialinės valandos?</Link>
+              <Link to="/socialiniu-valandu-lapas" className="underline underline-offset-4 hover:text-primary">Socialinių valandų lapas</Link>
             </div>
-
-            {/* floating stat pill under CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto mt-10 sm:mt-16 flex max-w-md items-center justify-center gap-4 sm:gap-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 sm:px-6 sm:py-4 shadow-elegant"
-            >
-              <motion.span
-                
-              >
-                <Clock className="h-5 w-5" style={{ color: GOLD }} />
-              </motion.span>
-              <div className="text-left">
-                <div className="text-2xl font-display font-semibold text-white">
-                  <CountUp value={counts.hours} /> val.
-                </div>
-                <div className="text-[10px] tracking-normal text-white/50">
-                  jau užregistruota mūsų bendruomenėje
-                </div>
-              </div>
-            </motion.div>
           </div>
         </section>
-
 
         {/* LIVE STATS ───────────────────────────────────────────────────── */}
         <section className="relative px-4 pt-4 pb-12 sm:px-6">
@@ -443,7 +354,7 @@ function Home() {
 
             <div className="mx-auto grid max-w-xl gap-6">
               {[
-                { name: "Šeduvos gimnazija", loc: "Šeduva · Radviliškio r.", b: "Pirmoji ir kol kas vienintelė mokykla, kurioje socialinės valandos tvarkomos visiškai skaitmeniškai." }
+                { name: "Šeduvos gimnazija", loc: "Šeduva · Radviliškio r.", b: "Šeduvos gimnazijos bendruomenė naudoja skaitmeninę socialinių valandų apskaitą." }
               ].map((s, i) => (
                 <Reveal key={s.name} delay={i * 0.1}>
                   <SpotlightCard accent={LT_GREEN} className="h-full p-7 text-left">
@@ -744,7 +655,7 @@ function Home() {
             />
             <Reveal delay={0.1}>
               <p className="mb-8 sm:mb-12 text-base sm:text-lg text-white/70 leading-relaxed">
-                Prisijunk prie didžiausio Lietuvoje savanorystės tinklo ir kurk vertę sau ir kitiems.
+                Rask veiklą, rezervuok laiką ir kaupk patvirtintas valandas savo paskyroje.
               </p>
             </Reveal>
             <Reveal delay={0.2}>

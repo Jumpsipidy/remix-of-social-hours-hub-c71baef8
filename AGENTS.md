@@ -34,3 +34,6 @@
 - Class letters live in profiles.class_letter (students) and profiles.assigned_letter (teachers, Super Admin only via tg_profiles_guard_privileged); class_year stays the canonical grade so yearly promotion keeps working.
 - Theme is applied by an inline script in the root <head> before paint; ThemeProvider must read the on-screen class when saving so a stale state can't overwrite the choice.
 - Bug reporting uses a shared portaled, viewport-aware dialog with opt-in bounded JPEG capture/upload; success requires a saved report rather than an alert-only response so the administrator's board remains the source of truth.
+
+- Visitor error boundaries share a presentation-only incident frame with isolated theme-aware tokens; recovery, logging and routing remain at their existing boundaries.
+- The public homepage presents the primary action immediately and keeps its process animation user-triggered; anonymous visitors do not receive release or guide overlays.

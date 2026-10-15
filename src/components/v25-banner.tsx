@@ -1,23 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { X, PartyPopper } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 const KEY = "sv_v25_banner_closed";
 const BITS = ["🎉", "✨", "🎊", "⭐", "🥳", "💙", "🎈", "✨"];
 
 /** Šventinė V2.5 kortelė su konfeti — uždaroma, rodoma vieną kartą įrenginyje. */
 export function V25Banner() {
+  const { isAuthenticated } = useAuth();
   const [show, setShow] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     try { setShow(localStorage.getItem(KEY) !== "1"); } catch { setShow(true); }
   }, []);
-  const visible = show && !(path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register");
+  const visible = isAuthenticated && show && path !== "/" && !(path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register");
   useEffect(() => {
     if (visible) document.documentElement.dataset.v25 = "1"; else delete document.documentElement.dataset.v25;
     return () => { delete document.documentElement.dataset.v25; };
   }, [visible]);
-  if (!show || path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register") return null;
+  if (!visible || path === "/versijos" || path.startsWith("/admin") || path === "/login" || path === "/register") return null;
   const close = () => { setShow(false); try { localStorage.setItem(KEY, "1"); } catch {} };
   return (
     <div className="sv-v25-in fixed inset-x-3 bottom-3 z-40 sm:left-auto sm:right-4 sm:w-[400px]" style={{ marginBottom: "env(safe-area-inset-bottom)" }}>
