@@ -1,5 +1,11 @@
 # Roadmap
 
+## SEO and first-visit clarity (2026-10-15)
+- [ ] Strengthen existing public search pages, visible homepage wording and internal links using Lithuanian search evidence
+- [ ] Remake error, missing-page and emergency fallback screens with selected-theme incident presentation
+- [ ] Reduce first-visit interruptions and keep purposeful homepage motion
+- [ ] Verify public navigation, error actions, themes and relevant tests; explain realistic SEO timing
+
 ## Soci Guard follow-up (2026-10-08)
 - [x] Explain mouse movement while holding, show live movement feedback, and retain touch/keyboard access
 - [x] Validate bounded hold samples on the server and safely recheck visitors when pass validation fails
