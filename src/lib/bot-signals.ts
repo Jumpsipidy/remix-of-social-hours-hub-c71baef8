@@ -57,7 +57,6 @@ export function collectBotSignals(): { score: number; reasons: string[] } {
       if (/Linux x86_64/.test(platform) && /Windows|Mac OS X/.test(ua)) add(2, "platform_mismatch");
       if ((window as any).__selenium_unwrapped || (window as any).__webdriver_evaluate || (document as any).$cdc_asdjflasutopfhvcZLmcfl_) add(3, "automation_globals");
       if (/Electron|Nightmare|jsdom|HappyDOM/i.test(ua)) add(3, "ua");
-      }
     } catch { /* ignore */ }
     const fnStr = Function.prototype.toString.call(navigator.permissions?.query ?? (() => {}));
     if (typeof navigator.permissions?.query === "function" && !/\[native code\]/.test(fnStr)) add(2, "tampered_api");
