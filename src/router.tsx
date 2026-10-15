@@ -5,6 +5,7 @@ import { createRouter, ErrorComponent } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { routeTree } from "./routeTree.gen";
 import { FriendlyErrorScreen } from "@/components/friendly-error";
+import { NotFoundScreen } from "@/components/not-found-screen";
 
 let silentRetries = 0;
 /** Trumpalaikės klaidos (tinklas, sesija dar kraunasi) dažnai praeina po
@@ -49,15 +50,7 @@ export const getRouter = () => {
     defaultPendingComponent: DefaultPending,
     defaultPendingMs: 250,
     defaultPendingMinMs: 0,
-    defaultNotFoundComponent: () => (
-      <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <div className="max-w-md text-center space-y-4">
-          <h1 className="text-3xl font-bold">404</h1>
-          <p className="text-sm text-muted-foreground">Puslapis nerastas.</p>
-          <a href="/" className="inline-flex rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Į pradžią</a>
-        </div>
-      </div>
-    ),
+    defaultNotFoundComponent: NotFoundScreen,
   });
 
   if (!router.isServer) {
