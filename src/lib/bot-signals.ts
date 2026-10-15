@@ -34,7 +34,29 @@ export function collectBotSignals(): { score: number; reasons: string[] } {
         const ext = gl.getExtension("WEBGL_debug_renderer_info");
         const r = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "";
         if (/SwiftShader|llvmpipe|softpipe|Mesa OffScreen/i.test(r)) add(2, "software_gpu");
+        if (/VMware|VirtualBox|Parallels|Hyper-V|Microsoft Basic Render|QEMU|virgl|Red Hat|Chromium OS GPU/i.test(r)) add(2, "virtual_machine");
+        const vendor = ext ? String(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)) : "";
+        if (/Mac/.test(nav.platform || "") && /Direct3D|ANGLE \(NVIDIA.*D3D/i.test(r)) add(2, "gpu_os_mismatch");
+        if (/Win/.test(nav.platform || "") && /Apple M\d|Apple GPU/i.test(r + vendor)) add(2, "gpu_os_mismatch");
       }
+    } catch { /* ignore */ }
+    try {
+      const mem = (nav as any).deviceMemory as number | undefined;
+      if (mem !== undefined && mem < 1) add(1, "low_memory");
+      if (screen.colorDepth && screen.colorDepth < 24) add(1, "low_color_depth");
+      if ((screen.width === 800 && screen.height === 600) || (screen.width === 1024 && screen.height === 768 && (nav.hardwareConcurrency ?? 4) <= 2)) add(1, "vm_resolution");
+      // Getter overridden to hide webdriver (stealth plugins).
+      const desc = Object.getOwnPropertyDescriptor(Navigator.prototype, "webdriver");
+      if (desc?.get && !/\[native code\]/.test(Function.prototype.toString.call(desc.get))) add(3, "stealth_patch");
+      if (Object.getOwnPropertyDescriptor(navigator, "webdriver")) add(2, "stealth_patch");
+      // Headless: notifications "denied" while permission API says "prompt".
+      if (typeof Notification !== "undefined" && Notification.permission === "denied" && /HeadlessChrome/.test(ua)) add(2, "headless_permissions");
+      const platform = nav.platform || "";
+      if (/Windows/.test(ua) && platform && !/Win/.test(platform)) add(2, "platform_mismatch");
+      if (/Mac OS X/.test(ua) && !/iPhone|iPad/.test(ua) && platform && !/Mac/.test(platform)) add(2, "platform_mismatch");
+      if (/Linux x86_64/.test(platform) && /Windows|Mac OS X/.test(ua)) add(2, "platform_mismatch");
+      if ((window as any).__selenium_unwrapped || (window as any).__webdriver_evaluate || (document as any).$cdc_asdjflasutopfhvcZLmcfl_) add(3, "automation_globals");
+      if (/Electron|Nightmare|jsdom|HappyDOM/i.test(ua)) add(3, "ua");
     } catch { /* ignore */ }
     const fnStr = Function.prototype.toString.call(navigator.permissions?.query ?? (() => {}));
     if (typeof navigator.permissions?.query === "function" && !/\[native code\]/.test(fnStr)) add(2, "tampered_api");
@@ -86,6 +108,15 @@ export const REASON_LABELS: Record<string, string> = {
   invalid_motion: "Judesio duomenys neatitiko laikymo laiko. Pradėk patikrą iš naujo",
   robotic_path: "Pelė judėjo per tiesiai ar per tolygiai — pajudink ją laisvai, kaip įprastai",
   decoy_followed: "Buvo atlikta paslėpta, žmonėms nematoma instrukcija",
+  virtual_machine: "Naršyklė veikia virtualioje mašinoje",
+  gpu_os_mismatch: "Vaizdo plokštė neatitinka operacinės sistemos",
+  low_memory: "Neįprastai mažai atminties",
+  low_color_depth: "Neįprastas ekrano spalvų gylis",
+  vm_resolution: "Ekrano dydis būdingas virtualioms mašinoms",
+  stealth_patch: "Naršyklė slepia, kad ją valdo programa",
+  headless_permissions: "Leidimų būsena būdinga nematomoms naršyklėms",
+  platform_mismatch: "Naršyklės pavadinimas neatitinka tikros sistemos",
+  srv_no_fetch_meta: "Užklausai trūksta įprastų naršyklės antraščių",
   robotic_timing: "Judesiai per tolygūs, kaip mašinos",
 };
 

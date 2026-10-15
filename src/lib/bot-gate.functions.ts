@@ -43,6 +43,7 @@ async function requestInfo() {
   if (/HeadlessChrome|PhantomJS|Puppeteer|Playwright|Selenium|python|curl|wget|Go-http|axios|node-fetch/i.test(ua)) reasons.push("srv_automation_ua");
   if (!req.headers.get("accept-language")) reasons.push("srv_no_language");
   if (/Chrome\//.test(ua) && !req.headers.get("sec-ch-ua") && !/Mobile|Android|iPhone/.test(ua)) reasons.push("srv_ua_mismatch");
+  if (/Chrome\/|Firefox\/|Safari\//.test(ua) && !req.headers.get("sec-fetch-mode")) reasons.push("srv_no_fetch_meta");
   return { uaHash: (await sha256Hex(ua)).slice(0, 16), reasons };
 }
 
