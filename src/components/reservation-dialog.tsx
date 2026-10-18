@@ -1,8 +1,9 @@
 import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, MapPin, Star, Check, Info, Sparkles, Loader2, Users, UserPlus } from "lucide-react";
 import { LeafletMap } from "@/components/leaflet-map";
+import { listMyFriendships, fetchFriendProfiles, type FriendProfile } from "@/lib/friends";
 
 export type ReservationSubmit = {
   date: string;
@@ -10,6 +11,8 @@ export type ReservationSubmit = {
   end_time: string;
   hours: number;
   note: string;
+  /** Friends invited to join; each must accept before they get their own check-in code. */
+  friendIds: string[];
 };
 
 export type ReserveTarget = {
@@ -30,6 +33,8 @@ export type ReserveTarget = {
 
 type Props = {
   target: ReserveTarget | null;
+  /** Signed-in student; enables the "go with friends" option. */
+  inviterId?: string | null;
   onClose: () => void;
   onConfirm: (details: ReservationSubmit) => Promise<void> | void;
 };
@@ -49,28 +54,51 @@ function calcHours(start: string, end: string): number {
   return Math.round(mins / 60);
 }
 
-export function ReservationDialog({ target, onClose, onConfirm }: Props) {
+export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Props) {
   const [date, setDate] = useState(todayISO());
   const [start, setStart] = useState("14:00");
   const [end, setEnd] = useState("17:00");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [withFriends, setWithFriends] = useState(false);
+  const [friends, setFriends] = useState<FriendProfile[] | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
 
   useEffect(() => {
     if (!target) return;
     if (target.presetDate) setDate(target.presetDate);
     if (target.presetStart) setStart(target.presetStart);
     if (target.presetEnd) setEnd(target.presetEnd);
+    setWithFriends(false);
+    setPicked([]);
   }, [target?.id]);
 
+  // Load accepted friends lazily, the first time the switch is turned on.
+  useEffect(() => {
+    if (!withFriends || friends !== null || !inviterId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const rows = await listMyFriendships(inviterId);
+        const ids = rows.filter((r) => r.status === "accepted").map((r) => (r.requester_id === inviterId ? r.addressee_id : r.requester_id));
+        const map = await fetchFriendProfiles(ids);
+        if (alive) setFriends(ids.map((id) => map[id]).filter(Boolean));
+      } catch {
+        if (alive) setFriends([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [withFriends, friends, inviterId]);
+
   const hours = useMemo(() => calcHours(start, end), [start, end]);
-  const valid = hours > 0 && !!date;
+  const valid = hours > 0 && !!date && (!withFriends || picked.length > 0);
+  const togglePick = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const handleSubmit = async () => {
     if (!valid || submitting) return;
     setSubmitting(true);
     try {
-      await onConfirm({ date, start_time: start, end_time: end, hours, note });
+      await onConfirm({ date, start_time: start, end_time: end, hours, note, friendIds: withFriends ? picked : [] });
     } finally {
       setSubmitting(false);
     }
