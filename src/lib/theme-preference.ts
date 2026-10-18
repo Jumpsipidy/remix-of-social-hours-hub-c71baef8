@@ -1,6 +1,8 @@
 export type SiteTheme = "dark" | "light";
 export const THEME_KEY = "sv_school_eyes_v1";
 export const THEME_PROMPT_KEY = "sv_theme_choice_seen_v1";
+/** Fired when the first-device theme chooser closes, so other first-visit prompts can follow it. */
+export const THEME_CHOICE_DONE_EVENT = "sv:theme-choice-done";
 export const ACCENT_KEY = "sv_theme_accent_v1";
 
 export function normalizeAccent(value: number) {
