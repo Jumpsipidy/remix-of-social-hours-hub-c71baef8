@@ -234,6 +234,79 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                 </div>
               </motion.div>
 
+              {/* Go with friends */}
+              {inviterId && (
+                <div className={`mt-5 overflow-hidden rounded-2xl border transition-colors ${withFriends ? "border-primary/40 bg-primary/5" : "border-border bg-background"}`}>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={withFriends}
+                    onClick={() => setWithFriends((v) => !v)}
+                    className="flex w-full items-center gap-3 p-4 text-left"
+                  >
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-colors ${withFriends ? "bg-primary text-primary-foreground" : "bg-accent text-primary"}`}>
+                      <Users className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold">Eiti su draugais</span>
+                      <span className="block text-xs text-muted-foreground">Draugai gaus kvietimą ir savo įsiregistravimo kodą</span>
+                    </span>
+                    <span className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${withFriends ? "bg-primary" : "bg-muted"}`}>
+                      <motion.span
+                        className="absolute top-1 h-5 w-5 rounded-full bg-background shadow"
+                        animate={{ left: withFriends ? 24 : 4 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                      />
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {withFriends && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
+                      >
+                        <div className="border-t border-border/70 p-4 pt-3">
+                          {friends === null ? (
+                            <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Kraunami draugai…</p>
+                          ) : friends.length === 0 ? (
+                            <p className="flex items-center gap-2 text-xs text-muted-foreground"><UserPlus className="h-4 w-4" /> Dar neturi draugų — susirask klasiokų skiltyje „Draugai“.</p>
+                          ) : (
+                            <>
+                              <p className="mb-2 text-xs font-semibold text-muted-foreground">Pasirink, su kuo eisi ({picked.length})</p>
+                              <div className="flex flex-wrap gap-2">
+                                {friends.map((f, i) => {
+                                  const on = picked.includes(f.id);
+                                  return (
+                                    <motion.button
+                                      key={f.id}
+                                      type="button"
+                                      aria-pressed={on}
+                                      onClick={() => togglePick(f.id)}
+                                      initial={{ opacity: 0, y: 6 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: i * 0.03 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className={`inline-flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm font-medium transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent"}`}
+                                    >
+                                      <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-bold ${on ? "bg-primary-foreground/20" : "bg-accent text-primary"}`}>
+                                        {on ? <Check className="h-3.5 w-3.5" /> : (f.full_name ?? "?").trim().charAt(0).toUpperCase()}
+                                      </span>
+                                      {f.full_name ?? "Draugas"}
+                                    </motion.button>
+                                  );
+                                })}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
               {/* Note */}
               <div className="mt-5">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
@@ -293,7 +366,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                {submitting ? "Siunčiama..." : "Siųsti užklausą"}
+                {submitting ? "Siunčiama..." : withFriends && picked.length ? `Rezervuoti su ${picked.length} ${picked.length === 1 ? "draugu" : "draugais"}` : "Siųsti užklausą"}
               </motion.button>
             </div>
           </motion.div>
