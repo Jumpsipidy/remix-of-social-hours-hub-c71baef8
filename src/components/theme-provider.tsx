@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { Moon, Sun, Heart, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, type SiteTheme } from "@/lib/theme-preference";
+import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, THEME_CHOICE_DONE_EVENT, type SiteTheme } from "@/lib/theme-preference";
 
 const ThemeContext = createContext<{ theme: SiteTheme; choose: (theme: SiteTheme) => void; openSettings: () => void }>({
   theme: "dark", choose: () => {}, openSettings: () => {},
@@ -85,6 +85,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try { saveThemePreference(localStorage, shown); saveAccentPreference(localStorage, accent); } catch {}
     setTheme(shown);
     setAsk(false);
+    window.dispatchEvent(new Event(THEME_CHOICE_DONE_EVENT));
   }
   function tune(value: number) {
     const next = normalizeAccent(value);

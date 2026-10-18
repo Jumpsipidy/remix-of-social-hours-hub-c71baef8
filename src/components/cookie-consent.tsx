@@ -79,8 +79,13 @@ export function CookieConsent() {
 
   useEffect(() => {
     const existing = readConsent();
+    // One first-visit prompt at a time: wait for the theme chooser to close before asking about cookies.
+    const showAfterTheme = () => { if (!readConsent()) setVisible(true); };
+    let themePending = false;
     if (!existing) {
-      setVisible(true);
+      try { themePending = readThemePreference(localStorage).ask; } catch { themePending = false; }
+      if (themePending) window.addEventListener(THEME_CHOICE_DONE_EVENT, showAfterTheme, { once: true });
+      else setVisible(true);
     } else {
       setAnalytics(existing.categories.analytics);
       setMarketing(existing.categories.marketing);
@@ -95,7 +100,10 @@ export function CookieConsent() {
       setVisible(true);
     };
     window.addEventListener(OPEN_SETTINGS_EVENT, openHandler);
-    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, openHandler);
+    return () => {
+      window.removeEventListener(OPEN_SETTINGS_EVENT, openHandler);
+      window.removeEventListener(THEME_CHOICE_DONE_EVENT, showAfterTheme);
+    };
   }, []);
 
   const close = useCallback(() => {
