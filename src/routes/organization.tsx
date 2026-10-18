@@ -165,6 +165,7 @@ function OrgDashboard() {
     const channel = supabase
       .channel(`org-dash-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants" }, () => refresh(user.id))
       .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
