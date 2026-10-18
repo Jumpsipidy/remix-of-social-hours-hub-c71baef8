@@ -495,7 +495,7 @@ function TasksPage() {
         </section>
       </div>
 
-      <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
+      <ReservationDialog target={active?.target ?? null} inviterId={user?.id ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
       <TaskDetailDialog
         task={detail}
         orgName={detail ? (detail.is_event ? (detail.event_host_name || orgName(detail.organization_id)) : orgName(detail.organization_id)) : ""}
