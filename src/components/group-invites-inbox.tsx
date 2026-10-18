@@ -58,7 +58,7 @@ export function GroupInvitesInbox({ userId }: { userId: string }) {
   const respond = async (id: string, accept: boolean) => {
     try {
       await respondToInvite(id, accept);
-      toast.success(accept ? "Prisijungei prie grupės" : "Kvietimas atmestas");
+      toast.success(accept ? "Prisijungei prie grupės" : "Kvietimas atmestas", accept ? { description: "Tavo įsiregistravimo kodas ir QR — skiltyje „QR kodas“." } : undefined);
       reload();
     } catch (e: any) {
       toast.error(e?.message ?? "Klaida");

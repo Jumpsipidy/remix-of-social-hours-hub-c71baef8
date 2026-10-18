@@ -19,6 +19,8 @@ import { CreateTaskPanel } from "@/components/create-task-panel";
 import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { OrgProfileEditor } from "@/components/org-profile-editor";
 import { Button } from "@/components/ui/button";
+import { OrgGroupDialog, type OrgParticipant, type GroupMember } from "@/components/org-group-dialog";
+import { OrgEventOverview } from "@/components/org-event-overview";
 const OrgAnalytics = lazy(() => import("@/components/org-analytics").then((m) => ({ default: m.OrgAnalytics })));
 
 import { sendHoursConfirmedEmail, sendReservationApprovedEmail, sendReservationDeclinedEmail } from "@/lib/email.functions";
@@ -88,6 +90,8 @@ function OrgDashboard() {
   const [view, setView] = useState<"dashboard" | "profile">("dashboard");
   const [dataLoading, setDataLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<Record<string, OrgParticipant[]>>({});
+  const [groupRes, setGroupRes] = useState<Reservation | null>(null);
 
   const refresh = useCallback(async (uid: string) => {
     try {
@@ -100,7 +104,20 @@ function OrgDashboard() {
       const rs = (rData as Reservation[]) ?? [];
       setReservations(rs);
       setTasks((tData as TaskRow[]) ?? []);
-      const ids = Array.from(new Set(rs.map((r) => r.student_id).filter((v): v is string => !!v)));
+      const pMap: Record<string, OrgParticipant[]> = {};
+      if (rs.length) {
+        const { data: pData } = await supabase
+          .from("reservation_participants")
+          .select("id, reservation_id, student_id, status, checked_in_at")
+          .in("reservation_id", rs.map((r) => r.id))
+          .neq("status", "removed");
+        ((pData as OrgParticipant[] | null) ?? []).forEach((p) => { (pMap[p.reservation_id] ??= []).push(p); });
+      }
+      setParticipants(pMap);
+      const ids = Array.from(new Set([
+        ...rs.map((r) => r.student_id),
+        ...Object.values(pMap).flat().map((p) => p.student_id),
+      ].filter((v): v is string => !!v)));
       if (ids.length) {
         const map: Record<string, StudentLite> = {};
         const { data: ps } = await supabase.from("profiles").select("id, full_name, email, hours_earned").in("id", ids);
@@ -148,6 +165,7 @@ function OrgDashboard() {
     const channel = supabase
       .channel(`org-dash-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants" }, () => refresh(user.id))
       .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `organization_id=eq.${user.id}` }, () => refresh(user.id))
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
@@ -246,6 +264,26 @@ function OrgDashboard() {
     return { weekdayCounts: counts, maxWD: Math.max(max, 1), busiestIdx: counts.indexOf(max), hasWeekdayData: max > 0 };
   }, [completed]);
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
+  const groupMembers = (r: Reservation): GroupMember[] => [
+    { id: r.student_id, name: students[r.student_id]?.full_name ?? "Mokinys", role: "owner", status: "owner", checkedInAt: r.checked_in_at ?? null },
+    ...(participants[r.id] ?? []).map((p) => ({ id: p.id, name: students[p.student_id]?.full_name ?? "Draugas", role: "member" as const, status: p.status, checkedInAt: p.checked_in_at })),
+  ];
+  const groupBadge = (r: Reservation) => {
+    const list = participants[r.id];
+    if (!list?.length) return null;
+    const going = 1 + list.filter((p) => p.status === "accepted").length;
+    const waiting = list.filter((p) => p.status === "pending").length;
+    return (
+      <button type="button" onClick={() => setGroupRes(r)} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition hover:bg-primary/15">
+        <Users className="h-3 w-3" /> Grupė · {going}{waiting ? ` (+${waiting} laukia)` : ""}
+      </button>
+    );
+  };
+  const overviewParticipants = useMemo(() => {
+    const set = new Set(completed.map((r) => r.student_id));
+    completed.forEach((r) => (participants[r.id] ?? []).forEach((p) => { if (p.status === "accepted") set.add(p.student_id); }));
+    return set.size;
+  }, [completed, participants]);
   const [bulkSel, setBulkSel] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
 
@@ -460,6 +498,9 @@ function OrgDashboard() {
       )}
 
       {view === "dashboard" && <>
+      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6">
+        <OrgEventOverview participants={overviewParticipants} hours={Math.round(hoursDelivered)} events={tasks.length} daily={chartData.map((d) => d.hrs)} />
+      </section>
 
 
       {/* Primary stats */}
@@ -638,6 +679,7 @@ function OrgDashboard() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
                         <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                        {groupBadge(r) && <div className="mt-1.5">{groupBadge(r)}</div>}
                       </div>
                     </div>
                     <button
@@ -692,6 +734,7 @@ function OrgDashboard() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
                           <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                        {groupBadge(r) && <div className="mt-1.5">{groupBadge(r)}</div>}
                         </div>
                       </div>
                       <button
@@ -755,6 +798,7 @@ function OrgDashboard() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{s?.full_name ?? "Mokinys"}</p>
                     <p className="text-xs text-muted-foreground">{r.reservation_date} · {Number(r.hours_to_earn)} val.</p>
+                    {groupBadge(r) && <div className="mt-1">{groupBadge(r)}</div>}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Icon className={`h-4 w-4 ${tone}`} />
@@ -779,6 +823,12 @@ function OrgDashboard() {
       </section>
       </>}
 
+      <OrgGroupDialog
+        open={!!groupRes}
+        onClose={() => setGroupRes(null)}
+        title={groupRes ? `${groupRes.reservation_date} · ${String(groupRes.start_time).slice(0, 5)}` : ""}
+        members={groupRes ? groupMembers(groupRes) : []}
+      />
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <VerifyCloseDialog
         open={!!verifyRes}

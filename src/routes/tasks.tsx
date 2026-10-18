@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
+import { inviteFriendsToReservation } from "@/lib/friends";
 import { TaskDetailDialog } from "@/components/task-detail-dialog";
 import { CITIES, cityOf } from "@/lib/cities";
 import { startReservationChat } from "@/lib/reservation-chat";
@@ -231,9 +232,15 @@ function TasksPage() {
     });
     if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: active.task.organization_id, message: details.note || `Sveiki! Noriu prisijungti prie „${active.task.title}“ ${details.date}.` });
     logActivity("reservation.created", { entityType: "reservation", entityId: inserted?.id as string | undefined, meta: { hours: details.hours, org: active.target.name } });
-    const label = `${active.target.name} · ${details.date} · ${details.hours} val.`;
+    if (inserted?.id && details.friendIds.length) {
+      try {
+        await inviteFriendsToReservation(inserted.id as string, user.id, details.friendIds);
+        toast.success(`Pakviesta draugų: ${details.friendIds.length}`, { description: "Kai jie priims kvietimą, kiekvienas gaus savo įsiregistravimo kodą." });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Nepavyko pakviesti draugų");
+      }
+    }
     setActive(null);
-    if (inserted?.id) setInvite({ id: inserted.id as string, label });
   };
 
   const toggleTag = (t: string) =>
@@ -488,7 +495,7 @@ function TasksPage() {
         </section>
       </div>
 
-      <ReservationDialog target={active?.target ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
+      <ReservationDialog target={active?.target ?? null} inviterId={user?.id ?? null} onClose={() => setActive(null)} onConfirm={confirm} />
       <TaskDetailDialog
         task={detail}
         orgName={detail ? (detail.is_event ? (detail.event_host_name || orgName(detail.organization_id)) : orgName(detail.organization_id)) : ""}
