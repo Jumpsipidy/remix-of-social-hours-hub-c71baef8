@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { readThemePreference, THEME_CHOICE_DONE_EVENT } from "@/lib/theme-preference";
 
 /**
  * Custom GDPR / ePrivacy compliant cookie banner.
