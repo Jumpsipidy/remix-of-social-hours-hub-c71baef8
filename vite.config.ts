@@ -1,11 +1,19 @@
 import { execSync } from "node:child_process";
 import { sentryTanstackStart } from "@sentry/tanstackstart-react/vite";
-import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, realpathSync } from "node:fs";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import tailwindcss from "@tailwindcss/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, searchForWorkspaceRoot, type Plugin } from "vite";
+
+function realNodeModules(): string[] {
+  try {
+    return [realpathSync("node_modules")];
+  } catch {
+    return [];
+  }
+}
 import tsconfigPaths from "vite-tsconfig-paths";
 
 // Nitro emits to `.output/`, but Lovable's post-build dist check (and some
@@ -55,6 +63,11 @@ export default defineConfig({
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(SUPABASE_PUBLISHABLE_KEY),
     "import.meta.env.VITE_COMMIT_SHA": JSON.stringify(COMMIT_SHA),
     "import.meta.env.VITE_BUILD_TIME": JSON.stringify(BUILD_TIME),
+  },
+  server: {
+    // Dev only: node_modules may be a symlink outside the project root; allow its real path
+    // so the Nitro dev entry can load. Production builds are unaffected.
+    fs: { allow: [searchForWorkspaceRoot(process.cwd()), ...realNodeModules()] },
   },
   build: {
     target: "esnext",
