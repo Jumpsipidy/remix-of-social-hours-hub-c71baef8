@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
+import { inviteFriendsToReservation } from "@/lib/friends";
 import { TaskDetailDialog } from "@/components/task-detail-dialog";
 import { CITIES, cityOf } from "@/lib/cities";
 import { startReservationChat } from "@/lib/reservation-chat";
