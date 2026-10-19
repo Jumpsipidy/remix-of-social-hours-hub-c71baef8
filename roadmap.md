@@ -1,5 +1,14 @@
 # Roadmap
 
+## Registration and lockdown repair (2026-10-19)
+- [ ] Repair email confirmation and explain pending accounts; verify hosted settings where possible
+- [ ] Class-bound signup codes, secure administrative management, and school-admin scope checks
+- [ ] Temporary licence-confirmed administrative registration options without main-site key entry
+- [ ] Validate cookie consent and correct tracking behavior
+- [ ] Static theme-aware lockdown screen, reliable selection and failure handling
+- [ ] Useful Lithuanian network error explanations and reachable group reservation action
+- [ ] Run relevant tests and public browser flows; disclose external authentication blockers
+
 ## SEO and first-visit clarity (2026-10-15)
 - [x] Create and review a standalone Lithuanian motion-graphics video with music; reservation, approval and certificate-code overlays are illustrative, not authenticated captures
 - [x] Strengthen existing public search pages, visible homepage wording and internal links using Lithuanian search evidence
