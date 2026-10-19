@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +16,7 @@ type School = { id: string; name: string; signup_code: string; is_active: boolea
 function SchoolsPage() {
   const list = useServerFn(adminListSchools);
   const upsert = useServerFn(adminUpsertSchool);
-  const del = useServerFn(adminDeleteSchool);
+  const licensed = useLicensedAction();
   const [rows, setRows] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -58,7 +59,7 @@ function SchoolsPage() {
   const remove = async (s: School) => {
     if (!confirm(`Ištrinti „${s.name}“?`)) return;
     setBusy(s.id);
-    try { await del({ data: { id: s.id } }); toast.success("Ištrinta"); setRows((r) => r.filter((x) => x.id !== s.id)); }
+    try { await licensed("delete_school", s.id, `Ištrinti mokyklą „${s.name}“`); }
     catch (err) { toast.error(err instanceof Error ? err.message : "Klaida"); }
     finally { setBusy(null); }
   };

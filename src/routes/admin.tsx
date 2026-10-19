@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { LicensedActionReturn } from "@/hooks/use-licensed-action";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageShell } from "../components/layout";
@@ -309,6 +310,7 @@ function AdminLayout() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.15, ease: "linear" }}
               >
+                <LicensedActionReturn />
                 <Outlet />
               </motion.div>
             </AnimatePresence>

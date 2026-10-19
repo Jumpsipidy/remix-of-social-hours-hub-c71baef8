@@ -1,4 +1,5 @@
 import { csvCell } from "@/lib/csv-safe";
+import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -471,7 +472,7 @@ function Page() {
       })));
   };
 
-  const resetFn = useServerFn(adminResetAnalytics);
+  const licensed = useLicensedAction();
   const resetAnalytics = async () => {
     const ok = window.confirm(
       "Ar tikrai nori IŠTRINTI VISUS analitikos duomenis (activity_log)?\n\n" +
@@ -481,9 +482,7 @@ function Page() {
     const confirmTxt = window.prompt('Įrašyk "RESET" kad patvirtintum:');
     if (confirmTxt !== "RESET") return;
     try {
-      const res = await resetFn();
-      toast.success(`Ištrinta ${res.deleted} įrašų. Analitika iš naujo.`);
-      load();
+      await licensed("reset_analytics", "", "Ištrinti visus analitikos duomenis");
     } catch (e) {
       toast.error("Nepavyko: " + (e instanceof Error ? e.message : String(e)));
     }

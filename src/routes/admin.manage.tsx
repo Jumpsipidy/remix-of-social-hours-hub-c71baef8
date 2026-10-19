@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,7 +27,7 @@ type Row = {
 function ManagePage() {
   const { user } = useAuth();
   const list = useServerFn(adminListAllAccounts);
-  const del = useServerFn(adminDeleteAccount);
+  const licensed = useLicensedAction();
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -50,9 +51,7 @@ function ManagePage() {
     if (!confirm(`Ištrinti paskyrą „${label}“? Šio veiksmo atšaukti negalima.`)) return;
     setBusy(id);
     try {
-      await del({ data: { userId: id } });
-      toast.success("Paskyra ištrinta");
-      setRows((prev) => prev.filter((r) => r.id !== id));
+      await licensed("delete_account", id, `Ištrinti paskyrą „${label}“`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nepavyko ištrinti");
     } finally {
