@@ -1,10 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Destructive ops run only via runLicensedAdminAction (admin-license.functions.ts).
+const LICENSE_ONLY = true as boolean;
+
 /** Wipe the entire activity_log analytics history. Super admin only. */
 export const adminResetAnalytics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (LICENSE_ONLY) throw new Error("Šis veiksmas reikalauja licencijos patikros");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as { role?: string } | null)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
@@ -67,6 +71,7 @@ export const adminDeleteAccount = createServerFn({ method: "POST" })
     return { userId };
   })
   .handler(async ({ data, context }) => {
+    if (LICENSE_ONLY) throw new Error("Šis veiksmas reikalauja licencijos patikros");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
@@ -129,6 +134,7 @@ export const adminPurgeOldMessages = createServerFn({ method: "POST" })
 export const adminWipeAllReservations = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (LICENSE_ONLY) throw new Error("Šis veiksmas reikalauja licencijos patikros");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");
@@ -139,6 +145,7 @@ export const adminWipeAllReservations = createServerFn({ method: "POST" })
 export const adminWipeAllTasks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (LICENSE_ONLY) throw new Error("Šis veiksmas reikalauja licencijos patikros");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: me } = await supabaseAdmin.from("profiles").select("role").eq("id", context.userId).maybeSingle();
     if ((me as any)?.role !== "admin") throw new Error("Reikia administratoriaus teisių");

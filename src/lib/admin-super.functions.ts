@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+// Destructive ops run only via runLicensedAdminAction (admin-license.functions.ts).
+const LICENSE_ONLY = true as boolean;
+
 async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: me } = await supabaseAdmin
@@ -60,6 +63,7 @@ export const adminDeleteSchool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
+    if (LICENSE_ONLY) throw new Error("Šis veiksmas reikalauja licencijos patikros");
     const sb = await assertAdmin(context.userId);
     const { error } = await sb.from("schools").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
