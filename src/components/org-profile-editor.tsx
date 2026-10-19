@@ -140,6 +140,12 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
   const removeGallery = async (url: string) => {
     try {
       await persistMediaPatch({ gallery_urls: (p.gallery_urls ?? []).filter((u) => u !== url) });
+      // Delete the stored object so its long-lived signed link stops working.
+      const m = url.match(/\/object\/sign\/org-photos\/([^?]+)/);
+      const path = m ? decodeURIComponent(m[1]) : null;
+      if (path && path.startsWith(`${userId}/`)) {
+        await supabase.storage.from("org-photos").remove([path]);
+      }
       toast.success("Nuotrauka pašalinta ir išsaugota");
     } catch (e) {
       toast.error((e as Error).message);

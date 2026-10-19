@@ -642,7 +642,8 @@ export const escalateAppError = createServerFn({ method: "POST" })
     }
 
 
-    if (lockdownReason) {
+    // Auto-lockdown from client reports is admin-only; DB health jobs still handle real outages.
+    if (lockdownReason && callerIsAdmin) {
       const { data: ss } = await supabaseAdmin
         .from("site_settings")
         .select("lockdown_enabled")
