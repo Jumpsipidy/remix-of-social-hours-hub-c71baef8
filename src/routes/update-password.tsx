@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Heart, Lock, Loader2, ShieldCheck, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPassword } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/update-password")({
   head: () => ({
@@ -106,8 +107,9 @@ function UpdatePasswordPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
-    if (password.length < 8) {
-      toast.error("Slaptažodis turi būti bent 8 simbolių.");
+    const pwErr = await checkPassword(password, email);
+    if (pwErr) {
+      toast.error(pwErr);
       return;
     }
     if (password !== confirm) {
@@ -209,7 +211,7 @@ function PasswordField({ label, value, onChange }: { label: string; value: strin
         <input
           type="password"
           required
-          minLength={8}
+          minLength={10}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Bent 8 simboliai"

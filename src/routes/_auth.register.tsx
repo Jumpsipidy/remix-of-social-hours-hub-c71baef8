@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { checkPassword } from "@/lib/password-policy";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,6 +99,8 @@ function RegisterPage() {
       if (!rule.locked && hoursNeeded < rule.min) { toast.error(`8+ klasėms — min. ${rule.min} val.`); return; }
 
     }
+    const pwErr = await checkPassword(password, email.trim());
+    if (pwErr) { toast.error(pwErr); return; }
     setLoading(true);
     try {
       const res = await signUpStudent({
@@ -274,7 +277,7 @@ function RegisterPage() {
 
               <Section n={3} title="Prisijungimo duomenys">
                 <AuthField id="reg-email" label="El. paštas" icon={Mail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vardas@mokykla.lt" required autoComplete="email" />
-                <AuthField id="reg-password" label="Slaptažodis" icon={Lock} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Bent 8 simboliai" required autoComplete="new-password" />
+                <AuthField id="reg-password" label="Slaptažodis" icon={Lock} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Bent 10 simbolių, raidės ir skaičiai" required autoComplete="new-password" />
               </Section>
 
               <div className="space-y-4">
