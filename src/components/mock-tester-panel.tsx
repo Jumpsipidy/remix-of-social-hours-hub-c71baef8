@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Wrench, X, Sparkles, RefreshCw, LogIn, LogOut, Copy, Trash2, KeyRound, CheckCircle2, XCircle, UserPlus, Eye, Send, MapPin } from "lucide-react";
@@ -41,7 +42,7 @@ export function MockTesterPanel() {
   const createOne = useServerFn(createTestAccount);
   const loadCodes = useServerFn(listSchoolCodes);
   const runCodeTest = useServerFn(testSignupCode);
-  const deleteAcc = useServerFn(adminDeleteAccount);
+  const licensed = useLicensedAction();
   const verifyDel = useServerFn(verifyAccountDeleted);
   const previewEmail = useServerFn(previewHoursConfirmedEmail);
   const sendTestEmail = useServerFn(sendTestHoursConfirmedEmail);
@@ -98,10 +99,7 @@ export function MockTesterPanel() {
     if (!confirm(`Ištrinti ${p.email} ir patikrinti?`)) return;
     setBusy(p.id);
     try {
-      await deleteAcc({ data: { userId: p.id } });
-      const check = await verifyDel({ data: { userId: p.id } });
-      if (check.fully_deleted) toast.success("✅ Paskyra pilnai ištrinta (auth + profilis)");
-      else toast.error(`⚠️ Liko: profilis=${check.profile_exists} auth=${check.auth_exists}`);
+      await licensed("delete_account", p.id, `Ištrinti testinę paskyrą ${p.email}`);
       await refresh();
     } catch (e: any) { toast.error(e?.message ?? "Klaida"); }
     finally { setBusy(null); }

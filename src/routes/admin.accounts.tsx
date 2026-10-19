@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { useEffect, useState } from "react";
 import { 
   Users, 
@@ -35,7 +36,7 @@ function AdminAccountsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const listFn = useServerFn(adminListAllAccounts);
-  const deleteFn = useServerFn(adminDeleteAccount);
+  const licensed = useLicensedAction();
 
   const fetchAccounts = async () => {
     setLoading(true);
@@ -58,9 +59,7 @@ function AdminAccountsPage() {
     
     setBusyId(id);
     try {
-      await deleteFn({ data: { userId: id } });
-      toast.success("Vartotojas sėkmingai ištrintas");
-      setAccounts(prev => prev.filter(a => a.id !== id));
+      await licensed("delete_account", id, `Ištrinti vartotoją ${email}`);
     } catch (err: any) {
       toast.error(err.message || "Klaida trinant");
     } finally {
