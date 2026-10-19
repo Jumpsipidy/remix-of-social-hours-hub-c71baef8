@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Lock, Unlock, AlertTriangle, ShieldCheck, Info, RefreshCw } from "lucide-react";
 import { LOCKDOWN_CODES } from "@/lib/lockdown-codes";
@@ -15,16 +15,15 @@ const LOCKDOWN_SQL = `ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS 
 NOTIFY pgrst, 'reload schema';`;
 
 export const Route = createFileRoute("/admin/lockdown")({
-  head: () => ({ meta: [{ title: "Lockdown — Socialinės Valandos" }] }),
+  head: () => ({ meta: [{ title: "Prieigos užrakinimas — Socialinės Valandos" }, { name: "description", content: "Incidento būsenos ir lankytojų pranešimo valdymas." }, { property: "og:title", content: "Prieigos užrakinimas — Socialinės Valandos" }, { property: "og:description", content: "Incidento ir saugios prieigos valdymas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: LockdownPage,
 });
 
 const SEVERITY_CHIP = {
-  info: "border-sky-400/40 bg-sky-500/10 text-sky-200",
-  warn: "border-amber-400/40 bg-amber-500/10 text-amber-200",
-  critical: "border-rose-400/50 bg-rose-500/10 text-rose-200",
+  info: "border-primary/40 bg-primary/10 text-primary",
+  warn: "border-warning/40 bg-warning/10 text-warning",
+  critical: "border-destructive/40 bg-destructive/10 text-destructive",
 } as const;
-
 function LockdownPage() {
   const getLockdownSettings = useServerFn(adminGetLockdownSettings);
   const updateLockdownSettings = useServerFn(adminUpdateLockdownSettings);
@@ -49,7 +48,7 @@ function LockdownPage() {
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Nepavyko užkrauti";
       setSetupProblem(msg);
-      setEnabled(false);
+      setEnabled(null);
     }
   };
 
@@ -59,7 +58,7 @@ function LockdownPage() {
     setSaving(true);
     try {
       const { settings } = await updateLockdownSettings({
-        data: { lockdown_enabled: next, lockdown_message: message || null, lockdown_code: next ? selectedCode : null },
+        data: { lockdown_enabled: next, lockdown_message: message || null, lockdown_code: selectedCode },
       });
       setEnabled(settings.lockdown_enabled);
       setUpdatedAt(settings.updated_at ?? null);
@@ -101,7 +100,9 @@ function LockdownPage() {
   };
 
   const activeCode = LOCKDOWN_CODES.find((c) => c.code === selectedCode) ?? LOCKDOWN_CODES[0];
-  const statusColor = enabled ? "rose" : "emerald";
+  const [severityFilter, setSeverityFilter] = useState("all");
+  const [codeSearch, setCodeSearch] = useState("");
+  const choices = LOCKDOWN_CODES.filter((item) => (severityFilter === "all" || severityFilter === item.severity) && `${item.code} ${item.title}`.toLocaleLowerCase("lt").includes(codeSearch.toLocaleLowerCase("lt")));
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -119,40 +120,35 @@ function LockdownPage() {
         <div className="rounded-2xl border border-amber-500/40 bg-amber-500/[0.07] p-4">
           <p className="text-sm font-semibold text-amber-100">Reikia atnaujinti lentelę</p>
           <p className="mt-1 text-xs text-amber-100/70">{setupProblem}</p>
-          <button onClick={async () => { await navigator.clipboard.writeText(LOCKDOWN_SQL); toast.success("SQL nukopijuotas"); }}
+          <Button onClick={async () => { await navigator.clipboard.writeText(LOCKDOWN_SQL); toast.success("SQL nukopijuotas"); }}
             className="mt-3 rounded-full bg-amber-300 px-3 py-1.5 text-xs font-bold text-black hover:bg-amber-200">
             Kopijuoti SQL
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Big status card */}
-      <motion.div layout
+      <div
         className={`relative overflow-hidden rounded-2xl border p-6 ${
           enabled
-            ? "border-rose-500/40 bg-rose-500/[0.06]"
-            : "border-emerald-500/30 bg-emerald-500/[0.04]"
+            ? "border-destructive/40 bg-destructive/5"
+            : "border-success/30 bg-success/5"
         }`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <motion.div
-              animate={enabled ? { scale: [1, 1.08, 1] } : {}}
-              transition={{ duration: 1.6, repeat: Infinity }}
-              className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${
-                enabled ? "from-rose-400 to-amber-500" : "from-emerald-400 to-teal-500"
-              } text-black shadow-lg`}>
+            <div className={`grid h-14 w-14 place-items-center rounded-lg ${enabled ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
               {enabled ? <AlertTriangle className="h-7 w-7" /> : <ShieldCheck className="h-7 w-7" />}
-            </motion.div>
+            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className={`inline-flex h-2 w-2 rounded-full bg-${statusColor}-400 ${enabled ? "animate-pulse" : ""}`} />
+                <span className={`inline-flex h-2 w-2 rounded-full ${enabled ? "bg-destructive" : "bg-success"}`} />
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Būsena</p>
               </div>
               <p className="mt-0.5 text-xl font-black">
                 {enabled === null ? "Kraunama…" : enabled ? "AKTYVUS" : "Sistema veikia"}
               </p>
               {enabled && (
-                <p className="mt-0.5 font-mono text-xs text-rose-200/80">{selectedCode} · {activeCode.title}</p>
+                <p className="mt-0.5 font-mono text-xs text-destructive">{selectedCode} · {activeCode.title}</p>
               )}
               {updatedAt && (
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
@@ -161,48 +157,52 @@ function LockdownPage() {
               )}
             </div>
           </div>
-          <button
+          <Button
             disabled={saving || enabled === null}
             onClick={() => toggle(!enabled)}
             className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold shadow-lg transition disabled:opacity-60 ${
               enabled
-                ? "bg-emerald-500 text-black hover:bg-emerald-400"
-                : "bg-gradient-to-r from-rose-500 to-amber-500 text-black hover:opacity-90"
+                ? "bg-success text-success-foreground hover:bg-success/90"
+                : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
             }`}>
             {enabled ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
             {enabled ? "Išjungti" : "Įjungti"}
-          </button>
+          </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Code picker — collapsed simple */}
-      <details className="group rounded-2xl border border-border bg-card/60 backdrop-blur">
+      <details open className="group rounded-2xl border border-border bg-card/60 backdrop-blur">
         <summary className="flex cursor-pointer items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
           <div>
             <p className="text-sm font-bold">Klaidos kodas</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Rodomas maintenance ekrane</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Rodomas lankytojams</p>
           </div>
           <span className={`rounded-full border px-3 py-1 font-mono text-xs font-bold ${SEVERITY_CHIP[activeCode.severity]}`}>
             {activeCode.code}
           </span>
         </summary>
         <div className="border-t border-border/60 p-5 pt-4">
-          <div className="grid gap-2 sm:grid-cols-2">
-            {LOCKDOWN_CODES.map((c) => {
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <input aria-label="Ieškoti incidento kodo" value={codeSearch} onChange={(event) => setCodeSearch(event.target.value)} placeholder="Ieškoti kodo ar pavadinimo" className="h-11 rounded-md border border-input bg-background px-3 text-sm" />
+            <select aria-label="Incidento tipas" value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)} className="h-11 rounded-md border border-input bg-background px-3 text-sm"><option value="all">Visi tipai</option><option value="info">Techninė priežiūra</option><option value="warn">Sutrikimai</option><option value="critical">Saugumo incidentai</option></select>
+          </div>
+          <div role="radiogroup" aria-label="Incidento kodas" className="grid gap-2 sm:grid-cols-2">
+            {choices.map((c) => {
               const active = c.code === selectedCode;
               return (
-                <button key={c.code} type="button" onClick={() => setSelectedCode(c.code)}
-                  className={`rounded-xl border p-3 text-left transition ${
+                <Button variant="outline" role="radio" aria-checked={active} key={c.code} type="button" onClick={() => setSelectedCode(c.code)}
+                  className={`h-auto min-h-20 flex-col items-stretch whitespace-normal rounded-lg border p-3 text-left ${
                     active
                       ? `${SEVERITY_CHIP[c.severity]} ring-2 ring-primary/30`
                       : "border-border bg-background/40 hover:border-primary/40"
                   }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold">{c.code}</span>
-                    <span className="text-[9px] font-bold uppercase opacity-70">{c.severity}</span>
+                    <span className="text-[9px] font-bold uppercase opacity-70">{c.severity === "info" ? "Priežiūra" : c.severity === "warn" ? "Sutrikimas" : "Saugumas"}</span>
                   </div>
                   <p className="mt-1 text-sm font-semibold">{c.title}</p>
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -213,29 +213,29 @@ function LockdownPage() {
           <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={400}
             placeholder="Palik tuščią — bus rodomas tik kodas"
             className="mt-2 w-full rounded-xl border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary" />
-          <button onClick={saveSettings} disabled={saving}
+          <Button onClick={saveSettings} disabled={saving}
             className="mt-3 rounded-full bg-gradient-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow disabled:opacity-60">
             Išsaugoti
-          </button>
+          </Button>
         </div>
       </details>
 
       {/* Quick actions row */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <button onClick={runHealthCheck} disabled={checking}
+        <Button onClick={runHealthCheck} disabled={checking}
           className="flex items-center justify-between rounded-2xl border border-border bg-card/60 p-4 text-left transition hover:border-primary/40 hover:bg-accent/40 disabled:opacity-60">
           <div>
             <p className="text-sm font-bold">Sistemos patikra</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {healthSummary
                 ? `${healthSummary.critical} kritinių · ${healthSummary.warnings} įspėjimų`
-                : "Paleisk deep health scan"}
+                : "Patikrinti paslaugų būseną"}
             </p>
           </div>
-          <motion.span animate={checking ? { rotate: 360 } : {}} transition={checking ? { duration: 0.9, repeat: Infinity, ease: "linear" } : {}}>
+          <span>
             <RefreshCw className="h-5 w-5 text-primary" />
-          </motion.span>
-        </button>
+          </span>
+        </Button>
         <Link to="/status"
           className="flex items-center justify-between rounded-2xl border border-border bg-card/60 p-4 transition hover:border-primary/40 hover:bg-accent/40">
           <div>

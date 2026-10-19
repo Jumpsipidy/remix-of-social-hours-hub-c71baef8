@@ -1,6 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Heart, KeyRound, Mail, ShieldCheck, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { registrationComplete } from "@/lib/signup-rules";
+import { userError } from "@/lib/user-error";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,28 +26,57 @@ function VerifyEmailPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [feedback, setFeedback] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
   const [status, setStatus] = useState<"idle" | "checking" | "verified">("idle");
 
+  async function finishVerification() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user?.email_confirmed_at) throw new Error("El. pašto patvirtinimas dar nebaigtas.");
+    const result = await supabase.from("profiles").select("role, school_id, class_year, class_letter").eq("id", data.user.id).maybeSingle();
+    if (result.error) throw new Error("Nepavyko patikrinti paskyros. Bandyk dar kartą.");
+    setStatus("verified");
+    try { sessionStorage.removeItem("sv_signup_email"); } catch {}
+    window.history.replaceState(null, "", "/verify-email");
+    toast.success("El. paštas patvirtintas!");
+    const profile = result.data;
+    if (profile?.role === "admin") await navigate({ to: "/admin", replace: true });
+    else if (profile?.role === "organization") await navigate({ to: "/organization", replace: true });
+    else if (profile?.role === "school_admin") await navigate({ to: "/school", replace: true });
+    else await navigate({ to: registrationComplete(profile) ? "/student" : "/complete-profile", replace: true });
+  }
+
   useEffect(() => {
-    setEmail(sessionStorage.getItem("sv_signup_email") ?? "");
-    // If arrived via magic link with a `code` query, exchange it automatically
+    try { setEmail(sessionStorage.getItem("sv_signup_email") ?? ""); } catch {}
     const url = new URL(window.location.href);
-    const code = url.searchParams.get("code");
-    if (code) {
-      setStatus("checking");
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          setStatus("idle");
-          toast.error("Nuoroda pasibaigė. Įvesk kodą ranka.");
-        } else {
-          setStatus("verified");
-          toast.success("El. paštas patvirtintas!");
-          setTimeout(() => navigate({ to: "/student" }), 800);
+    const hash = new URLSearchParams(url.hash.slice(1));
+    async function receiveLink() {
+      const code = url.searchParams.get("code");
+      const tokenHash = url.searchParams.get("token_hash");
+      const access = hash.get("access_token");
+      const refresh = hash.get("refresh_token");
+      if (url.searchParams.get("error") || hash.get("error")) throw new Error("Nuoroda negalioja. Paprašyk naujo laiško.");
+      if (code || tokenHash || (access && refresh)) {
+        setStatus("checking");
+        let error;
+        if (code) {
+          const result = await supabase.auth.exchangeCodeForSession(code);
+          error = result.error;
+          if (error) { const existing = await supabase.auth.getSession(); if (existing.data.session) error = null; }
+        } else if (tokenHash) {
+          const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "signup" }); error = result.error;
+        } else if (access && refresh) {
+          const result = await supabase.auth.setSession({ access_token: access, refresh_token: refresh }); error = result.error;
         }
-      });
+        if (error) throw error;
+        await finishVerification();
+      } else {
+        const result = await supabase.auth.getUser();
+        if (result.data.user?.email_confirmed_at) await finishVerification();
+      }
     }
+    void receiveLink().catch((error) => { setStatus("idle"); setFeedback(userError(error, "Nuoroda nebegalioja. Paprašyk naujo laiško arba įvesk kodą.")); });
   }, [navigate]);
 
   async function verify(e: React.FormEvent) {
@@ -58,11 +90,9 @@ function VerifyEmailPage() {
         type: "signup",
       });
       if (error) throw error;
-      setStatus("verified");
-      toast.success("El. paštas patvirtintas!");
-      setTimeout(() => navigate({ to: "/student" }), 600);
+      await finishVerification();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Neteisingas kodas");
+      setFeedback(userError(err, "Neteisingas arba pasibaigęs kodas."));
     } finally {
       setBusy(false);
     }
@@ -72,11 +102,11 @@ function VerifyEmailPage() {
     if (resending || !email) return;
     setResending(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: email.trim() });
+      const { error } = await supabase.auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/verify-email` } });
       if (error) throw error;
       toast.success("Naujas kodas išsiųstas.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Nepavyko išsiųsti");
+      setFeedback(userError(err, "Nepavyko išsiųsti laiško."));
     } finally {
       setResending(false);
     }
@@ -96,7 +126,7 @@ function VerifyEmailPage() {
         <div className="rounded-3xl border border-border bg-gradient-card p-8 shadow-elegant backdrop-blur-xl">
           <h1 className="text-2xl font-bold">Patvirtink el. paštą</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Į {email || "tavo el. paštą"} išsiuntėme 6 skaitmenų kodą. Įvesk jį žemiau arba paspausk nuorodą laiške.
+            Registracija laukia el. pašto patvirtinimo. Paskyra dar neaktyvi. Atverk nuorodą laiške arba įvesk laiške nurodytą kodą.
           </p>
 
           {status === "checking" && (
@@ -112,6 +142,7 @@ function VerifyEmailPage() {
             </div>
           )}
 
+          {feedback && <p role="alert" className="mt-4 text-sm text-destructive">{feedback}</p>}
           <form onSubmit={verify} className="mt-6 space-y-4">
             <label className="block">
               <span className="text-xs font-semibold text-muted-foreground">El. paštas</span>
@@ -134,7 +165,7 @@ function VerifyEmailPage() {
                   type="text"
                   required
                   inputMode="numeric"
-                  maxLength={6}
+                  maxLength={10}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="123456"
@@ -142,21 +173,21 @@ function VerifyEmailPage() {
                 />
               </div>
             </label>
-            <button
+            <Button
               disabled={busy || status === "verified"}
               className="w-full rounded-full bg-gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60"
             >
               {busy ? "Tikrinama…" : "Patvirtinti kodą"}
-            </button>
+            </Button>
           </form>
 
-          <button
+          <Button type="button" variant="ghost"
             onClick={resend}
-            disabled={resending}
+            disabled={resending || !email.trim() || status === "checking"}
             className="mt-4 w-full text-center text-xs font-semibold text-muted-foreground hover:text-primary disabled:opacity-60"
           >
             {resending ? "Siunčiama…" : "Negauni laiško? Siųsti dar kartą"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

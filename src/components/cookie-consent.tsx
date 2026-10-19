@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { parseConsent, CONSENT_STORAGE_KEY, CONSENT_CHANGED_EVENT, type ConsentCategory, type ConsentRecord } from "@/lib/consent";
+export { CONSENT_CHANGED_EVENT } from "@/lib/consent";
+export type { ConsentCategory, ConsentRecord } from "@/lib/consent";
 import { Link } from "@tanstack/react-router";
 import { readThemePreference, THEME_CHOICE_DONE_EVENT } from "@/lib/theme-preference";
 
@@ -15,19 +19,8 @@ import { readThemePreference, THEME_CHOICE_DONE_EVENT } from "@/lib/theme-prefer
  *  - Cookie policy: /privatumas
  */
 
-const STORAGE_KEY = "sv_cookie_consent_v1";
+const STORAGE_KEY = CONSENT_STORAGE_KEY;
 const CONSENT_VERSION = 1;
-const MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000; // 12 months
-
-export type ConsentCategory = "necessary" | "analytics" | "marketing";
-
-export interface ConsentRecord {
-  version: number;
-  timestamp: number;
-  categories: Record<ConsentCategory, boolean>;
-}
-
-export const CONSENT_CHANGED_EVENT = "sv:consent-changed";
 const OPEN_SETTINGS_EVENT = "sv:open-cookie-settings";
 
 function readConsent(): ConsentRecord | null {
@@ -35,10 +28,7 @@ function readConsent(): ConsentRecord | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as ConsentRecord;
-    if (parsed.version !== CONSENT_VERSION) return null;
-    if (Date.now() - parsed.timestamp > MAX_AGE_MS) return null;
-    return parsed;
+    return parseConsent(raw);
   } catch {
     return null;
   }
@@ -148,8 +138,8 @@ export function CookieConsent() {
                 Slapukų nustatymai
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Naudojame slapukus, kad svetainė veiktų (prisijungimas, sesija) ir kad galėtume
-                anonimiškai matuoti, kaip ja naudojatės. Gali priimti visus, atmesti nebūtinus arba
+                Būtini slapukai ir įrenginio saugykla palaiko prisijungimą, saugumą bei tavo pasirinkimus.
+                Naudojimo statistiką renkame tik tau sutikus. Gali priimti visus, atmesti nebūtinus arba
                 pasirinkti kategorijas.{" "}
                 <Link
                   to="/privatumas"
@@ -185,37 +175,37 @@ export function CookieConsent() {
 
               <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                 {!showDetails ? (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setShowDetails(true)}
                     className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
                   >
                     Tinkinti pasirinkimus
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     type="button"
                     onClick={saveChoice}
-                    className="rounded-lg border border-white/15 bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-white/10"
+                    className="rounded-lg border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
                   >
                     Išsaugoti pasirinkimus
-                  </button>
+                  </Button>
                 )}
                 <div className="flex gap-2 sm:justify-end">
-                  <button
+                  <Button
                     type="button"
                     onClick={rejectAll}
                     className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent sm:flex-none transition-colors"
                   >
                     Atmesti visus
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={acceptAll}
                     className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 sm:flex-none transition-all active:scale-95"
                   >
                     Sutikti su visais
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -241,8 +231,8 @@ function CategoryRow({
 }) {
   return (
     <label
-      className={`flex items-start gap-3 rounded-xl border border-border bg-white/[0.02] p-3 ${
-        disabled ? "opacity-70" : "cursor-pointer hover:bg-white/[0.04]"
+      className={`flex items-start gap-3 rounded-xl border border-border bg-background p-3 ${
+        disabled ? "opacity-70" : "cursor-pointer hover:bg-accent"
       }`}
     >
       <input
@@ -250,7 +240,7 @@ function CategoryRow({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.checked)}
-        className="mt-1 h-4 w-4 shrink-0 accent-indigo-500"
+        className="mt-1 h-4 w-4 shrink-0 accent-[var(--primary)]"
       />
       <div className="flex-1">
         <div className="text-sm font-medium text-foreground">{title}</div>

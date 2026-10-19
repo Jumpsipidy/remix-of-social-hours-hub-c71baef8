@@ -1,3 +1,4 @@
+import { ClassCodeManager } from "@/components/admin/class-code-manager";
 import { createFileRoute } from "@tanstack/react-router";
 import { useLicensedAction } from "@/hooks/use-licensed-action";
 import { useEffect, useMemo, useState } from "react";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { GraduationCap, Loader2, Plus, Save, Trash2, RefreshCw, Copy, Sparkles, ScrollText } from "lucide-react";
 import { ListSkeleton } from "@/components/skeleton-loader";
 
-export const Route = createFileRoute("/admin/schools")({ component: SchoolsPage });
+export const Route = createFileRoute("/admin/schools")({ head: () => ({ meta: [{ title: "Mokyklos ir klasių kodai — Socialinės Valandos" }, { name: "description", content: "Mokyklų ir klasių registracijos kodų administravimas." }, { property: "og:title", content: "Mokyklos ir klasių kodai — Socialinės Valandos" }, { property: "og:description", content: "Saugus mokyklų ir klasių kodų valdymas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }), component: SchoolsPage });
 
 type School = { id: string; name: string; signup_code: string; is_active: boolean; created_at: string };
 
@@ -122,6 +123,8 @@ function SchoolsPage() {
           </button>
         </div>
       </form>
+
+      <ClassCodeManager schools={rows} />
 
       {/* Diploma cards */}
       <div className="grid gap-4 md:grid-cols-2">

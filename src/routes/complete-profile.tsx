@@ -5,6 +5,8 @@ import { GraduationCap, Heart, Loader2, School } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { registrationComplete } from "@/lib/signup-rules";
+import { userError } from "@/lib/user-error";
 import { completeOAuthStudentSetup } from "@/lib/school-signup.functions";
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."] as const;
@@ -50,11 +52,11 @@ function CompleteProfilePage() {
       // Already finished setup (or not a student) → go straight to the dashboard.
       const { data: prof } = await supabase
         .from("profiles")
-        .select("role, school_id, class_year")
+        .select("role, school_id, class_year, class_letter")
         .eq("id", authResult.data.user.id)
         .maybeSingle();
-      const p = prof as { role?: string; school_id?: string | null; class_year?: string | null } | null;
-      if (p && (p.role !== "student" || (p.school_id && p.class_year))) {
+      const p = prof as { role?: string; school_id?: string | null; class_year?: string | null; class_letter?: string | null } | null;
+      if (p && (p.role !== "student" || registrationComplete(p))) {
         window.location.replace(p.role === "student" ? "/student" : "/");
         return;
       }
@@ -68,14 +70,14 @@ function CompleteProfilePage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!classYear || !classLetter || !schoolId || busy) return;
+    if (!code.trim() || !schoolId || busy) return;
     setBusy(true);
     try {
       await completeSetup({ data: { fullName, schoolId, classYear, classLetter, hoursNeeded, code } });
       toast.success("Mokykla patvirtinta.");
       window.location.assign("/student");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nepavyko patvirtinti mokyklos.");
+      toast.error(userError(error, "Nepavyko patvirtinti klasės."));
       setBusy(false);
     }
   }
@@ -98,17 +100,12 @@ function CompleteProfilePage() {
                 {schools.map((school) => <option key={school.id} value={school.id}>{school.name}{school.city ? ` (${school.city})` : ""}</option>)}
               </select>
             </label>
-            <label className="block text-sm font-semibold">Klasė
-              <select className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 font-normal" value={classYear && classLetter ? `${classYear}|${classLetter}` : ""} onChange={(event) => { const [y, l] = event.target.value.split("|"); setClassYear((y ?? "") as typeof classYear); setClassLetter((l as "A" | "B") ?? ""); }} required>
-                <option value="">Pasirink klasę</option>
-                {CLASS_YEARS.flatMap((c) => (["A", "B"] as const).map((l) => <option key={c + l} value={`${c}|${l}`}>{c.split(" / ")[0]}{l}{c.includes(" / ") ? ` (${c.split(" / ")[1]})` : ""}</option>))}
-              </select>
-            </label>
-            {classYear && !["5", "6", "7"].includes(classYear) && <label className="block text-sm font-semibold">Reikalingos valandos
+            <p className="text-sm text-muted-foreground">Klasės numeris ir A/B raidė priskiriami pagal tavo klasės kodą.</p>
+            <label className="block text-sm font-semibold">Reikalingos valandos
               <input type="number" min={8} max={500} className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 font-normal" value={hoursNeeded} onChange={(event) => setHoursNeeded(Number(event.target.value))} required />
-            </label>}
-            <Field label="Mokyklos kodas" value={code} onChange={setCode} placeholder="Pvz.: SEDUVA2026" />
-            <Button className="h-11 w-full" disabled={busy || !classYear || !schoolId}>
+            </label>
+            <Field label="Klasės kodas" value={code} onChange={setCode} placeholder="Pvz.: SEDUVA2026" />
+            <Button className="h-11 w-full" disabled={busy || !code.trim() || !schoolId}>
               {busy ? <><Loader2 className="animate-spin" /> Tikrinama…</> : <><GraduationCap /> Patvirtinti ir tęsti</>}
             </Button>
           </form>

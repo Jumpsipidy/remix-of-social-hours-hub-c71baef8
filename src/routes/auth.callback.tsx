@@ -6,6 +6,7 @@ import { Heart, Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
+import { registrationComplete } from "@/lib/signup-rules";
 import { deviceMeta } from "@/lib/device-meta";
 import { insertActivityLogRow } from "@/lib/activity-log";
 
@@ -76,15 +77,15 @@ function AuthCallbackPage() {
         try {
           const ensured = await ensureProfile();
           role = ensured.profile?.role ?? "student";
-          studentSetupComplete = !!ensured.profile?.school_id && !!ensured.profile?.class_year;
+          studentSetupComplete = registrationComplete(ensured.profile);
         } catch {
           const { data: prof } = await supabase
             .from("profiles")
-            .select("role, school_id, class_year")
+            .select("role, school_id, class_year, class_letter")
             .eq("id", data.session.user.id)
             .maybeSingle();
           role = (prof as { role?: string } | null)?.role ?? "student";
-          studentSetupComplete = !!(prof as { school_id?: string | null } | null)?.school_id && !!(prof as { class_year?: string | null } | null)?.class_year;
+          studentSetupComplete = registrationComplete(prof);
         }
 
         void insertActivityLogRow({

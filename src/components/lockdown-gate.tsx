@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+
 import { useServerFn } from "@tanstack/react-start";
 import { RefreshCw, X, Copy, Check, BookOpen, ChevronDown, Wrench, Unplug, ShieldAlert, Mail } from "lucide-react";
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
-import { tryLockdownAutoRecovery } from "@/lib/lockdown-recovery.functions";
+
 import { Captcha } from "@/components/captcha";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 const BYPASS_TOKEN_KEY = "sv_lockdown_bypass_token_v2";
 const TRIGGER_WORD = "jumpsipidy";
 
-export function LockdownGate() {
+export function LockdownGate({ children }: { children?: ReactNode }) {
   const [lockdown, setLockdown] = useState<boolean | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [codeId, setCodeId] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function LockdownGate() {
   const verifyToken = useServerFn(verifyBypassToken);
   const readBypassStatus = useServerFn(bypassStatus);
   const readPublicSettings = useServerFn(getPublicSiteSettings);
-  const attemptRecovery = useServerFn(tryLockdownAutoRecovery);
+  const [settingsFailed, setSettingsFailed] = useState(false);
 
   const submitCodeFn = useServerFn(verifyBypassCode);
 
@@ -56,7 +56,9 @@ export function LockdownGate() {
         const { data, error } = await readPublicSettings();
         if (!mounted) return;
         if (error) throw new Error(error.message);
-        setLockdown(Boolean(data?.lockdown_enabled));
+        if (!data) throw new Error("Būsena negauta");
+        setSettingsFailed(false);
+        setLockdown(Boolean(data.lockdown_enabled));
         setMessage(data?.lockdown_message ?? null);
         setCodeId(data?.lockdown_code ?? null);
       } catch {
@@ -64,23 +66,23 @@ export function LockdownGate() {
         // fall back to the public RPC exposed on the database directly.
         try {
           const { supabase } = await import("@/integrations/supabase/client");
-          const { data } = await supabase.rpc("get_lockdown_public");
+          const { data, error } = await supabase.rpc("get_lockdown_public");
+          if (error) throw error;
           const row = Array.isArray(data) ? data[0] : data;
           if (!mounted) return;
-          setLockdown(Boolean(row?.lockdown_enabled));
+          if (!row || typeof row.lockdown_enabled !== "boolean") throw new Error("Būsena negauta");
+          setSettingsFailed(false);
+          setLockdown(row.lockdown_enabled);
           setMessage(row?.lockdown_message ?? null);
           setCodeId(row?.lockdown_code ?? null);
         } catch {
-          if (mounted) setLockdown(false);
+          if (mounted) setSettingsFailed(true);
         }
       }
-      // Fire-and-forget auto-recovery attempt. Server throttles to once/min
-      // and only ever *disables* lockdown (never enables), so it's safe to
-      // call from anonymous polling.
-      try { void attemptRecovery(); } catch { /* ignore */ }
+
     };
     load();
-    const poll = setInterval(load, 60_000);
+    const poll = setInterval(load, 15_000);
     return () => { mounted = false; clearInterval(poll); };
   }, []);
 
@@ -108,10 +110,11 @@ export function LockdownGate() {
     return () => window.removeEventListener("keydown", onKey);
   }, [lockdown, bypassed]);
 
-  const visible = lockdown === true && !bypassed && !import.meta.env.DEV;
+  const visible = !bypassed && (lockdown !== false || settingsFailed);
+  useEffect(() => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: visible })); return () => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: false })); }; }, [visible]);
   const errInfo = getLockdownCode(codeId);
   const severity = errInfo?.severity ?? "warn";
-  const displayCode = errInfo?.code ?? codeId ?? "E-0000";
+  const displayCode = settingsFailed ? "E-4001" : errInfo?.code ?? codeId ?? "E-9000";
 
   const submitCode = async () => {
     if (codeChecking) return;
@@ -152,7 +155,7 @@ export function LockdownGate() {
   }, [showCodeModal, readBypassStatus]);
 
 
-  async function runCheck(auto = false) {
+  async function runCheck(_auto = false) {
     setRefreshing(true); setRefreshOk(null);
     try {
       let enabled = false;
@@ -161,40 +164,37 @@ export function LockdownGate() {
       try {
         const { data, error } = await readPublicSettings();
         if (error) throw new Error(error.message);
-        enabled = Boolean(data?.lockdown_enabled);
+        if (!data) throw new Error("Būsena negauta");
+        enabled = Boolean(data.lockdown_enabled);
         msg = data?.lockdown_message ?? null;
         cid = data?.lockdown_code ?? null;
       } catch {
         const { supabase } = await import("@/integrations/supabase/client");
-        const { data } = await supabase.rpc("get_lockdown_public");
+        const { data, error } = await supabase.rpc("get_lockdown_public");
+        if (error) throw error;
         const row = Array.isArray(data) ? data[0] : data;
-        enabled = Boolean(row?.lockdown_enabled);
+        if (!row || typeof row.lockdown_enabled !== "boolean") throw new Error("Būsena negauta");
+        enabled = row.lockdown_enabled;
         msg = row?.lockdown_message ?? null;
         cid = row?.lockdown_code ?? null;
       }
-      await new Promise((r) => setTimeout(r, auto ? 400 : 900));
+      setSettingsFailed(false);
       if (!enabled) {
         setRefreshOk(true);
-        setTimeout(() => setLockdown(false), 550);
+        setLockdown(false);
       } else {
         setLockdown(true);
         setMessage(msg);
         setCodeId(cid);
         setRefreshOk(false);
       }
-    } catch { setRefreshOk(false); }
+    } catch { setSettingsFailed(true); setRefreshOk(false); }
     finally { setRefreshing(false); setTimeout(() => setRefreshOk(null), 2500); }
   }
 
   const copyCode = async () => {
     try { await navigator.clipboard.writeText(displayCode); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
   };
-
-  const fade = (delay = 0) => ({
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.3, delay, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  });
 
   const grouped = useMemo(() => {
     const g: Record<LockdownCode["severity"], LockdownCode[]> = { info: [], warn: [], critical: [] };
@@ -203,11 +203,11 @@ export function LockdownGate() {
   }, []);
 
   return (
-    <AnimatePresence>
+    <>
       {visible ? (
-        <motion.div key="lockdown" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.25 } }} className="lockdown-ui fixed inset-0 z-[9999] overflow-y-auto bg-background text-foreground">
+        <div key="lockdown" role="alert" className="lockdown-ui fixed inset-0 z-[9999] overflow-y-auto bg-background text-foreground">
           <div className="flex min-h-dvh items-center justify-center p-4 sm:p-8">
-            <motion.section {...fade()} aria-labelledby="lockdown-title" className="lockdown-panel w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-card">
+            <section aria-labelledby="lockdown-title" className="lockdown-panel w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card">
               <header className="lockdown-header flex items-center justify-between gap-3 px-6 py-4 sm:px-8">
                 <div className="flex min-w-0 items-center gap-3">
                   <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
@@ -217,16 +217,16 @@ export function LockdownGate() {
               </header>
               <div className="px-6 py-8 text-center sm:px-16 sm:py-12">
                 <div className="mb-8 flex justify-center" aria-hidden>
-                  <div className="lockdown-symbol grid h-24 w-24 place-items-center rounded-[2rem] bg-accent text-primary">
+                  <div className="lockdown-symbol grid h-24 w-24 place-items-center rounded-lg bg-accent text-primary">
                     {severity === "info" ? <Wrench className="h-12 w-12" strokeWidth={1.5} /> : severity === "critical" ? <ShieldAlert className="h-12 w-12" strokeWidth={1.5} /> : <Unplug className="h-12 w-12" strokeWidth={1.5} />}
                   </div>
                 </div>
-                <h1 id="lockdown-title" className="text-3xl font-black leading-tight sm:text-5xl">{errInfo?.title ?? "Sistema laikinai nepasiekiama"}</h1>
+                <h1 id="lockdown-title" className="text-3xl font-black leading-tight sm:text-5xl">{settingsFailed ? "Nepavyko patikrinti saugios prieigos" : lockdown === null ? "Tikrinama saugi prieiga" : errInfo?.title ?? "Sistema laikinai nepasiekiama"}</h1>
                 <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
-                  {message?.trim() || errInfo?.description || "Įvyko sistemos sutrikimas. Šiuo metu platforma nepasiekiama. Pabandyk patikrinti būseną po kelių minučių."}
+                  {settingsFailed ? "Svetainės būsena nepasiekiama. Prieiga neatveriama, kol nepavyks jos patikrinti. Pabandyk dar kartą." : lockdown === null ? "Palauk, kol bus patikrinta svetainės būsena." : message?.trim() || errInfo?.description || "Įvyko sistemos sutrikimas. Šiuo metu platforma nepasiekiama. Pabandyk patikrinti būseną po kelių minučių."}
                 </p>
                 <dl className="my-8 grid grid-cols-1 gap-4 text-left sm:grid-cols-2">
-                  <div className="rounded-2xl border border-border bg-muted p-5">
+                  <div className="rounded-lg border border-border bg-muted p-5">
                     <dt className="text-xs font-semibold text-muted-foreground">Incidento kodas</dt>
                     <dd className="mt-2">
                       <Button variant="ghost" onClick={copyCode} title="Kopijuoti kodą" aria-label="Kopijuoti incidento kodą" className="h-auto min-h-11 justify-start gap-3 px-0 font-mono text-lg font-bold hover:bg-transparent hover:text-primary">
@@ -236,7 +236,7 @@ export function LockdownGate() {
                     <dt className="mt-3 text-xs text-muted-foreground">Numatoma trukmė</dt>
                     <dd className="mt-1 text-sm font-medium">{errInfo?.eta ?? "Nežinoma"}</dd>
                   </div>
-                  <div className="rounded-2xl border border-border bg-muted p-5">
+                  <div className="rounded-lg border border-border bg-muted p-5">
                     <dt className="text-xs font-semibold text-muted-foreground">Dabartinė būsena</dt>
                     <dd className="mt-2 flex min-h-11 items-center gap-2.5 text-lg font-bold"><span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />{severity === "info" ? "Techninė priežiūra" : severity === "critical" ? "Saugumo patikra" : "Sistemos sutrikimas"}</dd>
                     <dt className="mt-3 text-xs text-muted-foreground">Kitas patikrinimas</dt>
@@ -244,10 +244,10 @@ export function LockdownGate() {
                   </div>
                 </dl>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Button onClick={() => runCheck(false)} disabled={refreshing} className="lockdown-primary h-auto min-h-14 whitespace-normal rounded-2xl px-4 py-4 text-sm font-bold">
-                    <RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
+                  <Button onClick={() => runCheck(false)} disabled={refreshing} className="lockdown-primary h-auto min-h-14 whitespace-normal rounded-lg px-4 py-4 text-sm font-bold">
+                    <RefreshCw className={refreshing ? "h-4 w-4" : "h-4 w-4"} />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
                   </Button>
-                  <Button variant="outline" onClick={() => setShowGuide(true)} className="h-auto min-h-14 whitespace-normal rounded-2xl border-2 px-4 py-4 text-sm font-bold"><BookOpen className="h-4 w-4 shrink-0" />Ką reiškia šis kodas?</Button>
+                  <Button variant="outline" onClick={() => setShowGuide(true)} className="h-auto min-h-14 whitespace-normal rounded-lg border-2 px-4 py-4 text-sm font-bold"><BookOpen className="h-4 w-4 shrink-0" />Ką reiškia šis kodas?</Button>
                 </div>
                 <div role="status" className="mt-4 min-h-5 text-xs text-muted-foreground">
                   {refreshOk === false ? "Sistema vis dar nepasiekiama — pabandyk po minutės." : refreshOk === true ? "Sistema veikia. Grįžtame." : "Būsena tikrinama automatiškai."}
@@ -257,12 +257,12 @@ export function LockdownGate() {
                 <div className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card text-muted-foreground"><Mail className="h-5 w-5" /></div>
                 <div><p className="text-xs font-semibold text-muted-foreground">Techninė pagalba</p><a href="mailto:pagalba@socialinesvalandos.dev" className="mt-1 block break-all text-sm font-bold underline decoration-border underline-offset-4 hover:text-primary">pagalba@socialinesvalandos.dev</a></div>
               </footer>
-            </motion.section>
+            </section>
           </div>
           <Dialog open={showGuide} onOpenChange={setShowGuide}>
             <DialogPortal>
               <DialogOverlay className="lockdown-dialog-overlay z-[10001]" />
-              <DialogPrimitive.Content className="lockdown-ui fixed inset-x-4 top-[50%] z-[10002] mx-auto max-h-[85dvh] max-w-2xl translate-y-[-50%] overflow-y-auto rounded-3xl border border-border bg-card p-6 sm:p-8">
+              <DialogPrimitive.Content className="lockdown-ui fixed inset-x-4 top-[50%] z-[10002] mx-auto max-h-[85dvh] max-w-2xl translate-y-[-50%] overflow-y-auto rounded-lg border border-border bg-card p-6 sm:p-8">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div><DialogTitle>Klaidų kodų gidas</DialogTitle><DialogDescription className="mt-2">Incidento priežastis ir orientacinė trukmė.</DialogDescription></div>
                   <DialogPrimitive.Close asChild><Button variant="ghost" size="icon" aria-label="Uždaryti kodų gidą"><X className="h-4 w-4" /></Button></DialogPrimitive.Close>
@@ -284,17 +284,17 @@ export function LockdownGate() {
           <Dialog open={showCodeModal} onOpenChange={setShowCodeModal}>
             <DialogPortal>
               <DialogOverlay className="lockdown-dialog-overlay z-[10001]" />
-              <DialogPrimitive.Content className="lockdown-ui fixed inset-x-4 top-[50%] z-[10002] mx-auto max-h-[85dvh] max-w-sm translate-y-[-50%] overflow-y-auto rounded-3xl border border-border bg-card p-6">
+              <DialogPrimitive.Content className="lockdown-ui fixed inset-x-4 top-[50%] z-[10002] mx-auto max-h-[85dvh] max-w-sm translate-y-[-50%] overflow-y-auto rounded-lg border border-border bg-card p-6">
                 <div className="flex items-start justify-between gap-3"><div><DialogTitle>Administracinė prieiga</DialogTitle><DialogDescription className="mt-2">Įvesk prieigos kodą.</DialogDescription></div><DialogPrimitive.Close asChild><Button variant="ghost" size="icon" aria-label="Uždaryti prieigos langą"><X className="h-4 w-4" /></Button></DialogPrimitive.Close></div>
                 <input autoFocus aria-label="Prieigos kodas" type="password" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submitCode()} disabled={codeChecking} maxLength={10} className={`mt-5 w-full rounded-xl border bg-muted px-4 py-3 text-center font-mono text-2xl outline-none focus:ring-2 focus:ring-ring ${codeError ? "border-destructive" : "border-border"}`} placeholder="••••" />
                 {codeError && <p role="alert" className="mt-2 text-center text-xs text-destructive">{codeError}</p>}
                 {captchaRequired && <div className="mt-4"><Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} /></div>}
-                <Button onClick={submitCode} disabled={codeChecking || (captchaRequired && !captchaProof)} className="lockdown-primary mt-4 min-h-12 w-full rounded-xl">{codeChecking && <RefreshCw className="h-4 w-4 animate-spin" />}{codeChecking ? "Tikrinama…" : "Patvirtinti"}</Button>
+                <Button onClick={submitCode} disabled={codeChecking || (captchaRequired && !captchaProof)} className="lockdown-primary mt-4 min-h-12 w-full rounded-xl">{codeChecking && <RefreshCw className="h-4 w-4" />}{codeChecking ? "Tikrinama…" : "Patvirtinti"}</Button>
               </DialogPrimitive.Content>
             </DialogPortal>
           </Dialog>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+        </div>
+      ) : children}
+    </>
   );
 }

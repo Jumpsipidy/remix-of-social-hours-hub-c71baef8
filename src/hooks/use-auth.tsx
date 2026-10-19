@@ -17,6 +17,7 @@ export type Profile = {
   organization_name: string | null;
   school_id?: string | null;
   class_year?: string | null;
+  class_letter?: string | null;
   assigned_classes?: string[] | null;
 };
 

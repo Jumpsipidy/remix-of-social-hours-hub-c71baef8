@@ -1,3 +1,5 @@
+import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
+import { Users } from "lucide-react";
 import { DmInbox } from "@/components/dm-inbox";
 import { KindBadge } from "@/components/school/school-hub";
 import { WrongRole } from "@/components/wrong-role";
@@ -77,6 +79,7 @@ function StudentDashboard() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [orgMap, setOrgMap] = useState<Record<string, OrgLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
+  const [groupInvite, setGroupInvite] = useState<{ id: string; label: string } | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "completed">("all");
 
@@ -592,6 +595,7 @@ function StudentDashboard() {
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
                         <Icon className="h-3 w-3" /> {label}
                       </span>
+                      {!isDone && r.status !== "declined" && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
                       {isApproved && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
                       <button
                         onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
@@ -627,6 +631,7 @@ function StudentDashboard() {
       </div>
       </div>
 
+      <InviteFriendsDialog open={!!groupInvite} reservationId={groupInvite?.id ?? null} inviterId={user.id} reservationLabel={groupInvite?.label} onClose={() => setGroupInvite(null)} />
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <CustomReservationDialog
         open={customOpen}
