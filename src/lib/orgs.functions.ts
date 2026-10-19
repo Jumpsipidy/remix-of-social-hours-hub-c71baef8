@@ -23,7 +23,7 @@ export const listOrganizations = createServerFn({ method: "GET" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data, error } = await supabaseAdmin
         .from("profiles")
-        .select("id, full_name, organization_name, public_email")
+        .select("id, full_name, organization_name, email:public_email")
         .eq("role", "organization")
         .order("organization_name", { ascending: true });
       if (error) {
