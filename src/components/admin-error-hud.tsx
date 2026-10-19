@@ -31,6 +31,7 @@ export function AdminErrorHud() {
     let cancelled = false;
     const load = async () => {
       const since = new Date(Date.now() - WINDOW_MS).toISOString();
+      try {
       const { data } = await supabase
         .from("activity_log")
         .select("id, created_at, action")
@@ -39,6 +40,7 @@ export function AdminErrorHud() {
         .order("created_at", { ascending: false })
         .limit(200);
       if (!cancelled && data) setRows(data as Row[]);
+      } catch { /* Keep previous count; transient network errors are not SQL failures. */ }
     };
     void load();
     const poll = setInterval(load, 30_000);

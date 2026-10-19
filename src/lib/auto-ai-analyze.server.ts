@@ -1,3 +1,4 @@
+import { networkDiagnosis } from "@/lib/user-error";
 import { normalizeConfidenceForStorage, upsertAnalysis } from "@/lib/ai-analysis-store.server";
 // Server-only helper. Called from escalateAppError to run instant AI analysis
 // on new error groups and return the diagnosis to the caller so the first
@@ -11,7 +12,7 @@ const AUTO_ANALYSIS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const AUTO_GLOBAL_DAILY_CAP = 80;
 
 const AUTO_SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui (TanStack Start + React 19 + Supabase + Tailwind v4 + framer-motion).
-Kalbėk lietuviškai, konkrečiai, be išsigalvojimų. Jei nesi tikras — "hipotezė".
+Kalbėk tik lietuviškai. Tinklo klaida be HTTP atsakymo neįrodo neteisingų SQL parametrų ar datos. Kalbėk konkrečiai, be išsigalvojimų. Jei nesi tikras — "hipotezė".
 Grąžink TIKTAI validų JSON (be markdown, be code fence):
 {
   "suspected_cause": "1-2 sakiniai — kas kaltas",
@@ -46,6 +47,9 @@ export async function autoAnalyzeAndAlert(input: AutoInput): Promise<AutoAnalysi
   if (/\[UI užšalo|\[lėtas API|pagrindinė gija užblokuota|\[ryšys dingo/i.test(input.message)) {
     return null;
   }
+
+  const known = networkDiagnosis(input.message);
+  if (known) return { ...known, fingerprint: input.fingerprint, raw_response: { prompt_for_agent: known.prompt_for_agent } };
 
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return null; // nothing to do without an OpenAI key

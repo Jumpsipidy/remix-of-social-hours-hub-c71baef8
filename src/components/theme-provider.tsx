@@ -42,6 +42,8 @@ function ThemeExample({ mode }: { mode: SiteTheme }) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<SiteTheme>("dark");
+  const [accessBlocked, setAccessBlocked] = useState(false);
+  useEffect(() => { const update = (event: Event) => setAccessBlocked(Boolean((event as CustomEvent<boolean>).detail)); window.addEventListener("sv:access-blocked", update); return () => window.removeEventListener("sv:access-blocked", update); }, []);
   const [ask, setAsk] = useState(false);
   const [accent, setAccent] = useState(0);
   const animatedAccent = useRef(0);
@@ -102,7 +104,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
     <ThemeContext.Provider value={{ theme, choose, openSettings: () => setAsk(true) }}>
       {children}
-      <Dialog open={ask} onOpenChange={(open) => { if (!open) finish(); }}>
+      <Dialog open={ask && !accessBlocked} onOpenChange={(open) => { if (!open) finish(); }}>
         <DialogContent className="theme-welcome z-[10001] w-[calc(100%-2rem)] max-w-lg gap-0 rounded-[32px] border-border bg-background p-5 text-foreground sm:p-8" aria-describedby="theme-choice-description">
           <div className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground"><Heart className="size-5 text-primary" /> Socialinės Valandos</div>
           <DialogTitle className="text-2xl font-bold leading-tight sm:text-3xl">Tavo erdvė. Tavo spalvos.</DialogTitle>

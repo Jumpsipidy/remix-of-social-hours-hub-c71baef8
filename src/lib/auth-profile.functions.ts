@@ -3,9 +3,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { AppRole, Profile } from "@/hooks/use-auth";
 
 const PROFILE_COLUMNS =
-  "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes";
+  "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, class_letter, assigned_classes";
 const PROFILE_COLUMNS_SAFE =
-  "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year";
+  "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, class_letter";
 
 function isAssignedClassesSchemaError(error: unknown) {
   const message = error instanceof Error ? error.message : String((error as { message?: string } | null)?.message ?? error ?? "");
@@ -64,6 +64,7 @@ function copyProfileForCurrentUser(profile: Profile, id: string, email: string |
     hours_earned: profile.hours_earned ?? 0,
     school_id: profile.school_id ?? null,
     class_year: profile.class_year ?? null,
+    class_letter: profile.class_letter ?? null,
     assigned_classes: profile.assigned_classes ?? [],
   };
 }

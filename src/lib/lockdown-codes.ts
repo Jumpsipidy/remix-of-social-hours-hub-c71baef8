@@ -8,6 +8,9 @@ export type LockdownCode = {
 };
 
 export const LOCKDOWN_CODES: LockdownCode[] = [
+  { code: "E-4002", title: "Sistemos patikra nepavyko", short: "Tikrinamas sutrikimas", description: "Sistemos patikra aptiko sutrikimą. Prieiga laikinai apribota, kol administratorius patvirtins, kad saugu tęsti.", severity: "critical", eta: "nežinoma" },
+  { code: "E-5002", title: "Pasikartojantis sutrikimas", short: "Ribojama prieiga", description: "Aptikta pasikartojančių sistemos klaidų. Prieiga laikinai apribota.", severity: "warn", eta: "nežinoma" },
+  { code: "E-5003", title: "Kritinių klaidų incidentas", short: "Vyksta incidento patikra", description: "Prieiga sustabdyta dėl kritinių klaidų. Administratorius tikrina sistemos būseną.", severity: "critical", eta: "nežinoma" },
   {
     code: "E-1001",
     title: "Planinė techninė priežiūra",

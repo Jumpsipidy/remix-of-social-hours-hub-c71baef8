@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { upsertAnalysis } from "@/lib/ai-analysis-store.server";
+import { networkDiagnosis } from "@/lib/user-error";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -13,7 +14,7 @@ const AnalyzeInput = z.object({
 const SYSTEM_PROMPT = `Tu esi ekspertas debuggeris "Socialinės Valandos" projektui.
 Tech stack: TanStack Start (React 19 + TypeScript), Tailwind v4, Supabase (PostgreSQL + RLS), Vercel Edge, framer-motion, @zxing/browser (QR), pdf-lib, sonner.
 Failų struktūra: src/routes/*.tsx (file-based routes), src/lib/*.functions.ts (server fns), src/components/**, src/hooks/**.
-Kalbėk lietuviškai. Būk konkretus, tiesus, jokių išsigalvojimų. Jei nesi tikras — sakyk "unknown" arba "hipotezė".
+Kalbėk tik lietuviškai, taip pat klaidų paaiškinimuose. Tinklo klaida be HTTP atsakymo neįrodo neteisingų select, where ar datos parametrų. Būk konkretus, tiesus, jokių išsigalvojimų. Jei nesi tikras — sakyk "unknown" arba "hipotezė".
 
 Analizuok pateiktą klaidos grupę ir grąžink TIKTAI validų JSON (be markdown, be code fence):
 {
@@ -81,21 +82,17 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
       _user_id: context.userId,
       _role: "admin",
     });
-    if (!isAdmin) throw new Error("Not authorized");
+    if (!isAdmin) throw new Error("Reikia administratoriaus teisių");
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("OPENAI_API_KEY not configured — pridėk savo OpenAI raktą per Secrets.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    if (!data.force) {
-      const { data: cached } = await supabaseAdmin
-        .from("ai_error_analyses")
-        .select("*")
-        .eq("fingerprint", data.fingerprint)
-        .maybeSingle();
-      if (cached) return { cached: true, analysis: cached };
-    }
+    const { data: cached } = await supabaseAdmin.from("ai_error_analyses").select("*").eq("fingerprint", data.fingerprint).maybeSingle();
+    const knownNetwork = networkDiagnosis(String(cached?.error_message ?? ""));
+    if (cached && knownNetwork) return { cached: true, analysis: { ...cached, ...knownNetwork, raw_response: { prompt_for_agent: knownNetwork.prompt_for_agent } } };
+    if (cached && !data.force) return { cached: true, analysis: cached };
 
     // Rate/cost limits — only enforced when we actually call the AI (cache miss or force)
     const usage = await checkLimits(supabaseAdmin as unknown as SupabaseClient, context.userId);
@@ -125,12 +122,16 @@ export const analyzeErrorGroup = createServerFn({ method: "POST" })
     // Pull related samples across the fingerprint for richer context
     const timestamps = matching.map((m) => new Date(m.created_at).getTime()).sort((a, b) => a - b);
     const firstSeen = timestamps[0] ? new Date(timestamps[0]).toISOString() : "?";
-    const lastSeen = timestamps.at(-1) ? new Date(timestamps.at(-1)!).toISOString() : "?";
+    const lastSeen = timestamps.at(-1) ? new Date(timestamps[timestamps.length - 1] ?? 0).toISOString() : "?";
     const uniqueMessages = Array.from(
       new Set(matching.map((m) => String((m.meta as { message?: string })?.message ?? "")).filter(Boolean)),
     ).slice(0, 3);
 
-    const userPrompt = `Klaidos grupė (fingerprint: ${data.fingerprint})
+    const known = networkDiagnosis(String(meta.message ?? ""));
+    if (known) return { cached: false, analysis: { ...known, fingerprint: data.fingerprint, error_message: String(meta.message ?? ""), raw_response: { prompt_for_agent: known.prompt_for_agent } } };
+
+    const userPrompt = `Atsakyk tik lietuviškai. Tinklo klaida be HTTP atsakymo neįrodo SQL ar datos klaidos.
+Klaidos grupė (fingerprint: ${data.fingerprint})
 Pasitaikymai: ${matching.length} · paveikti vartotojai: ${affectedUsers}
 Pirmas įvykis: ${firstSeen} · paskutinis: ${lastSeen}
 Routes: ${routes.join(", ") || "(unknown)"}

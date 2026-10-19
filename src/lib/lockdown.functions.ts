@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { lockdownSettingsSchema } from "@/lib/lockdown-rules";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const adminGetLockdownSettings = createServerFn({ method: "GET" })
@@ -54,7 +55,7 @@ export const adminGetLockdownSettings = createServerFn({ method: "GET" })
 
 export const adminUpdateLockdownSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((input: { lockdown_enabled?: boolean; lockdown_message?: string | null; lockdown_code?: string | null }) => input)
+  .inputValidator((input) => lockdownSettingsSchema.parse(input))
   .handler(async ({ data, context }) => {
     const settingsColumns = "id, lockdown_enabled, lockdown_message, lockdown_code, updated_at, updated_by";
     const setupMessage =

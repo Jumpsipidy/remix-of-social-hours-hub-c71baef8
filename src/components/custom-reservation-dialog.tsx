@@ -1,3 +1,6 @@
+import { ReservationFriendsPicker } from "@/components/reservation-friends-picker";
+import { inviteFriendsToReservation } from "@/lib/friends";
+import { userError } from "@/lib/user-error";
 import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,6 +70,9 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
   const [address, setAddress] = useState<string | null>(null);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
+  const [withFriends, setWithFriends] = useState(false);
+  const [friendIds, setFriendIds] = useState<string[]>([]);
+  useEffect(() => { if (open) { setWithFriends(false); setFriendIds([]); } }, [open]);
   const [submitting, setSubmitting] = useState(false);
   const [open2, setOpen2] = useState(false);
 
@@ -123,10 +129,10 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
 
   const selected = orgs.find((o) => o.id === orgId) ?? null;
   const hours = useMemo(() => calcHours(start, end), [start, end]);
-  const valid = !!orgId && !!date && hours > 0;
+  const valid = !!orgId && !!date && hours > 0 && (!withFriends || friendIds.length > 0);
 
   const submit = async () => {
-    if (!valid || !user) return;
+    if (!valid || !user || !orgId || submitting) return;
     if (profile && profile.role !== "student") {
       toast.error("Tik moksleiviai gali siųsti rezervacijas");
       return;
@@ -149,12 +155,16 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
     } as any).select("id").single();
     setSubmitting(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(userError(error, "Nepavyko išsiųsti rezervacijos."));
       return;
     }
 
-    if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: orgId!, message: note.trim() || `Sveiki! Siūlau savanorystę ${date} ${start}–${end} (${city}).` });
+    if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: orgId, message: note.trim() || `Sveiki! Siūlau savanorystę ${date} ${start}–${end} (${city}).` });
     toast.success("Pasiūlymas išsiųstas organizacijai. Pokalbis atidarytas skiltyje „Pokalbiai“.");
+    if (inserted?.id && withFriends && friendIds.length) {
+      try { await inviteFriendsToReservation(inserted.id, user.id, friendIds); toast.success("Draugams išsiųsti kvietimai."); }
+      catch (error) { toast.error(userError(error, "Rezervacija sukurta, bet draugų pakviesti nepavyko. Pakviesk juos prie savo rezervacijos.")); }
+    }
     onCreated?.();
     onClose();
   };
@@ -360,6 +370,8 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 </p>
               </div>
 
+              {user && <ReservationFriendsPicker userId={user.id} enabled={withFriends} onEnabled={setWithFriends} selected={friendIds} onSelected={setFriendIds} />}
+
               {/* City */}
               <div className="mt-5">
                 <label className="mb-2 block text-sm font-semibold">Miestas</label>
@@ -431,7 +443,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
                 ) : (
                   <Check className="h-4 w-4" />
                 )}
-                {submitting ? "Siunčiama..." : "Siųsti pasiūlymą"}
+                {submitting ? "Siunčiama…" : withFriends ? `Rezervuoti su draugais (${friendIds.length})` : "Siųsti pasiūlymą"}
               </motion.button>
             </div>
           </motion.div>

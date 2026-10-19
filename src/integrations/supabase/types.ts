@@ -1184,6 +1184,47 @@ export type Database = {
         }
         Relationships: []
       }
+      school_class_codes: {
+        Row: {
+          class_letter: string
+          class_year: string
+          created_at: string
+          id: string
+          is_active: boolean
+          school_id: string
+          signup_code: string
+          updated_at: string
+        }
+        Insert: {
+          class_letter: string
+          class_year: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          school_id: string
+          signup_code: string
+          updated_at?: string
+        }
+        Update: {
+          class_letter?: string
+          class_year?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          school_id?: string
+          signup_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_class_codes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           city: string | null

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ReservationDialog, type ReservationSubmit, type ReserveTarget } from "@/components/reservation-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
+import { userError } from "@/lib/user-error";
 import { inviteFriendsToReservation } from "@/lib/friends";
 import { TaskDetailDialog } from "@/components/task-detail-dialog";
 import { CITIES, cityOf } from "@/lib/cities";
@@ -224,7 +225,7 @@ function TasksPage() {
       latitude: active.task.latitude ?? null,
       longitude: active.task.longitude ?? null,
     } as any).select("id").single();
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(userError(error, "Nepavyko išsiųsti rezervacijos.")); throw new Error("Rezervacija neišsiųsta"); }
     toast.success(`Rezervacija išsiųsta: ${active.target.name}`, {
       description: `${details.date} · ${details.hours} val. · laukia organizacijos patvirtinimo`,
       duration: 8000,
@@ -240,6 +241,7 @@ function TasksPage() {
         toast.error(e instanceof Error ? e.message : "Nepavyko pakviesti draugų");
       }
     }
+    if (inserted?.id && !details.friendIds.length) setInvite({ id: inserted.id, label: active.task.title });
     setActive(null);
   };
 

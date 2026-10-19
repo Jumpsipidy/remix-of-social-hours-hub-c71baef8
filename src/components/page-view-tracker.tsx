@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { deviceMeta } from "@/lib/device-meta";
+import { hasConsent, CONSENT_CHANGED_EVENT } from "@/components/cookie-consent";
+import { useState } from "react";
 import { insertActivityLogRow } from "@/lib/activity-log";
 
 /**
@@ -17,10 +19,12 @@ const THROTTLE_MS = 8_000;
 
 export function PageViewTracker() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [analyticsAllowed, setAnalyticsAllowed] = useState(false);
+  useEffect(() => { const sync = () => setAnalyticsAllowed(hasConsent("analytics")); sync(); window.addEventListener(CONSENT_CHANGED_EVENT, sync); return () => window.removeEventListener(CONSENT_CHANGED_EVENT, sync); }, []);
   const lastRef = useRef<{ path: string; at: number } | null>(null);
 
   useEffect(() => {
-    if (!pathname) return;
+    if (!pathname || !analyticsAllowed) return;
     // Skip admin console — analytics show it as an aggregated "super admin" bucket.
     if (pathname.startsWith("/admin")) return;
 
@@ -33,6 +37,7 @@ export function PageViewTracker() {
     (async () => {
       try {
         const { data } = await supabase.auth.getUser();
+        if (!hasConsent("analytics")) return;
         const meta = deviceMeta({ path: pathname });
         await insertActivityLogRow({
           user_id: data.user?.id ?? null,
@@ -44,7 +49,7 @@ export function PageViewTracker() {
         // ignore — analytics is best-effort
       }
     })();
-  }, [pathname]);
+  }, [pathname, analyticsAllowed]);
 
   return null;
 }

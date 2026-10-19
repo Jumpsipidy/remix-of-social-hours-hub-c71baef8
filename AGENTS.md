@@ -25,9 +25,9 @@
 - ThemeProvider owns device-level theme and continuous accent state inside the security gateway, animating a global numeric CSS tuning token; one owner synchronizes previews, settings and controls without exposing blocked content.
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
-- Lockdown presentation uses isolated semantic tokens and shared accessible dialogs; visitor-state styling cannot alter polling, bypass verification or database lockdown enforcement.
+- LockdownGate wraps content, fails closed on unknown settings and never auto-unlocks; static isolated tokens follow theme without changing enforcement.
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
-- Class letters live in profiles.class_letter (students) and profiles.assigned_letter (teachers, Super Admin only via tg_profiles_guard_privileged); class_year stays the canonical grade so yearly promotion keeps working.
+- Class letters use profiles.class_letter/assigned_letter; class_year stays canonical for promotion. Protected school_class_codes derive signup grade/letter server-side; never trust client selection.
 - Theme is applied by an inline script in the root <head> before paint; ThemeProvider must read the on-screen class when saving so a stale state can't overwrite the choice.
 - Bug reporting uses a shared portaled, viewport-aware dialog with opt-in bounded JPEG capture/upload; success requires a saved report rather than an alert-only response so the administrator's board remains the source of truth.
 
@@ -35,6 +35,6 @@
 - The public homepage presents the primary action immediately and keeps its process animation user-triggered; anonymous visitors do not receive release or guide overlays.
 - Group reservation participant rows change only through status (invitee accepts/declines, owner/org removes); the tg_participants_guard trigger blocks client writes to check-in and hours fields, so friends cannot self-check-in.
 - Vite dev allows the real node_modules path in server.fs.allow because the sandbox symlinks node_modules outside the project root.
-- Destructive Super Admin operations run only through runLicensedAdminAction after an auth.socialinesvalandos.dev ticket with payload.require_license; the licence key is verified only on that site, so this app never stores it.
+- Destructive admin actions and temporary signup options require external licence-confirmed tickets. Main site never accepts the key; signup grants stay in page memory and every privileged call rechecks them.
 
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.

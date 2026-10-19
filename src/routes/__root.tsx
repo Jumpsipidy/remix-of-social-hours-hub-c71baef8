@@ -258,6 +258,7 @@ function RootComponent() {
           <ThemeProvider>
           {/* Be „mode=wait" — kitaip senas puslapis išnyksta anksčiau nei
               atsiranda naujas ir matosi juodas blyksnis. */}
+          <LockdownGate>
           <V25Banner />
           <div className="flex-1 flex flex-col">
             <Outlet />
@@ -270,7 +271,7 @@ function RootComponent() {
           <Suspense fallback={null}><BugReportWidget /></Suspense>
           <CookieConsent />
           {import.meta.env.DEV && <Suspense fallback={null}><MockTesterPanel /></Suspense>}
-          <LockdownGate />
+
           <ErrorMonitor />
           <SkeletonReveal />
           <AdminAlertMonitor />
@@ -280,6 +281,7 @@ function RootComponent() {
           <PageViewTracker />
           <WebVitalsReporter />
           <AnalyticsLoader />
+          </LockdownGate>
           </ThemeProvider>
         </SecurityGatewayProvider>
       </AuthProvider>

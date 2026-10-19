@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,6 +62,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [withFriends, setWithFriends] = useState(false);
+  const [friendsFailed, setFriendsFailed] = useState(false);
   const [friends, setFriends] = useState<FriendProfile[] | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
 
@@ -71,7 +73,8 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
     if (target.presetEnd) setEnd(target.presetEnd);
     setWithFriends(false);
     setPicked([]);
-  }, [target?.id]);
+    setFriends(null); setFriendsFailed(false);
+  }, [target]);
 
   // Load accepted friends lazily, the first time the switch is turned on.
   useEffect(() => {
@@ -84,7 +87,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
         const map = await fetchFriendProfiles(ids);
         if (alive) setFriends(ids.map((id) => map[id]).filter(Boolean));
       } catch {
-        if (alive) setFriends([]);
+        if (alive) { setFriendsFailed(true); setFriends([]); }
       }
     })();
     return () => { alive = false; };
@@ -99,7 +102,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
     setSubmitting(true);
     try {
       await onConfirm({ date, start_time: start, end_time: end, hours, note, friendIds: withFriends ? picked : [] });
-    } finally {
+    } catch { /* Caller displays the failure; keep the dialog open for retry. */ } finally {
       setSubmitting(false);
     }
   };
@@ -197,52 +200,15 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
               </div>
 
               {/* Live duration calculator */}
-              <motion.div
-                layout
-                className={`mt-5 overflow-hidden rounded-2xl border p-4 transition ${
-                  hours > 0
-                    ? "border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"
-                    : "border-destructive/30 bg-destructive/5"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`grid h-11 w-11 place-items-center rounded-xl ${hours > 0 ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-destructive/20 text-destructive"}`}>
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tu uždirbsi</p>
-                    <AnimatePresence mode="wait">
-                      <motion.p
-                        key={`${start}-${end}`}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.2 }}
-                        className="font-display text-lg font-bold leading-tight"
-                      >
-                        {hours > 0 ? (
-                          <>
-                            {start} → {end}{" "}
-                            <span className="text-gradient">= {hours} {hours === 1 ? "valandą" : hours < 10 && hours % 1 === 0 ? "valandas" : "val."}</span>
-                          </>
-                        ) : (
-                          "Pabaigos laikas turi būti vėlesnis nei pradžios"
-                        )}
-                      </motion.p>
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </motion.div>
-
               {/* Go with friends */}
               {inviterId && (
                 <div className={`mt-5 overflow-hidden rounded-2xl border transition-colors ${withFriends ? "border-primary/40 bg-primary/5" : "border-border bg-background"}`}>
-                  <button
+                  <Button variant="ghost"
                     type="button"
                     role="switch"
                     aria-checked={withFriends}
                     onClick={() => setWithFriends((v) => !v)}
-                    className="flex w-full items-center gap-3 p-4 text-left"
+                    className="h-auto min-h-20 w-full items-center gap-3 whitespace-normal p-4 text-left"
                   >
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-colors ${withFriends ? "bg-primary text-primary-foreground" : "bg-accent text-primary"}`}>
                       <Users className="h-4 w-4" />
@@ -258,7 +224,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                         transition={{ type: "spring", stiffness: 500, damping: 32 }}
                       />
                     </span>
-                  </button>
+                  </Button>
                   <AnimatePresence initial={false}>
                     {withFriends && (
                       <motion.div
@@ -270,6 +236,8 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                         <div className="border-t border-border/70 p-4 pt-3">
                           {friends === null ? (
                             <p className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Kraunami draugai…</p>
+                          ) : friendsFailed ? (
+                            <Button variant="outline" type="button" onClick={() => { setFriendsFailed(false); setFriends(null); }}>Draugų įkelti nepavyko. Bandyti dar kartą</Button>
                           ) : friends.length === 0 ? (
                             <p className="flex items-center gap-2 text-xs text-muted-foreground"><UserPlus className="h-4 w-4" /> Dar neturi draugų — susirask klasiokų skiltyje „Draugai“.</p>
                           ) : (
@@ -306,6 +274,43 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                   </AnimatePresence>
                 </div>
               )}
+
+              <motion.div
+                layout
+                className={`mt-5 overflow-hidden rounded-2xl border p-4 transition ${
+                  hours > 0
+                    ? "border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"
+                    : "border-destructive/30 bg-destructive/5"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-11 w-11 place-items-center rounded-xl ${hours > 0 ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-destructive/20 text-destructive"}`}>
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tu uždirbsi</p>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={`${start}-${end}`}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="font-display text-lg font-bold leading-tight"
+                      >
+                        {hours > 0 ? (
+                          <>
+                            {start} → {end}{" "}
+                            <span className="text-gradient">= {hours} {hours === 1 ? "valandą" : hours < 10 && hours % 1 === 0 ? "valandas" : "val."}</span>
+                          </>
+                        ) : (
+                          "Pabaigos laikas turi būti vėlesnis nei pradžios"
+                        )}
+                      </motion.p>
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </motion.div>
 
               {/* Note */}
               <div className="mt-5">
