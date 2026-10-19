@@ -1,13 +1,17 @@
 # Roadmap
 
 ## Registration and lockdown repair (2026-10-19)
-- [ ] Repair email confirmation and explain pending accounts; verify hosted settings where possible
-- [ ] Class-bound signup codes, secure administrative management, and school-admin scope checks
-- [ ] Temporary licence-confirmed administrative registration options without main-site key entry
-- [ ] Validate cookie consent and correct tracking behavior
-- [ ] Static theme-aware lockdown screen, reliable selection and failure handling
-- [ ] Useful Lithuanian network error explanations and reachable group reservation action
-- [ ] Run relevant tests and public browser flows; disclose external authentication blockers
+- [x] Repair email link/OTP handling and pending-account copy; published page returns 200
+- [x] Add class-bound codes and Super Admin management; retain existing DB grade/letter scope
+- [x] Implement external licence-confirmed, page-memory-only administrative registration options
+- [x] Validate consent, gate page analytics and revoke Google Analytics collection
+- [x] Static theme-aware lockdown, validated code picker and fail-closed content gate
+- [x] Lithuanian network diagnosis and group actions in task/custom/student reservations
+- [x] 201 relevant tests pass; public and isolated OTP/consent flows verified without runtime errors
+- [ ] Real email delivery/confirmation, student creation and teacher roster — external unmanaged Supabase has no authenticated test session; hosted confirmation settings unverified
+- [ ] Activate class signup — Super Admin must create real class codes (none exist); one existing teacher has no A/B restriction and needs its intended assignment
+- [ ] External auth site signup_options licence round trip — requires counterpart support and real-domain authenticated testing
+- [ ] First-device theme chooser still appears over active lockdown; defer final coordination fix
 
 ## SEO and first-visit clarity (2026-10-15)
 - [x] Create and review a standalone Lithuanian motion-graphics video with music; reservation, approval and certificate-code overlays are illustrative, not authenticated captures
