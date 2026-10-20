@@ -170,7 +170,7 @@ function BrandLine({ as = "div", className, children }: { as?: "div" | "h1" | "l
   const Comp = as === "h1" ? motion.h1 : as === "li" ? motion.li : motion.div;
   return (
     <Comp className={className} variants={{
-      hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+      hidden: { opacity: 0, y: 18 },
       show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } },
       exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
     }}>
