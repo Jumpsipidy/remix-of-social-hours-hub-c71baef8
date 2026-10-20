@@ -22,7 +22,7 @@ function routeForNotif(
   // Reservations → role dashboard
   if (n.kind === "reservation") {
     if (role === "organization") return { to: "/organization", hash };
-    if (role === "school_admin") return { to: "/school", hash };
+    if (role === "school_admin") return { to: "/mokytojas/rezervacijos", hash };
     if (role === "admin") return { to: "/admin/reservations", hash };
     return { to: "/student", hash };
   }

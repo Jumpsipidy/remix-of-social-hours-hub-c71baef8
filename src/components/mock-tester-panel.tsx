@@ -16,7 +16,7 @@ import { previewHoursConfirmedEmail, sendTestHoursConfirmedEmail } from "@/lib/e
 import { useAuth, type Profile } from "@/hooks/use-auth";
 
 const DASH_BY_ROLE: Record<string, string> = {
-  student: "/student", organization: "/organization", school_admin: "/school", admin: "/admin",
+  student: "/student", organization: "/organization", school_admin: "/mokytojas", admin: "/admin",
 };
 const ROLE_LABEL: Record<string, string> = {
   student: "Mokinys", organization: "Organizacija", school_admin: "Mokyklos admin.", admin: "Super Admin",

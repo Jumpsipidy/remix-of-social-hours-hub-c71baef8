@@ -33,7 +33,7 @@ const ROLE_COPY: Record<Props["role"], { eyebrow: string; heading: (n: string) =
     body: () =>
       `Tavo mokyklos administratoriaus paskyra sukurta. Gali stebėti savo klasės mokinių pažangą, patvirtinti veiklas ir generuoti ataskaitas.`,
     cta: "Atidaryti panelę",
-    href: `${APP_URL}/school`,
+    href: `${APP_URL}/mokytojas`,
   },
   admin: {
     eyebrow: "Super admin",
