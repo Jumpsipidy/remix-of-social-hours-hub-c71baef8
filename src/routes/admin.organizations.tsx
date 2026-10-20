@@ -99,6 +99,59 @@ function OrganizationsPage() {
         <SaaSKpi icon={Flame} label="Suteikta valandų" value={totals.hours} accent="warn" />
       </div>
 
+      <SaaSPanel>
+        <div className="flex items-center gap-2">
+          <Inbox className="h-4 w-4 text-primary" />
+          <h2 className="font-bold">Prieigos prašymai</h2>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+            {requests.filter((r) => r.status === "pending").length} laukia
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Organizacijos, pateikusios prašymą registracijos puslapyje. Priėmus, paskyrą sukurk skiltyje „Paskyros“ ir išsiųsk kvietimą el. paštu.
+        </p>
+        <ul className="mt-3 space-y-2">
+          {requests.map((r) => (
+            <li key={r.id} className="rounded-xl border border-border/60 bg-background/60 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{r.organization_name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {r.contact_name} · {r.contact_email}{r.legal_code ? ` · kodas ${r.legal_code}` : ""} · {new Date(r.created_at).toLocaleDateString("lt-LT")}
+                  </p>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                  r.status === "approved" ? "bg-emerald-500/15 text-emerald-500"
+                  : r.status === "rejected" ? "bg-destructive/10 text-destructive"
+                  : "bg-amber-500/15 text-amber-500"
+                }`}>
+                  {r.status === "approved" ? "Priimtas" : r.status === "rejected" ? "Atmestas" : "Laukia"}
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.description}</p>
+              {r.status === "pending" && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button size="sm" className="gap-1.5" disabled={reqBusy === r.id} onClick={() => void decideRequest(r, "approved")}>
+                    <MailCheck className="h-3.5 w-3.5" /> Priimti
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" disabled={reqBusy === r.id} onClick={() => void decideRequest(r, "rejected")}>
+                    <XCircle className="h-3.5 w-3.5" /> Atmesti
+                  </Button>
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link to="/admin/accounts">Kurti paskyrą →</Link>
+                  </Button>
+                </div>
+              )}
+            </li>
+          ))}
+          {requests.length === 0 && (
+            <li className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              Prieigos prašymų nėra.
+            </li>
+          )}
+        </ul>
+      </SaaSPanel>
+
       <SaaSPanel padded={false}>
         <div className="flex flex-wrap items-center gap-2 border-b border-border/60 p-3">
           <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-background/60 px-3">
