@@ -75,6 +75,7 @@ import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as AuthenticatedMokytojasIndexRouteImport } from './routes/_authenticated/mokytojas/index'
 import { Route as AuthenticatedMokytojasMokiniaiRouteImport } from './routes/_authenticated/mokytojas/mokiniai'
+import { Route as AuthenticatedMokytojasPokalbiaiRouteImport } from './routes/_authenticated/mokytojas/pokalbiai'
 import { Route as AuthenticatedMokytojasRezervacijosRouteImport } from './routes/_authenticated/mokytojas/rezervacijos'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
@@ -415,6 +416,12 @@ const AuthenticatedMokytojasMokiniaiRoute =
     path: '/mokiniai',
     getParentRoute: () => AuthenticatedMokytojasRouteRoute,
   } as any)
+const AuthenticatedMokytojasPokalbiaiRoute =
+  AuthenticatedMokytojasPokalbiaiRouteImport.update({
+    id: '/pokalbiai',
+    path: '/pokalbiai',
+    getParentRoute: () => AuthenticatedMokytojasRouteRoute,
+  } as any)
 const AuthenticatedMokytojasRezervacijosRoute =
   AuthenticatedMokytojasRezervacijosRouteImport.update({
     id: '/rezervacijos',
@@ -508,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/mokytojas/pokalbiai': typeof AuthenticatedMokytojasPokalbiaiRoute
   '/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
@@ -577,6 +585,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
   '/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/mokytojas/pokalbiai': typeof AuthenticatedMokytojasPokalbiaiRoute
   '/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
@@ -651,6 +660,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
   '/_authenticated/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/_authenticated/mokytojas/pokalbiai': typeof AuthenticatedMokytojasPokalbiaiRoute
   '/_authenticated/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
@@ -724,6 +734,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/mokytojas/mokiniai'
+    | '/mokytojas/pokalbiai'
     | '/mokytojas/rezervacijos'
     | '/organization/scan'
     | '/api/public/error-beacon'
@@ -793,6 +804,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/verify'
     | '/mokytojas/mokiniai'
+    | '/mokytojas/pokalbiai'
     | '/mokytojas/rezervacijos'
     | '/organization/scan'
     | '/api/public/error-beacon'
@@ -866,6 +878,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/verify/'
     | '/_authenticated/mokytojas/mokiniai'
+    | '/_authenticated/mokytojas/pokalbiai'
     | '/_authenticated/mokytojas/rezervacijos'
     | '/_authenticated/organization/scan'
     | '/api/public/error-beacon'
@@ -1375,6 +1388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMokytojasMokiniaiRouteImport
       parentRoute: typeof AuthenticatedMokytojasRouteRoute
     }
+    '/_authenticated/mokytojas/pokalbiai': {
+      id: '/_authenticated/mokytojas/pokalbiai'
+      path: '/pokalbiai'
+      fullPath: '/mokytojas/pokalbiai'
+      preLoaderRoute: typeof AuthenticatedMokytojasPokalbiaiRouteImport
+      parentRoute: typeof AuthenticatedMokytojasRouteRoute
+    }
     '/_authenticated/mokytojas/rezervacijos': {
       id: '/_authenticated/mokytojas/rezervacijos'
       path: '/rezervacijos'
@@ -1415,6 +1435,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedMokytojasRouteRouteChildren {
   AuthenticatedMokytojasMokiniaiRoute: typeof AuthenticatedMokytojasMokiniaiRoute
+  AuthenticatedMokytojasPokalbiaiRoute: typeof AuthenticatedMokytojasPokalbiaiRoute
   AuthenticatedMokytojasRezervacijosRoute: typeof AuthenticatedMokytojasRezervacijosRoute
   AuthenticatedMokytojasIndexRoute: typeof AuthenticatedMokytojasIndexRoute
 }
@@ -1422,6 +1443,7 @@ interface AuthenticatedMokytojasRouteRouteChildren {
 const AuthenticatedMokytojasRouteRouteChildren: AuthenticatedMokytojasRouteRouteChildren =
   {
     AuthenticatedMokytojasMokiniaiRoute: AuthenticatedMokytojasMokiniaiRoute,
+    AuthenticatedMokytojasPokalbiaiRoute: AuthenticatedMokytojasPokalbiaiRoute,
     AuthenticatedMokytojasRezervacijosRoute:
       AuthenticatedMokytojasRezervacijosRoute,
     AuthenticatedMokytojasIndexRoute: AuthenticatedMokytojasIndexRoute,
