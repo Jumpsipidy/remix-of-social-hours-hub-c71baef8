@@ -31,12 +31,14 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
 
       if (reservation.direct) {
         // school admin ↔ organization direct chat (reservation_id NULL)
+        const orgId = reservation.organization_id;
+        if (!orgId) { onClose(); return; }
         const { data: existing } = await supabase
           .from("chat_rooms")
           .select("id, student_id, organization_id, school_admin_id")
           .is("reservation_id", null)
           .eq("school_admin_id", user.id)
-          .eq("organization_id", reservation.organization_id)
+          .eq("organization_id", orgId)
           .maybeSingle();
         r = existing ?? null;
         if (!r) {
@@ -45,7 +47,7 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
             .insert({
               reservation_id: null,
               student_id: user.id, // constraint requires NOT NULL; reuse admin's own id
-              organization_id: reservation.organization_id,
+              organization_id: orgId,
               school_admin_id: user.id,
             })
             .select("id, student_id, organization_id, school_admin_id")
