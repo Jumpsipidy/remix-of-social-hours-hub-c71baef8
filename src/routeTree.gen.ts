@@ -24,6 +24,7 @@ import { Route as SaugumasRouteImport } from './routes/saugumas'
 import { Route as SavanorysteSeduvojeRouteImport } from './routes/savanoryste-seduvoje'
 import { Route as SchoolRouteImport } from './routes/school'
 import { Route as SchoolsRouteImport } from './routes/schools'
+import { Route as SecurityguardRouteImport } from './routes/securityguard'
 import { Route as SocialinesValandosMokyklomsRouteImport } from './routes/socialines-valandos-mokykloms'
 import { Route as SocialiniuValanduLapasRouteImport } from './routes/socialiniu-valandu-lapas'
 import { Route as StatusRouteImport } from './routes/status'
@@ -151,6 +152,11 @@ const SchoolRoute = SchoolRouteImport.update({
 const SchoolsRoute = SchoolsRouteImport.update({
   id: '/schools',
   path: '/schools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityguardRoute = SecurityguardRouteImport.update({
+  id: '/securityguard',
+  path: '/securityguard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SocialinesValandosMokyklomsRoute =
@@ -452,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/securityguard': typeof SecurityguardRoute
   '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -521,6 +528,7 @@ export interface FileRoutesByTo {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/securityguard': typeof SecurityguardRoute
   '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -593,6 +601,7 @@ export interface FileRoutesById {
   '/savanoryste-seduvoje': typeof SavanorysteSeduvojeRoute
   '/school': typeof SchoolRoute
   '/schools': typeof SchoolsRoute
+  '/securityguard': typeof SecurityguardRoute
   '/socialines-valandos-mokykloms': typeof SocialinesValandosMokyklomsRoute
   '/socialiniu-valandu-lapas': typeof SocialiniuValanduLapasRoute
   '/status': typeof StatusRoute
@@ -665,6 +674,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/securityguard'
     | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -734,6 +744,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/securityguard'
     | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -805,6 +816,7 @@ export interface FileRouteTypes {
     | '/savanoryste-seduvoje'
     | '/school'
     | '/schools'
+    | '/securityguard'
     | '/socialines-valandos-mokykloms'
     | '/socialiniu-valandu-lapas'
     | '/status'
@@ -878,6 +890,7 @@ export interface RootRouteChildren {
   SavanorysteSeduvojeRoute: typeof SavanorysteSeduvojeRoute
   SchoolRoute: typeof SchoolRoute
   SchoolsRoute: typeof SchoolsRoute
+  SecurityguardRoute: typeof SecurityguardRoute
   SocialinesValandosMokyklomsRoute: typeof SocialinesValandosMokyklomsRoute
   SocialiniuValanduLapasRoute: typeof SocialiniuValanduLapasRoute
   StatusRoute: typeof StatusRoute
@@ -1003,6 +1016,13 @@ declare module '@tanstack/react-router' {
       path: '/schools'
       fullPath: '/schools'
       preLoaderRoute: typeof SchoolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/securityguard': {
+      id: '/securityguard'
+      path: '/securityguard'
+      fullPath: '/securityguard'
+      preLoaderRoute: typeof SecurityguardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/socialines-valandos-mokykloms': {
@@ -1532,6 +1552,7 @@ const rootRouteChildren: RootRouteChildren = {
   SavanorysteSeduvojeRoute: SavanorysteSeduvojeRoute,
   SchoolRoute: SchoolRoute,
   SchoolsRoute: SchoolsRoute,
+  SecurityguardRoute: SecurityguardRoute,
   SocialinesValandosMokyklomsRoute: SocialinesValandosMokyklomsRoute,
   SocialiniuValanduLapasRoute: SocialiniuValanduLapasRoute,
   StatusRoute: StatusRoute,
