@@ -39,3 +39,5 @@
 
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.
 - Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).
+- Signup confirmation emails are generated with admin generateLink and sent through Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
+- Student class, letter and required hours derive only from the school_class_codes row; assigning classes to a school admin auto-creates missing MKC codes.
