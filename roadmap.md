@@ -1,15 +1,10 @@
-# Roadmap
+# Užduotys (2026-10-20)
 
-- [x] „Tikriname" flash — naujas šviesus įkrovos ekranas su animacija (nebe lockdown stilius), patikrinta naršyklėje
-- [x] „Rizikos centras" pašalintas iš mokyklos puslapio
-- [x] Mokinio detalė: paspaudus ant mokinio — visas vaizdas (valandos, streak, draugai, QR, istorija) naujame /mokytojas/mokiniai
-- [x] Naujas mokytojo rezervacijų puslapis /mokytojas/rezervacijos: kūrimas, redagavimas, trynimas (DB RPC school_update/delete_reservation), statistika, kvietimai pagal klasę+raidę
-- [x] Kvietimas mokiniui į /chat kaip auklėtojo DM su nuoroda (teacherSendInvites)
-- [x] Mokytojo zona: atskiras šviesus išdėstymas su šonine juosta, „Labas, {vardas}", atsijungimas per profilio kortelę (/mokytojas)
-- [x] Atsakyta: grupinė rezervacija su draugais yra rezervacijos lange „Eiti su draugais" + org skydelyje „Grupė" žyma
-- [ ] Gyvas patikrinimas prisijungus auklėtoju — negalima šioje peržiūroje (išorinė Supabase), reikia patikrinti tikrame domene
-- [x] /mokytojas greitis: bendra Query talpykla + išankstinis įkėlimas + lygiagrečios DB užklausos
-- [x] Paskyrai „testas testas" priskirta 7A — patikrinta DB: mato tik 7A mokinį
-- [x] Puslapio viršus suspaustas (mažesnė juosta, antraštės, paraštės)
-- [x] Naujas /mokytojas/pokalbiai su šablonais, „Rašyti mokiniui", kvietimu į rezervaciją
-- [x] Registracijoje mažas beveik nematomas taškas → licencijos patikra auth svetainėje → papildomos parinktys iki perkrovimo
+- [ ] 1. Mokytojas→mokinys pokalbis: „Toks pokalbis negalimas" (open_chat_with neturi school_admin→student šakos; chat_rooms.organization_id NOT NULL)
+- [ ] 2. Priminimo šablonai / greitieji veiksmai mokytojo chate
+- [ ] 3. Atsakyti: ar žinutės tikrai trinamos po 12 d. (taip — pg_cron purge)
+- [ ] 4. Klaidų pranešimai LT + be „šokančių" angliškų toast'ų (userError + tiesioginiai error.message)
+- [ ] 5. Super Admin klasių registracijos kodų puslapis (MKC-#####-X, school_class_codes, kodas pririštas prie klasės)
+- [ ] 6. Paskyrų trynimas: pasirinkimas be licencijos patikros
+- [ ] 7. Slaptas registracijos mygtukas matomesnis, neužstoja „Pranešti apie klaidą"
+- [ ] 8. /versijos → V2.6.0 įrašas
