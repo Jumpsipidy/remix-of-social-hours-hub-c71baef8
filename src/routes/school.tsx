@@ -533,7 +533,7 @@ function SchoolDashboard() {
                 <button
                   onClick={() => setTab(item.id)}
                   aria-current={tab === item.id ? "page" : undefined}
-                  className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all lg:w-full ${tab === item.id ? "bg-primary/10 text-primary" : item.id === "risk" ? "text-destructive hover:bg-destructive/10" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+                  className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all lg:w-full ${tab === item.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
                   <span className="flex-1 text-left">{item.label}</span>
