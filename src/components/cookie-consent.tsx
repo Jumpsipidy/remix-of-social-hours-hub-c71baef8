@@ -178,7 +178,7 @@ export function CookieConsent() {
                   <Button
                     type="button"
                     onClick={() => setShowDetails(true)}
-                    className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                    className="rounded-lg !bg-transparent px-2 py-1.5 text-sm font-semibold !text-foreground underline underline-offset-4 !shadow-none hover:!bg-muted"
                   >
                     Tinkinti pasirinkimus
                   </Button>
