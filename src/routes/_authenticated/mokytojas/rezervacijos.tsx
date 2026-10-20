@@ -279,8 +279,18 @@ function TeacherReservations() {
         ))}
       </div>
 
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
+        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Ieškoti pagal mokinį, datą ar pastabą…"
+          className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none"
+        />
+      </div>
+
       <ul className="space-y-2">
-        {schoolRes.map((r) => {
+        {filteredRes.map((r) => {
           const finished = r.status === "completed" || r.status === "confirmed";
           return (
             <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
