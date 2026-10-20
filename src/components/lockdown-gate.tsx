@@ -205,6 +205,15 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
   return (
     <>
       {visible ? (
+        lockdown === null && !settingsFailed ? (
+          <div key="boot" role="status" aria-label="Tikrinama saugi prieiga" className="sv-boot fixed inset-0 z-[9999] grid place-items-center bg-background text-foreground">
+            <div className="sv-boot-inner flex flex-col items-center gap-6 px-6 text-center">
+              <div className="sv-boot-ring" aria-hidden><span className="sv-boot-core" /></div>
+              <p className="sv-boot-text text-sm font-semibold tracking-wide text-muted-foreground">Tikrinama saugi prieiga…</p>
+              <div className="sv-boot-bar" aria-hidden />
+            </div>
+          </div>
+        ) : (
         <div key="lockdown" role="alert" className="lockdown-ui fixed inset-0 z-[9999] overflow-y-auto bg-background text-foreground">
           <div className="flex min-h-dvh items-center justify-center p-4 sm:p-8">
             <section aria-labelledby="lockdown-title" className="lockdown-panel w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card">
