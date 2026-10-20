@@ -6,6 +6,8 @@ import { registrationComplete } from "@/lib/signup-rules";
 import { userError } from "@/lib/user-error";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { resendSignupVerification } from "@/lib/school-signup.functions";
 
 export const Route = createFileRoute("/verify-email")({
   head: () => ({
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/verify-email")({
 
 function VerifyEmailPage() {
   const navigate = useNavigate();
+  const resendFn = useServerFn(resendSignupVerification);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -65,7 +68,8 @@ function VerifyEmailPage() {
           error = result.error;
           if (error) { const existing = await supabase.auth.getSession(); if (existing.data.session) error = null; }
         } else if (tokenHash) {
-          const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "signup" }); error = result.error;
+          const linkType = url.searchParams.get("type") === "magiclink" ? "magiclink" : "signup";
+          const result = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: linkType }); error = result.error;
         } else if (access && refresh) {
           const result = await supabase.auth.setSession({ access_token: access, refresh_token: refresh }); error = result.error;
         }
@@ -84,11 +88,8 @@ function VerifyEmailPage() {
     if (busy) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: email.trim(),
-        token: otp.trim(),
-        type: "signup",
-      });
+      let { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: otp.trim(), type: "signup" });
+      if (error) ({ error } = await supabase.auth.verifyOtp({ email: email.trim(), token: otp.trim(), type: "email" }));
       if (error) throw error;
       await finishVerification();
     } catch (err) {
@@ -102,9 +103,9 @@ function VerifyEmailPage() {
     if (resending || !email) return;
     setResending(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/verify-email` } });
-      if (error) throw error;
-      toast.success("Naujas kodas išsiųstas.");
+      await resendFn({ data: { email: email.trim() } });
+      setFeedback(null);
+      toast.success("Jei paskyra laukia patvirtinimo, naujas laiškas jau pakeliui. Patikrink ir „Spam“ aplanką.");
     } catch (err) {
       setFeedback(userError(err, "Nepavyko išsiųsti laiško."));
     } finally {

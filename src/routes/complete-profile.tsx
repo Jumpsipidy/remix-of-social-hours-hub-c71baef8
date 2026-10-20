@@ -36,7 +36,7 @@ function CompleteProfilePage() {
   const [classYear, setClassYear] = useState<(typeof CLASS_YEARS)[number] | "">("");
   const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
   const [fullName, setFullName] = useState("");
-  const [hoursNeeded, setHoursNeeded] = useState(20);
+  const hoursNeeded = 20;
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -100,11 +100,9 @@ function CompleteProfilePage() {
                 {schools.map((school) => <option key={school.id} value={school.id}>{school.name}{school.city ? ` (${school.city})` : ""}</option>)}
               </select>
             </label>
-            <p className="text-sm text-muted-foreground">Klasės numeris ir A/B raidė priskiriami pagal tavo klasės kodą.</p>
-            <label className="block text-sm font-semibold">Reikalingos valandos
-              <input type="number" min={8} max={500} className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 font-normal" value={hoursNeeded} onChange={(event) => setHoursNeeded(Number(event.target.value))} required />
-            </label>
-            <Field label="Klasės kodas" value={code} onChange={setCode} placeholder="Pvz.: SEDUVA2026" />
+            <p className="text-sm text-muted-foreground">Klasės numeris, A/B raidė ir valandos priskiriami pagal tavo klasės kodą.</p>
+            <p className="text-sm text-muted-foreground">Privalomos valandos užrakintos pagal klasės kodą.</p>
+            <Field label="Klasės kodas" value={code} onChange={setCode} placeholder="MKC-XXXXX-X" />
             <Button className="h-11 w-full" disabled={busy || !code.trim() || !schoolId}>
               {busy ? <><Loader2 className="animate-spin" /> Tikrinama…</> : <><GraduationCap /> Patvirtinti ir tęsti</>}
             </Button>

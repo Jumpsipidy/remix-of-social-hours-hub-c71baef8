@@ -56,7 +56,8 @@ export function AdminCreateAccountPanel() {
           assigned_letter: isSchoolAdmin ? letter : null,
         },
       });
-      toast.success(res.updated ? "Paskyra atnaujinta" : "Paskyra sukurta. Perduok kredencialus asmeniškai.");
+      const codes = (res as { codes?: { class_year: string; class_letter: string; signup_code: string }[] }).codes ?? [];
+      toast.success(res.updated ? "Paskyra atnaujinta" : "Paskyra sukurta. Perduok kredencialus asmeniškai.", { description: codes.length ? `Klasių registracijos kodai: ${codes.map((c) => `${c.class_year.split(" / ")[0]}${c.class_letter} ${c.signup_code}`).join(", ")}` : undefined, duration: 15000 });
       setOrgName(""); setFullName(""); setEmail(""); setPassword(""); setClasses([]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nepavyko sukurti paskyros");

@@ -101,11 +101,17 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
       { onConflict: "id" },
     );
     if (profileError) throw new Error(`Paskyra sukurta, bet profilio nepavyko nustatyti: ${profileError.message}`);
+    let codes: { class_year: string; class_letter: string; signup_code: string; hours_needed: number | null }[] = [];
+    const codeSchool = data.school_id ?? (me as any)?.school_id ?? null;
+    if (data.role === "school_admin" && codeSchool && data.assigned_classes?.length) {
+      const { ensureClassCodes } = await import("@/lib/class-codes.server");
+      codes = await ensureClassCodes(supabaseAdmin, codeSchool, data.assigned_classes, data.assigned_letter === "A" || data.assigned_letter === "B" ? data.assigned_letter : null);
+    }
 
 
 
 
-    return { ok: true, id: created.user.id, updated: !!existing };
+    return { ok: true, id: created.user.id, updated: !!existing, codes };
   });
 
 /** How many org accounts this school_admin has personally created (for cap UI). */
@@ -164,5 +170,7 @@ export const adminUpdateSchoolAdmin = createServerFn({ method: "POST" })
     if (data.full_name?.trim()) patch.full_name = data.full_name.trim().slice(0, 120);
     const { error } = await (supabaseAdmin.from("profiles") as any).update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    const { ensureClassCodes } = await import("@/lib/class-codes.server");
+    const codes = await ensureClassCodes(supabaseAdmin, data.school_id, data.assigned_classes, patch.assigned_letter as string | null);
+    return { ok: true, codes };
   });

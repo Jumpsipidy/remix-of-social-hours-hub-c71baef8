@@ -1216,6 +1216,7 @@ export type Database = {
           class_letter: string
           class_year: string
           created_at: string
+          hours_needed: number | null
           id: string
           is_active: boolean
           school_id: string
@@ -1226,6 +1227,7 @@ export type Database = {
           class_letter: string
           class_year: string
           created_at?: string
+          hours_needed?: number | null
           id?: string
           is_active?: boolean
           school_id: string
@@ -1236,6 +1238,7 @@ export type Database = {
           class_letter?: string
           class_year?: string
           created_at?: string
+          hours_needed?: number | null
           id?: string
           is_active?: boolean
           school_id?: string

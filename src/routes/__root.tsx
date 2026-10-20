@@ -144,12 +144,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@type": "SoftwareApplication",
           name: "Socialinės Valandos",
           applicationCategory: "EducationalApplication",
-          softwareVersion: "2.5.0",
+          softwareVersion: "2.6.0",
           operatingSystem: "Web",
           inLanguage: "lt-LT",
           url: "https://socialinesvalandos.dev/",
           description:
-            "Socialinių valandų platforma V2.5: užduočių žemėlapis, rezervacijos, pokalbiai, QR atvykimo patikra, pasirašyti PDF pažymėjimai ir mokyklos renginiai.",
+            "Socialinių valandų platforma V2.6: auklėtojo sritis, klasių kodai, užduočių žemėlapis, rezervacijos, pokalbiai, QR atvykimo patikra, pasirašyti PDF pažymėjimai ir mokyklos renginiai.",
           offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
           audience: {
             "@type": "EducationalAudience",

@@ -28,8 +28,9 @@ export function SchoolAdminManager({ refreshKey = 0 }: { refreshKey?: number }) 
     if (!school) return toast.error("Pasirink mokyklą");
     setBusy(a.id);
     try {
-      await saveFn({ data: { id: a.id, school_id: school, assigned_classes: a.assigned_classes ?? [], auto_year_renewal: a.auto_year_renewal, assigned_letter: a.assigned_letter ?? null, full_name: a.full_name ?? undefined } });
-      toast.success("Išsaugota");
+      const res = await saveFn({ data: { id: a.id, school_id: school, assigned_classes: a.assigned_classes ?? [], auto_year_renewal: a.auto_year_renewal, assigned_letter: a.assigned_letter ?? null, full_name: a.full_name ?? undefined } });
+      const codes = (res as { codes?: { class_year: string; class_letter: string; signup_code: string }[] }).codes ?? [];
+      toast.success("Išsaugota", { description: codes.length ? `Klasių kodai: ${codes.map((c) => `${c.class_year.split(" / ")[0]}${c.class_letter} ${c.signup_code}`).join(", ")}` : undefined, duration: 12000 });
     } catch (e: any) { toast.error(e.message); } finally { setBusy(null); }
   }
 
@@ -58,7 +59,7 @@ export function SchoolAdminManager({ refreshKey = 0 }: { refreshKey?: number }) 
               </div>
               <ClassPicker value={a.assigned_classes ?? []} onChange={(v) => patch(a.id, { assigned_classes: v })} />
               <LetterPicker value={a.assigned_letter ?? null} onChange={(v) => patch(a.id, { assigned_letter: v })} />
-              <p className="text-[11px] text-muted-foreground">Auklėtoja pati klasės ir raidės pakeisti negali. Rugsėjo 1 d. klasė pakyla +1 metais, raidė lieka ta pati.</p>
+              <p className="text-[11px] text-muted-foreground">Išsaugojus kiekvienai priskirtai klasei automatiškai sukuriamas (arba paliekamas esamas) registracijos kodas. Auklėtoja pati klasės ir raidės pakeisti negali. Rugsėjo 1 d. klasė pakyla +1 metais, raidė lieka ta pati.</p>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <label className="flex items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={a.auto_year_renewal} onChange={(e) => patch(a.id, { auto_year_renewal: e.target.checked })} />
