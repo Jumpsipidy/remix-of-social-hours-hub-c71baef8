@@ -38,3 +38,4 @@
 - Destructive admin actions and temporary signup options require external licence-confirmed tickets. Main site never accepts the key; signup grants stay in page memory and every privileged call rechecks them.
 
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.
+- Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).

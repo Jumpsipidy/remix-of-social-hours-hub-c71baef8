@@ -64,11 +64,21 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
   }).partial().parse(d ?? {}))
   .handler(async ({ data }) => {
     const { uaHash, reasons } = await requestInfo();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Issuance limit per browser fingerprint (DB-backed, survives serverless workers).
+    const since = new Date(Date.now() - 3600_000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("gate_nonces")
+      .select("nonce", { count: "exact", head: true })
+      .eq("ua_hash", uaHash)
+      .gte("created_at", since);
+    if ((count ?? 0) >= 60) throw new Error("gate_rate_limited");
     const nonce = crypto.randomUUID();
     const issuedAt = Date.now();
     const difficulty = reasons.length ? 4 : 3; // leading hex zeros
     // Extra step when the server or the device itself looks suspicious.
-    const steps = data.forceKind || reasons.length > 0 || (data.clientRisk ?? 0) >= 2 ? 2 : 1;
+    // Client-reported risk (data.clientRisk) is advisory only and never decides the steps.
+    const steps = data.forceKind || reasons.length > 0 ? 2 : 1;
     // Build a 6-icon grid and ask for 3 of them in a given order.
     const pool = [...SYMBOLS];
     const grid: string[] = [];
@@ -80,6 +90,16 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     const kind = data.forceKind ?? "target";
     const spot = 15 + randInt(70), tx = 12 + randInt(76), ty = 15 + randInt(70);
     const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}|${kind}|${spot}|${tx}|${ty}`);
+    // Persist the nonce so a solved challenge cannot be replayed; the row expires with the challenge.
+    await supabaseAdmin.from("gate_nonces").insert({
+      nonce,
+      ua_hash: uaHash,
+      expires_at: new Date(issuedAt + 6 * 60_000).toISOString(),
+    });
+    // Occasionally clear expired rows so the table stays small.
+    if (randInt(20) === 0) {
+      await supabaseAdmin.from("gate_nonces").delete().lt("expires_at", new Date().toISOString());
+    }
     return {
       nonce, issuedAt, difficulty, sig, steps, serverReasons: reasons,
       grid, targets: order.map((i) => grid[i]), kind, spot, tx, ty,
@@ -119,6 +139,7 @@ export const verifyGate = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => verifySchema.parse(d))
   .handler(async ({ data }) => {
     const { uaHash } = await requestInfo();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const fail: string[] = [];
     // The answer is re-derived from grid+targets and covered by the signature,
     // so the client can't change the step count, task kind or expected answer.
@@ -130,7 +151,21 @@ export const verifyGate = createServerFn({ method: "POST" })
     const hash = await sha256Hex(`${data.nonce}:${data.solution}`);
     if (!hash.startsWith("0".repeat(data.difficulty))) fail.push("bad_pow");
     if (data.steps === 2) fail.push(...extraStepFailures(data, derived));
-    if (fail.length) return { ok: false as const, reasons: fail };
+    if (fail.length) {
+      // Count failures server-side; the challenge is burned after 5 bad tries.
+      await supabaseAdmin.rpc("bump_gate_attempt", { _nonce: data.nonce });
+      return { ok: false as const, reasons: fail };
+    }
+    // Single-use: atomically mark the nonce consumed. An unknown, expired or
+    // already-solved nonce (replay) yields zero rows and is rejected.
+    const { data: consumed } = await supabaseAdmin
+      .from("gate_nonces")
+      .update({ consumed_at: new Date().toISOString() })
+      .eq("nonce", data.nonce)
+      .is("consumed_at", null)
+      .gte("expires_at", new Date().toISOString())
+      .select("nonce");
+    if (!consumed || consumed.length !== 1) return { ok: false as const, reasons: ["replay"] };
     const exp = Date.now() + 6 * 3600_000;
     const token = `${exp}.${uaHash}.${await hmac(`p|${exp}|${uaHash}`)}`;
     return { ok: true as const, token };
@@ -139,6 +174,12 @@ export const verifyGate = createServerFn({ method: "POST" })
 export const checkGatePass = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ token: z.string().max(200) }).parse(d))
   .handler(async ({ data }) => {
+    // A fresh CAPTCHA proof also counts as a pass for its 10-minute lifetime.
+    if (data.token.startsWith("cap.")) {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const { verifyCaptchaProof } = await import("./security-crypto.server");
+      return { ok: verifyCaptchaProof(data.token, getRequest()) };
+    }
     const [expS, ua, sig] = data.token.split(".");
     const exp = Number(expS);
     if (!exp || exp < Date.now() || !ua || !sig) return { ok: false };

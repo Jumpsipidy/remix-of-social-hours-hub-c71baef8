@@ -1517,6 +1517,7 @@ export type Database = {
           student_id: string
         }[]
       }
+      bump_gate_attempt: { Args: { _nonce: string }; Returns: number }
       bump_login_streak: {
         Args: never
         Returns: {

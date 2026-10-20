@@ -250,7 +250,7 @@ export function SecurityGatewayInternal() {
           <AnimatePresence mode="wait">
             {stage === "captcha" ? (
               <motion.div key="cap" initial={{ opacity: 0, scale: .95 }} animate={{ opacity: 1, scale: 1 }} className="w-full">
-                <Captcha tone={typeof document !== "undefined" && document.documentElement.classList.contains("school-eyes") ? "light" : "dark"} onVerify={() => { setStage("ok"); setTimeout(() => pass(), 600); }} />
+                <Captcha tone={typeof document !== "undefined" && document.documentElement.classList.contains("school-eyes") ? "light" : "dark"} onVerify={(proof) => { setStage("ok"); setTimeout(() => pass(proof), 600); }} />
               </motion.div>
             ) : stage === "tap" && current && current.kind === "slider" ? (
               <motion.div key="slider" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-full">
