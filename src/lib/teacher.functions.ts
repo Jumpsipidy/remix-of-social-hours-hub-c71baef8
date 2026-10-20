@@ -30,7 +30,8 @@ export const teacherCreateReservations = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ context, data }) => {
-    const { error, data: created } = await context.supabase.rpc("school_create_reservations", {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error, data: created } = await (context.supabase.rpc as any)("school_create_reservations", {
       _student_ids: data.studentIds,
       _organization_id: data.organizationId,
       _task_id: data.taskId,
