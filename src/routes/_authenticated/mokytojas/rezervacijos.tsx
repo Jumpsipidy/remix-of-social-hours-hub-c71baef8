@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarPlus, Clock, Pencil, Send, Trash2 } from "lucide-react";
+import { CalendarPlus, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -308,6 +308,9 @@ function TeacherReservations() {
               }`}>{STATUS_LT[r.status] ?? r.status}</span>
               {!finished && (
                 <div className="flex gap-1">
+                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Siųsti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
+                    <Users className="h-4 w-4" /> Siųsti klasei
+                  </Button>
                   <Button variant="ghost" size="icon" aria-label="Redaguoti" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label="Ištrinti" onClick={() => void submitDelete(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
