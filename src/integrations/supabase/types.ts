@@ -1660,6 +1660,22 @@ export type Database = {
         }
         Returns: number
       }
+      school_delete_reservation: {
+        Args: { _reservation_id: string }
+        Returns: boolean
+      }
+      school_update_reservation: {
+        Args: {
+          _date: string
+          _end: string
+          _hours: number
+          _kind: string
+          _note: string
+          _reservation_id: string
+          _start: string
+        }
+        Returns: boolean
+      }
       search_classmates: {
         Args: { _q: string }
         Returns: {
