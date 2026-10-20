@@ -73,6 +73,8 @@ import { Route as OrganizationWelcomeRouteImport } from './routes/organization.w
 import { Route as VerifyIndexRouteImport } from './routes/verify.index'
 import { Route as VerifyCodeRouteImport } from './routes/verify.$code'
 import { Route as AuthenticatedMokytojasIndexRouteImport } from './routes/_authenticated/mokytojas/index'
+import { Route as AuthenticatedMokytojasMokiniaiRouteImport } from './routes/_authenticated/mokytojas/mokiniai'
+import { Route as AuthenticatedMokytojasRezervacijosRouteImport } from './routes/_authenticated/mokytojas/rezervacijos'
 import { Route as AuthenticatedOrganizationScanRouteImport } from './routes/_authenticated/organization.scan'
 import { Route as ApiPublicErrorBeaconRouteImport } from './routes/api/public/error-beacon'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -401,6 +403,18 @@ const AuthenticatedMokytojasIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedMokytojasRouteRoute,
   } as any)
+const AuthenticatedMokytojasMokiniaiRoute =
+  AuthenticatedMokytojasMokiniaiRouteImport.update({
+    id: '/mokiniai',
+    path: '/mokiniai',
+    getParentRoute: () => AuthenticatedMokytojasRouteRoute,
+  } as any)
+const AuthenticatedMokytojasRezervacijosRoute =
+  AuthenticatedMokytojasRezervacijosRouteImport.update({
+    id: '/rezervacijos',
+    path: '/rezervacijos',
+    getParentRoute: () => AuthenticatedMokytojasRouteRoute,
+  } as any)
 const AuthenticatedOrganizationScanRoute =
   AuthenticatedOrganizationScanRouteImport.update({
     id: '/organization/scan',
@@ -486,6 +500,8 @@ export interface FileRoutesByFullPath {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -552,6 +568,8 @@ export interface FileRoutesByTo {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin': typeof AdminIndexRoute
   '/verify': typeof VerifyIndexRoute
+  '/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -623,6 +641,8 @@ export interface FileRoutesById {
   '/verify/$code': typeof VerifyCodeRoute
   '/admin/': typeof AdminIndexRoute
   '/verify/': typeof VerifyIndexRoute
+  '/_authenticated/mokytojas/mokiniai': typeof AuthenticatedMokytojasMokiniaiRoute
+  '/_authenticated/mokytojas/rezervacijos': typeof AuthenticatedMokytojasRezervacijosRoute
   '/_authenticated/organization/scan': typeof AuthenticatedOrganizationScanRoute
   '/api/public/error-beacon': typeof ApiPublicErrorBeaconRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -693,6 +713,8 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/mokytojas/mokiniai'
+    | '/mokytojas/rezervacijos'
     | '/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
@@ -759,6 +781,8 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin'
     | '/verify'
+    | '/mokytojas/mokiniai'
+    | '/mokytojas/rezervacijos'
     | '/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
@@ -829,6 +853,8 @@ export interface FileRouteTypes {
     | '/verify/$code'
     | '/admin/'
     | '/verify/'
+    | '/_authenticated/mokytojas/mokiniai'
+    | '/_authenticated/mokytojas/rezervacijos'
     | '/_authenticated/organization/scan'
     | '/api/public/error-beacon'
     | '/api/public/health'
@@ -1322,6 +1348,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMokytojasIndexRouteImport
       parentRoute: typeof AuthenticatedMokytojasRouteRoute
     }
+    '/_authenticated/mokytojas/mokiniai': {
+      id: '/_authenticated/mokytojas/mokiniai'
+      path: '/mokiniai'
+      fullPath: '/mokytojas/mokiniai'
+      preLoaderRoute: typeof AuthenticatedMokytojasMokiniaiRouteImport
+      parentRoute: typeof AuthenticatedMokytojasRouteRoute
+    }
+    '/_authenticated/mokytojas/rezervacijos': {
+      id: '/_authenticated/mokytojas/rezervacijos'
+      path: '/rezervacijos'
+      fullPath: '/mokytojas/rezervacijos'
+      preLoaderRoute: typeof AuthenticatedMokytojasRezervacijosRouteImport
+      parentRoute: typeof AuthenticatedMokytojasRouteRoute
+    }
     '/_authenticated/organization/scan': {
       id: '/_authenticated/organization/scan'
       path: '/organization/scan'
@@ -1354,11 +1394,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedMokytojasRouteRouteChildren {
+  AuthenticatedMokytojasMokiniaiRoute: typeof AuthenticatedMokytojasMokiniaiRoute
+  AuthenticatedMokytojasRezervacijosRoute: typeof AuthenticatedMokytojasRezervacijosRoute
   AuthenticatedMokytojasIndexRoute: typeof AuthenticatedMokytojasIndexRoute
 }
 
 const AuthenticatedMokytojasRouteRouteChildren: AuthenticatedMokytojasRouteRouteChildren =
   {
+    AuthenticatedMokytojasMokiniaiRoute: AuthenticatedMokytojasMokiniaiRoute,
+    AuthenticatedMokytojasRezervacijosRoute:
+      AuthenticatedMokytojasRezervacijosRoute,
     AuthenticatedMokytojasIndexRoute: AuthenticatedMokytojasIndexRoute,
   }
 
