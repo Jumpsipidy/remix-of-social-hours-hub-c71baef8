@@ -9,7 +9,7 @@ const NAV = [
   { to: "/mokytojas", label: "Apžvalga", icon: LayoutDashboard, exact: true },
   { to: "/mokytojas/mokiniai", label: "Mokiniai", icon: Users, exact: false },
   { to: "/mokytojas/rezervacijos", label: "Rezervacijos", icon: CalendarCheck, exact: false },
-  { to: "/chat", label: "Pokalbiai", icon: MessageCircle, exact: false },
+  { to: "/mokytojas/pokalbiai", label: "Pokalbiai", icon: MessageCircle, exact: false },
 ] as const;
 
 function initials(name: string | null | undefined) {
