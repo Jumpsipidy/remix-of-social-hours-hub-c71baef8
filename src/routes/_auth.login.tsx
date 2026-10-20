@@ -129,7 +129,7 @@ function LoginPage() {
       setCaptchaProof(null);
       // Sėkmės perėjimas — kitoks nei OAuth „skeneris“: trumpas patvirtinimas.
       setSuccessRole(ROLE_LABELS[role] ?? "Naudotojas");
-      await new Promise((r) => setTimeout(r, 1250));
+      await new Promise((r) => setTimeout(r, 350));
       // Hard nav — avoids router transient state crashes after auth change
       window.location.assign(target);
     } catch (err) {

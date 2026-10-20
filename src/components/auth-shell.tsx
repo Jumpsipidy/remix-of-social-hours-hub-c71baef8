@@ -171,8 +171,8 @@ function BrandLine({ as = "div", className, children }: { as?: "div" | "h1" | "l
   return (
     <Comp className={className} variants={{
       hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
-      show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
-      exit: { opacity: 0, y: -12, filter: "blur(6px)", transition: { duration: 0.2, ease: "easeIn" } },
+      show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] } },
+      exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
     }}>
       {children}
     </Comp>
@@ -202,7 +202,7 @@ export function AuthStage({ mode, loading = false, children }: { mode: AuthMode;
   return (
     <AnimatePresence mode="wait" initial={false}>
       {loading ? (
-        <motion.div key="skeleton" exit={{ opacity: 0, filter: "blur(4px)" }} transition={{ duration: 0.16 }}>
+        <motion.div key="skeleton" exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
           <AuthLoadingContent mode={mode} />
         </motion.div>
       ) : (
@@ -288,7 +288,7 @@ export function OAuthButtons({ disabled, beforeStart }: { disabled?: boolean; be
     setBusy(provider);
     try { localStorage.removeItem("sv_last_role_v1"); } catch {}
     // Leidžiam animacijai pasirodyti prieš paliekant puslapį
-    await new Promise((r) => setTimeout(r, 450));
+    await new Promise((r) => setTimeout(r, 120));
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
