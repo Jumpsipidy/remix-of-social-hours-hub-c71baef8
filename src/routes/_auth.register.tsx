@@ -72,8 +72,8 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const [schoolId, setSchoolId] = useState("");
-  const [classYear, setClassYear] = useState("");
-  const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
+  const [, setClassYear] = useState("");
+  const [, setClassLetter] = useState<"A" | "B" | "">("");
   const [schoolCode, setSchoolCode] = useState("");
   const [agree, setAgree] = useState(false);
 

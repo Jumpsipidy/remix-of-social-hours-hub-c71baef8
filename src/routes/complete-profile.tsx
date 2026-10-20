@@ -36,7 +36,7 @@ function CompleteProfilePage() {
   const [classYear, setClassYear] = useState<(typeof CLASS_YEARS)[number] | "">("");
   const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
   const [fullName, setFullName] = useState("");
-  const [hoursNeeded, setHoursNeeded] = useState(20);
+  const hoursNeeded = 20;
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
