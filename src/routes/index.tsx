@@ -171,16 +171,18 @@ function Home() {
   return (
     <PageShell>
       <div className="relative">
-        <section className="px-4 pb-12 pt-12 sm:px-6 sm:pt-20" aria-labelledby="home-title">
-          <div className="mx-auto max-w-4xl text-center">
+        <section className="relative overflow-hidden px-4 pb-12 pt-12 sm:px-6 sm:pt-20" aria-labelledby="home-title">
+          <div aria-hidden className="home-hero-bg pointer-events-none absolute inset-0" />
+          <div aria-hidden className="home-grid pointer-events-none absolute inset-0" />
+          <div className="relative mx-auto max-w-4xl text-center">
             {isAuthenticated && dash && (
               <Link to={dash.to} className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-semibold text-foreground hover:border-primary/50">
                 Sveiki sugrįžę{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""} · {dash.label} <ArrowRight className="h-4 w-4" />
               </Link>
             )}
-            <p className="text-sm font-semibold text-primary">Mokiniams · organizacijoms · mokykloms</p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs font-semibold text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Mokiniams · organizacijoms · mokykloms</p>
             <h1 id="home-title" className="mt-3 font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Socialinės valandos.<br /><span className="text-primary">Be popierių.</span>
+              Socialinės valandos.<br /><span className="home-gradient-text">Be popierių.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">Rask savanorystės veiklą, rezervuok, patvirtink QR kodu ir gauk pažymėjimą. Nemokamai.</p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
@@ -213,7 +215,7 @@ function Home() {
             <h2 id="how" className="mt-2 font-display text-3xl font-bold text-foreground sm:text-4xl">Trys žingsniai iki valandų</h2>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {STEPS.map((s) => (
-                <article key={s.n} className="flex flex-col rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/40">
+                <article key={s.n} className="flex flex-col rounded-2xl border border-border bg-card p-6 transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
                   <div className="flex items-center justify-between"><s.icon className="h-5 w-5 text-primary" /><span className="font-mono text-xs text-muted-foreground">{s.n}</span></div>
                   <h3 className="mt-4 font-display text-xl font-bold text-foreground">{s.t}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.d}</p>

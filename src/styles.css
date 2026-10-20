@@ -727,10 +727,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .chat-transcript { scrollbar-gutter: auto; }
   .certificate-page :is(h1,h2,p,dd,code) { overflow-wrap: anywhere; }
   .page-shell { width: 100%; }
-  .site-navbar > div:nth-child(2) { min-height: 72px; padding-inline: .75rem; }
-  .site-navbar > div:nth-child(2) > a { gap: .5rem; }
-  .site-navbar > div:nth-child(2) > a > div { width: 32px; height: 32px; }
-  .site-navbar > div:nth-child(2) > a > span { font-family: var(--font-sans); font-size: 12px; }
   .mobile-sidebar { padding-top: max(3rem, env(safe-area-inset-top)); }
   .sv-dialog { top: calc(var(--visual-viewport-top, 0px) + var(--visual-viewport-height, 100dvh) / 2); max-height: calc(var(--visual-viewport-height, 100dvh) - 1.5rem); }
   .dm-chat-dialog { height: calc(var(--visual-viewport-height, 100dvh) - 1.5rem); }
@@ -851,3 +847,16 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 }
 .home-caret { animation: home-caret 1s steps(1) infinite; }
 @keyframes home-caret { 50% { opacity: 0; } }
+/* Homepage: calm theme-tinted backdrop, readable in both themes. */
+.home-hero-bg {
+  background:
+    radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--primary) 16%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 85% 30%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%);
+}
+.home-grid {
+  background-image: linear-gradient(color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(70% 60% at 50% 20%, #000, transparent 75%);
+}
+.home-gradient-text { background: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; color: transparent; }
