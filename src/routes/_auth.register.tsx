@@ -6,13 +6,14 @@ import { checkPassword } from "@/lib/password-policy";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, GraduationCap, Building2, Clock, KeyRound, Phone, Globe, Check, Info } from "lucide-react";
+import { Mail, Lock, User, GraduationCap, Building2, KeyRound, Phone, Globe, Check, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { signUpStudentWithCode } from "@/lib/school-signup.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { AuthField, AuthHeading, AuthLegal, AuthSelect, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
+import { ClassCodeInput } from "@/components/class-code-input";
 
 export const Route = createFileRoute("/_auth/register")({
   ssr: false,
@@ -38,11 +39,6 @@ type Mode = "student" | "org_request";
 type SchoolRow = { id: string; name: string; city: string | null };
 
 const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / III gimn.", "12 / IV gimn."];
-function isLowerClass(cy: string) { return cy === "5" || cy === "6" || cy === "7"; }
-function hoursRuleFor(cy: string): { locked: boolean; min: number; default: number } {
-  if (isLowerClass(cy)) return { locked: true, min: 20, default: 20 };
-  return { locked: false, min: 8, default: 20 };
-}
 
 function RegisterPage() {
   const navigate = useNavigate();
@@ -78,7 +74,6 @@ function RegisterPage() {
   const [schoolId, setSchoolId] = useState("");
   const [classYear, setClassYear] = useState("");
   const [classLetter, setClassLetter] = useState<"A" | "B" | "">("");
-  const [hoursNeeded, setHoursNeeded] = useState(20);
   const [schoolCode, setSchoolCode] = useState("");
   const [agree, setAgree] = useState(false);
 
@@ -116,8 +111,6 @@ function RegisterPage() {
       if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
       if (!schoolCode.trim() && !adminGrant) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
       if (!agree && !adminGrant) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
-      const rule = hoursRuleFor(classYear);
-      if (!rule.locked && hoursNeeded < rule.min) { toast.error(`8+ klasėms — min. ${rule.min} val.`); return; }
 
     }
     const pwErr = await checkPassword(password, email.trim());
@@ -126,7 +119,7 @@ function RegisterPage() {
     try {
       if (adminGrant) {
         if (!adminCodeId) { toast.error("Pasirink klasės kodą."); return; }
-        const result = await adminCreate({ data: { ...adminGrant, codeId: adminCodeId, fullName, email: email.trim(), password, hoursNeeded, skipEmail } });
+        const result = await adminCreate({ data: { ...adminGrant, codeId: adminCodeId, fullName, email: email.trim(), password, skipEmail } });
         toast.success(skipEmail ? "Mokinio paskyra sukurta ir aktyvuota." : result.mailSent ? "Mokinio paskyra laukia el. pašto patvirtinimo." : "Paskyra sukurta, bet laiško išsiųsti nepavyko. Mokinys gali pakartoti siuntimą patvirtinimo puslapyje.");
         setPassword(""); return;
       }
@@ -136,9 +129,6 @@ function RegisterPage() {
           password,
           fullName,
           schoolId,
-          classYear: classYear as never,
-          classLetter: classLetter as "A" | "B",
-          hoursNeeded: isLowerClass(classYear) ? 20 : Math.max(8, hoursNeeded),
           code: schoolCode.trim(),
           redirectTo: `${window.location.origin}/verify-email`,
         },
@@ -151,7 +141,8 @@ function RegisterPage() {
       if (res.session) await supabase.auth.setSession(res.session);
       sessionStorage.setItem("sv_signup_email", email.trim());
       if (!signUp.session) {
-        toast.success("Registracija pradėta. Paskyrą aktyvuosi patvirtinęs el. paštą.");
+        if ("mailSent" in res && res.mailSent === false) toast.warning("Paskyra sukurta, bet laiško išsiųsti nepavyko. Patvirtinimo puslapyje spausk „Siųsti dar kartą“.");
+        else toast.success("Laiškas išsiųstas! Patikrink el. paštą (ir „Spam“ aplanką).");
         navigate({ to: "/verify-email" });
       } else {
         // Session active — send welcome email (bearer is already attached)
@@ -192,7 +183,6 @@ function RegisterPage() {
     } finally { setLoading(false); }
   }
 
-  const rule = classYear ? hoursRuleFor(classYear) : { locked: false, min: 8, default: 20 };
   const canSubmitStudent = !(loading || schoolsLoading || schoolsError || !schools.length);
 
   return (
@@ -276,8 +266,10 @@ function RegisterPage() {
                   </AuthSelect>
                 )}
                 <p className="text-xs text-muted-foreground">Klasės numeris ir A/B raidė bus priskirti pagal auklėtojo duotą kodą.</p>
-                <AuthField id="reg-hours" label="Valandų tikslas" icon={Clock} type="number" inputMode="numeric" min={8} max={500} value={hoursNeeded} onChange={(e) => setHoursNeeded(Number(e.target.value))} />
-                <p className="text-xs text-muted-foreground">5–7 klasėms automatiškai priskiriama 20 valandų.</p>
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <span>Privalomos valandos <b className="text-foreground">užrakintos pagal klasės kodą</b> — jų pasirinkti nereikia.</span>
+                </div>
                 {adminGrant && <div className="space-y-3 border-y border-border py-4">
                   <AuthSelect id="admin-class-code" label="Klasės kodas" value={adminCodeId} onChange={(event) => {
                     setAdminCodeId(event.target.value);
@@ -286,9 +278,7 @@ function RegisterPage() {
                   }}><option value="">Pasirink kodą</option>{adminCodes.map((code) => <option key={code.id} value={code.id}>{schools.find((school) => school.id === code.school_id)?.name} · {code.class_year.split(" / ")[0]}{code.class_letter} · {code.signup_code}</option>)}</AuthSelect>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={skipEmail} onChange={(event) => setSkipEmail(event.target.checked)} />Aktyvuoti be el. pašto patvirtinimo</label>
                 </div>}
-                <AuthField id="reg-code" label="Klasės kodas" icon={KeyRound} value={schoolCode} onChange={(e) => setSchoolCode(e.target.value)} required
-                  autoComplete="off" placeholder="Klasės registracijos kodas" className="tracking-wider"
-                  hint="Gausi iš klasės auklėtojo arba mokyklos administratoriaus." />
+                <ClassCodeInput value={schoolCode} onChange={setSchoolCode} />
               </Section>
 
               <Section n={3} title="Prisijungimo duomenys">
@@ -312,17 +302,18 @@ function RegisterPage() {
         Jau turi paskyrą?{" "}
         <Link to="/login" className="font-semibold text-primary hover:underline">Prisijunk</Link>
       </p>
-      {profile?.role === "admin" && !isImpersonating && !adminGrant && (
+      {!isImpersonating && !adminGrant && (
         <button
           type="button"
           aria-label="Administracinė registracija"
           title="Administracinė registracija"
-          className="mx-auto mt-4 flex h-7 items-center gap-1.5 rounded-full border border-transparent px-2.5 text-[10px] font-semibold text-muted-foreground/30 transition hover:border-border hover:text-muted-foreground focus-visible:border-border focus-visible:text-muted-foreground"
+          className="mx-auto mt-4 flex h-7 items-center gap-1.5 rounded-full border border-border/60 px-3 text-[11px] font-semibold text-muted-foreground/70 transition hover:border-primary/50 hover:text-foreground focus-visible:border-primary focus-visible:text-foreground"
           onClick={async () => {
+            if (profile?.role !== "admin") { toast.info("Administracinės parinktys veikia tik prisijungus kaip Super Admin. Prisijunk ir grįžk į šį puslapį."); return; }
             try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
             catch (error) { toast.error(userError(error)); }
           }}
-        >Administracija</button>
+        ><KeyRound className="h-3 w-3" />Administracija</button>
       )}
       {adminGrant && <p role="status" className="mt-3 text-center text-xs text-muted-foreground">Administracinė prieiga patvirtinta. Perkrovus puslapį ji išsijungs.</p>}
       <AuthLegal />
