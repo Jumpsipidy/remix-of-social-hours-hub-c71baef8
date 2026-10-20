@@ -51,10 +51,10 @@ const COPY: Record<AuthMode, Copy> = {
     eyebrow: "Pradžia · 60 sekundžių",
     title: "Pradėk savo",
     accent: "valandų kelionę.",
-    body: "Įvesk mokyklos kodą, pasirink klasę — ir jau gali rezervuoti pirmąją savanorystę.",
+    body: "Įvesk klasės kodą — klasė ir valandos priskiriamos automatiškai, ir jau gali rezervuoti pirmąją savanorystę.",
     list: [
       { icon: UserRound, text: "Gauk mokyklos kodą iš auklėtojo" },
-      { icon: GraduationCap, text: "Pasirink klasę ir valandų tikslą" },
+      { icon: GraduationCap, text: "Klasė ir valandos priskiriamos pagal kodą" },
       { icon: Award, text: "Rezervuok ir rink valandas" },
     ],
     numbered: true,
