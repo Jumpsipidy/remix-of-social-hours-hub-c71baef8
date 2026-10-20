@@ -5,7 +5,7 @@ import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Search, QrCode, FileCheck2, ShieldCheck, MapPin, Clock, Check, ChevronDown } from "lucide-react";
+import { ArrowRight, Search, QrCode, FileCheck2, ShieldCheck, MapPin, Clock, Check, ChevronDown, Users, MessageCircle, Flame, GraduationCap, Building2, School } from "lucide-react";
 
 
 /**
@@ -158,6 +158,67 @@ const STEPS = [
   ) },
 ];
 
+const ROLE_TABS = [
+  { id: "student", label: "Mokiniams", icon: GraduationCap, title: "Valandos be streso", points: ["Rask veiklą per kelias sekundes", "Eik kartu su draugais", "Sek progresą ir serijas", "PDF pažymėjimas vienu paspaudimu"], to: "/tasks", cta: "Rasti veiklą" },
+  { id: "org", label: "Organizacijoms", icon: Building2, title: "Savanoriai, kai jų reikia", points: ["Skelbk užduotis ir laikus", "Skenuok QR atvykus", "Pasirink suteikiamas valandas", "Matyk grupes ir statistiką"], to: "/register", cta: "Sukurti profilį" },
+  { id: "school", label: "Mokykloms", icon: School, title: "Apskaita be popierių", points: ["Atskiri kodai kiekvienai klasei", "Auklėtoja mato tik savo klases", "Pokalbiai ir kvietimai klasei", "Patikrinami pažymėjimai"], to: "/socialines-valandos-mokykloms", cta: "Plačiau mokykloms" },
+] as const;
+
+function RoleTabs() {
+  const [tab, setTab] = useState<(typeof ROLE_TABS)[number]["id"]>("student");
+  const r = ROLE_TABS.find((x) => x.id === tab)!;
+  return (
+    <section className="px-4 pb-16 sm:px-6 sm:pb-24" aria-labelledby="roles">
+      <div className="mx-auto max-w-6xl">
+        <h2 id="roles" className="font-display text-3xl font-bold text-foreground sm:text-4xl">Kiekvienam savo vieta</h2>
+        <div role="tablist" className="mt-6 inline-flex rounded-xl border border-border bg-muted/60 p-1">
+          {ROLE_TABS.map((t) => (
+            <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
+              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:px-4 ${tab === t.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+              <t.icon className="h-4 w-4" /><span className="hidden sm:inline">{t.label}</span>
+            </button>
+          ))}
+        </div>
+        <div key={r.id} className="sv-reveal mt-6 grid gap-6 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">
+          <div>
+            <h3 className="font-display text-2xl font-bold text-foreground">{r.title}</h3>
+            <Button asChild className="mt-6"><Link to={r.to}>{r.cta} <ArrowRight /></Link></Button>
+          </div>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {r.points.map((x) => <li key={x} className="flex items-start gap-2 rounded-xl border border-border bg-background p-3 text-sm text-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{x}</li>)}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Bento() {
+  const tiles = [
+    { icon: Users, t: "Su draugais", d: "Pakviesk draugus — kiekvienas gauna savo QR.", cls: "md:col-span-2" },
+    { icon: Flame, t: "Serijos", d: "Savaitės serija ir pasiekimai.", cls: "" },
+    { icon: MessageCircle, t: "Pokalbiai", d: "Mokinys, organizacija ir auklėtoja.", cls: "" },
+    { icon: MapPin, t: "Žemėlapis", d: "Šeduva, Radviliškis, Šiauliai.", cls: "md:col-span-2" },
+  ];
+  return (
+    <section className="px-4 pb-16 sm:px-6 sm:pb-24" aria-labelledby="bento">
+      <div className="mx-auto max-w-6xl">
+        <h2 id="bento" className="font-display text-3xl font-bold text-foreground sm:text-4xl">Viskas vienoje vietoje</h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {tiles.map((x) => (
+            <div key={x.t} className={`group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 ${x.cls}`}>
+              <div aria-hidden className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100 md:opacity-60" />
+              <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary"><x.icon className="h-5 w-5" /></span>
+              <h3 className="relative mt-4 font-display text-lg font-bold text-foreground">{x.t}</h3>
+              <p className="relative mt-1 text-sm text-muted-foreground">{x.d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Home() {
   const { profile, isAuthenticated } = useAuth();
   const { data: counts = { students: 0, orgs: 0, hours: 0, schools: 0 } } = useQuery({
@@ -225,6 +286,9 @@ function Home() {
             </div>
           </div>
         </section>
+
+        <Bento />
+        <RoleTabs />
 
         <section className="px-4 pb-16 sm:px-6 sm:pb-24" aria-labelledby="guard">
           <div className="mx-auto grid max-w-6xl items-center gap-8 rounded-3xl border border-border bg-card p-6 sm:p-10 md:grid-cols-2">

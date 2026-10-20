@@ -8,6 +8,8 @@ import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { NavCommand } from "@/components/nav-command";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 
@@ -97,29 +99,50 @@ export function Navbar() {
   // const isAdminSection = pathname.startsWith("/admin");
   // if (isAdminSection) return null;
 
+  const [scrolled, setScrolled] = useState(false);
+  const [egg, setEgg] = useState(false);
+  const [taps, setTaps] = useState(0);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 12);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  // Secret: tap the logo 5 times quickly.
+  const onLogo = () => {
+    const n = taps + 1;
+    setTaps(n);
+    window.setTimeout(() => setTaps(0), 1500);
+    if (n >= 5) { setTaps(0); setEgg(true); toast("💙 Ačiū, kad padedi bendruomenei!"); window.setTimeout(() => setEgg(false), 700); }
+  };
+
   return (
-    <header className="site-navbar sticky top-0 z-50 px-3 pt-3 sm:px-5">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-card/85 px-3 py-2 shadow-sm backdrop-blur-md sm:px-4">
-        <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="Socialinės Valandos — pradžia">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary">
+    <header className={`site-navbar sticky top-0 z-50 px-3 transition-[padding] duration-200 sm:px-5 ${scrolled ? "pt-2" : "pt-3 sm:pt-4"}`}>
+      <div className={`mx-auto flex max-w-6xl items-center gap-2 rounded-2xl border bg-card/85 px-2.5 backdrop-blur-md transition-all duration-200 sm:px-3 ${scrolled ? "border-border py-1.5 shadow-elegant" : "border-border/60 py-2 shadow-sm"}`}>
+        <Link to="/" onClick={onLogo} className="group flex min-w-0 items-center gap-2.5 rounded-xl pr-2" aria-label="Socialinės Valandos — pradžia">
+          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary transition-transform duration-500 group-hover:-rotate-6 ${egg ? "rotate-[360deg] scale-110" : ""}`}>
             <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
           </span>
-          <span className="truncate font-display text-base font-bold text-foreground sm:text-lg">Socialinės Valandos</span>
+          <span className="hidden truncate font-display text-base font-bold leading-none text-foreground sm:block">
+            Socialinės Valandos
+            <span className="mt-0.5 block font-sans text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">socialinesvalandos.dev</span>
+          </span>
         </Link>
 
-        <nav aria-label="Pagrindinis meniu" className="mx-auto hidden items-center gap-1 rounded-xl bg-muted/60 p-1 md:flex">
+        <nav aria-label="Pagrindinis meniu" className="mx-auto hidden items-center gap-0.5 md:flex">
           {links.map((l) => {
             const active = isActive(l.to, l.to === "/");
             return (
               <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
-                className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
                 {l.label}
+                {active && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-primary" />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
+        <div className="ml-auto flex items-center gap-1 md:ml-0">
+          <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
           <SchoolEyesToggle />
           <NotificationBell />
           {isAuthenticated ? (
@@ -127,10 +150,10 @@ export function Navbar() {
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex"><Link to="/login">Prisijungti</Link></Button>
-              <Button size="sm" asChild className="hidden sm:inline-flex"><Link to="/register">Registruotis</Link></Button>
+              <Button size="sm" asChild className="hidden rounded-xl sm:inline-flex"><Link to="/register">Registruotis</Link></Button>
             </>
           )}
-          <Button variant="ghost" size="icon" className="h-10 w-10 md:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}>
+          <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}>
             <Menu className="h-5 w-5" />
           </Button>
         </div>
