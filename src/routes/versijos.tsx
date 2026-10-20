@@ -422,12 +422,12 @@ export const Route = createFileRoute("/versijos")({
 });
 
 const HIGHLIGHTS = [
-  { e: "💬", t: "Pokalbiai visiems", d: "Mokiniai, organizacijos ir mokyklos susirašinėja vienoje vietoje. Žinutės dingsta po 12 dienų." },
-  { e: "🗺️", t: "Lietuvos žemėlapis", d: "Visos organizacijos ir užduotys žemėlapyje su miestų filtrais." },
-  { e: "🏢", t: "Nauji skydeliai", d: "Organizacijos ir mokyklos skydeliai sukurti iš naujo — greiti mygtukai ir viskas po ranka." },
-  { e: "🛡️", t: "SOCI GUARD", d: "Mūsų pačių apsauga nuo robotų, kuri paaiškina, kodėl tave patikrino." },
-  { e: "📱", t: "QR įsiregistravimas", d: "Besikeičiantis kodas, keli vizitai per dieną ir veikimas be interneto." },
-  { e: "👥", t: "Draugai ir grupės", d: "Pakviesk draugą nuoroda ir rezervuok kartu — valandos kiekvienam." },
+  { e: "🍎", t: "Auklėtojo sritis", d: "/mokytojas: mokiniai, rezervacijos, pokalbiai su šablonais — tik savo priskirtoms klasėms." },
+  { e: "🔑", t: "Klasių kodai", d: "Kiekviena klasė gauna savo MKC kodą — mokinys automatiškai patenka į savo klasę su teisingomis valandomis." },
+  { e: "👥", t: "Rezervacijos su draugais", d: "Pasirink draugus, jie patvirtina, kiekvienas gauna savo QR kodą." },
+  { e: "🛡️", t: "Stipresnis SV Guard", d: "Vienkartiniai serverio iššūkiai ir apsauga nuo robotų bei automatizacijos." },
+  { e: "✉️", t: "Patikimi laiškai", d: "Patvirtinimo laiškai pasiekia el. paštą per mūsų pašto sistemą." },
+  { e: "🔒", t: "Saugesnės paskyros", d: "Stipresni slaptažodžiai ir licencija patvirtinami svarbūs administratoriaus veiksmai." },
 ];
 
 function VersionsPage() {
