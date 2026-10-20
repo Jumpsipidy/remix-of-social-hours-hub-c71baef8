@@ -68,6 +68,10 @@ function TeacherReservations() {
   const [editing, setEditing] = useState<SchoolReservation | null>(null);
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
 
+  const [search, setSearch] = useState("");
+  const [inviteFor, setInviteFor] = useState<SchoolReservation | null>(null);
+  const [inviteClass, setInviteClass] = useState<string | null>(null);
+
   const students = data?.students ?? [];
   const orgs = data?.organizations ?? [];
   const schoolRes = useMemo(
@@ -77,6 +81,48 @@ function TeacherReservations() {
   );
 
   const classYears = useMemo(() => [...new Set(students.map((s) => s.class_year).filter(Boolean) as string[])].sort(), [students]);
+
+  // Klasių (metai + raidė) sąrašas tik iš to auklėtojo mokinių — serveris jau
+  // apriboja pagrindinį sąrašą jo priskirtomis klasėmis, tad čia nieko pridurti negalima.
+  const classGroups = useMemo(() => {
+    const map = new Map<string, SchoolStudent[]>();
+    for (const s of students) {
+      if (!s.class_year) continue;
+      const key = `${s.class_year}${s.class_letter ? ` ${s.class_letter}` : ""}`;
+      map.set(key, [...(map.get(key) ?? []), s]);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [students]);
+
+  const filteredRes = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return schoolRes;
+    return schoolRes.filter((r) =>
+      studentName(r.student_id).toLowerCase().includes(q) ||
+      r.reservation_date.includes(q) ||
+      (r.note ?? "").toLowerCase().includes(q));
+  }, [schoolRes, search, students]);
+
+  const inviteStudents = inviteClass ? (classGroups.find(([k]) => k === inviteClass)?.[1] ?? []) : [];
+  const submitClassInvite = async () => {
+    if (!inviteFor || busy) return;
+    if (!inviteClass || inviteStudents.length === 0) { toast.error("Pasirink klasę su mokiniais."); return; }
+    setBusy(true);
+    try {
+      const ids = inviteStudents.map((s) => s.id);
+      const teacherName = profile?.full_name ?? "Auklėtojas";
+      const link = `${window.location.origin}/student`;
+      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)}–${String(inviteFor.end_time).slice(0, 5)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
+      const res = await inviteFn({ data: { studentIds: ids, message } });
+      toast.success(`Kvietimai išsiųsti: ${res.sent}/${res.total}.`);
+      setInviteFor(null);
+      setInviteClass(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti kvietimų.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const pickable = students.filter((s) =>
     (classFilter === "all" || s.class_year === classFilter) &&
     (letterFilter === "all" || (s.class_letter ?? "") === letterFilter));
