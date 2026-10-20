@@ -5,13 +5,14 @@ import { useMemo } from "react";
  * for the last 30 days. Pure SVG so it renders instantly without the chart bundle.
  */
 export function OrgEventOverview({ participants, hours, events, daily }: { participants: number; hours: number; events: number; daily: number[] }) {
-  const { line, area } = useMemo(() => {
+  const { line, area, pts, gridYs, max, total } = useMemo(() => {
     const W = 600, H = 160, pad = 8;
     let acc = 0;
     const cum = daily.map((v) => (acc += v));
     const max = Math.max(1, cum[cum.length - 1] ?? 0);
     const pts = cum.map((v, i) => [pad + (i / Math.max(1, cum.length - 1)) * (W - pad * 2), H - pad - (v / max) * (H - pad * 2 - 16)] as const);
-    if (!pts.length) return { line: "", area: "" };
+    const gridYs = [0.25, 0.5, 0.75].map((f) => H - pad - f * (H - pad * 2 - 16));
+    if (!pts.length) return { line: "", area: "", pts: [] as readonly (readonly [number, number])[], gridYs, max, total: 0 };
     // Catmull-Rom to cubic Bézier for a soft curve.
     let d = `M${pts[0][0]},${pts[0][1]}`;
     for (let i = 0; i < pts.length - 1; i++) {
@@ -19,7 +20,7 @@ export function OrgEventOverview({ participants, hours, events, daily }: { parti
       d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
     }
     const last = pts[pts.length - 1];
-    return { line: d, area: `${d} L${last[0]},${H} L${pts[0][0]},${H} Z` };
+    return { line: d, area: `${d} L${last[0]},${H} L${pts[0][0]},${H} Z`, pts, gridYs, max, total: cum[cum.length - 1] ?? 0 };
   }, [daily]);
 
   const stats = [
@@ -47,10 +48,19 @@ export function OrgEventOverview({ participants, hours, events, daily }: { parti
             <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
         </defs>
+        {gridYs.map((y) => (
+          <line key={y} x1="8" x2="592" y1={y} y2={y} stroke="var(--border)" strokeWidth="1" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" opacity="0.6" />
+        ))}
         {area && <path d={area} fill="url(#org-overview-fill)" />}
         {line && <path d={line} fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" className="org-overview-line" pathLength={1} />}
+        {pts.length > 0 && (
+          <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="4" fill="var(--primary)" stroke="var(--card)" strokeWidth="2" />
+        )}
       </svg>
-      <p className="mt-1 text-xs text-muted-foreground">Suteiktos valandos per paskutines 30 dienų</p>
+      <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+        <span>Suteiktos valandos per paskutines 30 dienų</span>
+        <span className="font-semibold text-foreground tabular-nums">{total} val. iš viso</span>
+      </div>
     </div>
   );
 }
