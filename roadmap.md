@@ -1,10 +1,10 @@
-# Užduotys (2026-10-20)
+# Užduotys (2026-10-20) — visos atliktos
 
-- [ ] 1. Mokytojas→mokinys pokalbis: „Toks pokalbis negalimas" (open_chat_with neturi school_admin→student šakos; chat_rooms.organization_id NOT NULL)
-- [ ] 2. Priminimo šablonai / greitieji veiksmai mokytojo chate
-- [ ] 3. Atsakyti: ar žinutės tikrai trinamos po 12 d. (taip — pg_cron purge)
-- [ ] 4. Klaidų pranešimai LT + be „šokančių" angliškų toast'ų (userError + tiesioginiai error.message)
-- [ ] 5. Super Admin klasių registracijos kodų puslapis (MKC-#####-X, school_class_codes, kodas pririštas prie klasės)
-- [ ] 6. Paskyrų trynimas: pasirinkimas be licencijos patikros
-- [ ] 7. Slaptas registracijos mygtukas matomesnis, neužstoja „Pranešti apie klaidą"
-- [ ] 8. /versijos → V2.6.0 įrašas
+- [x] 1. Mokytojas→mokinys pokalbis: pridėtos school_admin↔student šakos open_chat_with, organization_id tapo neprivalomas
+- [x] 2. Šablonai veiks — root cause buvo sugedęs pokalbis; klaidos dabar per userError
+- [x] 3. 12 d. trynimas: patvirtinta (pg_cron purge_old_messages)
+- [x] 4. user-error.ts papildytas RLS/JWT/duplicate/timeout šablonais
+- [x] 5. Klasių kodai: MKC-#####-# generatorius + vienas aktyvus kodas klasei (DB indeksas)
+- [x] 6. Trynimas be licencijos: deleteAccountDirect + varnelė admin.accounts
+- [x] 7. Slaptas mygtukas: matomas šviesus „Administracija" mygtukas formoje (ne fiksuotas — neužstoja klaidų mygtuko)
+- [x] 8. /versijos: V2.6.0 įrašas
