@@ -849,3 +849,5 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
   .sv-boot-ring { animation-duration: 2.4s; }
   .sv-boot-core, .sv-boot-bar::after { animation: none; }
 }
+.home-caret { animation: home-caret 1s steps(1) infinite; }
+@keyframes home-caret { 50% { opacity: 0; } }
