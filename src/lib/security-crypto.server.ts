@@ -122,6 +122,19 @@ export function verifyChallenge(challenge: string, answer: number): boolean {
 }
 
 // ─── reCAPTCHA v2 verification ─────────────────────────────────────────────
+// Only the production domain (and local dev) may pass; a token minted for any
+// other site is rejected even if Google would accept the shared secret.
+const RECAPTCHA_ALLOWED_HOSTNAMES = new Set([
+  "socialinesvalandos.dev",
+  "www.socialinesvalandos.dev",
+  "localhost",
+  "127.0.0.1",
+]);
+
+export function isAllowedRecaptchaHostname(hostname: unknown): boolean {
+  return typeof hostname === "string" && RECAPTCHA_ALLOWED_HOSTNAMES.has(hostname.toLowerCase());
+}
+
 export async function verifyRecaptchaToken(
   token: string,
   remoteIp: string | null,
@@ -136,8 +149,8 @@ export async function verifyRecaptchaToken(
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body,
     });
-    const json = (await r.json()) as { success?: boolean; score?: number };
-    return json?.success === true;
+    const json = (await r.json()) as { success?: boolean; score?: number; hostname?: string };
+    return json?.success === true && isAllowedRecaptchaHostname(json?.hostname);
   } catch {
     return false;
   }
