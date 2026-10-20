@@ -13,7 +13,9 @@ import {
   AlertCircle,
   Mail,
   Calendar,
-  MoreVertical
+  MoreVertical,
+  Pencil,
+  ArrowUpCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useServerFn } from "@tanstack/react-start";
@@ -21,6 +23,8 @@ import { toast } from "sonner";
 import { DashHero, GlassCard } from "@/components/dashboard-kit";
 import { requireAdmin } from "@/lib/auth-guards";
 import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { adminUpdateStudent, adminPromoteClasses } from "@/lib/admin-students.functions";
+import { CLASS_YEARS } from "@/lib/class-years";
 import { AdminCreateAccountPanel } from "@/components/admin-create-account-panel";
 import { SchoolAdminManager } from "@/components/admin/school-admin-manager";
 
@@ -34,9 +38,59 @@ function AdminAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState<{ role: string; class_year: string; class_letter: string; hours_needed: string }>({ role: "student", class_year: "", class_letter: "", hours_needed: "" });
+  const [promoting, setPromoting] = useState(false);
 
   const listFn = useServerFn(adminListAllAccounts);
+  const updateFn = useServerFn(adminUpdateStudent);
+  const promoteFn = useServerFn(adminPromoteClasses);
   const licensed = useLicensedAction();
+
+  const openEdit = (acc: any) => {
+    setEditing(acc);
+    setEditForm({
+      role: acc.role || "student",
+      class_year: acc.class_year || "",
+      class_letter: acc.class_letter || "",
+      hours_needed: acc.hours_needed != null ? String(acc.hours_needed) : "",
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setBusyId(editing.id);
+    try {
+      await updateFn({ data: {
+        id: editing.id,
+        role: editForm.role as any,
+        class_year: editForm.class_year || null,
+        class_letter: (editForm.class_letter || null) as any,
+        hours_needed: editForm.hours_needed === "" ? undefined : Number(editForm.hours_needed),
+      } });
+      toast.success("Paskyra atnaujinta");
+      setEditing(null);
+      fetchAccounts();
+    } catch (err: any) {
+      toast.error(err.message || "Nepavyko išsaugoti");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handlePromote = async () => {
+    if (!window.confirm("Perkelti visas klases į kitus mokslo metus? 12 / IV gimn. klasės bus pažymėtos kaip baigusios.")) return;
+    setPromoting(true);
+    try {
+      const res = await promoteFn();
+      toast.success(`Perkelta: ${res?.promoted_count ?? 0}, baigė: ${res?.graduated_count ?? 0}`);
+      fetchAccounts();
+    } catch (err: any) {
+      toast.error(err.message || "Nepavyko perkelti klasių");
+    } finally {
+      setPromoting(false);
+    }
+  };
 
   const fetchAccounts = async () => {
     setLoading(true);
@@ -113,7 +167,57 @@ function AdminAccountsPage() {
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Atnaujinti
         </button>
+        <button
+          onClick={handlePromote}
+          disabled={promoting}
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary/20 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/30"
+          title="Perkelti visas klases į kitus mokslo metus"
+        >
+          {promoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpCircle className="h-4 w-4" />}
+          Nauji mokslo metai
+        </button>
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={() => setEditing(null)}>
+          <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-background p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-white">Redaguoti: {editing.full_name || editing.email}</h3>
+            <label className="block text-xs font-bold uppercase tracking-wider text-white/50">Rolė</label>
+            <select value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white">
+              <option value="student">Mokinys</option>
+              <option value="school_admin">Mokyklos Admin</option>
+              <option value="organization">Organizacija</option>
+              <option value="admin">Super Admin</option>
+            </select>
+            <label className="block text-xs font-bold uppercase tracking-wider text-white/50">Klasė</label>
+            <div className="flex gap-2">
+              <select value={editForm.class_year} onChange={(e) => setEditForm({ ...editForm, class_year: e.target.value })}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white">
+                <option value="">—</option>
+                {CLASS_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <select value={editForm.class_letter} onChange={(e) => setEditForm({ ...editForm, class_letter: e.target.value })}
+                className="w-24 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white">
+                <option value="">—</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+              </select>
+            </div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-white/50">Privalomos valandos</label>
+            <input type="number" min={0} value={editForm.hours_needed} onChange={(e) => setEditForm({ ...editForm, hours_needed: e.target.value })}
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white" />
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setEditing(null)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-white/60 hover:bg-white/5">Atšaukti</button>
+              <button onClick={saveEdit} disabled={busyId === editing.id}
+                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50">
+                {busyId === editing.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Išsaugoti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <GlassCard className="overflow-hidden p-0">
         <div className="overflow-x-auto">
@@ -179,6 +283,13 @@ function AdminAccountsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => openEdit(acc)}
+                          className="rounded-lg p-2 text-white/20 transition hover:bg-primary/20 hover:text-primary"
+                          title="Redaguoti rolę ir klasę"
+                        >
+                          <Pencil className="h-5 w-5" />
+                        </button>
                         <button
                           onClick={() => handleDelete(acc.id, acc.email)}
                           disabled={busyId === acc.id}
