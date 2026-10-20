@@ -52,6 +52,7 @@ export function ClassCodeInput({ value, onChange }: { value: string; onChange: (
           spellCheck={false}
           required
           aria-describedby={`${id}-hint`}
+          style={mkc ? { color: "transparent", caretColor: "transparent", background: "transparent", border: 0, boxShadow: "none" } : undefined}
           className={mkc ? "absolute inset-0 h-full w-full cursor-text bg-transparent text-transparent caret-transparent outline-none selection:bg-transparent" : "relative h-8 w-full bg-transparent pl-7 font-mono text-base font-bold tracking-wider outline-none"}
         />
         {mkc ? (
