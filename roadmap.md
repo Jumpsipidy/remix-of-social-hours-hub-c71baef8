@@ -8,3 +8,8 @@
 - [x] Mokytojo zona: atskiras šviesus išdėstymas su šonine juosta, „Labas, {vardas}", atsijungimas per profilio kortelę (/mokytojas)
 - [x] Atsakyta: grupinė rezervacija su draugais yra rezervacijos lange „Eiti su draugais" + org skydelyje „Grupė" žyma
 - [ ] Gyvas patikrinimas prisijungus auklėtoju — negalima šioje peržiūroje (išorinė Supabase), reikia patikrinti tikrame domene
+- [ ] /mokytojas puslapiai kraunasi lėtai — sugreitinti
+- [ ] Mokytojas mato tik savo priskirtų klasių mokinius (ne kitas klases)
+- [ ] Puslapio viršus netelpa ekrane — pakeisti dydį
+- [ ] Mokytojams atskiras /chat su integruotomis funkcijomis
+- [ ] Registracijoje paslėptas licencijos mygtukas (SVC-####-####-E) — papildomos parinktys tik sesijoje iki perkrovimo
