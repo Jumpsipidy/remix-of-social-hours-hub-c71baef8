@@ -303,6 +303,7 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
             </DialogPortal>
           </Dialog>
         </div>
+        )
       ) : children}
     </>
   );
