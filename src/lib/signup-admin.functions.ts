@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { signupHours } from "@/lib/signup-rules";
 import { passwordProblem } from "@/lib/password-policy";
 
 async function digest(value: string) {
@@ -59,18 +58,18 @@ export const getSignupAdminCodes = createServerFn({ method: "POST" }).middleware
   });
 
 export const createStudentAsSignupAdmin = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ ticketId: z.string().uuid(), token: z.string().length(64), codeId: z.string().uuid(), fullName: z.string().trim().min(3).max(120), email: z.string().email(), password: z.string().min(10).max(200), hoursNeeded: z.number().int().min(8).max(500), skipEmail: z.boolean() }).parse(input))
+  .inputValidator((input) => z.object({ ticketId: z.string().uuid(), token: z.string().length(64), codeId: z.string().uuid(), fullName: z.string().trim().min(3).max(120), email: z.string().email(), password: z.string().min(10).max(200), hoursNeeded: z.number().int().min(0).max(500).default(20), skipEmail: z.boolean() }).parse(input))
   .handler(async ({ data, context }) => {
     const db = await requireSignupGrant(context.supabase, context.userId, data);
     const problem = passwordProblem(data.password, data.email);
     if (problem) throw new Error(problem);
-    const { data: code, error } = await db.from("school_class_codes").select("school_id, class_year, class_letter").eq("id", data.codeId).eq("is_active", true).maybeSingle();
+    const { data: code, error } = await db.from("school_class_codes").select("school_id, class_year, class_letter, hours_needed").eq("id", data.codeId).eq("is_active", true).maybeSingle();
     if (error || !code) throw new Error("Klasės kodas nebegalioja.");
     const school = await db.from("schools").select("is_active").eq("id", code.school_id).maybeSingle();
     if (school.error || !school.data?.is_active) throw new Error("Mokykla neaktyvi.");
     const { data: created, error: createError } = await db.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: data.skipEmail, user_metadata: { full_name: data.fullName } });
     if (createError || !created.user) throw new Error("Nepavyko sukurti paskyros. Patikrink, ar el. paštas dar nenaudojamas.");
-    const saved = await db.from("profiles").update({ school_id: code.school_id, associated_school_id: code.school_id, class_year: code.class_year, class_letter: code.class_letter, hours_needed: signupHours(code.class_year, data.hoursNeeded) }).eq("id", created.user.id).eq("role", "student").select("id").single();
+    const saved = await db.from("profiles").update({ school_id: code.school_id, associated_school_id: code.school_id, class_year: code.class_year, class_letter: code.class_letter, hours_needed: (await import("@/lib/class-codes.server")).hoursFromCode(code.class_year, (code as any).hours_needed) }).eq("id", created.user.id).eq("role", "student").select("id").single();
     if (saved.error) {
       await db.auth.admin.deleteUser(created.user.id);
       throw new Error("Klasės išsaugoti nepavyko. Paskyra nesukurta.");
@@ -78,13 +77,13 @@ export const createStudentAsSignupAdmin = createServerFn({ method: "POST" }).mid
     if (!data.skipEmail) {
       // Admin-created accounts do not send confirmation automatically. Invite
       // existing unconfirmed user through the regular signup resend endpoint.
-      const { createClient } = await import("@supabase/supabase-js");
-      const url = process.env.SUPABASE_URL || process.env.SB_URL || process.env.VITE_SUPABASE_URL;
-      const key = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-      if (!url || !key) return { ok: true, mailSent: false };
-      const pub = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-      const result = await pub.auth.resend({ type: "signup", email: data.email, options: { emailRedirectTo: "https://socialinesvalandos.dev/verify-email" } });
-      return { ok: true, mailSent: !result.error };
+      try {
+        const { data: link, error: linkError } = await db.auth.admin.generateLink({ type: "magiclink", email: data.email });
+        if (linkError) return { ok: true, mailSent: false };
+        const { sendVerificationEmail } = await import("@/lib/signup-email.server");
+        await sendVerificationEmail(data.email, "https://socialinesvalandos.dev", link.properties, "magiclink", data.fullName);
+        return { ok: true, mailSent: true };
+      } catch { return { ok: true, mailSent: false }; }
     }
     await db.from("auth_security_events").insert({ ticket_id: data.ticketId, user_id: context.userId, event: "signup.admin_created", meta: { email_confirmation_skipped: true, student_id: created.user.id } });
     return { ok: true, mailSent: false };
