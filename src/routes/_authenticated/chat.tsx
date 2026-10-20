@@ -127,7 +127,7 @@ function ChatPage() {
   const titleFor = (c: Conv) => {
     const schoolOnly = !c.student_id;
     if (profile?.role === "organization") return schoolOnly ? (c.school_admin_name ?? "Mokyklos administracija") : (c.student_name ?? "Mokinys");
-    if (profile?.role === "student") return c.organization_name ?? "Organizacija";
+    if (profile?.role === "student") return c.organization_name ?? (c.school_admin_name ? `${c.school_admin_name} (Auklėtojas)` : "Auklėtojas");
     return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
   const shown = useMemo(() => (convs ?? []).filter((c) => titleFor(c).toLowerCase().includes(filter.toLowerCase())), [convs, filter, profile?.role]);

@@ -8,6 +8,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { userError } from "@/lib/user-error";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -118,6 +119,7 @@ function TeacherChatPage() {
 
   const active = convs?.find((c) => c.room_id === activeId) ?? null;
   const titleFor = (c: Conv) => {
+    if (!c.organization_id) return c.student_name ?? "Mokinys"; // tiesioginis auklėtojas ↔ mokinys
     const schoolOnly = !c.student_id;
     return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
@@ -153,7 +155,7 @@ function TeacherChatPage() {
   );
   async function startWith(studentId: string) {
     const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: studentId });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(userError(error)); return; }
     setPicker(false);
     await loadConvs();
     navigate({ to: "/mokytojas/pokalbiai", search: { room: data as string } });
@@ -167,7 +169,7 @@ function TeacherChatPage() {
     const { data, error } = await supabase.from("messages").insert({ chat_room_id: activeId, sender_id: user.id, content }).select("*").single();
     sendLock.current = false;
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(userError(error)); return; }
     setText((current) => (current.trim() === content ? "" : current));
     followLatest.current = true;
     notifyStop();

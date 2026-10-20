@@ -100,3 +100,22 @@ export const runLicensedAdminAction = createServerFn({ method: "POST" })
     }
     return { ok: true as const, op, detail };
   });
+
+/**
+ * Account deletion without the licence round-trip. Enabled only when the
+ * Super Admin explicitly toggles „be licencijos" in the dashboard — weaker
+ * protection, so it is logged as a security event.
+ */
+export const deleteAccountDirect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = await adminClient(context.userId);
+    if (data.userId === context.userId) throw new Error("Negali ištrinti savo paskyros");
+    const { deleteAccountOp } = await import("./admin-ops.server");
+    await deleteAccountOp(sb, data.userId);
+    try {
+      await sb.from("auth_security_events").insert({ user_id: context.userId, event: "account.deleted_no_license", meta: { target: data.userId } });
+    } catch { /* best-effort */ }
+    return { ok: true as const };
+  });

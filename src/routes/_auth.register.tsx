@@ -317,12 +317,12 @@ function RegisterPage() {
           type="button"
           aria-label="Administracinė registracija"
           title="Administracinė registracija"
-          className="mx-auto mt-4 block h-2.5 w-2.5 rounded-full bg-muted-foreground/15 transition-colors hover:bg-primary/40 focus-visible:bg-primary/40"
+          className="mx-auto mt-4 flex h-7 items-center gap-1.5 rounded-full border border-transparent px-2.5 text-[10px] font-semibold text-muted-foreground/30 transition hover:border-border hover:text-muted-foreground focus-visible:border-border focus-visible:text-muted-foreground"
           onClick={async () => {
             try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
             catch (error) { toast.error(userError(error)); }
           }}
-        />
+        >Administracija</button>
       )}
       {adminGrant && <p role="status" className="mt-3 text-center text-xs text-muted-foreground">Administracinė prieiga patvirtinta. Perkrovus puslapį ji išsijungs.</p>}
       <AuthLegal />

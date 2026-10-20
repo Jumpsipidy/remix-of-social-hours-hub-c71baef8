@@ -3,9 +3,9 @@ import { PageShell } from "@/components/layout";
 import { useState } from "react";
 import { ArrowRight, PartyPopper, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-const TITLE = "V2.5 naujienos ir versijų istorija — Socialinės Valandos";
+const TITLE = "V2.6 naujienos ir versijų istorija — Socialinės Valandos";
 const DESC =
-  "Socialinės Valandos V2.5: pokalbiai, žemėlapis, QR patikra, SOCI GUARD, mokyklos renginiai ir naujos temos. Visos naujovės ir pataisymai vienoje vietoje.";
+  "Socialinės Valandos V2.6: auklėtojo sritis /mokytojas, grupinės rezervacijos su draugais, sustiprintas SV Guard, klasių registracijos kodai ir saugesnis slaptažodis.";
 
 type Tag = "Nauja" | "Patobulinta" | "Sauga" | "Pataisyta" | "Dizainas";
 
@@ -19,6 +19,29 @@ type Version = {
 
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
+  {
+    v: "V2.6.0",
+    title: "Auklėtojo sritis ir stipresnė apsauga",
+    date: "2026 m. spalis",
+    summary:
+      "V2.6 atneša visiškai naują auklėtojo (mokyklos administratoriaus) sritį /mokytojas, grupines rezervacijas su draugais, dar stipresnį SV Guard ir klasių registracijos kodus.",
+    items: [
+      { tag: "Nauja", text: "Auklėtojo sritis /mokytojas: apžvalga, mokinių sąrašas su draugais ir prisijungimų serijomis, detalus mokinio vaizdas ir atskira rezervacijų valdymo vieta." },
+      { tag: "Nauja", text: "Auklėtojas gali kurti, keisti ir trinti rezervacijas savo priskirtoms klasėms, kviesti klasę į rezervaciją, o mokiniai gauna „Auklėtoja“ pokalbio žinutę su nuoroda." },
+      { tag: "Nauja", text: "Auklėtojo pokalbiai su greitaisiais šablonais (priminimas apie valandas, rezervacijos patvirtinimas, paskatinimas) ir tiesioginis pokalbis su priskirtos klasės mokiniu." },
+      { tag: "Nauja", text: "Grupinės rezervacijos su draugais: pasirink draugus, jie patvirtina dalyvavimą, kiekvienas gauna savo QR / 6 skaitmenų kodą, organizacija mato grupes." },
+      { tag: "Nauja", text: "Klasių registracijos kodai (MKC-#####-#): Super Admin kuria unikalų kodą kiekvienai klasei — 5A ir 5B gauna skirtingus kodus, o mokinys registruodamasis automatiškai patenka į savo klasę." },
+      { tag: "Nauja", text: "Puslapis /securityguard paaiškina, kaip SV Guard saugo svetainę nuo robotų ir kaip veikia patikros." },
+      { tag: "Nauja", text: "Super Admin gali redaguoti mokinio rolę, klasę ir privalomas valandas bei vienu mygtuku perkelti visas klases į naujus mokslo metus." },
+      { tag: "Nauja", text: "Organizacijų prieigos prašymų peržiūra ir tvirtinimas Super Admin skyde." },
+      { tag: "Sauga", text: "SV Guard stiprinimas: vienkartiniai serverio iššūkiai, bandymų ribojimas, reCAPTCHA pririšta tik prie tikro domeno, riziką sprendžia tik serveris." },
+      { tag: "Sauga", text: "Stipresni slaptažodžiai: mažiausiai 10 simbolių, raidės ir skaičiai, atmesti akivaizdžiai nutekėję slaptažodžiai." },
+      { tag: "Sauga", text: "Gresiantys Super Admin veiksmai patvirtinami licencijos raktu per saugią auth.socialinesvalandos.dev svetainę." },
+      { tag: "Patobulinta", text: "Klaidų pranešimai visur lietuviški ir suprantami — be techninių angliškų tekstų." },
+      { tag: "Patobulinta", text: "Auklėtojo puslapiai kraunasi akimirksniu — duomenys dalijamasi tarp puslapių." },
+      { tag: "Dizainas", text: "Naujas būsenos puslapis ir klaidų ekranai, derinami prie pasirinktos temos." },
+    ],
+  },
   {
     v: "V2.5.0",
     title: "🎉 Didžiausias atnaujinimas — 3 mėnesių darbas",
