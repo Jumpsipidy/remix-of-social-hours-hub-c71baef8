@@ -3,7 +3,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart, Mail, ArrowLeft, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { requestPasswordReset } from "@/lib/school-signup.functions";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/forgot-password")({
 
 function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const resetFn = useServerFn(requestPasswordReset);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -31,10 +33,7 @@ function ForgotPasswordPage() {
     if (busy) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
-      if (error) throw error;
+      await resetFn({ data: { email: email.trim() } });
       sessionStorage.setItem("sv_reset_email", email.trim());
       setSent(true);
       setTimeout(() => navigate({ to: "/update-password" }), 1800);

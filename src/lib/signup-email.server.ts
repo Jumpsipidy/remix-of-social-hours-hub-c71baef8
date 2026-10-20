@@ -24,3 +24,23 @@ export async function sendVerificationEmail(email: string, origin: string, props
   if ("skipped" in result) throw new Error("Laiškų siuntimas nesukonfigūruotas (trūksta RESEND_API_KEY).");
   return result;
 }
+
+/** Password recovery email through Resend; link opens /update-password with a token hash. */
+export async function sendRecoveryEmail(email: string, origin: string, props: { hashed_token?: string; email_otp?: string }) {
+  if (!props.hashed_token) throw new Error("Nepavyko paruošti atkūrimo nuorodos.");
+  const link = `${origin}/update-password?token_hash=${encodeURIComponent(props.hashed_token)}&type=recovery`;
+  const code = props.email_otp ? escape(props.email_otp) : "";
+  const html = renderShell({
+    accent: "indigo",
+    eyebrow: "Slaptažodžio atkūrimas",
+    medallionEmoji: "🔑",
+    heading: "Atkurk slaptažodį",
+    bodyHtml: `Paspausk mygtuką ir nustatyk naują slaptažodį.${code ? `<br/><br/>Arba įvesk šį kodą:<br/><b style="font-size:26px;letter-spacing:6px;">${code}</b>` : ""}<br/><br/>Jei to neprašei — ignoruok šį laišką.`,
+    ctaLabel: "Nustatyti naują slaptažodį",
+    ctaHref: link,
+  } as never);
+  const { sendResendEmail } = await import("./email.functions");
+  const result = await sendResendEmail(email, "Slaptažodžio atkūrimas — Socialinės Valandos", html, { text: `Atkurk slaptažodį: ${link}${props.email_otp ? `\nKodas: ${props.email_otp}` : ""}`, tag: "password_reset" });
+  if ("skipped" in result) throw new Error("Laiškų siuntimas nesukonfigūruotas (trūksta RESEND_API_KEY).");
+  return result;
+}
