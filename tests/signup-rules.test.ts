@@ -16,3 +16,16 @@ describe("cookie consent", () => {
   it("rejects future consent", () => expect(parseConsent(JSON.stringify({ ...record, timestamp: now + 1 }), now)).toBeNull());
   it("rejects malformed consent", () => expect(parseConsent(JSON.stringify({ ...record, categories: { necessary: true, analytics: "yes" } }), now)).toBeNull());
 });
+import { hoursFromCode } from "@/lib/class-codes.server";
+import { formatClassCode, isCompleteClassCode } from "@/components/class-code-input";
+
+describe("hours locked to class code", () => {
+  it("uses the hours set on the class code", () => { expect(hoursFromCode("9 / I gimn.", 40)).toBe(40); });
+  it("always gives 20 hours to classes 5–7", () => { expect(hoursFromCode("6", 60)).toBe(20); });
+  it("falls back to 20 when the code has no hours", () => { expect(hoursFromCode("10 / II gimn.", null)).toBe(20); });
+});
+
+describe("class code formatting", () => {
+  it("formats typed input to MKC-XXXXX-X", () => { expect(formatClassCode("mkc ab12c 9")).toBe("MKC-AB12C-9"); });
+  it("recognises a complete code", () => { expect(isCompleteClassCode("MKC-AB12C-9")).toBe(true); expect(isCompleteClassCode("MKC-AB12")).toBe(false); });
+});
