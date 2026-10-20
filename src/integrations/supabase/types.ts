@@ -680,6 +680,33 @@ export type Database = {
         }
         Relationships: []
       }
+      gate_nonces: {
+        Row: {
+          attempts: number
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          nonce: string
+          ua_hash: string
+        }
+        Insert: {
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          nonce: string
+          ua_hash: string
+        }
+        Update: {
+          attempts?: number
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          nonce?: string
+          ua_hash?: string
+        }
+        Relationships: []
+      }
       invite_links: {
         Row: {
           audience: string
