@@ -209,9 +209,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try { localStorage.removeItem(ROLE_CACHE_KEY); localStorage.removeItem(ROLE_CACHE_UID_KEY); } catch {}
         setMock(null);
         await supabase.auth.signOut();
-        const wait = 1100 - (Date.now() - started);
+        const wait = 300 - (Date.now() - started);
         if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-        setTimeout(() => setLeaving(false), 300);
+        setTimeout(() => setLeaving(false), 150);
       },
       impersonate: (p: Profile) => {
         try { localStorage.setItem(MOCK_KEY, JSON.stringify({ profile: p })); } catch {}

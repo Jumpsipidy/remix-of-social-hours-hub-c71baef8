@@ -531,15 +531,15 @@ html.school-eyes, .theme-sample-light {
   background-color: color-mix(in oklab, var(--muted) 55%, transparent);
   background-image: linear-gradient(100deg, transparent 20%, color-mix(in oklab, var(--foreground) 6%, transparent) 50%, transparent 80%);
   background-size: 200vw 100%;
-  background-attachment: fixed;
+  background-attachment: scroll;
   background-repeat: no-repeat;
   opacity: 0;
-  animation: sv-skel-in .45s ease-out calc(180ms + var(--sk-delay, 0ms)) forwards, sv-skel-sweep 2.2s ease-in-out infinite;
+  animation: sv-skel-in .2s ease-out calc(60ms + var(--sk-delay, 0ms)) forwards, sv-skel-sweep 1.4s ease-in-out infinite;
 }
 @keyframes sv-skel-in { to { opacity: 1; } }
 @keyframes sv-skel-sweep { 0% { background-position: -100vw 0; } 100% { background-position: 100vw 0; } }
 /* Content that replaces a skeleton glides in instead of popping. */
-.sv-reveal { animation: sv-reveal .4s cubic-bezier(.2,.7,.2,1) both; }
+.sv-reveal { animation: sv-reveal .2s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes sv-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .sv-skeleton { animation: sv-skel-in .2s ease-out forwards; }
