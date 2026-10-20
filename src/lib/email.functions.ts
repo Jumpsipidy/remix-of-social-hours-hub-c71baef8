@@ -8,7 +8,7 @@ import { renderWelcomeEmail, welcomeText } from "./email-templates/welcome";
 import { renderOrgInviteEmail } from "./email-templates/org-invite";
 import { APP_URL, SUPPORT_EMAIL } from "./email-templates/_shell";
 
-const FROM = "Socialinės Valandos <noreply@jumpsipidy.online>";
+const FROM_FALLBACK = "Socialinės Valandos <noreply@jumpsipidy.online>";
 const REPLY_TO = SUPPORT_EMAIL;
 
 type SendPayload = {
@@ -31,7 +31,7 @@ async function sendResend(payload: SendPayload) {
     return { skipped: true as const, reason: "missing_api_key" };
   }
   const body: Record<string, unknown> = {
-    from: FROM,
+    from: process.env.RESEND_FROM?.trim() || FROM_FALLBACK,
     to: payload.to,
     reply_to: REPLY_TO,
     subject: payload.subject,
@@ -362,7 +362,7 @@ export const getEmailHealth = createServerFn({ method: "GET" })
 
     return {
       configured,
-      from: FROM,
+      from: process.env.RESEND_FROM?.trim() || FROM_FALLBACK,
       replyTo: REPLY_TO,
       appUrl: APP_URL,
       domainStatus,

@@ -136,13 +136,36 @@ export const resendSignupVerification = createServerFn({ method: "POST" })
     if ((count ?? 0) >= 3) throw new Error("Per daug bandymų. Palauk 15 minučių.");
     await supabaseAdmin.from("auth_security_events").insert({ event: "signup.resend", meta: { email_hash: emailHash } });
     // Same answer whether or not the account exists, so emails can't be probed.
-    const { data: profile } = await supabaseAdmin.from("profiles").select("id, full_name").ilike("email", email).maybeSingle();
-    if (!profile) return { ok: true };
-    const { data: user } = await supabaseAdmin.auth.admin.getUserById(profile.id);
-    if (!user.user || user.user.email_confirmed_at) return { ok: true };
+    // generateLink works for any existing account, even if the profile row lacks email.
     const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "magiclink", email });
-    if (error) throw new Error("Nepavyko paruošti laiško.");
+    if (error || !link.user) return { ok: true };
+    if (link.user.email_confirmed_at) return { ok: true };
+    const name = (link.user.user_metadata as { full_name?: string } | null)?.full_name;
     const { sendVerificationEmail } = await import("@/lib/signup-email.server");
-    await sendVerificationEmail(email, origin, link.properties, "magiclink", profile.full_name ?? undefined);
+    try { await sendVerificationEmail(email, origin, link.properties, "magiclink", name); }
+    catch (e) { console.error("[resend-verify] email failed", e); throw new Error("Laiško išsiųsti nepavyko. Bandyk vėliau arba rašyk pagalba@socialinesvalandos.dev."); }
+    return { ok: true };
+  });
+
+/** Password reset via Resend (Supabase's built-in mailer only reaches team members). */
+export const requestPasswordReset = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ email: z.string().trim().email().max(200) }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const origin = getRequest().headers.get("origin");
+    if (!origin || !/^https?:\/\/(localhost(:\d+)?|([a-z0-9-]+\.)*socialinesvalandos\.dev|[a-z0-9-]+\.lovable\.app)$/i.test(origin)) throw new Error("Netinkamas puslapis.");
+    const email = data.email.toLowerCase();
+    const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email));
+    const emailHash = Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
+    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin.from("auth_security_events").select("id", { count: "exact", head: true }).eq("event", "password.reset").eq("meta->>email_hash", emailHash).gte("created_at", since);
+    if ((count ?? 0) >= 3) throw new Error("Per daug bandymų. Palauk 15 minučių.");
+    await supabaseAdmin.from("auth_security_events").insert({ event: "password.reset", meta: { email_hash: emailHash } });
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({ type: "recovery", email });
+    if (error || !link?.properties) return { ok: true }; // same answer for unknown emails
+    const { sendRecoveryEmail } = await import("@/lib/signup-email.server");
+    try { await sendRecoveryEmail(email, origin, link.properties); }
+    catch (e) { console.error("[password-reset] email failed", e); throw new Error("Laiško išsiųsti nepavyko. Bandyk vėliau arba rašyk pagalba@socialinesvalandos.dev."); }
     return { ok: true };
   });
