@@ -57,6 +57,7 @@ import {
 } from "@/lib/fraud-flags";
 import { loadAntiCheatConfig } from "@/lib/anti-cheat-config";
 import { RiskCenter } from "@/components/school/risk-center";
+// Rizikos centro skirtukas pašalintas mokytojų prašymu — komponentas paliktas kode.
 import { CertificateVerifyPanel } from "@/components/certificate-verify-panel";
 import { toast } from "sonner";
 import { ClassRoster, ReservationHub, HistoryPanel, RecommendDialog, classLabel } from "@/components/school/school-hub";
@@ -64,7 +65,7 @@ import { DmDialog } from "@/components/dm-dialog";
 import { CalendarCheck, History, LayoutList } from "lucide-react";
 
 const SCHOOL_TABS = [
-  "overview", "roster", "hub", "history", "students", "classes", "queue", "risk", "verify", "orgs", "events", "accounts",
+  "overview", "roster", "hub", "history", "students", "classes", "queue", "verify", "orgs", "events", "accounts",
 ] as const;
 
 export const Route = createFileRoute("/school")({
@@ -132,7 +133,6 @@ type SchoolTab =
   | "students"
   | "classes"
   | "queue"
-  | "risk"
   | "verify"
   | "orgs"
   | "events"
@@ -516,12 +516,6 @@ function SchoolDashboard() {
     { id: "students", label: "Mokiniai", icon: Users, badge: String(students.length) },
     { id: "classes", label: "Klasės", icon: GraduationCap, badge: String(availableClasses.length) },
     { id: "queue", label: "Peržiūros eilė", icon: ClipboardCheck, badge: String(unreviewedCount) },
-    {
-      id: "risk",
-      label: "Rizikos centras",
-      icon: AlertTriangle,
-      badge: String(riskStudents.length),
-    },
     { id: "verify", label: "PDF / QR patikra", icon: ShieldCheck, badge: "skenuoti" },
     { id: "orgs", label: "Partneriai", icon: Building2, badge: String(orgs.length) },
     { id: "events", label: "Renginiai", icon: CalendarPlus, badge: "kurti" },
@@ -688,7 +682,6 @@ function SchoolDashboard() {
             <div className="mb-4">
               <QuickTiles tiles={[
                 { label: "Peržiūros eilė", value: unreviewedCount, hint: "Nepatvirtintos rezervacijos", icon: ClipboardCheck, tone: unreviewedCount ? "warning" : "default", onClick: () => setTab("queue") },
-                { label: "Rizika", value: riskStudents.length, hint: "Reikia dėmesio", icon: ShieldCheck, onClick: () => setTab("risk") },
                 { label: "Mokiniai", value: students.length, hint: "Visi mokyklos", icon: Users, onClick: () => setTab("students") },
                 { label: "Pokalbiai", hint: "Su organizacijomis", icon: MessageCircle, to: "/chat" },
                 { label: "PDF / QR patikra", hint: "Pažymėjimų tikrinimas", icon: ShieldCheck, onClick: () => setTab("verify") },
@@ -895,15 +888,6 @@ function SchoolDashboard() {
                 setChatRes={setChatRes}
                 persistReviewed={persistReviewed}
               />
-            </Panel>
-          )}
-
-          {tab === "risk" && (
-            <Panel
-              title="Rizikos centras"
-              subtitle="Paspausk kortelę, kad filtruotum. Peržiūra atidaro visą mokinio istoriją."
-            >
-              <RiskCenter rows={riskStudents} onAudit={setAuditing} />
             </Panel>
           )}
 
