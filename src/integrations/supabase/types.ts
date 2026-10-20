@@ -419,7 +419,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          organization_id: string
+          organization_id: string | null
           reservation_id: string | null
           school_admin_id: string | null
           student_id: string | null
@@ -427,7 +427,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          organization_id: string
+          organization_id?: string | null
           reservation_id?: string | null
           school_admin_id?: string | null
           student_id?: string | null
@@ -435,7 +435,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          organization_id?: string
+          organization_id?: string | null
           reservation_id?: string | null
           school_admin_id?: string | null
           student_id?: string | null
