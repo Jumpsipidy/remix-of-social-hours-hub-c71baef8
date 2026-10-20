@@ -38,11 +38,11 @@ export function NavCommand({ extra }: { extra: Item[] }) {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}
-        className="hidden h-9 items-center gap-2 rounded-xl border border-border bg-background/70 px-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground lg:inline-flex">
+        className="hidden h-9 items-center gap-2 rounded-xl border border-border bg-background/70 px-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground xl:inline-flex">
         <Search className="h-4 w-4" /> Ieškoti…
-        <kbd className="ml-3 rounded-md border border-border bg-muted px-1.5 font-mono text-[10px]">Ctrl K</kbd>
+        <kbd className="ml-3 whitespace-nowrap rounded-md border border-border bg-muted px-1.5 font-mono text-[10px]">Ctrl K</kbd>
       </button>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Ieškoti" className="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Ieškoti" className="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground xl:hidden">
         <Search className="h-4 w-4" />
       </button>
       <CommandDialog open={open} onOpenChange={setOpen}>

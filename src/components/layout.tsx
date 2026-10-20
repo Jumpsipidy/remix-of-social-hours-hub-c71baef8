@@ -133,7 +133,7 @@ export function Navbar() {
             const active = isActive(l.to, l.to === "/");
             return (
               <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
-                className={`relative rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+                className={`relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
                 {l.label}
                 {active && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-primary" />}
               </Link>
