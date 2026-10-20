@@ -37,6 +37,10 @@ const VERSIONS: Version[] = [
       { tag: "Sauga", text: "SV Guard stiprinimas: vienkartiniai serverio iššūkiai, bandymų ribojimas, reCAPTCHA pririšta tik prie tikro domeno, riziką sprendžia tik serveris." },
       { tag: "Sauga", text: "Stipresni slaptažodžiai: mažiausiai 10 simbolių, raidės ir skaičiai, atmesti akivaizdžiai nutekėję slaptažodžiai." },
       { tag: "Sauga", text: "Gresiantys Super Admin veiksmai patvirtinami licencijos raktu per saugią auth.socialinesvalandos.dev svetainę." },
+      { tag: "Nauja", text: "Privalomos valandos užrakintos pagal klasės kodą — Super Admin nustato valandas kiekvienai klasei, mokinys jų nebesirenka." },
+      { tag: "Nauja", text: "Kuriant ar keičiant auklėtojo paskyrą jo klasėms automatiškai sukuriami registracijos kodai." },
+      { tag: "Dizainas", text: "Animuotas klasės kodo laukelis registracijoje: simboliai „įšoka“ į vietas, o pilnas kodas užsidega." },
+      { tag: "Pataisyta", text: "Paskyros patvirtinimo laiškai siunčiami per mūsų pašto sistemą, todėl tikrai pasiekia mokinius; pakartotinis siuntimas apsaugotas nuo piktnaudžiavimo." },
       { tag: "Patobulinta", text: "Klaidų pranešimai visur lietuviški ir suprantami — be techninių angliškų tekstų." },
       { tag: "Patobulinta", text: "Auklėtojo puslapiai kraunasi akimirksniu — duomenys dalijamasi tarp puslapių." },
       { tag: "Dizainas", text: "Naujas būsenos puslapis ir klaidų ekranai, derinami prie pasirinktos temos." },
@@ -444,20 +448,20 @@ function VersionsPage() {
             <PartyPopper className="h-3.5 w-3.5" /> Didžiausias atnaujinimas
           </span>
           <h1 className="relative mt-5 font-display text-6xl font-black leading-none tracking-tight sm:text-8xl">
-            <span className="sv-v25-title inline-block text-primary">V2.5</span> <span className="inline-block text-5xl sm:text-7xl">🎉</span>
+            <span className="sv-v25-title inline-block text-primary">V2.6</span> <span className="inline-block text-5xl sm:text-7xl">🎉</span>
           </h1>
           <p className="relative mt-4 max-w-xl text-base font-semibold sm:text-lg">
-            3 mėnesiai darbo. Šimtai pakeitimų. Viena platforma, kuri pagaliau sujungia mokinius, organizacijas ir mokyklas.
+            Auklėtojo sritis, klasių registracijos kodai, grupinės rezervacijos ir dar stipresnė apsauga — viskas vienoje platformoje.
           </p>
           <p className="relative mt-2 max-w-xl text-sm text-muted-foreground">
             Sukurta savo laiku ir savo lėšomis — ačiū visiems, kas testavo, rašė klaidas ir laukė.
           </p>
           <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { k: big?.items.length ?? 0, l: "naujovių V2.5" },
+              { k: big?.items.length ?? 0, l: "naujovių V2.6" },
               { k: TOTAL_CHANGES, l: "pakeitimų iš viso" },
               { k: VERSIONS.length, l: "versijų" },
-              { k: "3 mėn.", l: "darbo" },
+              { k: "V2.6.0", l: "naujausia" },
             ].map((x) => (
               <div key={x.l} className="rounded-2xl border border-border bg-background/60 p-4 text-center">
                 <p className="font-display text-2xl font-black sm:text-3xl">{x.k}</p>
@@ -467,27 +471,12 @@ function VersionsPage() {
           </div>
         </section>
 
-        {/* Mažas pataisų leidimas — sąmoningai daug kuklesnis nei V2.5. */}
-        <details className="group mt-4 rounded-2xl border border-border bg-card px-4 py-3 text-sm">
-          <summary className="flex cursor-pointer list-none items-center gap-2">
-            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs font-bold">v25.1</span>
-            <span className="text-muted-foreground">Mažas atnaujinimas mokykloms</span>
-            <span className="ml-auto text-xs text-muted-foreground group-open:hidden">Rodyti</span>
-          </summary>
-          <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-            <li>• Naujas mokyklos administratoriaus skydelis su šonine juosta</li>
-            <li>• „Mano klasė“, rezervacijų centras be QR ir visa mokinių istorija</li>
-            <li>• Klasės su raidėmis (5A, 5B…), užrakintos auklėtojų klasės</li>
-            <li>• Rekomendacijos ir „Siųsti rezervaciją“ mokiniui, „…“ rašymo indikatorius</li>
-            <li>• Veiklos tipai: Dirbo, Pasitarimo valandos, Renginys</li>
-            <li>• Tema nebemirksi kraunantis, šviesioje temoje įskaitomas tekstas, pataisytas klaidų pranešimas</li>
-          </ul>
-        </details>
+
 
 
 
         <section className="mt-10">
-          <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.5</h2>
+          <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.6</h2>
           <p className="mt-1 text-sm text-muted-foreground">Nuo didžiausių naujovių iki smulkmenų — žemiau visas sąrašas.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {HIGHLIGHTS.map((h, i) => (

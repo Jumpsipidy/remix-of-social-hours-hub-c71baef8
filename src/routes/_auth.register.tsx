@@ -137,21 +137,10 @@ function RegisterPage() {
         if (res.reason === "bad_code") { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
         throw new Error(res.reason === "signup" && res.message ? res.message : "Nepavyko sukurti paskyros");
       }
-      const signUp = { session: res.session };
-      if (res.session) await supabase.auth.setSession(res.session);
       sessionStorage.setItem("sv_signup_email", email.trim());
-      if (!signUp.session) {
-        if ("mailSent" in res && res.mailSent === false) toast.warning("Paskyra sukurta, bet laiško išsiųsti nepavyko. Patvirtinimo puslapyje spausk „Siųsti dar kartą“.");
-        else toast.success("Laiškas išsiųstas! Patikrink el. paštą (ir „Spam“ aplanką).");
-        navigate({ to: "/verify-email" });
-      } else {
-        // Session active — send welcome email (bearer is already attached)
-        import("@/lib/email.functions").then(({ sendWelcomeEmail }) =>
-          sendWelcomeEmail().catch((e) => console.warn("[email] welcome failed", e)),
-        );
-        toast.success("Paskyra sukurta! Sveiki atvykę.");
-        navigate({ to: "/student" });
-      }
+      if (res.mailSent === false) toast.warning("Paskyra sukurta, bet laiško išsiųsti nepavyko. Patvirtinimo puslapyje spausk „Siųsti dar kartą“.");
+      else toast.success("Laiškas išsiųstas! Patikrink el. paštą (ir „Spam“ aplanką).");
+      navigate({ to: "/verify-email" });
     } catch (err) {
       toast.error(userError(err, "Nepavyko sukurti paskyros."));
     } finally { setLoading(false); }
