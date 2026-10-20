@@ -1,8 +1,13 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { TeacherShell } from "@/components/teacher/teacher-shell";
+import { schoolSnapshotQuery } from "@/components/teacher/use-school-data";
 
 export const Route = createFileRoute("/_authenticated/mokytojas")({
+  // Duomenys pradedami krauti iš karto – visi vaikiniai puslapiai dalijasi talpykla.
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(schoolSnapshotQuery);
+  },
   component: TeacherLayout,
 });
 

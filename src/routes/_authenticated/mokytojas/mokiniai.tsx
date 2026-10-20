@@ -56,9 +56,9 @@ function TeacherStudents() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Mokiniai</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">Mokiniai</h1>
         <p className="text-sm text-muted-foreground">Paspausk ant mokinio, kad pamatytum visą informaciją.</p>
       </div>
 

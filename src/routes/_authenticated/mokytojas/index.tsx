@@ -44,9 +44,9 @@ function TeacherOverview() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">Apžvalga</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">Apžvalga</h1>
         <p className="text-sm text-muted-foreground">
           {data?.scope.class_restricted
             ? `Priskirtos klasės: ${data.scope.assigned_classes.join(", ") || "visos"}${data.scope.assigned_letter ? ` · ${data.scope.assigned_letter}` : ""}`

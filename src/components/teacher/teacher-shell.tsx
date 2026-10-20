@@ -9,7 +9,7 @@ const NAV = [
   { to: "/mokytojas", label: "Apžvalga", icon: LayoutDashboard, exact: true },
   { to: "/mokytojas/mokiniai", label: "Mokiniai", icon: Users, exact: false },
   { to: "/mokytojas/rezervacijos", label: "Rezervacijos", icon: CalendarCheck, exact: false },
-  { to: "/chat", label: "Pokalbiai", icon: MessageCircle, exact: false },
+  { to: "/mokytojas/pokalbiai", label: "Pokalbiai", icon: MessageCircle, exact: false },
 ] as const;
 
 function initials(name: string | null | undefined) {
@@ -81,7 +81,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-muted/30 text-foreground">
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-card px-4 py-3 lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center gap-2 border-b border-border bg-card px-3 py-2 lg:hidden">
         <Button variant="ghost" size="icon" aria-label="Meniu" onClick={() => setMenuOpen(true)}>
           <Menu className="h-5 w-5" />
         </Button>
@@ -124,7 +124,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
           <div className="mt-auto">{profileChip}</div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-8">{children}</main>
       </div>
     </div>
   );

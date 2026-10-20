@@ -312,10 +312,18 @@ function RegisterPage() {
         Jau turi paskyrą?{" "}
         <Link to="/login" className="font-semibold text-primary hover:underline">Prisijunk</Link>
       </p>
-      {profile?.role === "admin" && !isImpersonating && !adminGrant && <Button type="button" size="sm" variant="ghost" className="mx-auto mt-2 flex text-xs text-muted-foreground" onClick={async () => {
-        try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
-        catch (error) { toast.error(userError(error)); }
-      }}><KeyRound className="h-3 w-3" />Administracinė registracija</Button>}
+      {profile?.role === "admin" && !isImpersonating && !adminGrant && (
+        <button
+          type="button"
+          aria-label="Administracinė registracija"
+          title="Administracinė registracija"
+          className="mx-auto mt-4 block h-2.5 w-2.5 rounded-full bg-muted-foreground/15 transition-colors hover:bg-primary/40 focus-visible:bg-primary/40"
+          onClick={async () => {
+            try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
+            catch (error) { toast.error(userError(error)); }
+          }}
+        />
+      )}
       {adminGrant && <p role="status" className="mt-3 text-center text-xs text-muted-foreground">Administracinė prieiga patvirtinta. Perkrovus puslapį ji išsijungs.</p>}
       <AuthLegal />
     </AuthStage>

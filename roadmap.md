@@ -8,3 +8,8 @@
 - [x] Mokytojo zona: atskiras šviesus išdėstymas su šonine juosta, „Labas, {vardas}", atsijungimas per profilio kortelę (/mokytojas)
 - [x] Atsakyta: grupinė rezervacija su draugais yra rezervacijos lange „Eiti su draugais" + org skydelyje „Grupė" žyma
 - [ ] Gyvas patikrinimas prisijungus auklėtoju — negalima šioje peržiūroje (išorinė Supabase), reikia patikrinti tikrame domene
+- [x] /mokytojas greitis: bendra Query talpykla + išankstinis įkėlimas + lygiagrečios DB užklausos
+- [ ] Paskyrai „testas testas" priskirti klases/raidę (laukia vartotojo atsakymo; kodas filtruoja teisingai)
+- [x] Puslapio viršus suspaustas (mažesnė juosta, antraštės, paraštės)
+- [x] Naujas /mokytojas/pokalbiai su šablonais, „Rašyti mokiniui", kvietimu į rezervaciją
+- [x] Registracijoje mažas beveik nematomas taškas → licencijos patikra auth svetainėje → papildomos parinktys iki perkrovimo
