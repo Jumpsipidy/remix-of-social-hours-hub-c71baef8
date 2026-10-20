@@ -118,7 +118,7 @@ function stepsFor(role: AppRole | null, name?: string | null): Step[] {
         eyebrow: "Prieiga",
         title: "Matai tik savo mokyklą",
         body: "Duomenų izoliacija per RLS — kitų mokyklų mokinių tu nematai. Priskirtos klasės nurodytos tavo profilyje.",
-        cta: { label: "Į mokyklos sritį", to: "/school" },
+        cta: { label: "Į auklėtojo sritį", to: "/mokytojas" },
       },
       {
         icon: BarChart3,

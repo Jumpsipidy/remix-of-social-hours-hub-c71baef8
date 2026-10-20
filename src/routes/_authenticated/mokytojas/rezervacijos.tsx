@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarPlus, Clock, Pencil, Send, Trash2 } from "lucide-react";
+import { CalendarPlus, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -68,6 +68,10 @@ function TeacherReservations() {
   const [editing, setEditing] = useState<SchoolReservation | null>(null);
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
 
+  const [search, setSearch] = useState("");
+  const [inviteFor, setInviteFor] = useState<SchoolReservation | null>(null);
+  const [inviteClass, setInviteClass] = useState<string | null>(null);
+
   const students = data?.students ?? [];
   const orgs = data?.organizations ?? [];
   const schoolRes = useMemo(
@@ -77,6 +81,48 @@ function TeacherReservations() {
   );
 
   const classYears = useMemo(() => [...new Set(students.map((s) => s.class_year).filter(Boolean) as string[])].sort(), [students]);
+
+  // Klasių (metai + raidė) sąrašas tik iš to auklėtojo mokinių — serveris jau
+  // apriboja pagrindinį sąrašą jo priskirtomis klasėmis, tad čia nieko pridurti negalima.
+  const classGroups = useMemo(() => {
+    const map = new Map<string, SchoolStudent[]>();
+    for (const s of students) {
+      if (!s.class_year) continue;
+      const key = `${s.class_year}${s.class_letter ? ` ${s.class_letter}` : ""}`;
+      map.set(key, [...(map.get(key) ?? []), s]);
+    }
+    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }, [students]);
+
+  const filteredRes = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return schoolRes;
+    return schoolRes.filter((r) =>
+      studentName(r.student_id).toLowerCase().includes(q) ||
+      r.reservation_date.includes(q) ||
+      (r.note ?? "").toLowerCase().includes(q));
+  }, [schoolRes, search, students]);
+
+  const inviteStudents = inviteClass ? (classGroups.find(([k]) => k === inviteClass)?.[1] ?? []) : [];
+  const submitClassInvite = async () => {
+    if (!inviteFor || busy) return;
+    if (!inviteClass || inviteStudents.length === 0) { toast.error("Pasirink klasę su mokiniais."); return; }
+    setBusy(true);
+    try {
+      const ids = inviteStudents.map((s) => s.id);
+      const teacherName = profile?.full_name ?? "Auklėtojas";
+      const link = `${window.location.origin}/student`;
+      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)}–${String(inviteFor.end_time).slice(0, 5)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
+      const res = await inviteFn({ data: { studentIds: ids, message } });
+      toast.success(`Kvietimai išsiųsti: ${res.sent}/${res.total}.`);
+      setInviteFor(null);
+      setInviteClass(null);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti kvietimų.");
+    } finally {
+      setBusy(false);
+    }
+  };
   const pickable = students.filter((s) =>
     (classFilter === "all" || s.class_year === classFilter) &&
     (letterFilter === "all" || (s.class_letter ?? "") === letterFilter));
@@ -233,8 +279,18 @@ function TeacherReservations() {
         ))}
       </div>
 
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
+        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Ieškoti pagal mokinį, datą ar pastabą…"
+          className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none"
+        />
+      </div>
+
       <ul className="space-y-2">
-        {schoolRes.map((r) => {
+        {filteredRes.map((r) => {
           const finished = r.status === "completed" || r.status === "confirmed";
           return (
             <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
@@ -252,6 +308,9 @@ function TeacherReservations() {
               }`}>{STATUS_LT[r.status] ?? r.status}</span>
               {!finished && (
                 <div className="flex gap-1">
+                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Siųsti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
+                    <Users className="h-4 w-4" /> Siųsti klasei
+                  </Button>
                   <Button variant="ghost" size="icon" aria-label="Redaguoti" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label="Ištrinti" onClick={() => void submitDelete(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
@@ -264,7 +323,47 @@ function TeacherReservations() {
             Mokyklos rezervacijų dar nėra. Sukurk pirmąją ir pakviesk mokinius.
           </li>
         )}
+        {schoolRes.length > 0 && filteredRes.length === 0 && (
+          <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Pagal paiešką nieko nerasta.
+          </li>
+        )}
       </ul>
+
+      {/* Class invite dialog */}
+      <Dialog open={!!inviteFor} onOpenChange={(o) => { if (!o) { setInviteFor(null); setInviteClass(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Siųsti klasei</DialogTitle>
+            <DialogDescription>
+              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)} · ${studentName(inviteFor.student_id)}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Pasirink klasę — visi jos mokiniai gaus kvietimą į pokalbį. Rodomos tik tavo priskirtos klasės.
+          </p>
+          <div className="max-h-64 space-y-1 overflow-y-auto">
+            {classGroups.map(([key, list]) => (
+              <button
+                key={key}
+                onClick={() => setInviteClass(key)}
+                className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  inviteClass === key ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
+                }`}
+              >
+                <span>{key}</span>
+                <span className="text-xs font-normal text-muted-foreground">{list.length} mok.</span>
+              </button>
+            ))}
+            {classGroups.length === 0 && (
+              <p className="p-3 text-center text-xs text-muted-foreground">Priskirtų klasių mokinių dar nėra.</p>
+            )}
+          </div>
+          <Button onClick={() => void submitClassInvite()} disabled={busy || !inviteClass} className="w-full gap-2">
+            <Send className="h-4 w-4" /> {busy ? "Siunčiama…" : `Siųsti kvietimus${inviteClass ? ` (${inviteStudents.length})` : ""}`}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

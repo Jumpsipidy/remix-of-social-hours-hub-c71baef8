@@ -43,7 +43,7 @@ function VerifyEmailPage() {
     const profile = result.data;
     if (profile?.role === "admin") await navigate({ to: "/admin", replace: true });
     else if (profile?.role === "organization") await navigate({ to: "/organization", replace: true });
-    else if (profile?.role === "school_admin") await navigate({ to: "/school", replace: true });
+    else if (profile?.role === "school_admin") await navigate({ to: "/mokytojas", replace: true });
     else await navigate({ to: registrationComplete(profile) ? "/student" : "/complete-profile", replace: true });
   }
 

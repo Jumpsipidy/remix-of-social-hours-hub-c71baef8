@@ -13,7 +13,7 @@ import { insertActivityLogRow } from "@/lib/activity-log";
 const DASH_BY_ROLE: Record<string, string> = {
   student: "/student",
   organization: "/organization",
-  school_admin: "/school",
+  school_admin: "/mokytojas",
   admin: "/admin",
 };
 

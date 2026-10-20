@@ -31,7 +31,7 @@ const TABS_BY_ROLE: Record<AppRole, TabItem[]> = {
     { to: "/chat", label: "Pokalbiai", short: "Pokalbiai", icon: MessageCircle },
   ],
   school_admin: [
-    { to: "/school", label: "Mokykla", short: "Mokykla", icon: School },
+    { to: "/mokytojas", label: "Auklėtojas", short: "Auklėtojas", icon: School },
     { to: "/tasks", label: "Užduotys", short: "Užduotys", icon: ListChecks },
     { to: "/chat", label: "Pokalbiai", short: "Pokalbiai", icon: MessageCircle },
   ],
