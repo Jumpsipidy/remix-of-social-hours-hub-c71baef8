@@ -21,7 +21,7 @@ const FAIL_THRESHOLD = 3;
 const DASH_BY_ROLE: Record<string, string> = {
   student: "/student",
   organization: "/organization",
-  school_admin: "/school",
+  school_admin: "/mokytojas",
   admin: "/admin",
 };
 
