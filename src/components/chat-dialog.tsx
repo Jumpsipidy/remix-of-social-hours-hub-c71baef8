@@ -27,7 +27,7 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
     let cancelled = false;
     (async () => {
       // Look up / create room
-      let r: { id: string; student_id: string | null; organization_id: string; school_admin_id: string | null } | null = null;
+      let r: { id: string; student_id: string | null; organization_id: string | null; school_admin_id: string | null } | null = null;
 
       if (reservation.direct) {
         // school admin ↔ organization direct chat (reservation_id NULL)
