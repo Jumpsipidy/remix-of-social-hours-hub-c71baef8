@@ -1661,11 +1661,12 @@ export type Database = {
         Returns: number
       }
       school_delete_reservation: {
-        Args: { _reservation_id: string }
+        Args: { _caller: string; _reservation_id: string }
         Returns: boolean
       }
       school_update_reservation: {
         Args: {
+          _caller: string
           _date: string
           _end: string
           _hours: number
