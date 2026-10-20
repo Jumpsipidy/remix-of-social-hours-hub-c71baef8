@@ -7,6 +7,12 @@ export function userError(error: unknown, fallback = "Nepavyko atlikti veiksmo. 
   if (/already.*registered|already.*exists/i.test(value)) return "Šiuo el. paštu jau registruotasi. Prisijunk arba atkurk slaptažodį.";
   if (/email.*not.*confirmed/i.test(value)) return "Pirmiausia patvirtink el. paštą naudodamas nuorodą laiške.";
   if (/invalid.*credentials/i.test(value)) return "Neteisingas el. paštas arba slaptažodis.";
+  if (/row.level.security|permission denied|insufficient_privilege|42501/i.test(value)) return "Neturi teisių atlikti šio veiksmo. Jei manai, kad tai klaida – pranešk apie klaidą.";
+  if (/duplicate key|unique constraint|23505/i.test(value)) return "Toks įrašas jau egzistuoja.";
+  if (/jwt|session|not authenticated|unauthorized|401/i.test(value)) return "Sesija baigėsi. Prisijunk iš naujo.";
+  if (/violates foreign key|23503/i.test(value)) return "Šis įrašas susietas su kitais duomenimis, todėl veiksmas negalimas.";
+  if (/pgrst|schema cache|could not find/i.test(value)) return "Paslauga laikinai nepasiekiama. Pabandyk po minutės.";
+  if (/timeout|timed out|abort/i.test(value)) return "Užklausa užtruko per ilgai. Patikrink ryšį ir bandyk dar kartą.";
   return /[ąčęėįšųūž]/i.test(value) && !/https?:|PGRST|SQL|schema|column/i.test(value) ? value : fallback;
 }
 
