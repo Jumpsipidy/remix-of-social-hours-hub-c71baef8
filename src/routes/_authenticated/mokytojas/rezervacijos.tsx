@@ -323,7 +323,47 @@ function TeacherReservations() {
             Mokyklos rezervacijų dar nėra. Sukurk pirmąją ir pakviesk mokinius.
           </li>
         )}
+        {schoolRes.length > 0 && filteredRes.length === 0 && (
+          <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Pagal paiešką nieko nerasta.
+          </li>
+        )}
       </ul>
+
+      {/* Class invite dialog */}
+      <Dialog open={!!inviteFor} onOpenChange={(o) => { if (!o) { setInviteFor(null); setInviteClass(null); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Siųsti klasei</DialogTitle>
+            <DialogDescription>
+              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)} · ${studentName(inviteFor.student_id)}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Pasirink klasę — visi jos mokiniai gaus kvietimą į pokalbį. Rodomos tik tavo priskirtos klasės.
+          </p>
+          <div className="max-h-64 space-y-1 overflow-y-auto">
+            {classGroups.map(([key, list]) => (
+              <button
+                key={key}
+                onClick={() => setInviteClass(key)}
+                className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                  inviteClass === key ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
+                }`}
+              >
+                <span>{key}</span>
+                <span className="text-xs font-normal text-muted-foreground">{list.length} mok.</span>
+              </button>
+            ))}
+            {classGroups.length === 0 && (
+              <p className="p-3 text-center text-xs text-muted-foreground">Priskirtų klasių mokinių dar nėra.</p>
+            )}
+          </div>
+          <Button onClick={() => void submitClassInvite()} disabled={busy || !inviteClass} className="w-full gap-2">
+            <Send className="h-4 w-4" /> {busy ? "Siunčiama…" : `Siųsti kvietimus${inviteClass ? ` (${inviteStudents.length})` : ""}`}
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Create dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
