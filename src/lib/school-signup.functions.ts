@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { classAssignment, signupHours } from "@/lib/signup-rules";
+import { classAssignment } from "@/lib/signup-rules";
 import { passwordProblem } from "@/lib/password-policy";
 import { userError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
