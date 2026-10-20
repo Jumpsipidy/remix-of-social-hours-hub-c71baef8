@@ -65,7 +65,7 @@ async function sendResend(payload: SendPayload) {
   } catch {
     id = null;
   }
-  return { ok: true as const, id, to: payload.to, from: FROM, sentAt: new Date().toISOString() };
+  return { ok: true as const, id, to: payload.to, from: (process.env.RESEND_FROM?.trim() || FROM_FALLBACK), sentAt: new Date().toISOString() };
 }
 
 // -------------------- 1. Hours confirmed --------------------
