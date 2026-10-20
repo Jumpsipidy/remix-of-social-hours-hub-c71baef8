@@ -180,7 +180,7 @@ function Home() {
             )}
             <p className="text-sm font-semibold text-primary">Mokiniams · organizacijoms · mokykloms</p>
             <h1 id="home-title" className="mt-3 font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl">
-              Socialinės valandos.<br /><span className="text-gradient-primary">Be popierių.</span>
+              Socialinės valandos.<br /><span className="text-primary">Be popierių.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">Rask savanorystės veiklą, rezervuok, patvirtink QR kodu ir gauk pažymėjimą. Nemokamai.</p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
