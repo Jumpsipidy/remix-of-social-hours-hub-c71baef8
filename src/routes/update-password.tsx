@@ -37,7 +37,7 @@ function UpdatePasswordPage() {
     // #type=recovery) arba patvirtintas kodas. Vien prisijungusi sesija nebeužtenka.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" && !cancelled) {
-        setReady(true);
+        setReady(true); try { sessionStorage.setItem("sv_recovery_pending", "1"); } catch {}
         setStatus("Nuoroda patvirtinta. Įvesk naują slaptažodį.");
       }
     });
@@ -67,7 +67,7 @@ function UpdatePasswordPage() {
         }
         window.history.replaceState(null, "", "/update-password");
         if (!cancelled) {
-          setReady(true);
+          setReady(true); try { sessionStorage.setItem("sv_recovery_pending", "1"); } catch {}
           setStatus("Nuoroda patvirtinta. Įvesk naują slaptažodį.");
         }
       } catch (err) {
@@ -94,7 +94,7 @@ function UpdatePasswordPage() {
       });
       if (error) throw error;
       sessionStorage.setItem("sv_reset_email", email.trim());
-      setReady(true);
+      setReady(true); try { sessionStorage.setItem("sv_recovery_pending", "1"); } catch {}
       setStatus("Kodas patvirtintas. Įvesk naują slaptažodį.");
       toast.success("Kodas patvirtintas.");
     } catch (err) {
@@ -121,7 +121,7 @@ function UpdatePasswordPage() {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       await supabase.auth.signOut();
-      sessionStorage.removeItem("sv_reset_email");
+      sessionStorage.removeItem("sv_reset_email"); sessionStorage.removeItem("sv_recovery_pending");
       toast.success("Slaptažodis pakeistas. Prisijunk su nauju slaptažodžiu.");
       navigate({ to: "/login" });
     } catch (err) {

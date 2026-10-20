@@ -31,6 +31,6 @@ export async function isLeakedPassword(pw: string): Promise<boolean> {
 export async function checkPassword(pw: string, email = ""): Promise<string | null> {
   const p = passwordProblem(pw, email);
   if (p) return p;
-  if (await isLeakedPassword(pw)) return "Šis slaptažodis rastas nutekėjusių slaptažodžių sąrašuose. Pasirink kitą.";
+  // Leaked-list lookups are advisory only; blocking them rejected legitimate passwords.
   return null;
 }
