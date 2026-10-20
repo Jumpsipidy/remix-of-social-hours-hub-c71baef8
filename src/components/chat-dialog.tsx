@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export type ChatReservation = {
   id: string;
   student_id: string;
-  organization_id: string;
+  organization_id: string | null;
   organization_name?: string;
   /** School-admin ↔ organization channel without a reservation row. */
   direct?: boolean;
