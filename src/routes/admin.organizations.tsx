@@ -18,6 +18,31 @@ function OrganizationsPage() {
   const [reservations, setReservations] = useState<AdminReservation[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<OrgAccessRequest[]>([]);
+  const [reqBusy, setReqBusy] = useState<string | null>(null);
+  const fetchRequests = useServerFn(listOrgAccessRequests);
+  const setRequestStatus = useServerFn(setOrgAccessRequestStatus);
+
+  const loadRequests = async () => {
+    try {
+      const res = await fetchRequests();
+      setRequests(res.requests);
+    } catch { /* sąrašas ne kritinis — puslapis veikia ir be jo */ }
+  };
+
+  const decideRequest = async (req: OrgAccessRequest, status: "approved" | "rejected") => {
+    if (reqBusy) return;
+    setReqBusy(req.id);
+    try {
+      await setRequestStatus({ data: { id: req.id, status } });
+      toast.success(status === "approved" ? "Prašymas pažymėtas kaip priimtas. Sukurk paskyrą skiltyje „Paskyros“." : "Prašymas atmestas.");
+      await loadRequests();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nepavyko atnaujinti prašymo.");
+    } finally {
+      setReqBusy(null);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -30,6 +55,8 @@ function OrganizationsPage() {
       setReservations((r.data as AdminReservation[]) ?? []);
       setLoading(false);
     })();
+    void loadRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rows = useMemo(() => {
