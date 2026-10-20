@@ -9,7 +9,7 @@
 - [x] Atsakyta: grupinė rezervacija su draugais yra rezervacijos lange „Eiti su draugais" + org skydelyje „Grupė" žyma
 - [ ] Gyvas patikrinimas prisijungus auklėtoju — negalima šioje peržiūroje (išorinė Supabase), reikia patikrinti tikrame domene
 - [x] /mokytojas greitis: bendra Query talpykla + išankstinis įkėlimas + lygiagrečios DB užklausos
-- [ ] Paskyrai „testas testas" priskirti klases/raidę (laukia vartotojo atsakymo; kodas filtruoja teisingai)
+- [x] Paskyrai „testas testas" priskirta 7A — patikrinta DB: mato tik 7A mokinį
 - [x] Puslapio viršus suspaustas (mažesnė juosta, antraštės, paraštės)
 - [x] Naujas /mokytojas/pokalbiai su šablonais, „Rašyti mokiniui", kvietimu į rezervaciją
 - [x] Registracijoje mažas beveik nematomas taškas → licencijos patikra auth svetainėje → papildomos parinktys iki perkrovimo
