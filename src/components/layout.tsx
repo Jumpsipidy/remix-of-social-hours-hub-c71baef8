@@ -317,6 +317,7 @@ export function Footer() {
             <li><Link to="/terms" className="hover:text-foreground font-semibold text-foreground">📜 Naudojimosi taisyklės</Link></li>
             <li><Link to="/privacy" className="hover:text-foreground font-semibold text-foreground">🔐 Privatumas ir sauga</Link></li>
             <li><Link to="/saugumas" className="hover:text-foreground">🛡️ Kaip saugome mokinių duomenis</Link></li>
+            <li><Link to="/securityguard" className="hover:text-foreground">🤖 SV Guard — apsauga nuo botų</Link></li>
             <li><Link to="/versijos" className="hover:text-foreground">🚀 Versijų istorija</Link></li>
           </ul>
         </div>
