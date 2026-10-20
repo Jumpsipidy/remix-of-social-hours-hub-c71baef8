@@ -9,8 +9,6 @@ import { BackgroundFX } from "@/components/background-fx";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { AnimatePresence, motion } from "framer-motion";
-import { Magnetic } from "@/components/motion-kit";
 
 
 
@@ -26,8 +24,6 @@ const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const [clickCount, setClickCount] = useState(0);
-  const [easterEgg, setEasterEgg] = useState(false);
   const { isAuthenticated, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -102,156 +98,39 @@ export function Navbar() {
   // if (isAdminSection) return null;
 
   return (
-    <header className="site-navbar fixed top-0 inset-x-0 z-50 border-b border-border bg-background/95 backdrop-blur-xl group/header">
-      {/* Animated gradient top border */}
-      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-primary opacity-30" />
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-3 sm:px-6 md:flex md:justify-between md:gap-6 md:py-4 lg:py-5">
-        <Link 
-          to="/" 
-          className="group flex min-w-0 items-center gap-3 active:scale-95 transition-transform"
-        >
-          <motion.div 
-            onClick={() => {
-              const next = clickCount + 1;
-              if (next >= 4) {
-                setClickCount(0);
-                setEasterEgg(true);
-                setTimeout(() => setEasterEgg(false), 2000);
-              } else {
-                setClickCount(next);
-              }
-            }}
-            animate={easterEgg ? {
-              rotateY: [0, 360, 720],
-              rotateX: [0, -20, 20, -20, 0],
-              scale: [1, 1.3, 1],
-              transition: { duration: 1.2, ease: "easeInOut" }
-            } : {
-              scale: clickCount > 0 ? 1 + clickCount * 0.05 : 1,
-              rotateY: 0,
-              rotateX: 0
-            }}
-            whileHover={{ 
-              scale: 1.1 
-            }}
-            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-primary shadow-glow ring-1 ring-white/10 group-hover:shadow-primary/40 transition-shadow cursor-pointer"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-            <div className="absolute -inset-1 -z-10 rounded-2xl bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-            {/* Easter Egg Particles */}
-            <AnimatePresence>
-              {(easterEgg || clickCount > 0) && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute -inset-8 pointer-events-none"
-                >
-                  {[...Array(easterEgg ? 12 : clickCount * 2)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute h-1.5 w-1.5 bg-primary rounded-full"
-                      animate={{
-                        y: [-10, -60],
-                        x: [0, (Math.random() - 0.5) * 80],
-                        opacity: [0, 1, 0],
-                        scale: [0, 1.5, 0],
-                        rotate: [0, 180]
-                      }}
-                      transition={{
-                        duration: easterEgg ? 1.5 : 0.8,
-                        delay: i * 0.05
-                      }}
-                      style={{ left: "50%", top: "50%" }}
-                    />
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-          <span className="relative font-display truncate whitespace-nowrap text-sm font-extrabold sm:text-xl lg:text-2xl">
-            Socialinės<span className="text-gradient"> Valandos</span>
+    <header className="site-navbar sticky top-0 z-50 px-3 pt-3 sm:px-5">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 rounded-2xl border border-border bg-card/85 px-3 py-2 shadow-sm backdrop-blur-md sm:px-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2.5" aria-label="Socialinės Valandos — pradžia">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary">
+            <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
           </span>
+          <span className="truncate font-display text-base font-bold text-foreground sm:text-lg">Socialinės Valandos</span>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
+        <nav aria-label="Pagrindinis meniu" className="mx-auto hidden items-center gap-1 rounded-xl bg-muted/60 p-1 md:flex">
           {links.map((l) => {
             const active = isActive(l.to, l.to === "/");
             return (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={`relative px-5 py-2.5 text-sm font-bold tracking-tight transition-all active:scale-95 group/nav ${
-                  active 
-                    ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span className="relative z-10">{l.label}</span>
-                {!active && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileHover={{ opacity: 1, scale: 1 }}
-                    className="absolute inset-0 -z-0 bg-white/5 rounded-full blur-sm"
-                  />
-                )}
-                {active && (
-                  <motion.div 
-                    layoutId="nav-glow"
-                    className="absolute inset-x-2 -bottom-1 h-[2px] rounded-full bg-gradient-primary shadow-[0_0_8px_hsl(var(--primary))]"
-                  />
-                )}
+              <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
+                className={`rounded-lg px-3.5 py-1.5 text-sm font-semibold transition-colors ${active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                {l.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
           <SchoolEyesToggle />
-           <div className="shrink-0">
-            <NotificationBell />
-          </div>
-
+          <NotificationBell />
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSignOut}
-                className="hidden items-center gap-2 rounded-2xl border border-border/60 bg-card/50 px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all sm:inline-flex"
-              >
-                <LogOut className="h-4 w-4" /> Atsijungti
-              </button>
-            </div>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:inline-flex"><LogOut /> Atsijungti</Button>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/login"
-                className="hidden rounded-2xl px-5 py-2.5 text-sm font-bold text-muted-foreground hover:bg-white/5 hover:text-foreground active:scale-95 transition-all sm:inline-flex"
-              >
-                Prisijungti
-              </Link>
-              <Magnetic strength={10}>
-                <Link
-                  to="/register"
-                  className="group/btn relative hidden items-center justify-center overflow-hidden rounded-2xl bg-gradient-primary px-6 py-2.5 text-sm font-extrabold text-primary-foreground shadow-glow active:scale-95 transition-all sm:inline-flex"
-                >
-                  <span className="relative z-10">Registruotis</span>
-                  <motion.div 
-                    className="absolute inset-0 bg-white/20 opacity-0 group-hover/btn:opacity-100 transition-opacity"
-                    initial={false}
-                  />
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700" />
-                </Link>
-              </Magnetic>
-            </div>
+            <>
+              <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex"><Link to="/login">Prisijungti</Link></Button>
+              <Button size="sm" asChild className="hidden sm:inline-flex"><Link to="/register">Registruotis</Link></Button>
+            </>
           )}
-          <Button
-            variant="outline" size="icon"
-            className="h-11 w-11 shrink-0 md:hidden"
-            onClick={() => setOpen(!open)}
-            aria-label="Meniu"
-            aria-expanded={open}
-          >
+          <Button variant="ghost" size="icon" className="h-10 w-10 md:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}>
             <Menu className="h-5 w-5" />
           </Button>
         </div>

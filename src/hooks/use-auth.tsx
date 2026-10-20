@@ -138,7 +138,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // A password-reset link signs the user in temporarily. If they leave the
+    // reset page without setting a new password, end that session.
+    try {
+      if (sessionStorage.getItem("sv_recovery_pending") && window.location.pathname !== "/update-password") {
+        sessionStorage.removeItem("sv_recovery_pending");
+        void supabase.auth.signOut();
+      }
+    } catch {}
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/update-password") {
+        try { sessionStorage.setItem("sv_recovery_pending", "1"); } catch {}
+        window.location.replace("/update-password");
+        return;
+      }
       // Ignore TOKEN_REFRESHED — it fires on tab focus and would otherwise
       // reset component state (scroll, form inputs). INITIAL_SESSION is handled by getSession.
       if (event === "TOKEN_REFRESHED") return;
