@@ -259,7 +259,7 @@ function TeacherReservations() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Rezervacijos</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">Rezervacijos</h1>
           <p className="text-sm text-muted-foreground">Kurk mokyklos renginius ir kviesk savo klasių mokinius.</p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2"><CalendarPlus className="h-4 w-4" /> Nauja rezervacija</Button>
