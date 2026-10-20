@@ -322,7 +322,7 @@ function RegisterPage() {
             try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
             catch (error) { toast.error(userError(error)); }
           }}
-        />
+        >Administracija</button>
       )}
       {adminGrant && <p role="status" className="mt-3 text-center text-xs text-muted-foreground">Administracinė prieiga patvirtinta. Perkrovus puslapį ji išsijungs.</p>}
       <AuthLegal />

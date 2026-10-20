@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { DashHero, GlassCard } from "@/components/dashboard-kit";
 import { requireAdmin } from "@/lib/auth-guards";
 import { adminListAllAccounts, adminDeleteAccount } from "@/lib/admin-delete.functions";
+import { deleteAccountDirect } from "@/lib/admin-license.functions";
 import { adminUpdateStudent, adminPromoteClasses } from "@/lib/admin-students.functions";
 import { CLASS_YEARS } from "@/lib/class-years";
 import { AdminCreateAccountPanel } from "@/components/admin-create-account-panel";
@@ -46,6 +47,8 @@ function AdminAccountsPage() {
   const updateFn = useServerFn(adminUpdateStudent);
   const promoteFn = useServerFn(adminPromoteClasses);
   const licensed = useLicensedAction();
+  const deleteDirect = useServerFn(deleteAccountDirect);
+  const [noLicense, setNoLicense] = useState(false);
 
   const openEdit = (acc: any) => {
     setEditing(acc);
@@ -113,7 +116,14 @@ function AdminAccountsPage() {
     
     setBusyId(id);
     try {
-      await licensed("delete_account", id, `Ištrinti vartotoją ${email}`);
+      if (noLicense) {
+        if (!window.confirm(`DĖMESIO: trinsite BE licencijos patikros. Tikrai tęsti (${email})?`)) return;
+        await deleteDirect({ data: { userId: id } });
+        toast.success("Paskyra ištrinta");
+        fetchAccounts();
+      } else {
+        await licensed("delete_account", id, `Ištrinti vartotoją ${email}`);
+      }
     } catch (err: any) {
       toast.error(err.message || "Klaida trinant");
     } finally {
@@ -176,6 +186,10 @@ function AdminAccountsPage() {
           {promoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpCircle className="h-4 w-4" />}
           Nauji mokslo metai
         </button>
+        <label className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/5 px-3 py-2 text-xs font-semibold text-rose-300" title="Leidžia trinti paskyras be nukreipimo į auth.socialinesvalandos.dev licencijos patikrą. Mažesnė apsauga – naudok tik savo įrenginyje.">
+          <input type="checkbox" checked={noLicense} onChange={(e) => setNoLicense(e.target.checked)} />
+          Trynimas be licencijos
+        </label>
       </div>
 
       {editing && (
