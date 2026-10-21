@@ -343,18 +343,7 @@ html { background-color: var(--background); }
 }
 .theme-welcome {
   --font-display: var(--font-sans);
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #171717;
-  --muted: #262626;
-  --muted-foreground: #a3a3a3;
-  --border: #262626;
-  --primary: oklch(0.72 calc(0.11 + var(--theme-tuning, 0) * 0.0002) calc(235 - var(--theme-tuning, 0) * 0.8));
-  --primary-foreground: #000000;
-  --accent: #171717;
-  --accent-foreground: #ffffff;
   font-family: var(--font-sans);
-  color-scheme: dark;
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
 }
@@ -865,14 +854,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 @media (prefers-reduced-motion: reduce) { .sv-party body { animation: none; } }
 
 /* Shared navigation and product pages: bounded geometry, theme-owned surfaces. */
-:root {
-  --hero-wash: color-mix(in oklab, var(--background) 94%, transparent);
-  --hero-wash-end: color-mix(in oklab, var(--background) 12%, transparent);
-}
-.dark {
-  --hero-wash: color-mix(in oklab, var(--background) 96%, transparent);
-  --hero-wash-end: color-mix(in oklab, var(--background) 35%, transparent);
-}
 .nav-redesign { transition: box-shadow 180ms ease, border-color 180ms ease; }
 .nav-inner { transition: height 180ms ease; }
 .nav-redesign.is-scrolled .nav-inner { height: 64px; }
@@ -888,9 +869,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .nav-redesign .logo-celebrate { animation: logo-celebrate 650ms cubic-bezier(.2,.8,.2,1); }
 .home-saas, .tasks-workspace, .nav-redesign { font-family: var(--font-sans); }
 .home-saas :is(h1,h2,h3), .tasks-workspace :is(h1,h2,h3), .nav-redesign :is(a,button) { font-family: var(--font-sans); letter-spacing: 0; }
-.home-photo-hero { min-height: 510px; }
-.hero-photo { object-position: center 56%; }
-.hero-photo-wash { background: linear-gradient(90deg, var(--background) 0%, var(--hero-wash) 25%, color-mix(in oklab, var(--background) 75%, transparent) 43%, var(--hero-wash-end) 65%, transparent 100%); }
 .demo-stage { min-height: 172px; }
 @keyframes demo-swap { from { transform: translateY(5px); } to { transform: translateY(0); } }
 .demo-swap { animation: demo-swap 160ms ease-out; }
@@ -900,11 +878,6 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .task-result:hover { border-color: var(--primary); transform: translateY(-2px); }
 .tasks-workspace .task-result { border-radius: 8px; }
 @media (max-width: 767px) {
-  .home-photo-hero { min-height: 600px; }
-  .home-photo-hero > div.relative { padding-top: 32px; padding-bottom: 240px; }
-  .hero-copy { max-width: 100%; }
-  .hero-photo { object-position: 69% bottom; }
-  .hero-photo-wash { background: linear-gradient(180deg, var(--background) 0%, var(--hero-wash) 42%, color-mix(in oklab, var(--background) 35%, transparent) 68%, transparent 100%); }
   .home-saas h1 { font-size: 40px; }
   .nav-redesign .nav-inner { gap: 4px; padding-inline: 12px; }
   .nav-redesign .nav-logo { height: 36px; width: 36px; }
@@ -915,4 +888,29 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 @media (prefers-reduced-motion: reduce) {
   .nav-redesign *, .home-saas *, .tasks-workspace * { animation: none !important; transition: none !important; }
   .task-result:hover, .nav-redesign .nav-brand:hover .nav-logo { transform: none; }
+}
+
+/* UI-led homepage: no photographic backdrop, no animation loop while scrolling. */
+.home-ui-hero { background: var(--background); }
+.home-anchor, #faq { scroll-margin-top: 125px; }
+.hero-ui-item { transition: border-color 180ms ease, transform 180ms ease; }
+.hero-ui-item:hover { border-color: var(--primary); transform: translateY(-3px); }
+.hero-hours-bar { transform-origin: left; animation: demo-progress 550ms ease-out; }
+.scroll-fact { transition: border-color 400ms ease; }
+.has-entered .scroll-fact { border-top-color: var(--primary); }
+.has-entered .scroll-fact:nth-child(2) { transition-delay: 100ms; }
+.has-entered .scroll-fact:nth-child(3) { transition-delay: 200ms; }
+.home-section-nav { scrollbar-width: none; }
+.home-section-nav::-webkit-scrollbar { display: none; }
+.theme-welcome { color-scheme: inherit; }
+@media (max-width: 639px) {
+  .home-ui-hero .hero-type { padding-block: 25px; }
+  .home-ui-hero h1 { font-size: 36px; }
+  .hero-ui-flow { grid-template-columns: 1fr; }
+  .hero-ui-item:nth-child(2), .hero-ui-item:nth-child(3) { display: none; }
+  .home-section-nav a { min-width: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-ui-item:hover { transform: none; }
+  .hero-hours-bar { animation: none; }
 }

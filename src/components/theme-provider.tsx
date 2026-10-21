@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Moon, Sun, Heart, ArrowRight, RotateCcw } from "lucide-react";
+import { Moon, Sun, Heart, ArrowRight, RotateCcw, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, THEME_CHOICE_DONE_EVENT, type SiteTheme } from "@/lib/theme-preference";
@@ -105,7 +105,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     <ThemeContext.Provider value={{ theme, choose, openSettings: () => setAsk(true) }}>
       {children}
       <Dialog open={ask && !accessBlocked} onOpenChange={(open) => { if (!open) finish(); }}>
-        <DialogContent className="theme-welcome z-[10001] w-[calc(100%-2rem)] max-w-lg gap-0 rounded-[32px] border-border bg-background p-5 text-foreground sm:p-8" aria-describedby="theme-choice-description">
+        <DialogContent className="theme-welcome z-[10001] w-[calc(100%-2rem)] max-w-lg gap-0 rounded-lg border-border bg-background p-5 text-foreground sm:p-8" aria-describedby="theme-choice-description">
           <div className="mb-6 flex items-center gap-2 text-sm font-medium text-muted-foreground"><Heart className="size-5 text-primary" /> Socialinės Valandos</div>
           <DialogTitle className="text-2xl font-bold leading-tight sm:text-3xl">Tavo erdvė. Tavo spalvos.</DialogTitle>
           <DialogDescription id="theme-choice-description" className="mb-6 mt-2">Kuri tema tau patinka?</DialogDescription>
@@ -120,7 +120,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             <div className="relative"><input id="theme-accent" aria-label="Akcento spalva" type="range" min={-100} max={100} step={1} value={accent} onChange={(event) => tune(Number(event.target.value))} className="theme-accent-slider block h-6 w-full cursor-pointer" /><span aria-hidden className="pointer-events-none absolute left-1/2 top-8 h-1.5 w-px bg-muted-foreground/60" /></div>
           </div>
           <Button variant="ghost" onClick={reset} className="mb-3 h-9 justify-start px-0 text-xs text-muted-foreground"><RotateCcw /> Atkurti temos nustatymus</Button>
-          <div className="flex items-center justify-between border-t border-border pt-5"><Button variant="ghost" onClick={finish} className="text-muted-foreground">Praleisti</Button><Button onClick={finish} className="theme-continue rounded-full px-6">Tęsti <ArrowRight /></Button></div>
+          <div className="flex items-center justify-between border-t border-border pt-5"><Button variant="ghost" onClick={finish} className="text-muted-foreground">Praleisti</Button><Button onClick={finish} className="theme-continue rounded-full px-6">Išsaugoti <Check /></Button></div>
         </DialogContent>
       </Dialog>
     </ThemeContext.Provider>
