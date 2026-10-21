@@ -92,7 +92,7 @@ export function DmDialog({
       <DialogContent className="dm-chat-dialog flex h-[calc(var(--visual-viewport-height,100dvh)-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 sm:h-[70vh]">
         <DialogHeader className="shrink-0 border-b border-border px-4 py-3 pr-14">
           <DialogTitle className="truncate text-sm">{friend.name}</DialogTitle>
-          <DialogDescription className="text-xs">Asmeninis pokalbis · žinutės ištrinamos po 2 dienų</DialogDescription>
+          <DialogDescription className="text-xs">Asmeninis pokalbis · žinutės ištrinamos po 12 dienų</DialogDescription>
         </DialogHeader>
 
         <div ref={scrollRef} role="log" aria-label="Asmeninės žinutės" aria-live="polite" aria-relevant="additions" aria-busy={loading} onScroll={() => { const node = scrollRef.current; if (node) followLatest.current = node.scrollHeight - node.scrollTop - node.clientHeight < 100; }} className="chat-transcript min-h-0 min-w-0 flex-1 space-y-2 overflow-y-auto overscroll-contain bg-background/40 p-3 sm:p-4">
@@ -111,7 +111,7 @@ export function DmDialog({
                 >
                   <LinkifiedText text={m.content} className="message-text whitespace-pre-wrap [overflow-wrap:anywhere]" />
                   <p className={`mt-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(m.created_at).toLocaleString("lt-LT", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Vilnius" })}
                   </p>
                 </div>
               </div>

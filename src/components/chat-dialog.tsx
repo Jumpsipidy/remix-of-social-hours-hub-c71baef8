@@ -26,70 +26,15 @@ export function ChatDialog({ reservation, onClose }: { reservation: ChatReservat
     if (!reservation || !user) return;
     let cancelled = false;
     (async () => {
-      // Look up / create room
-      let r: { id: string; student_id: string | null; organization_id: string | null; school_admin_id: string | null } | null = null;
-
-      if (reservation.direct) {
-        // school admin ↔ organization direct chat (reservation_id NULL)
-        const orgId = reservation.organization_id;
-        if (!orgId) { onClose(); return; }
-        const { data: existing } = await supabase
-          .from("chat_rooms")
-          .select("id, student_id, organization_id, school_admin_id")
-          .is("reservation_id", null)
-          .eq("school_admin_id", user.id)
-          .eq("organization_id", orgId)
-          .maybeSingle();
-        r = existing ?? null;
-        if (!r) {
-          const { data: created, error } = await supabase
-            .from("chat_rooms")
-            .insert({
-              reservation_id: null,
-              student_id: user.id, // constraint requires NOT NULL; reuse admin's own id
-              organization_id: orgId,
-              school_admin_id: user.id,
-            })
-            .select("id, student_id, organization_id, school_admin_id")
-            .maybeSingle();
-          if (error) { toast.error("Nepavyko atverti pokalbio: " + error.message); onClose(); return; }
-          r = created;
-        }
-      } else {
-        const { data: existing } = await supabase
-          .from("chat_rooms")
-          .select("id, student_id, organization_id, school_admin_id")
-          .eq("reservation_id", reservation.id)
-          .maybeSingle();
-        r = existing ?? null;
-        if (!r) {
-          const { data: created, error } = await supabase
-            .from("chat_rooms")
-            .insert({
-              reservation_id: reservation.id,
-              student_id: reservation.student_id,
-              organization_id: reservation.organization_id,
-              school_admin_id: profile?.role === "school_admin" ? user.id : null,
-            })
-            .select("id, student_id, organization_id, school_admin_id")
-            .maybeSingle();
-          if (error) { toast.error("Nepavyko atverti pokalbio: " + error.message); onClose(); return; }
-          r = created;
-        } else if (profile?.role === "school_admin" && !r.school_admin_id) {
-          const { data: upd } = await supabase
-            .from("chat_rooms")
-            .update({ school_admin_id: user.id })
-            .eq("id", r.id)
-            .select("id, student_id, organization_id, school_admin_id")
-            .maybeSingle();
-          if (upd) r = upd;
-        }
-
-      }
-
-      if (cancelled || !r) { onClose(); return; }
+      if (reservation.direct && !reservation.organization_id) { onClose(); return; }
+      const { data: roomId, error } = reservation.direct
+        ? await supabase.rpc("open_chat_with", { _other: reservation.organization_id ?? "" })
+        : await supabase.rpc("open_reservation_chat", { _reservation: reservation.id });
+      if (cancelled) return;
+      if (error || !roomId) { toast.error("Nepavyko atverti pokalbio. Bandyk dar kartą."); onClose(); return; }
       onClose();
-      navigate({ to: "/chat", search: { room: r.id } });
+      if (profile?.role === "school_admin") navigate({ to: "/mokytojas/pokalbiai", search: { room: roomId } });
+      else navigate({ to: "/chat", search: { room: roomId } });
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
