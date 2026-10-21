@@ -1,4 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { CalendarDays, MapPin, Clock, ArrowRight } from "lucide-react";
+import { parseTaskInvite } from "@/lib/task-invite";
 
 /** Mažas "…" burbulas, kai pašnekovas rašo. */
 export function TypingDots({ show, name }: { show: boolean; name?: string }) {
@@ -26,6 +28,26 @@ export function TypingDots({ show, name }: { show: boolean; name?: string }) {
 
 /** Paverčia nuorodas žinutėje paspaudžiamomis (pvz. rekomenduojama užduotis). */
 export function LinkifiedText({ text, className }: { text: string; className?: string }) {
+  const invite = parseTaskInvite(text);
+  if (invite) {
+    const t = invite.invite;
+    return (
+      <div className="min-w-[14rem] space-y-2">
+        <a href={`/tasks?task=${encodeURIComponent(t.id)}`} className="task-invite-card block rounded-xl border border-border p-3 text-foreground no-underline shadow-sm transition-transform hover:-translate-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Rezervacijos pasiūlymas</span>
+          <span className="mt-1 block text-base font-bold leading-snug">{t.title}</span>
+          <span className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {t.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{t.date}</span>}
+            {t.time && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{t.time}</span>}
+            {t.place && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{t.place}</span>}
+            {t.hours && <span className="font-semibold text-foreground">{t.hours} val.</span>}
+          </span>
+          <span className="mt-3 flex items-center justify-between rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Peržiūrėti ir rezervuoti <ArrowRight className="h-3.5 w-3.5" /></span>
+        </a>
+        {invite.message && <p className={className}>{invite.message}</p>}
+      </div>
+    );
+  }
   const parts = text.split(/(https?:\/\/[^\s]+|\/tasks\?task=[\w-]+)/g);
   return (
     <p className={className}>

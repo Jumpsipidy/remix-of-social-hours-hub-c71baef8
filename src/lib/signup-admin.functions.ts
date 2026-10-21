@@ -58,7 +58,7 @@ export const getSignupAdminCodes = createServerFn({ method: "POST" }).middleware
   });
 
 export const createStudentAsSignupAdmin = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ ticketId: z.string().uuid(), token: z.string().length(64), codeId: z.string().uuid(), fullName: z.string().trim().min(3).max(120), email: z.string().email(), password: z.string().min(10).max(200), hoursNeeded: z.number().int().min(0).max(500).default(20), skipEmail: z.boolean() }).parse(input))
+  .inputValidator((input) => z.object({ ticketId: z.string().uuid(), token: z.string().length(64), codeId: z.string().uuid(), fullName: z.string().trim().min(3).max(120), email: z.string().email(), password: z.string().min(10).max(200), hoursNeeded: z.number().int().min(0).max(500).default(20), skipEmail: z.boolean(), role: z.enum(["student", "school_admin", "organization"]).default("student"), hoursOverride: z.number().int().min(0).max(500).nullable().default(null), hoursEarned: z.number().int().min(0).max(500).default(0) }).parse(input))
   .handler(async ({ data, context }) => {
     const db = await requireSignupGrant(context.supabase, context.userId, data);
     const problem = passwordProblem(data.password, data.email);
@@ -69,7 +69,14 @@ export const createStudentAsSignupAdmin = createServerFn({ method: "POST" }).mid
     if (school.error || !school.data?.is_active) throw new Error("Mokykla neaktyvi.");
     const { data: created, error: createError } = await db.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: data.skipEmail, user_metadata: { full_name: data.fullName } });
     if (createError || !created.user) throw new Error("Nepavyko sukurti paskyros. Patikrink, ar el. paštas dar nenaudojamas.");
-    const saved = await db.from("profiles").update({ school_id: code.school_id, associated_school_id: code.school_id, class_year: code.class_year, class_letter: code.class_letter, hours_needed: (await import("@/lib/class-codes.server")).hoursFromCode(code.class_year, (code as any).hours_needed) }).eq("id", created.user.id).eq("role", "student").select("id").single();
+    const baseHours = (await import("@/lib/class-codes.server")).hoursFromCode(code.class_year, (code as any).hours_needed);
+    const patch: Record<string, unknown> = data.role === "organization"
+      ? { role: "organization", organization_name: data.fullName }
+      : data.role === "school_admin"
+        ? { role: "school_admin", school_id: code.school_id, associated_school_id: code.school_id, assigned_classes: [code.class_year], assigned_letter: code.class_letter }
+        : { school_id: code.school_id, associated_school_id: code.school_id, class_year: code.class_year, class_letter: code.class_letter, hours_needed: data.hoursOverride ?? baseHours, hours_earned: data.hoursEarned };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const saved = await db.from("profiles").update(patch as any).eq("id", created.user.id).select("id").single();
     if (saved.error) {
       await db.auth.admin.deleteUser(created.user.id);
       throw new Error("Klasės išsaugoti nepavyko. Paskyra nesukurta.");
@@ -85,6 +92,6 @@ export const createStudentAsSignupAdmin = createServerFn({ method: "POST" }).mid
         return { ok: true, mailSent: true };
       } catch { return { ok: true, mailSent: false }; }
     }
-    await db.from("auth_security_events").insert({ ticket_id: data.ticketId, user_id: context.userId, event: "signup.admin_created", meta: { email_confirmation_skipped: true, student_id: created.user.id } });
+    await db.from("auth_security_events").insert({ ticket_id: data.ticketId, user_id: context.userId, event: "signup.admin_created", meta: { email_confirmation_skipped: true, student_id: created.user.id, role: data.role, hours_override: data.hoursOverride, hours_earned: data.hoursEarned } });
     return { ok: true, mailSent: false };
   });

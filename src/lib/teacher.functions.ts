@@ -96,21 +96,63 @@ export const teacherSendInvites = createServerFn({ method: "POST" })
   .inputValidator((input: { studentIds: string[]; message: string }) => {
     if (!Array.isArray(input?.studentIds) || input.studentIds.length === 0) throw new Error("Pasirink bent vieną mokinį.");
     if (!input.message?.trim()) throw new Error("Žinutė tuščia.");
-    return { studentIds: input.studentIds.map(String).slice(0, 200), message: input.message.trim().slice(0, 2000) };
+    return { studentIds: input.studentIds.map(String).slice(0, 200), message: input.message.trim().slice(0, 2400) };
   })
   .handler(async ({ context, data }) => {
     await requireTeacher(context.userId);
     let sent = 0;
     for (const sid of data.studentIds) {
-      // open_dm_room pats patikrina, ar auklėtojas gali rašyti šiam mokiniui.
-      const { data: roomId, error: roomErr } = await context.supabase.rpc("open_dm_room", { _other: sid });
+      // open_chat_with pats patikrina, ar auklėtojas gali rašyti šiam mokiniui (priskirtos klasės).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: roomId, error: roomErr } = await (context.supabase.rpc as any)("open_chat_with", { _other: sid });
       if (roomErr || !roomId) continue;
-      const { error: msgErr } = await context.supabase.from("dm_messages").insert({
-        room_id: roomId,
+      const { error: msgErr } = await context.supabase.from("messages").insert({
+        chat_room_id: roomId as string,
         sender_id: context.userId,
         content: data.message,
       });
       if (!msgErr) sent += 1;
     }
     return { sent, total: data.studentIds.length };
+  });
+
+/** Auklėtojas paskelbia veiklą, kurią mato visi /tasks puslapyje. */
+export const teacherPublishTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: {
+    title: string; description?: string; date: string; start: string; end: string;
+    hours: number; city?: string; location?: string; spots: number;
+  }) => {
+    const title = String(input?.title ?? "").trim();
+    if (title.length < 3) throw new Error("Įrašyk pavadinimą (bent 3 simboliai).");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(input.date))) throw new Error("Pasirink datą.");
+    if (!input.start || !input.end || input.end <= input.start) throw new Error("Pabaiga turi būti vėliau nei pradžia.");
+    return {
+      title: title.slice(0, 140), description: String(input.description ?? "").slice(0, 2000),
+      date: String(input.date), start: String(input.start).slice(0, 5), end: String(input.end).slice(0, 5),
+      hours: Math.max(0, Math.min(8, Math.round(Number(input.hours) || 0))),
+      city: String(input.city ?? "").slice(0, 60) || null, location: String(input.location ?? "").slice(0, 200),
+      spots: Math.max(1, Math.min(500, Math.round(Number(input.spots) || 1))),
+    };
+  })
+  .handler(async ({ context, data }) => {
+    const { supabaseAdmin, me } = await requireTeacher(context.userId);
+    const host = (me as { full_name?: string | null }).full_name ?? "Mokykla";
+    const row = {
+      organization_id: context.userId, created_by: context.userId, title: data.title, description: data.description,
+      task_date: data.date, start_time: data.start, end_time: data.end, available_hours: data.hours,
+      city: data.city, location: data.location, spots_total: data.spots, is_open: true, is_event: true,
+      event_host_name: `${host} (mokykla)`,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let payload: Record<string, unknown> = { ...row };
+    for (let i = 0; i < 3; i += 1) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res = await supabaseAdmin.from("tasks").insert(payload as any).select("id").single();
+      if (!res.error) return { id: res.data.id as string };
+      const missing = /Could not find the '([^']+)' column/.exec(res.error.message)?.[1];
+      if (!missing || !(missing in payload)) throw new Error("Nepavyko paskelbti veiklos.");
+      delete payload[missing];
+    }
+    throw new Error("Nepavyko paskelbti veiklos.");
   });

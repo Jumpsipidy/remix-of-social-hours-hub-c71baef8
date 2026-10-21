@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { CalendarPlus, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
+import { CalendarPlus, Megaphone, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,6 +14,7 @@ import {
 import type { SchoolReservation, SchoolStudent } from "@/lib/school-data.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClassTaskInviteDialog, PublishTaskDialog } from "@/components/teacher/class-task-invite-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/mokytojas/rezervacijos")({
@@ -59,6 +60,8 @@ function TeacherReservations() {
   const inviteFn = useServerFn(teacherSendInvites);
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [classInviteOpen, setClassInviteOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [classFilter, setClassFilter] = useState("all");
@@ -262,8 +265,14 @@ function TeacherReservations() {
           <h1 className="text-xl font-bold sm:text-2xl">Rezervacijos</h1>
           <p className="text-sm text-muted-foreground">Kurk mokyklos renginius ir kviesk savo klasių mokinius.</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="gap-2"><CalendarPlus className="h-4 w-4" /> Nauja rezervacija</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setClassInviteOpen(true)} className="gap-2"><Send className="h-4 w-4" /> Kviesti klasę</Button>
+          <Button variant="outline" onClick={() => setPublishOpen(true)} className="gap-2"><Megaphone className="h-4 w-4" /> Veikla visiems</Button>
+          <Button onClick={() => setCreateOpen(true)} className="gap-2"><CalendarPlus className="h-4 w-4" /> Tik mano klasei</Button>
+        </div>
       </div>
+      <ClassTaskInviteDialog open={classInviteOpen} onOpenChange={setClassInviteOpen} students={students} />
+      <PublishTaskDialog open={publishOpen} onOpenChange={setPublishOpen} students={students} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[

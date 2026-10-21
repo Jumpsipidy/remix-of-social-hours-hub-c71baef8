@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Moon, Sun, Heart, ArrowRight, RotateCcw, Check } from "lucide-react";
+import { Moon, Sun, Heart, ArrowRight, RotateCcw, Check, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, THEME_CHOICE_DONE_EVENT, type SiteTheme } from "@/lib/theme-preference";
+import { readThemePreference, saveThemePreference, readAccentPreference, saveAccentPreference, resetThemePreference, normalizeAccent, readElegantPreference, saveElegantPreference, THEME_CHOICE_DONE_EVENT, type SiteTheme } from "@/lib/theme-preference";
 
 const ThemeContext = createContext<{ theme: SiteTheme; choose: (theme: SiteTheme) => void; openSettings: () => void }>({
   theme: "dark", choose: () => {}, openSettings: () => {},
@@ -46,6 +46,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => { const update = (event: Event) => setAccessBlocked(Boolean((event as CustomEvent<boolean>).detail)); window.addEventListener("sv:access-blocked", update); return () => window.removeEventListener("sv:access-blocked", update); }, []);
   const [ask, setAsk] = useState(false);
   const [accent, setAccent] = useState(0);
+  const [elegant, setElegant] = useState(false);
   const animatedAccent = useRef(0);
   useEffect(() => {
     try {
@@ -56,6 +57,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       animatedAccent.current = savedAccent;
       document.documentElement.style.setProperty("--theme-tuning", String(savedAccent));
       applyTheme(preference.theme, false);
+      const el = readElegantPreference(localStorage);
+      setElegant(el);
+      document.documentElement.classList.toggle("sv-elegant", el);
       setAsk(preference.ask);
     } catch { applyTheme("dark", false); }
   }, []);
@@ -94,7 +98,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setAccent(next);
     try { saveAccentPreference(localStorage, next); } catch {}
   }
+  function toggleElegant(on: boolean) {
+    setElegant(on);
+    document.documentElement.classList.toggle("sv-elegant", on);
+    try { saveElegantPreference(localStorage, on); } catch {}
+  }
   function reset() {
+    toggleElegant(false);
     try { resetThemePreference(localStorage); } catch {}
     setTheme("dark");
     setAccent(0);
@@ -119,6 +129,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             <div className="mb-3 flex items-center justify-between gap-2"><label htmlFor="theme-accent" className="text-xs font-medium text-muted-foreground">Akcento spalva</label><Button size="sm" variant="ghost" onClick={() => tune(0)} className="h-7 gap-1 px-1 text-xs text-muted-foreground"><RotateCcw className="size-3" />Numatytasis</Button></div>
             <div className="relative"><input id="theme-accent" aria-label="Akcento spalva" type="range" min={-100} max={100} step={1} value={accent} onChange={(event) => tune(Number(event.target.value))} className="theme-accent-slider block h-6 w-full cursor-pointer" /><span aria-hidden className="pointer-events-none absolute left-1/2 top-8 h-1.5 w-px bg-muted-foreground/60" /></div>
           </div>
+          <button type="button" role="switch" aria-checked={elegant} onClick={() => toggleElegant(!elegant)} className={`elegant-switch mb-5 flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors ${elegant ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50"}`}>
+            <span className="elegant-swatch grid size-11 shrink-0 place-items-center rounded-lg text-primary"><Waves className="size-5" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">Elegantiškas režimas</span><span className="block text-xs text-muted-foreground">Švelnios bangos ir gylis fone, kaip moderniose svetainėse.</span></span>
+            <span aria-hidden className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${elegant ? "bg-primary" : "bg-muted"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-background shadow transition-transform ${elegant ? "translate-x-[22px]" : "translate-x-0.5"}`} /></span>
+          </button>
           <Button variant="ghost" onClick={reset} className="mb-3 h-9 justify-start px-0 text-xs text-muted-foreground"><RotateCcw /> Atkurti temos nustatymus</Button>
           <div className="flex items-center justify-between border-t border-border pt-5"><Button variant="ghost" onClick={finish} className="text-muted-foreground">Praleisti</Button><Button onClick={finish} className="theme-continue rounded-full px-6">Išsaugoti <Check /></Button></div>
         </DialogContent>

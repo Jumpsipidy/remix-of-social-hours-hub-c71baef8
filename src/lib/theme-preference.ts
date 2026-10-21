@@ -35,3 +35,10 @@ export function resetThemePreference(storage: Pick<Storage, "setItem">) {
   saveThemePreference(storage, "dark");
   saveAccentPreference(storage, 0);
 }
+export const ELEGANT_KEY = "sv_theme_elegant_v1";
+export function readElegantPreference(storage: Pick<Storage, "getItem">) {
+  return storage.getItem(ELEGANT_KEY) === "1";
+}
+export function saveElegantPreference(storage: Pick<Storage, "setItem">, on: boolean) {
+  storage.setItem(ELEGANT_KEY, on ? "1" : "0");
+}

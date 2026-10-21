@@ -123,7 +123,7 @@ export function Navbar() {
           <span className={`nav-logo grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
             <Heart className="h-5 w-5" fill="currentColor" />
           </span>
-          <span className="hidden text-sm font-bold leading-tight text-foreground sm:block">Socialinės<br />Valandos<span className="sr-only"> socialinesvalandos.dev</span></span>
+          <span className="brand-wordmark hidden leading-none sm:block"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span><span className="sr-only"> socialinesvalandos.dev</span></span>
         </Link>
         <nav aria-label="Pagrindinis meniu" className="ml-4 hidden min-w-0 items-center gap-1 lg:flex">
           {links.filter((l) => l.to === "/" || l.to === "/tasks" || l.to === DASHBOARD_BY_ROLE[activeRole ?? "student"]?.to).map((l) => {

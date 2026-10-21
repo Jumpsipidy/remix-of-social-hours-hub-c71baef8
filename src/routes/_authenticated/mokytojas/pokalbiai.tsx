@@ -1,3 +1,4 @@
+import { messagePreview } from "@/lib/task-invite";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { userError } from "@/lib/user-error";
+import { ClassTaskInviteDialog } from "@/components/teacher/class-task-invite-dialog";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,7 @@ function TeacherChatPage() {
   const navigate = useNavigate();
   const notify = useServerFn(notifyNewMessage);
   const { data: school } = useSchoolData();
+  const [classInvite, setClassInvite] = useState(false);
   const [convs, setConvs] = useState<Conv[] | null>(null);
   const [filter, setFilter] = useState("");
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
@@ -191,9 +194,10 @@ function TeacherChatPage() {
         <Button type="button" size="sm" onClick={() => { setPicker(true); setStudentQ(""); }}>
           <Users className="h-4 w-4" /> Rašyti mokiniui
         </Button>
-        <Button type="button" size="sm" variant="outline" asChild>
-          <Link to="/mokytojas/rezervacijos"><CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją</Link>
+        <Button type="button" size="sm" variant="outline" onClick={() => setClassInvite(true)}>
+          <CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją
         </Button>
+        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={students} />
         {TEMPLATES.map((t) => (
           <Button
             key={t.label}
@@ -263,7 +267,7 @@ function TeacherChatPage() {
                       <span className="shrink-0 text-[10px] text-muted-foreground">{new Date(c.last_at).toLocaleDateString("lt-LT", { month: "2-digit", day: "2-digit" })}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-xs text-muted-foreground">{c.last_message ?? (c.reservation_date ? `Rezervacija ${c.reservation_date}` : "Naujas pokalbis")}</p>
+                      <p className="truncate text-xs text-muted-foreground">{(c.last_message ? messagePreview(c.last_message) : null) ?? (c.reservation_date ? `Rezervacija ${c.reservation_date}` : "Naujas pokalbis")}</p>
                       {c.unread > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>}
                     </div>
                   </div>
