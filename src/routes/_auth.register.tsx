@@ -102,6 +102,15 @@ function RegisterPage() {
   }
 
   useEffect(() => { void loadSchools(); }, []);
+  // Returning from login via the "Administracija" button: continue straight to the licence check.
+  useEffect(() => {
+    if (profile?.role !== "admin" || adminGrant) return;
+    if (new URLSearchParams(window.location.search).get("admin") !== "1") return;
+    startAdmin({ data: { returnUrl: `${window.location.origin}/register` } })
+      .then((r) => window.location.assign(r.url))
+      .catch((e) => toast.error(userError(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.role]);
 
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -298,7 +307,14 @@ function RegisterPage() {
           title="Administracinė registracija"
           className="mx-auto mt-4 flex h-7 items-center gap-1.5 rounded-full border border-border/60 px-3 text-[11px] font-semibold text-muted-foreground/70 transition hover:border-primary/50 hover:text-foreground focus-visible:border-primary focus-visible:text-foreground"
           onClick={async () => {
-            if (profile?.role !== "admin") { toast.info("Administracinės parinktys veikia tik prisijungus kaip Super Admin. Prisijunk ir grįžk į šį puslapį."); return; }
+            if (!profile) {
+              // Signed out: sign in as Super Admin, then come straight back and continue to the licence check.
+              try { sessionStorage.setItem("sv_admin_signup_return", "1"); } catch {}
+              toast.info("Prisijunk kaip Super Admin — po to grįši čia ir būsi nukreiptas į licencijos patikrą.");
+              window.location.assign("/login");
+              return;
+            }
+            if (profile.role !== "admin") { toast.error("Ši parinktis skirta tik Super Admin paskyrai."); return; }
             try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
             catch (error) { toast.error(userError(error)); }
           }}

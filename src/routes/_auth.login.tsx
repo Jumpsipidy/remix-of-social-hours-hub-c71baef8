@@ -122,7 +122,9 @@ function LoginPage() {
         const { data: prof } = await supabase.from("profiles").select("role").eq("id", signIn.user.id).maybeSingle();
         role = (prof as { role?: string } | null)?.role ?? "student";
       }
-      const target = DASH_BY_ROLE[role] ?? "/";
+      let target = DASH_BY_ROLE[role] ?? "/";
+      // Admin pressed "Administracija" on /register while signed out: return there once.
+      try { if (sessionStorage.getItem("sv_admin_signup_return") === "1") { sessionStorage.removeItem("sv_admin_signup_return"); if (role === "admin") target = "/register?admin=1"; } } catch {}
       if (role) { try { localStorage.setItem("sv_last_role_v1", role); localStorage.setItem("sv_last_role_uid_v1", signIn.user.id); } catch {} }
       try { localStorage.removeItem(FAIL_KEY); } catch {}
       setFails(0);
