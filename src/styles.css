@@ -935,22 +935,21 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 
 /* ── Elegant background mode ────────────────────── */
 .elegant-swatch { background: radial-gradient(120% 90% at 0% 100%, color-mix(in oklab, var(--primary) 45%, transparent), transparent 60%), var(--muted); }
-html.sv-elegant body {
-  background-color: var(--background);
+html.sv-elegant { background-color: var(--background);
   background-image:
     radial-gradient(60rem 30rem at 85% -5%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 70%),
     radial-gradient(50rem 28rem at -10% 110%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 70%),
     linear-gradient(180deg, color-mix(in oklab, var(--background) 92%, var(--primary)), var(--background) 40%);
   background-attachment: fixed;
 }
+html.sv-elegant body { background: transparent; }
 html.sv-elegant body::before {
-  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .55;
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .55;
   background:
     repeating-radial-gradient(ellipse 140% 60% at 50% 120%, transparent 0 46px, color-mix(in oklab, var(--primary) 16%, transparent) 47px 48px);
   -webkit-mask-image: linear-gradient(180deg, transparent 20%, #000 75%); mask-image: linear-gradient(180deg, transparent 20%, #000 75%);
   animation: sv-elegant-drift 26s ease-in-out infinite alternate;
 }
-html.sv-elegant body > * { position: relative; z-index: 1; }
 html.sv-elegant :is(.bg-card, .bg-background\/60, .bg-background\/40) { background-color: color-mix(in oklab, var(--card) 78%, transparent); backdrop-filter: blur(10px); }
 html.sv-elegant .site-navbar { background-color: color-mix(in oklab, var(--background) 72%, transparent); backdrop-filter: blur(14px); }
 html.sv-elegant .home-ui-hero { background: transparent; }
