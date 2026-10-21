@@ -1,6 +1,6 @@
 # Užduotys (2026-10-21, vakaras)
 
-- [ ] Mokyklos rezervacijos mokinio skydelyje iškart, be papildomo patvirtinimo
+- [x] Mokyklos rezervacijos mokinio skydelyje iškart, be papildomo patvirtinimo (9 testai; prisijungusio mokinio gyva patikra neprieinama)
 
 - [x] Neprivalomas rezervacijų laikas, galutinis valandų pasirinkimas ir organizacijų pokalbis
 - [x] QR puslapio atnaujinimas ir elegantiška šviesi tema

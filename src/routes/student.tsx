@@ -1,4 +1,5 @@
 import { reservationTimeLabel } from "@/lib/reservation-time";
+import { isActiveStudentReservation, isSchoolReservation, studentReservationNeedsQr, studentReservationStatus } from "@/lib/student-reservation";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { Users } from "lucide-react";
 import { DmInbox } from "@/components/dm-inbox";
@@ -56,8 +57,10 @@ type Reservation = {
   student_id: string;
   organization_id: string;
   reservation_date: string;
-  start_time: string;
-  end_time: string;
+  start_time: string | null;
+  end_time: string | null;
+  source?: string | null;
+  requires_checkin?: boolean | null;
   hours_to_earn: number;
   kind?: string | null;
   status: "pending" | "approved" | "confirmed" | "completed" | "declined";
@@ -95,7 +98,7 @@ function StudentDashboard() {
     // Runs in the background; never blocks the first paint of the dashboard.
     void Promise.resolve(supabase.rpc("expire_stale_reservations" as never)).catch(() => {});
 
-    const [{ data }, { data: parts }] = await Promise.all([
+    const [{ data, error }, { data: parts }] = await Promise.all([
       supabase
         .from("reservations")
         .select("*")
@@ -107,6 +110,10 @@ function StudentDashboard() {
         .eq("student_id", uid)
         .eq("status", "accepted"),
     ]);
+    if (error) {
+      toast.error("Nepavyko įkelti rezervacijų. Bandyk dar kartą.");
+      return;
+    }
     let rs = (data as Reservation[]) ?? [];
     setReservations(rs);
     const partIds = ((parts as { reservation_id: string }[] | null) ?? [])
@@ -139,6 +146,15 @@ function StudentDashboard() {
   useEffect(() => {
     if (!user) return;
     loadReservations(user.id);
+    const refresh = () => { void loadReservations(user.id); };
+    window.addEventListener("focus", refresh);
+    const channel = supabase.channel(`student-reservations-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `student_id=eq.${user.id}` }, refresh)
+      .subscribe();
+    return () => {
+      window.removeEventListener("focus", refresh);
+      void supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const orgName = (id: string) => orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
@@ -298,11 +314,11 @@ function StudentDashboard() {
   const required = Number(profile.hours_needed ?? 0);
   const progress = required ? Math.min(100, Math.round((completed / required) * 100)) : 0;
   const remaining = Math.max(0, required - completed);
-  const active = reservations.filter((r) => r.status === "pending" || r.status === "approved");
+  const active = reservations.filter(isActiveStudentReservation);
   const done = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
   const nextRes = active
     .slice()
-    .sort((a, b) => (a.reservation_date + a.start_time).localeCompare(b.reservation_date + b.start_time))[0];
+    .sort((a, b) => (a.reservation_date + (a.start_time ?? "")).localeCompare(b.reservation_date + (b.start_time ?? "")))[0];
   const avgHoursPerVisit = done.length ? (done.reduce((a, r) => a + Number(r.hours_to_earn), 0) / done.length) : 0;
 
   const filtered = reservations.filter((r) => {
@@ -333,7 +349,7 @@ function StudentDashboard() {
         </div>
       </aside>
       <div className="min-w-0">
-      <div className="flex flex-col lg:block">
+      <div className="flex flex-col [&>section]:w-full">
       <section id="pradzia" className="order-1 scroll-mt-20 mx-auto max-w-7xl px-4 pt-8 sm:px-6">
         <DashHero
           eyebrow="Mokinio sritis"
@@ -388,13 +404,13 @@ function StudentDashboard() {
               <h2 className="text-sm font-bold uppercase tracking-wider text-primary">Kitas vizitas</h2>
               {nextRes && (
                 <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${nextRes.status === "approved" ? "bg-primary/15 text-primary" : "bg-warning/20 text-warning-foreground"}`}>
-                  {nextRes.status === "approved" ? "Vykdoma" : "Laukiama"}
+                  {studentReservationStatus(nextRes)}
                 </span>
               )}
             </div>
             {nextRes ? (
               <div className="mt-4">
-                <p className="font-display text-xl font-bold">{orgName(nextRes.organization_id)}</p>
+                <p className="font-display text-xl font-bold">{isSchoolReservation(nextRes) ? "Auklėtojo rezervacija" : orgName(nextRes.organization_id)}</p>
                 <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {nextRes.reservation_date} · {reservationTimeLabel(nextRes.start_time, nextRes.end_time)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{Number(nextRes.hours_to_earn)} val. socialinių</p>
                 {nextRes.tags && nextRes.tags.length > 0 && (
@@ -404,12 +420,14 @@ function StudentDashboard() {
                     ))}
                   </div>
                 )}
-                <button
+                {isSchoolReservation(nextRes) ? (
+                  <Button asChild variant="outline" className="mt-4"><a href="#mano-rezervacijos">Peržiūrėti rezervaciją</a></Button>
+                ) : <button
                   onClick={() => setChatRes({ id: nextRes.id, student_id: nextRes.student_id, organization_id: nextRes.organization_id, organization_name: orgName(nextRes.organization_id) })}
                   className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition hover:opacity-90"
                 >
                   <MessageSquare className="h-3.5 w-3.5" /> Atverti pokalbį
-                </button>
+                </button>}
               </div>
             ) : (
               <div className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
@@ -544,12 +562,12 @@ function StudentDashboard() {
       </section>
 
       {/* Reservations list w/ filter */}
-      <section id="mano-rezervacijos" className="order-3 lg:order-none scroll-mt-20 mx-auto mt-6 max-w-7xl px-4 pb-16 sm:px-6">
+      <section id="mano-rezervacijos" className="order-3 w-full scroll-mt-20 mx-auto mt-6 max-w-7xl px-4 pb-6 sm:px-6">
         <div className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-bold">Mano rezervacijos</h2>
-              <p className="text-xs text-muted-foreground">Bendrauk saugiame 3-šalių pokalbyje su organizacija.</p>
+              <p className="text-xs text-muted-foreground">Auklėtojo rezervacijos ir organizacijų vizitai.</p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {([
@@ -579,27 +597,29 @@ function StudentDashboard() {
               const isApproved = r.status === "approved";
               const tone = isDone ? "bg-success/15 text-success" : r.status === "declined" ? "bg-destructive/15 text-destructive" : isApproved ? "bg-primary/15 text-primary" : "bg-warning/15 text-warning-foreground";
               const Icon = isDone ? CheckCircle2 : r.status === "declined" ? XCircle : isApproved ? PlayCircle : AlarmClock;
-              const label = isDone ? "Užbaigta" : r.status === "declined" ? "Atmesta" : isApproved ? "Vykdoma" : "Laukia patvirtinimo";
+              const school = isSchoolReservation(r);
+              const label = studentReservationStatus(r);
               return (
                 <div key={r.id} className={`rounded-2xl border p-4 ${isApproved ? "border-primary/40 bg-primary/5" : "border-border bg-background/60"}`}>
                   <div className="student-reservation-row grid grid-cols-[44px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
                     <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
+                      <p className="truncate text-sm font-semibold">{school ? "Auklėtojo rezervacija" : orgName(r.organization_id)}</p>
+                      {school && <p className="text-xs text-muted-foreground">{orgMap[r.organization_id]?.full_name ?? "Mokykla"} · Papildomai patvirtinti nereikia</p>}
                       <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"><KindBadge kind={r.kind} />{r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {Number(r.hours_to_earn)} val.</p>
                     </div>
                     <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 sm:col-span-1 sm:flex-row">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
                         <Icon className="h-3 w-3" /> {label}
                       </span>
-                      {!isDone && r.status !== "declined" && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
-                      {isApproved && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
-                      <button
+                      {!school && !isDone && r.status !== "declined" && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
+                      {studentReservationNeedsQr(r) && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
+                      {!school && <button
                         onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
                         className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"
                       >
                         <MessageSquare className="h-3 w-3" /> Pokalbis
-                      </button>
+                      </button>}
                     </div>
                   </div>
                   {(r.tags && r.tags.length > 0) || r.note ? (

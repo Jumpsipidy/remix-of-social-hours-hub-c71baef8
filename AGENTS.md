@@ -26,6 +26,7 @@
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
 - LockdownGate wraps content, fails closed on unknown settings and never auto-unlocks; static isolated tokens follow theme without changing enforcement.
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
+- Student reservation presentation uses shared source-aware rules; school reservations stay active until teacher completion and omit organization confirmation, QR and group-invite actions.
 - Class letters use profiles.class_letter/assigned_letter; class_year stays canonical for promotion. Student class, letter and required hours derive only from the protected school_class_codes row server-side; assigning classes to a school admin auto-creates missing codes.
 - Theme is applied by an inline script in the root <head> before paint; ThemeProvider must read the on-screen class when saving so a stale state can't overwrite the choice.
 - Bug reporting uses a shared portaled, viewport-aware dialog with opt-in bounded JPEG upload; success requires a saved report so the admin board stays the source of truth.
