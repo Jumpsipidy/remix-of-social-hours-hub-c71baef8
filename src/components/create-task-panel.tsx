@@ -1,4 +1,5 @@
 import { CITIES } from "@/lib/cities";
+import { optionalReservationTimes, reservationTimeLabel } from "@/lib/reservation-time";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
@@ -40,8 +41,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(todayISO());
-  const [start, setStart] = useState("14:00");
-  const [end, setEnd] = useState("17:00");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
   const [hours, setHours] = useState(3);
   const [location, setLocation] = useState("");
   const [city, setCity] = useState<string>("Šeduva");
@@ -66,13 +67,14 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
 
   const reset = () => {
     setTitle(""); setDescription(""); setDate(todayISO());
-    setStart("14:00"); setEnd("17:00"); setHours(3);
+    setStart(""); setEnd(""); setHours(3);
     setLocation(""); setAddress(null); setLat(null); setLng(null);
     setSpots(1); setTags([]);
   };
 
   const submit = async () => {
     if (!title.trim() || !date) { toast.error("Užpildyk pavadinimą ir datą"); return; }
+    try { optionalReservationTimes(start, end); } catch (e) { toast.error(e instanceof Error ? e.message : "Patikrink laiką."); return; }
     setBusy(true);
     const weekday = new Date(date + "T00:00:00").getDay();
     const baseTask = {
@@ -170,8 +172,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
               />
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <LabeledInput label="Data" type="date" value={date} min={todayISO()} onChange={setDate} />
-                <LabeledInput label="Pradžia" type="time" value={start} onChange={setStart} />
-                <LabeledInput label="Pabaiga" type="time" value={end} onChange={setEnd} />
+                <LabeledInput label="Pradžia (nebūtina)" type="time" value={start} onChange={setStart} />
+                <LabeledInput label="Pabaiga (nebūtina)" type="time" value={end} onChange={setEnd} />
                 <LabeledInput label="Valandos" type="number" value={String(hours)} onChange={(v) => setHours(Math.min(8, Math.max(0, Math.round(Number(v) || 0))))} />
               </div>
               <div>
@@ -261,7 +263,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{description.trim() || "Trumpas aprašymas atsiras čia."}</p>
                 <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{date}</span>
-                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{start}–{end}</span>
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{reservationTimeLabel(start, end)}</span>
                   {(location || address) && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location || address}</span>}
                 </div>
                 {tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{tags.map((tg) => <span key={tg} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{tg}</span>)}</div>}
