@@ -91,9 +91,8 @@ function StudentDashboard() {
   const loadReservations = async (uid: string) => {
     // Pasibaigusios, bet neuždarytos rezervacijos automatiškai užsidaro, kad
     // nekabėtų kaip aktyvios.
-    try { await supabase.rpc("expire_stale_reservations" as never); } catch { /* nesvarbu */ }
-    // Mokinys turi matyti ir savo sukurtas rezervacijas, ir tas, į kurias jis
-    // buvo pakviestas kaip grupės dalyvis (anksčiau jos tiesiog dingdavo).
+    // Runs in the background; never blocks the first paint of the dashboard.
+    void Promise.resolve(supabase.rpc("expire_stale_reservations" as never)).catch(() => {});
 
     const [{ data }, { data: parts }] = await Promise.all([
       supabase
@@ -108,6 +107,7 @@ function StudentDashboard() {
         .eq("status", "accepted"),
     ]);
     let rs = (data as Reservation[]) ?? [];
+    setReservations(rs);
     const partIds = ((parts as { reservation_id: string }[] | null) ?? [])
       .map((p) => p.reservation_id)
       .filter((id) => !rs.some((r) => r.id === id));
@@ -116,25 +116,21 @@ function StudentDashboard() {
       rs = [...rs, ...((extra as Reservation[]) ?? [])].sort((a, b) =>
         a.reservation_date < b.reservation_date ? 1 : -1,
       );
+      setReservations(rs);
     }
-    setReservations(rs);
 
     const ids = Array.from(new Set(rs.map((r) => r.organization_id).filter((v): v is string => !!v)));
     if (ids.length) {
-      const { data: ps } = await supabase.from("profiles").select("id, organization_name, full_name").in("id", ids);
+      // Profiles and the public directory load in parallel instead of one after another.
+      const [{ data: ps }, dir] = await Promise.all([
+        supabase.from("profiles").select("id, organization_name, full_name").in("id", ids),
+        listOrganizations().catch(() => [] as Awaited<ReturnType<typeof listOrganizations>>),
+      ]);
       const m: Record<string, OrgLite> = {};
       (ps as OrgLite[] | null)?.forEach((p) => (m[p.id] = p));
-      // RLS often hides other users' profiles from students, which used to show
-      // a generic „Organizacija" label. Fall back to the public org directory.
-      const missing = ids.filter((id) => !m[id]?.organization_name && !m[id]?.full_name);
-      if (missing.length) {
-        try {
-          const dir = await listOrganizations();
-          dir.forEach((o) => {
-            if (missing.includes(o.id)) m[o.id] = { id: o.id, organization_name: o.organization_name, full_name: o.full_name };
-          });
-        } catch { /* directory unavailable — keep fallback label */ }
-      }
+      dir.forEach((o) => {
+        if (ids.includes(o.id) && !m[o.id]?.organization_name && !m[o.id]?.full_name) m[o.id] = { id: o.id, organization_name: o.organization_name, full_name: o.full_name };
+      });
       setOrgMap(m);
     }
   };
