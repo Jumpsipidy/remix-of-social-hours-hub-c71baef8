@@ -1,4 +1,5 @@
 import { messagePreview } from "@/lib/task-invite";
+import { chatDate, matchesChatFilter, messageIsRetained, type ChatFilter } from "@/lib/chat-list";
 import { DmInbox } from "@/components/dm-inbox";
 import { useTypingIndicator } from "@/hooks/use-typing";
 import { TypingDots, LinkifiedText } from "@/components/typing-dots";
@@ -53,6 +54,10 @@ function ChatPage() {
   const notify = useServerFn(notifyNewMessage);
   const [convs, setConvs] = useState<Conv[] | null>(null);
   const [filter, setFilter] = useState("");
+  const [category, setCategory] = useState<ChatFilter>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [untilDate, setUntilDate] = useState("");
+  const [sort, setSort] = useState("recent");
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -63,6 +68,17 @@ function ChatPage() {
   const sendLock = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const activeId = search.room ?? null;
+  const currentRoom = useRef(activeId);
+  currentRoom.current = activeId;
+
+  useEffect(() => {
+    if (!activeId) return;
+    let alive = true;
+    void supabase.rpc("resolve_chat_room", { _room: activeId }).then(({ data }) => {
+      if (alive && data && data !== activeId) void navigate({ to: "/chat", search: { room: data }, replace: true });
+    });
+    return () => { alive = false; };
+  }, [activeId]);
 
   const loadConvs = useCallback(async () => {
     const { data, error } = await (supabase.rpc as any)("list_my_conversations");
@@ -131,7 +147,10 @@ function ChatPage() {
     if (profile?.role === "student") return c.organization_name ?? (c.school_admin_name ? `${c.school_admin_name} (Auklėtojas)` : "Auklėtojas");
     return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
-  const shown = useMemo(() => (convs ?? []).filter((c) => titleFor(c).toLowerCase().includes(filter.toLowerCase())), [convs, filter, profile?.role]);
+  const shown = useMemo(() => (convs ?? []).filter((c) =>
+    `${titleFor(c)} ${c.last_message ?? ""}`.toLowerCase().includes(filter.toLowerCase()) &&
+    matchesChatFilter(c, category, fromDate, untilDate))
+    .sort((a, b) => sort === "name" ? titleFor(a).localeCompare(titleFor(b), "lt") : b.last_at.localeCompare(a.last_at)), [convs, filter, profile?.role, category, fromDate, untilDate, sort]);
   const totalUnread = (convs ?? []).reduce((a, c) => a + c.unread, 0);
 
   const nameOf = (id: string | null) => {
@@ -184,6 +203,7 @@ function ChatPage() {
     sendLock.current = false;
     setSending(false);
     if (error) { toast.error(error.message); return; }
+    if (currentRoom.current !== activeId) { void loadConvs(); return; }
     setText((current) => current.trim() === content ? "" : current);
     followLatest.current = true;
     notifyStop();
@@ -263,6 +283,16 @@ function ChatPage() {
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <input aria-label="Ieškoti pokalbio" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Ieškoti pokalbio…" className="h-10 w-full bg-transparent text-sm outline-none" />
               </div>
+              {profile?.role === "organization" && <div className="mt-3 space-y-2">
+                <div className="flex flex-wrap gap-1" aria-label="Pokalbių filtrai">
+                  {([["all", "Visi"], ["unread", "Neperskaityti"], ["students", "Mokiniai"], ["school", "Mokykla"]] as const).map(([value, label]) => <Button key={value} size="sm" variant={category === value ? "default" : "outline"} onClick={() => setCategory(value)}>{label}</Button>)}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="min-w-0 text-xs text-muted-foreground">Nuo<input aria-label="Pokalbiai nuo datos" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="mt-1 h-9 w-full min-w-0 rounded-md border border-input bg-background px-1 text-xs text-foreground" /></label>
+                  <label className="min-w-0 text-xs text-muted-foreground">Iki<input aria-label="Pokalbiai iki datos" type="date" value={untilDate} onChange={(e) => setUntilDate(e.target.value)} className="mt-1 h-9 w-full min-w-0 rounded-md border border-input bg-background px-1 text-xs text-foreground" /></label>
+                </div>
+                <select aria-label="Rikiuoti pokalbius" value={sort} onChange={(e) => setSort(e.target.value)} className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"><option value="recent">Naujausi pirmiau</option><option value="name">Pagal vardą</option></select>
+              </div>}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
               {convs === null ? (
@@ -272,8 +302,8 @@ function ChatPage() {
               ) : shown.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   <MessageCircle className="mx-auto mb-2 h-8 w-8" />
-                  Žinutės saugomos 12 dienų, po to ištrinamos automatiškai.<br />
-                  Pokalbių dar nėra. Jie atsiras, kai rezervuosi užduotį arba parašysi organizacijai.
+                  {convs.length ? "Pagal pasirinktus filtrus pokalbių nerasta." : "Pokalbių dar nėra."}
+                  {convs.length > 0 && <Button variant="outline" className="mt-3" onClick={() => { setFilter(""); setCategory("all"); setFromDate(""); setUntilDate(""); }}>Išvalyti filtrus</Button>}
                 </div>
               ) : shown.map((c) => {
                 const Icon = profile?.role === "student" ? Building2 : c.student_id === c.school_admin_id ? GraduationCap : UserIcon;
@@ -326,10 +356,12 @@ function ChatPage() {
                     <p className="pt-10 text-center text-sm text-muted-foreground">Parašyk pirmą žinutę 👋</p>
                   ) : (
                     <AnimatePresence initial={false}>
-                      {msgs.map((m) => {
+                      {msgs.filter((m) => messageIsRetained(m.created_at)).map((m, index, list) => {
                         const mine = m.sender_id === user?.id;
                         return (
-                          <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                          <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                            {(index === 0 || chatDate(list[index - 1].created_at) !== chatDate(m.created_at)) && <p className="my-3 text-center text-xs font-semibold text-muted-foreground">{chatDate(m.created_at)}</p>}
+                            <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                             <div className={`min-w-0 max-w-[88%] rounded-lg sm:max-w-[78%] px-3.5 py-2 text-sm ${mine ? "rounded-br-md bg-primary text-primary-foreground" : "rounded-bl-md border border-border bg-card"}`}>
                               {(() => { const r = roleOf(m.sender_id); return (
                                 <p className={`mb-0.5 flex items-center gap-1.5 text-[10px] font-bold ${mine ? "justify-end opacity-80" : "opacity-80"}`}>
@@ -338,6 +370,7 @@ function ChatPage() {
                                 </p>); })()}
                               <LinkifiedText text={m.content} className="message-text whitespace-pre-wrap [overflow-wrap:anywhere]" />
                               <p className="mt-0.5 text-right text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}</p>
+                            </div>
                             </div>
                           </motion.div>
                         );

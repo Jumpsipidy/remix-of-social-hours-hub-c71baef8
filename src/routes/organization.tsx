@@ -1,4 +1,5 @@
 import { reservationTimeLabel } from "@/lib/reservation-time";
+import { startReservationChat } from "@/lib/reservation-chat";
 import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
@@ -62,16 +63,7 @@ type StudentLite = { id: string; full_name: string | null; email: string | null;
 type TaskRow = { id: string; title: string; task_date: string; available_hours: number; location: string | null; is_open: boolean; created_at: string };
 
 async function ensureRoomAndNotify(reservation: Reservation, content: string, senderId: string) {
-  const { data: existing } = await supabase.from("chat_rooms").select("id").eq("reservation_id", reservation.id).maybeSingle();
-  let roomId = existing?.id;
-  if (!roomId) {
-    const { data: created, error } = await supabase.from("chat_rooms").insert({
-      reservation_id: reservation.id, student_id: reservation.student_id, organization_id: reservation.organization_id,
-    }).select("id").maybeSingle();
-    if (error || !created) return;
-    roomId = created.id;
-  }
-  await supabase.from("messages").insert({ chat_room_id: roomId, sender_id: senderId, content });
+  await startReservationChat({ reservationId: reservation.id, studentId: reservation.student_id, organizationId: reservation.organization_id, message: content });
 }
 
 const STATUS_COLORS: Record<string, string> = {
