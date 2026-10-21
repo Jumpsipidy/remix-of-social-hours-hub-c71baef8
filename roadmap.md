@@ -1,12 +1,11 @@
-# Užduotys (2026-10-21)
+# Užduotys (2026-10-21, vakaras)
 
-- [x] Greitis: mokinio skydelis krauna lygiagrečiai, skeletai be uždelsimo
-- [x] „Administracija“ registracijoje veikia ir neprisijungus (per prisijungimą → licencijos patikra)
-- Ankstesnis QR puslapio prašymas — neįtrauktas į dabartinį meniu / pradžios / veiklų atnaujinimą.
-- [x] Temos nustatymų mygtukas atidaro esamą temos pasirinkimo langą
-- [x] Viršutinio meniu pritaikymas ir animacijos
-- [x] Naujas SaaS pradžios puslapis
-- [x] Užduočių puslapio perdarymas
-- [ ] Laiškai mokiniams per Resend — laukia RESEND_API_KEY / RESEND_FROM patikros Vercel'yje
-- [x] Pradžia be sugeneruotų nuotraukų: modernūs UI elementai, svarbi informacija slenkant
-- [x] Temos spalvos ir nustatymų patikra kompiuteryje bei telefone
+- [x] Logotipo užrašas su šriftu ir spalvų perėjimu
+- [x] Sklandus perėjimas iš pradžios į prisijungimą / registraciją
+- [x] Nustatymų mygtukas meniu + „Elegantiškas“ fono režimas
+- [x] Auklėtojas: rezervacija visiems (/tasks) arba tik klasei
+- [x] „Kviesti klasę“: visų veiklų sąrašas su filtrais → mokiniai → kortelė pokalbyje
+- [x] Organizacijos skydelio išvaizda + specialus atsijungimo mygtukas + kūrimas iššokančiame lange
+- [x] Daugiau slaptų Super Admin registracijos parinkčių
+- [ ] Laiškai per Resend — laukia RESEND_API_KEY / RESEND_FROM patikros Vercel'yje
+- [ ] QR / atvykimo / PDF gyva patikra — reikia tikro domeno ir paskyrų
