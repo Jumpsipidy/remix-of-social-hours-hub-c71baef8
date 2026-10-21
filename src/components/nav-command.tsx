@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Search, Home, ListTodo, ShieldCheck, History, FileCheck2, MessageCircle, LayoutDashboard, Sparkles } from "lucide-react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 
+import { Button } from "@/components/ui/button";
+
 type Item = { to: string; label: string };
 
 const PAGES: (Item & { icon: typeof Home })[] = [
@@ -37,14 +39,7 @@ export function NavCommand({ extra }: { extra: Item[] }) {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)}
-        className="hidden h-9 items-center gap-2 rounded-xl border border-border bg-background/70 px-3 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground xl:inline-flex">
-        <Search className="h-4 w-4" /> Ieškoti…
-        <kbd className="ml-3 whitespace-nowrap rounded-md border border-border bg-muted px-1.5 font-mono text-[10px]">Ctrl K</kbd>
-      </button>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Ieškoti" className="grid h-9 w-9 place-items-center rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground xl:hidden">
-        <Search className="h-4 w-4" />
-      </button>
+      <Button variant="ghost" size="icon" type="button" onClick={() => setOpen(true)} aria-label="Ieškoti" title="Ieškoti · Ctrl K" className="nav-search h-10 w-10 text-muted-foreground"><Search className="h-4 w-4" /></Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Kur nori eiti? Pvz. užduotys, pažymėjimas…" />
         <CommandList>
@@ -65,7 +60,7 @@ export function NavCommand({ extra }: { extra: Item[] }) {
           )}
           <CommandSeparator />
           <CommandGroup heading="Paslaptys">
-            <CommandItem value="vakarelis party sventė" onSelect={() => secret(() => {
+            <CommandItem value="vakarelis party sventė šventė šventės režimas" onSelect={() => secret(() => {
               document.documentElement.classList.add("sv-party");
               window.setTimeout(() => document.documentElement.classList.remove("sv-party"), 2600);
               toast.success("🎉 Radai slaptą šventę!");

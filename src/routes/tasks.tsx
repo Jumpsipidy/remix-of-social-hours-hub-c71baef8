@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { PageShell } from "../components/layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,7 +12,7 @@ import { TaskDetailDialog } from "@/components/task-detail-dialog";
 import { CITIES, cityOf } from "@/lib/cities";
 import { startReservationChat } from "@/lib/reservation-chat";
 import { TasksSkeleton } from "@/components/skeleton-loader";
-import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Sparkles, Building2, Filter, X, CalendarHeart, Tag as TagIcon, Navigation, ArrowUpRight, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { TAG_PRESETS } from "@/components/tags-input";
 import { logActivity } from "@/lib/activity-log";
@@ -30,9 +29,7 @@ export const Route = createFileRoute("/tasks")({
       { property: "og:description", content: "Atviros savanorystės užduotys moksleiviams — filtruok, rezervuok ir rink socialines valandas patikimose organizacijose." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://socialinesvalandos.dev/tasks" },
-      { property: "og:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://socialinesvalandos.dev/og-cover.jpg" },
     ],
     links: [{ rel: "canonical", href: "https://socialinesvalandos.dev/tasks" }],
   }),
@@ -90,6 +87,7 @@ function TasksPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"tasks" | "orgs" | "map">("tasks");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [orgs, setOrgs] = useState<Record<string, OrgProfile>>({});
@@ -252,248 +250,57 @@ function TasksPage() {
 
   return (
     <PageShell>
-      <div className="tasks-page relative">
-        <section className="relative overflow-hidden border-b border-border">
-          <div className="absolute inset-0 bg-gradient-mesh opacity-40" aria-hidden />
-          <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-14">
-          <span className="text-xs font-semibold uppercase tracking-wider text-primary">Atraskite galimybes</span>
-          <h1 className="mt-2 font-display text-2xl font-bold sm:text-5xl">Užduotys ir organizacijos</h1>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            {loadingTasks ? "Kraunamos užduotys…" : `${tasks.length} atvirų užduočių iš ${allOrgs.length} organizacijų.`} Filtruok pagal miestą, kategoriją arba raktinius žodžius.
-          </p>
-
-          <div className="mt-6 -mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="inline-flex rounded-full border border-border bg-card/70 p-1 backdrop-blur">
-              {[
-                { id: "tasks", label: "Užduotys", icon: TagIcon },
-                { id: "map", label: "Žemėlapis", icon: Navigation },
-                { id: "orgs", label: "Organizacijos", icon: Building2 }
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id as any)}
-                  className={`flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2 text-sm font-bold tracking-tight transition-all active:scale-95 ${
-                    tab === t.id 
-                      ? "bg-gradient-primary text-primary-foreground shadow-glow" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <t.icon className={`h-3.5 w-3.5 ${tab === t.id ? "text-white" : "text-muted-foreground"}`} />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="task-filters mt-4 grid grid-cols-2 items-center gap-2 sm:mt-6 sm:flex sm:flex-wrap sm:gap-3">
-            <div className="col-span-2 flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-border bg-card/80 px-4 py-2 backdrop-blur">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <input aria-label="Ieškoti užduoties ar organizacijos" value={q} onChange={(e) => setQ(e.target.value)}
-                placeholder={tab === "tasks" ? "Paieška: pavadinimas, vieta, organizacija…" : "Ieškoti organizacijos…"}
-                className="h-11 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-            </div>
-            {(tab === "tasks" || tab === "map") && (
-              <>
-                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <select aria-label="Miestas" value={town} onChange={(e) => setTown(e.target.value)}
-                    className="h-11 min-w-0 w-full rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
-                    <option value="" className="bg-card text-foreground">Visi miestai</option>
-                    {towns.map((t) => <option key={t} value={t} className="bg-card text-foreground">{t}</option>)}
-                  </select>
-                </div>
-                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <select value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)} aria-label="Organizacija"
-                    className="h-11 min-w-0 w-full sm:max-w-[200px] rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
-                    <option value="" className="bg-card text-foreground">Visos organizacijos ({orgOptions.length})</option>
-                    {orgOptions.map((o) => <option key={o.id} value={o.id} className="bg-card text-foreground">{o.organization_name ?? o.full_name}</option>)}
-                  </select>
-                </div>
-                <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card/80 px-2 py-1.5 sm:px-3 sm:py-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <select aria-label="Kategorija" value={cat} onChange={(e) => setCat(e.target.value)}
-                    className="h-11 min-w-0 w-full rounded-md bg-card text-foreground pr-2 text-sm outline-none focus:ring-1 focus:ring-primary">
-                    <option value="" className="bg-card text-foreground">Visos kategorijos</option>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k} className="bg-card text-foreground">{v}</option>)}
-                  </select>
-                </div>
-              </>
-            )}
-            {(q || town || cat || orgFilter || selectedTags.length > 0) && (
-              <button onClick={clearFilters} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-accent">
-                <X className="h-3 w-3" /> Išvalyti
-              </button>
-            )}
-            <button onClick={() => {
+      <div className="tasks-page tasks-workspace relative">
+        <section className="border-b border-border bg-card/40">
+          <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 sm:pt-10">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div><p className="text-xs font-semibold text-primary">SAVANORYSTĖ ŠALIA TAVĘS</p><h1 className="mt-2 text-3xl font-bold sm:text-4xl">Atrask savo veiklą<span className="text-primary">.</span></h1><p className="mt-3 text-sm text-muted-foreground">{loadingTasks ? "Veiklos, kurios kuria pokytį." : `${tasks.length} atvirų veiklų · ${allOrgs.length} organizacijų`}</p></div>
+              <Button variant="outline" className="h-10" onClick={() => {
                 if (!user) { toast.error("Prisijunk, kad galėtum rezervuoti"); navigate({ to: "/login" }); return; }
                 if (profile && profile.role !== "student") { toast.error("Tik moksleiviai gali rezervuoti"); return; }
                 setCustomOpen(true);
-              }}
-              className="col-span-2 inline-flex min-w-0 items-center justify-center gap-2 rounded-lg bg-gradient-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow">
-              <Sparkles className="h-4 w-4" /> Pasiūlyk savo rezervaciją
-            </button>
+              }}><Sparkles />Savo rezervacija</Button>
+            </div>
+            <div className="task-search mt-6 flex items-center gap-3 rounded-lg border border-input bg-background px-4 shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+              <Search className="h-5 w-5 shrink-0 text-primary" />
+              <input aria-label="Ieškoti užduoties ar organizacijos" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Gyvūnų prieglauda, biblioteka, organizacija…" className="h-14 w-full min-w-0 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
+              {q && <Button variant="ghost" size="icon" onClick={() => setQ("")} aria-label="Išvalyti paiešką"><X /></Button>}
+            </div>
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div role="tablist" aria-label="Veiklų vaizdas" className="flex max-w-full gap-1 rounded-lg bg-muted/70 p-1">
+                {([{id:"tasks",label:"Veiklos",icon:TagIcon},{id:"map",label:"Žemėlapis",icon:Navigation},{id:"orgs",label:"Organizacijos",icon:Building2}] as const).map((t) => <Button key={t.id} role="tab" aria-selected={tab === t.id} variant={tab === t.id ? "outline" : "ghost"} onClick={() => setTab(t.id)} className={`h-10 px-3 text-xs sm:text-sm ${tab === t.id ? "border-border text-foreground" : "text-muted-foreground"}`}><t.icon className="h-4 w-4" />{t.label}</Button>)}
+              </div>
+              {(tab === "tasks" || tab === "map") && <Button variant={filtersOpen ? "secondary" : "ghost"} onClick={() => setFiltersOpen(!filtersOpen)} aria-expanded={filtersOpen} className="h-10"><Filter />Filtrai{(town || cat || orgFilter || selectedTags.length > 0) && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}<ChevronDown className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`} /></Button>}
+            </div>
+            {(tab === "tasks" || tab === "map") && <div className="mt-4 flex flex-wrap gap-2" aria-label="Miestų pasirinkimas"><Button variant={town === "" ? "secondary" : "ghost"} size="sm" onClick={() => setTown("")}>Visi miestai</Button>{towns.map((t) => <Button key={t} variant={town === t ? "secondary" : "ghost"} size="sm" onClick={() => setTown(t)}><MapPin className="h-3.5 w-3.5" />{t}</Button>)}</div>}
+            {filtersOpen && tab !== "orgs" && <div className="task-filters demo-swap mt-5 border-t border-border pt-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="text-xs font-semibold text-muted-foreground">Miestas<select aria-label="Miestas" value={town} onChange={(e) => setTown(e.target.value)} className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"><option value="">Visi miestai</option>{towns.map((t)=><option key={t} value={t}>{t}</option>)}</select></label>
+                <label className="text-xs font-semibold text-muted-foreground">Organizacija<select aria-label="Organizacija" value={orgFilter} onChange={(e)=>setOrgFilter(e.target.value)} className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"><option value="">Visos organizacijos</option>{orgOptions.map((o)=><option key={o.id} value={o.id}>{o.organization_name ?? o.full_name}</option>)}</select></label>
+                <label className="text-xs font-semibold text-muted-foreground">Kategorija<select aria-label="Kategorija" value={cat} onChange={(e)=>setCat(e.target.value)} className="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"><option value="">Visos kategorijos</option>{Object.entries(CATEGORY_LABELS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">{availableTags.map((t)=><Button key={t} variant={selectedTags.includes(t) ? "secondary" : "ghost"} size="sm" onClick={()=>toggleTag(t)}>#{t}</Button>)}</div>
+            </div>}
           </div>
-
-          {tab === "tasks" && (
-            <div className="mt-5">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <TagIcon className="h-3.5 w-3.5" /> Žymos
-                {selectedTags.length > 0 && (
-                  <button onClick={() => setSelectedTags([])} className="ml-1 inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] normal-case tracking-normal text-muted-foreground hover:text-foreground">
-                    <X className="h-3 w-3" /> Nuimti visas
-                  </button>
-                )}
-              </div>
-              <div className="mt-2 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {availableTags.map((t) => {
-                  const on = selectedTags.includes(t);
-                  return (
-                    <button
-                      key={t}
-                      onClick={() => toggleTag(t)}
-                      className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                        on
-                          ? "border-transparent bg-gradient-primary text-primary-foreground shadow-glow"
-                          : "border-border bg-card/70 text-muted-foreground hover:border-primary/40 hover:text-primary"
-                      }`}
-                    >
-                      #{t}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
         </section>
-
-
-      <section className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-10">
-        {tab === "map" ? (
-          <InteractiveTasksMap 
-            tasks={filteredTasks} 
-            organizations={allOrgs}
-            onSelectTask={(t: Task) => setDetail(t)}
-            onSelectOrg={(org) => navigate({ to: `/org/${org.id}` })}
-          />
-        ) : tab === "tasks" && loadingTasks ? (
-          <TasksSkeleton count={6} />
-        ) : tab === "tasks" ? (
-          <>
-            {filteredTasks.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-border p-16 text-center">
-                <Sparkles className="mx-auto h-8 w-8 text-muted-foreground" />
-                <p className="mt-3 text-lg font-semibold">Kol kas nėra atitinkamų užduočių</p>
-                <p className="mt-1 text-sm text-muted-foreground">Pabandyk pakeisti filtrus arba pasiūlyk savo rezervaciją.</p>
-              </div>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-              <AnimatePresence mode="popLayout">
-                {filteredTasks.map((t, i) => (
-                  <motion.div key={t.id} layout
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.3, delay: (i % 6) * 0.03 }}
-                  >
-                      <article onClick={() => setDetail(t)} className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-gradient-card/85 p-4 shadow-md sm:rounded-3xl sm:p-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elegant">
-                        <motion.div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-gradient-primary opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
-                        <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                          <div className={`inline-flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-xs font-semibold ${t.is_event ? "bg-primary/15 text-primary" : "bg-accent"}`}>
-                            {t.is_event ? <CalendarHeart className="h-3 w-3" /> : <Building2 className="h-3 w-3" />}
-                            <span className="min-w-0 break-words">{t.is_event ? (t.event_host_name || "Vienkartinis renginys") : orgName(t.organization_id)}</span>
-                          </div>
-                          <span className="shrink-0 rounded-lg bg-success/15 px-2 py-1 text-xs font-semibold text-success">
-                            {Number(t.available_hours)} val.
-                          </span>
-                        </div>
-                        <h2 className="relative mt-2.5 font-display text-base font-bold leading-tight sm:mt-4 sm:text-lg"><Button variant="ghost" type="button" className="h-auto w-full min-w-0 justify-start whitespace-normal p-0 text-left text-inherit font-inherit [overflow-wrap:anywhere]" onClick={(event) => { event.stopPropagation(); setDetail(t); }}>{t.title}</Button></h2>
-                        <span className="relative mt-1 inline-block w-fit rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                          {CATEGORY_LABELS[guessCategory(t)]}
-                        </span>
-                        {t.description && (
-                          <p className="relative mt-1.5 line-clamp-2 text-[13px] text-muted-foreground sm:mt-2 sm:line-clamp-3 sm:text-sm">{t.description}</p>
-                        )}
-                        <div className="relative mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground sm:mt-4 sm:block sm:space-y-1.5">
-                          <p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {t.task_date}{cityOf(t) ? ` · ${cityOf(t)}` : ""}</p>
-                          {t.start_time && t.end_time && (
-                            <p className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {t.start_time.slice(0, 5)}–{t.end_time.slice(0, 5)}</p>
-                          )}
-                          {t.location && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" /> {t.location}</p>}
-                        </div>
-                        {t.tags && t.tags.length > 0 && (
-                          <div className="relative mt-3 hidden flex-wrap gap-1 sm:flex">
-                            {t.tags.slice(0, 5).map((tg) => (
-                              <button
-                                key={tg}
-                                onClick={(e) => { e.stopPropagation(); toggleTag(tg); }}
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold transition ${
-                                  selectedTags.includes(tg)
-                                    ? "bg-gradient-primary text-primary-foreground"
-                                    : "bg-primary/10 text-primary hover:bg-primary/20"
-                                }`}
-                              >
-                                #{tg}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
-                          onClick={(e) => { e.stopPropagation(); handleReserve(t); }}
-                          className="relative mt-3 w-full rounded-lg bg-gradient-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow">
-                          Rezervuoti
-                        </motion.button>
-                      </article>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+        <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          <div className="mb-5 flex items-center justify-between gap-3"><p className="text-sm font-semibold">{tab === "orgs" ? "Organizacijos" : tab === "map" ? "Veiklų žemėlapis" : "Artimiausios veiklos"}{!loadingTasks && <span className="ml-2 font-normal text-muted-foreground">{tab === "orgs" ? filteredOrgs.length : filteredTasks.length}</span>}</p>{(q || town || cat || orgFilter || selectedTags.length > 0) && <Button variant="ghost" size="sm" onClick={clearFilters}><X />Išvalyti filtrus</Button>}</div>
+          {tab === "map" ? <InteractiveTasksMap tasks={filteredTasks} organizations={allOrgs} onSelectTask={(t: Task) => setDetail(t)} onSelectOrg={(org) => navigate({ to: `/org/${org.id}` })} /> : loadingTasks ? <TasksSkeleton count={6} /> : tab === "tasks" ? <>
+            {filteredTasks.length === 0 && <div className="py-16 text-center"><Search className="mx-auto h-8 w-8 text-muted-foreground" /><h2 className="mt-4 text-lg font-semibold">Atitinkančių veiklų nerasta</h2><p className="mt-2 text-sm text-muted-foreground">Pabandyk kitą paiešką arba miestą.</p><Button variant="outline" onClick={clearFilters} className="mt-5">Išvalyti filtrus</Button></div>}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredTasks.map((t) => <article key={t.id} className="task-result group flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-card">
+                <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/30 px-5 py-4"><span className="flex items-center gap-2 text-xs font-semibold text-primary">{t.is_event ? <CalendarHeart className="h-4 w-4" /> : <TagIcon className="h-4 w-4" />}{CATEGORY_LABELS[guessCategory(t)]}</span><span className="font-mono text-sm font-bold text-success">{Number(t.available_hours)} val.</span></div>
+                <div className="flex flex-1 flex-col p-5"><p className="truncate text-xs text-muted-foreground">{t.is_event ? t.event_host_name || "Vienkartinis renginys" : orgName(t.organization_id)}</p><h2 className="mt-2 text-lg font-semibold leading-snug"><Button variant="link" onClick={() => setDetail(t)} className="h-auto w-full justify-start whitespace-normal p-0 text-left text-lg font-semibold text-foreground hover:text-primary">{t.title}</Button></h2>{t.description && <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{t.description}</p>}
+                  <div className="mt-5 space-y-2 text-xs text-muted-foreground"><p className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 shrink-0" />{t.task_date}{t.start_time ? ` · ${t.start_time.slice(0,5)}${t.end_time ? `–${t.end_time.slice(0,5)}` : ""}` : ""}</p>{(t.location || cityOf(t)) && <p className="flex items-start gap-2"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="break-words">{t.location || cityOf(t)}</span></p>}</div>
+                  {t.tags && <div className="mt-3 flex flex-wrap gap-1">{t.tags.slice(0,3).map((tg)=><Button key={tg} variant="ghost" size="sm" onClick={()=>toggleTag(tg)} className="h-7 px-1 text-xs text-primary">#{tg}</Button>)}</div>}
+                  <div className="mt-auto flex items-center gap-3 pt-6"><Button onClick={()=>handleReserve(t)} className="h-10 flex-1">Rezervuoti<ArrowUpRight /></Button><Button variant="outline" size="icon" className="h-10 w-10" onClick={()=>setDetail(t)} aria-label={`Peržiūrėti: ${t.title}`} title="Peržiūrėti veiklą"><Search /></Button></div>
+                </div>
+              </article>)}
             </div>
-          </>
-        ) : (
-          <>
-            {filteredOrgs.length === 0 && (
-              <div className="rounded-3xl border border-dashed border-border p-16 text-center">
-                <Building2 className="mx-auto h-8 w-8 text-muted-foreground" />
-                <p className="mt-3 text-lg font-semibold">Nerasta organizacijų</p>
-                <p className="mt-1 text-sm text-muted-foreground">Pabandyk kitokią paiešką.</p>
-              </div>
-            )}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredOrgs.map((o, i) => {
-                const orgTaskCount = tasks.filter((t) => t.organization_id === o.id).length;
-                return (
-                  <motion.div key={o.id}
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: (i % 6) * 0.04 }}
-                  >
-                      <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-gradient-card/85 p-6 shadow-md backdrop-blur-xl transition hover:shadow-elegant">
-                        <motion.div aria-hidden className="pointer-events-none absolute -left-16 -bottom-16 h-40 w-40 rounded-full bg-gradient-accent opacity-10 blur-2xl transition-opacity group-hover:opacity-30" />
-                        <div className="relative flex items-center gap-3">
-                          <motion.div whileHover={{ rotate: [0, -8, 8, 0], scale: 1.08 }} transition={{ duration: 0.5 }} className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-lg text-primary-foreground shadow-glow">
-                            {(o.organization_name ?? o.full_name ?? "?").slice(0, 1)}
-                          </motion.div>
-                          <div className="min-w-0">
-                            <h2 className="truncate font-display text-lg font-bold">{o.organization_name ?? o.full_name}</h2>
-                            <p className="truncate text-xs text-muted-foreground">{o.email}</p>
-                          </div>
-                        </div>
-                        <div className="relative mt-4 flex items-center gap-2 text-xs">
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
-                            {orgTaskCount} atvirų užduočių
-                          </span>
-                        </div>
-                        <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
-                          onClick={() => { setTab("tasks"); setQ(o.organization_name ?? o.full_name ?? ""); }}
-                          className="relative mt-5 w-full rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:border-primary/40 hover:bg-accent"
-                        >
-                          Peržiūrėti užduotis
-                        </motion.button>
-                      </article>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </>
-        )}
+          </> : <>
+            {filteredOrgs.length === 0 && <div className="py-16 text-center"><Building2 className="mx-auto h-8 w-8 text-muted-foreground" /><h2 className="mt-4 text-lg font-semibold">Nerasta organizacijų</h2><p className="mt-2 text-sm text-muted-foreground">Pabandyk kitokią paiešką.</p></div>}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredOrgs.map((o) => <article key={o.id} className="task-result flex min-w-0 flex-col rounded-lg border border-border bg-card p-5"><div className="flex items-center gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-primary/10 text-xl font-bold text-primary">{(o.organization_name ?? o.full_name ?? "?").slice(0,1)}</span><h2 className="min-w-0 break-words text-lg font-semibold">{o.organization_name ?? o.full_name}</h2></div><p className="mt-5 text-sm text-muted-foreground">{tasks.filter((t)=>t.organization_id === o.id).length} atvirų veiklų</p><Button variant="outline" onClick={()=>{setTab("tasks");setQ(o.organization_name ?? o.full_name ?? "");}} className="mt-6 w-full">Peržiūrėti veiklas<ArrowUpRight /></Button></article>)}</div>
+          </>}
         </section>
       </div>
 

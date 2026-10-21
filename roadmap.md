@@ -2,7 +2,9 @@
 
 - [x] Greitis: mokinio skydelis krauna lygiagrečiai, skeletai be uždelsimo
 - [x] „Administracija“ registracijoje veikia ir neprisijungus (per prisijungimą → licencijos patikra)
-- [ ] QR kodų puslapio perdarymas
-- [ ] Nustatymų mygtukas su iššokančiu langu
-- [ ] Viršutinio meniu pritaikymas ir animacijos
+- Ankstesnis QR puslapio prašymas — neįtrauktas į dabartinį meniu / pradžios / veiklų atnaujinimą.
+- [x] Temos nustatymų mygtukas atidaro esamą temos pasirinkimo langą
+- [x] Viršutinio meniu pritaikymas ir animacijos
+- [x] Naujas SaaS pradžios puslapis
+- [x] Užduočių puslapio perdarymas
 - [ ] Laiškai mokiniams per Resend — laukia RESEND_API_KEY / RESEND_FROM patikros Vercel'yje

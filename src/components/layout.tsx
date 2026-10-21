@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck } from "lucide-react";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
@@ -10,6 +10,7 @@ import { OnboardingTour } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { NavCommand } from "@/components/nav-command";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 
@@ -81,7 +82,7 @@ export function Navbar() {
   if (activeRole) {
     const dash = DASHBOARD_BY_ROLE[activeRole];
     if (dash) links.push(dash);
-    if (activeRole !== "admin") links.push({ to: "/chat", label: "Pokalbiai" });
+    if (activeRole !== "admin") links.push({ to: activeRole === "school_admin" ? "/mokytojas/pokalbiai" : "/chat", label: "Pokalbiai" });
     if (activeRole === "student") links.push({ to: "/checkin", label: "Mano QR kodas" });
     if (activeRole === "organization") links.push({ to: "/organization/scan", label: "Skenuoti QR kodą" });
   }
@@ -116,46 +117,33 @@ export function Navbar() {
   };
 
   return (
-    <header className={`site-navbar sticky top-0 z-50 px-3 transition-[padding] duration-200 sm:px-5 ${scrolled ? "pt-2" : "pt-3 sm:pt-4"}`}>
-      <div className={`mx-auto flex max-w-6xl items-center gap-2 rounded-2xl border bg-card/85 px-2.5 backdrop-blur-md transition-all duration-200 sm:px-3 ${scrolled ? "border-border py-1.5 shadow-elegant" : "border-border/60 py-2 shadow-sm"}`}>
-        <Link to="/" onClick={onLogo} className="group flex min-w-0 items-center gap-2.5 rounded-xl pr-2" aria-label="Socialinės Valandos — pradžia">
-          <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary transition-transform duration-500 group-hover:-rotate-6 ${egg ? "rotate-[360deg] scale-110" : ""}`}>
-            <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
+    <header className={`site-navbar nav-redesign sticky top-0 z-50 border-b bg-background/95 ${scrolled ? "is-scrolled border-border shadow-sm" : "border-border/60"}`}>
+      <div className="nav-inner mx-auto flex h-[72px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
+        <Link to="/" onClick={onLogo} className="nav-brand group flex shrink-0 items-center gap-2.5" aria-label="Socialinės Valandos — pradžia">
+          <span className={`nav-logo grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
+            <Heart className="h-5 w-5" fill="currentColor" />
           </span>
-          <span className="hidden truncate font-display text-base font-bold leading-none text-foreground sm:block">
-            Socialinės Valandos
-            <span className="mt-0.5 block font-sans text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">socialinesvalandos.dev</span>
-          </span>
+          <span className="hidden text-sm font-bold leading-tight text-foreground sm:block">Socialinės<br />Valandos<span className="sr-only"> socialinesvalandos.dev</span></span>
         </Link>
-
-        <nav aria-label="Pagrindinis meniu" className="mx-auto hidden items-center gap-0.5 md:flex">
-          {links.map((l) => {
+        <nav aria-label="Pagrindinis meniu" className="ml-4 hidden min-w-0 items-center gap-1 lg:flex">
+          {links.filter((l) => l.to === "/" || l.to === "/tasks" || l.to === DASHBOARD_BY_ROLE[activeRole ?? "student"]?.to).map((l) => {
             const active = isActive(l.to, l.to === "/");
-            return (
-              <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
-                className={`relative whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
-                {l.label}
-                {active && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full bg-gradient-primary" />}
-              </Link>
-            );
+            return <Button key={l.to} asChild variant="ghost" className={`nav-link relative h-11 px-3 text-sm ${active ? "text-primary" : "text-muted-foreground"}`}><Link to={l.to} aria-current={active ? "page" : undefined}>{l.to === "/tasks" ? "Veiklos" : l.label}</Link></Button>;
           })}
         </nav>
-
-        <div className="ml-auto flex items-center gap-1 md:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
-          <SchoolEyesToggle />
+          <SchoolEyesToggle compact />
           <NotificationBell />
-          {isAuthenticated ? (
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:inline-flex"><LogOut /> Atsijungti</Button>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" asChild className="hidden sm:inline-flex"><Link to="/login">Prisijungti</Link></Button>
-              <Button size="sm" asChild className="hidden rounded-xl sm:inline-flex"><Link to="/register">Registruotis</Link></Button>
-            </>
-          )}
-          <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}>
-            <Menu className="h-5 w-5" />
-          </Button>
+          {isAuthenticated ? <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button variant="secondary" className="hidden h-10 gap-2 px-2.5 sm:inline-flex" aria-label="Paskyros meniu"><UserRound /><span className="hidden max-w-24 truncate xl:inline">{profile?.full_name?.split(" ")[0] ?? "Paskyra"}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={12} className="w-64 p-2">
+              <DropdownMenuLabel className="truncate">{profile?.full_name ?? "Tavo paskyra"}</DropdownMenuLabel><DropdownMenuSeparator />
+              {links.filter((l) => l.to !== "/" && l.to !== "/tasks").map((l) => <DropdownMenuItem key={l.to} asChild className="min-h-10"><Link to={l.to}>{l.to.includes("chat") || l.to.includes("pokalbiai") ? <MessageCircle /> : l.to.includes("checkin") || l.to.includes("scan") ? <QrCode /> : <LayoutDashboard />}{l.label}</Link></DropdownMenuItem>)}
+              <DropdownMenuSeparator /><DropdownMenuItem onSelect={() => void handleSignOut()} className="min-h-10"><LogOut />Atsijungti</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button size="sm" asChild className="h-10"><Link to="/register">Registruotis</Link></Button></div>}
+          <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}><Menu /></Button>
         </div>
       </div>
 
@@ -169,6 +157,7 @@ export function Navbar() {
               const active = isActive(link.to, link.to === "/");
               return <Button key={link.to} variant={active ? "secondary" : "ghost"} asChild className="h-auto min-h-12 justify-start whitespace-normal px-3 py-3 text-left"><Link to={link.to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}><Icon /><span className="min-w-0">{link.label}</span></Link></Button>;
             })}
+            <Button variant="ghost" asChild className="h-12 justify-start"><Link to="/securityguard" onClick={() => setOpen(false)}><ShieldCheck /> SV Guard</Link></Button>
             <Button variant="ghost" asChild className="h-12 justify-start"><Link to="/versijos" onClick={() => setOpen(false)}><History /> Kas naujo</Link></Button>
           </nav>
           <div className="mt-6 space-y-4 border-t border-border pt-4">
