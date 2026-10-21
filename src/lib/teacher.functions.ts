@@ -61,7 +61,8 @@ export const teacherUpdateReservation = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await requireTeacher(context.userId);
-    const { error } = await supabaseAdmin.rpc("school_update_reservation", {
+    // RPC argument metadata omits SQL's nullable time arguments.
+    const { error } = await (supabaseAdmin.rpc as typeof context.supabase.rpc & ((name: "school_update_reservation", args: Record<string, unknown>) => ReturnType<typeof context.supabase.rpc>))("school_update_reservation", {
       _caller: context.userId,
       _reservation_id: data.id,
       _date: data.date,
