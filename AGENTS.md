@@ -15,7 +15,7 @@
 - PDF generation and its libraries load only on download, paginate every activity and provide a clickable verification link; this keeps the student page light and exports complete history.
 - Certificate PDFs embed a bundled full-character sans-serif font; this preserves Lithuanian names without a remote font dependency.
 - Auxiliary root diagnostic widgets load behind independent Suspense boundaries; this keeps their loading from delaying the primary page.
-- City values live in src/lib/cities.ts and must match the DB `tg_validate_city` trigger; one list avoids filter/DB drift.
+- Cities in src/lib/cities.ts must match DB `tg_validate_city` to prevent drift.
 - Privileged profile fields (role, school, hours, assigned classes) change only via service role or SECURITY DEFINER functions; the `tg_profiles_guard_privileged` trigger blocks direct client writes to stop self-promotion.
 - The security gateway does not render the app while blocked; hiding the overlay must never expose content.
 - Soci Guard verifies bounded monotonic holds server-side; provide mouse guidance and keyboard/touch alternatives. Client telemetry is advisory, never authorization.
@@ -31,7 +31,7 @@
 - Visitor error boundaries share a presentation-only incident frame with isolated theme-aware tokens; recovery, logging and routing remain at their existing boundaries.
 - The public homepage presents the primary action immediately and keeps its process animation user-triggered; anonymous visitors do not receive release or guide overlays.
 - Group reservation participant rows change only through status (invitee accepts/declines, owner/org removes); the tg_participants_guard trigger blocks client writes to check-in and hours fields, so friends cannot self-check-in.
-- Vite dev allows the real node_modules path in server.fs.allow because the sandbox symlinks node_modules outside the project root.
+- Vite server.fs.allow includes real node_modules because sandbox dependencies are symlinked.
 - Destructive admin actions and temporary signup options require external licence-confirmed tickets. Main site never accepts the key; signup grants stay in page memory and every privileged call rechecks them.
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.
 - Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).
