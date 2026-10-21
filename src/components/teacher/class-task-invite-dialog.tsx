@@ -64,7 +64,7 @@ function StudentPicker({ students, selected, setSelected }: { students: SchoolSt
   );
 }
 
-async function sendCards(inviteFn: ReturnType<typeof useServerFn<typeof teacherSendInvites>>, invite: TaskInvite, ids: string[], note: string, teacher: string) {
+async function sendCards(inviteFn: (a: { data: { studentIds: string[]; message: string } }) => Promise<{ sent: number; total: number }>, invite: TaskInvite, ids: string[], note: string, teacher: string) {
   const message = encodeTaskInvite(invite, `${teacher}: ${note.trim() || "Siūlau šią veiklą — rezervuokite vietą!"}`);
   return inviteFn({ data: { studentIds: ids, message } });
 }
