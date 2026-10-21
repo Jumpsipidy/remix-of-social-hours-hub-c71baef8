@@ -81,7 +81,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function OrgDashboard() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [students, setStudents] = useState<Record<string, StudentLite>>({});
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -144,6 +144,7 @@ function OrgDashboard() {
   }, []);
 
   const navigate = useNavigate();
+  const orgSignOut = async () => { await signOut(); navigate({ to: "/" }); };
 
   // Onboarding: redirect if org profile is incomplete
   useEffect(() => {
@@ -412,24 +413,25 @@ function OrgDashboard() {
     <PageShell>
       <div className="dash-v3 organization-mobile">
       <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
-        {/* Top bar */}
-        <div className="flex flex-wrap items-center gap-3 border-b border-border pb-4">
-          <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-primary text-base font-bold text-primary-foreground">
-            {orgMedia.logo_url ? <img src={orgMedia.logo_url} alt="Organizacijos logotipas" className="h-full w-full object-cover" /> : orgLabel.charAt(0)}
+        {/* Hero */}
+        <div className="org-hero relative overflow-hidden rounded-3xl border border-border p-5 sm:p-7">
+          <div className="relative flex flex-wrap items-center gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-lg ring-4 ring-primary/15">
+              {orgMedia.logo_url ? <img src={orgMedia.logo_url} alt="Organizacijos logotipas" className="h-full w-full object-cover" /> : orgLabel.charAt(0)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">Organizacijos centras · {new Date().toLocaleDateString("lt-LT", { weekday: "long", month: "long", day: "numeric" })}</p>
+              <h1 className="truncate text-2xl font-extrabold tracking-tight sm:text-3xl">Labas, {orgLabel} 👋</h1>
+              <p className="mt-0.5 text-sm text-muted-foreground">Kurk veiklas, tvirtink valandas ir sek savanorius vienoje vietoje.</p>
+            </div>
+            <button type="button" onClick={() => void orgSignOut()} className="org-signout group inline-flex h-11 items-center gap-2 rounded-full border border-destructive/30 bg-destructive/10 px-4 text-sm font-semibold text-destructive transition hover:bg-destructive hover:text-destructive-foreground" aria-label="Atsijungti">
+              <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" /> Atsijungti
+            </button>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">
-              {new Date().toLocaleDateString("lt-LT", { weekday: "long", month: "long", day: "numeric" })}
-            </p>
-            <h1 className="truncate font-display text-xl font-bold sm:text-2xl">Labas, {orgLabel}</h1>
-          </div>
-          <div className="flex w-full gap-2 sm:w-auto">
-            <Button size="sm" className="h-auto min-h-11 min-w-0 flex-1 whitespace-normal rounded-lg py-2 text-left sm:flex-none" onClick={() => openCreateTask()}>
-              <Plus className="mr-1.5 h-4 w-4" /> Sukurti užduotį / Rezervaciją
-            </Button>
-            <Button asChild size="sm" variant="outline" className="rounded-lg">
-              <Link to="/organization/scan" aria-label="Skenuoti QR"><ScanLine className="h-4 w-4 sm:mr-1.5" /><span className="hidden sm:inline">Skenuoti</span></Link>
-            </Button>
+          <div className="relative mt-5 flex flex-wrap gap-2">
+            <Button className="h-11 rounded-full px-5" onClick={() => openCreateTask()}><Plus className="mr-1.5 h-4 w-4" /> Nauja veikla</Button>
+            <Button asChild variant="outline" className="h-11 rounded-full bg-background/60"><Link to="/organization/scan"><ScanLine className="mr-1.5 h-4 w-4" /> Skenuoti QR</Link></Button>
+            <Button asChild variant="outline" className="h-11 rounded-full bg-background/60"><Link to="/tasks"><Eye className="mr-1.5 h-4 w-4" /> Kaip mato mokiniai</Link></Button>
           </div>
         </div>
 
