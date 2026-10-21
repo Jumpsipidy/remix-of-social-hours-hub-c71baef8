@@ -5,4 +5,6 @@
 - [ ] QR kodų puslapio perdarymas
 - [ ] Nustatymų mygtukas su iššokančiu langu
 - [ ] Viršutinio meniu pritaikymas ir animacijos
+- [ ] Naujas SaaS pradžios puslapis
+- [ ] Užduočių puslapio perdarymas
 - [ ] Laiškai mokiniams per Resend — laukia RESEND_API_KEY / RESEND_FROM patikros Vercel'yje
