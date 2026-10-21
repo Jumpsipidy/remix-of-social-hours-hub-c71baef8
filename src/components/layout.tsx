@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck, Settings2 } from "lucide-react";
+import { useSiteTheme } from "@/components/theme-provider";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
@@ -27,6 +28,7 @@ const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { openSettings } = useSiteTheme();
   const { isAuthenticated, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
