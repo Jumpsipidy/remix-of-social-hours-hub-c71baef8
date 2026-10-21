@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { userError } from "@/lib/user-error";
+import { ClassTaskInviteDialog } from "@/components/teacher/class-task-invite-dialog";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ function TeacherChatPage() {
   const navigate = useNavigate();
   const notify = useServerFn(notifyNewMessage);
   const { data: school } = useSchoolData();
+  const [classInvite, setClassInvite] = useState(false);
   const [convs, setConvs] = useState<Conv[] | null>(null);
   const [filter, setFilter] = useState("");
   const [msgs, setMsgs] = useState<Msg[] | null>(null);
@@ -192,9 +194,10 @@ function TeacherChatPage() {
         <Button type="button" size="sm" onClick={() => { setPicker(true); setStudentQ(""); }}>
           <Users className="h-4 w-4" /> Rašyti mokiniui
         </Button>
-        <Button type="button" size="sm" variant="outline" asChild>
-          <Link to="/mokytojas/rezervacijos"><CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją</Link>
+        <Button type="button" size="sm" variant="outline" onClick={() => setClassInvite(true)}>
+          <CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją
         </Button>
+        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={students} />
         {TEMPLATES.map((t) => (
           <Button
             key={t.label}

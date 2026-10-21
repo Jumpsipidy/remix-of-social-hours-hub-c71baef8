@@ -60,7 +60,7 @@ function TeacherReservations() {
   const inviteFn = useServerFn(teacherSendInvites);
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [classInviteOpen, setClassInviteOpen] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("kviesti") === "1");
+  const [classInviteOpen, setClassInviteOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
