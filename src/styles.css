@@ -955,6 +955,7 @@ html.school-eyes.sv-elegant {
   background-image: linear-gradient(155deg, color-mix(in oklab, var(--primary) 7%, var(--background)), var(--background) 45%, color-mix(in oklab, var(--primary) 5%, var(--background)));
 }
 html.school-eyes.sv-elegant body::before { opacity: .3; }
+html.school-eyes .site-background-fx, html.sv-elegant .site-background-fx { display: none; }
 html.sv-elegant .site-navbar { background-color: color-mix(in oklab, var(--background) 72%, transparent); backdrop-filter: blur(14px); }
 html.sv-elegant .home-ui-hero { background: transparent; }
 @keyframes sv-elegant-drift { from { transform: translateY(0) scale(1); } to { transform: translateY(-3%) scale(1.04); } }
