@@ -1,3 +1,4 @@
+import { messagePreview } from "@/lib/task-invite";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -263,7 +264,7 @@ function TeacherChatPage() {
                       <span className="shrink-0 text-[10px] text-muted-foreground">{new Date(c.last_at).toLocaleDateString("lt-LT", { month: "2-digit", day: "2-digit" })}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-xs text-muted-foreground">{c.last_message ?? (c.reservation_date ? `Rezervacija ${c.reservation_date}` : "Naujas pokalbis")}</p>
+                      <p className="truncate text-xs text-muted-foreground">{(c.last_message ? messagePreview(c.last_message) : null) ?? (c.reservation_date ? `Rezervacija ${c.reservation_date}` : "Naujas pokalbis")}</p>
                       {c.unread > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{c.unread}</span>}
                     </div>
                   </div>

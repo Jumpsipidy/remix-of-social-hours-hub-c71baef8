@@ -96,17 +96,18 @@ export const teacherSendInvites = createServerFn({ method: "POST" })
   .inputValidator((input: { studentIds: string[]; message: string }) => {
     if (!Array.isArray(input?.studentIds) || input.studentIds.length === 0) throw new Error("Pasirink bent vieną mokinį.");
     if (!input.message?.trim()) throw new Error("Žinutė tuščia.");
-    return { studentIds: input.studentIds.map(String).slice(0, 200), message: input.message.trim().slice(0, 2000) };
+    return { studentIds: input.studentIds.map(String).slice(0, 200), message: input.message.trim().slice(0, 2400) };
   })
   .handler(async ({ context, data }) => {
     await requireTeacher(context.userId);
     let sent = 0;
     for (const sid of data.studentIds) {
-      // open_dm_room pats patikrina, ar auklėtojas gali rašyti šiam mokiniui.
-      const { data: roomId, error: roomErr } = await context.supabase.rpc("open_dm_room", { _other: sid });
+      // open_chat_with pats patikrina, ar auklėtojas gali rašyti šiam mokiniui (priskirtos klasės).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: roomId, error: roomErr } = await (context.supabase.rpc as any)("open_chat_with", { _other: sid });
       if (roomErr || !roomId) continue;
-      const { error: msgErr } = await context.supabase.from("dm_messages").insert({
-        room_id: roomId,
+      const { error: msgErr } = await context.supabase.from("messages").insert({
+        chat_room_id: roomId as string,
         sender_id: context.userId,
         content: data.message,
       });
