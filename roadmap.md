@@ -1,5 +1,7 @@
 # Užduotys (2026-10-21, vakaras)
 
+- [ ] Suvienodinti tos pačios sudėties pokalbius, 12 dienų ištrynimas, organizacijų filtrai ir datos
+
 - [x] Mokyklos rezervacijos mokinio skydelyje iškart, be papildomo patvirtinimo (9 testai; prisijungusio mokinio gyva patikra neprieinama)
 
 - [x] Neprivalomas rezervacijų laikas, galutinis valandų pasirinkimas ir organizacijų pokalbis
