@@ -36,3 +36,5 @@
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.
 - Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).
 - Signup confirmation emails use admin generateLink + Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
+
+- Header uses bounded primary links and an account dropdown; keep secondary role links reachable in both the dropdown and mobile Sheet to prevent overflow.

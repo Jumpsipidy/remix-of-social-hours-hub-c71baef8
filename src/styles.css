@@ -863,3 +863,56 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .sv-party body { animation: sv-party 2.6s ease-in-out; }
 @keyframes sv-party { 0%,100% { filter: none; } 50% { filter: hue-rotate(120deg) saturate(1.3); } }
 @media (prefers-reduced-motion: reduce) { .sv-party body { animation: none; } }
+
+/* Shared navigation and product pages: bounded geometry, theme-owned surfaces. */
+:root {
+  --hero-wash: color-mix(in oklab, var(--background) 94%, transparent);
+  --hero-wash-end: color-mix(in oklab, var(--background) 12%, transparent);
+}
+.dark {
+  --hero-wash: color-mix(in oklab, var(--background) 96%, transparent);
+  --hero-wash-end: color-mix(in oklab, var(--background) 35%, transparent);
+}
+.nav-redesign { transition: box-shadow 180ms ease, border-color 180ms ease; }
+.nav-inner { transition: height 180ms ease; }
+.nav-redesign.is-scrolled .nav-inner { height: 64px; }
+.nav-redesign .nav-brand { min-width: 0; }
+.nav-redesign .nav-logo { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+.nav-redesign .nav-brand:hover .nav-logo { transform: rotate(-8deg); }
+.nav-link { transition: background-color 160ms ease, color 160ms ease; }
+.nav-link::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 1px; height: 2px; background: var(--primary); transform: scaleX(0); transition: transform 180ms ease; transform-origin: left; }
+.nav-link:hover::after, .nav-link:has([aria-current="page"])::after, .nav-link[aria-current="page"]::after { transform: scaleX(1); }
+.nav-search:hover svg { transform: rotate(-10deg) scale(1.12); }
+.nav-search svg { transition: transform 180ms ease; }
+@keyframes logo-celebrate { to { transform: rotate(360deg); } }
+.nav-redesign .logo-celebrate { animation: logo-celebrate 650ms cubic-bezier(.2,.8,.2,1); }
+.home-saas, .tasks-workspace, .nav-redesign { font-family: var(--font-sans); }
+.home-saas :is(h1,h2,h3), .tasks-workspace :is(h1,h2,h3), .nav-redesign :is(a,button) { font-family: var(--font-sans); letter-spacing: 0; }
+.home-photo-hero { min-height: 510px; }
+.hero-photo { object-position: center 56%; }
+.hero-photo-wash { background: linear-gradient(90deg, var(--background) 0%, var(--hero-wash) 25%, color-mix(in oklab, var(--background) 75%, transparent) 43%, var(--hero-wash-end) 65%, transparent 100%); }
+.demo-stage { min-height: 172px; }
+@keyframes demo-swap { from { transform: translateY(5px); } to { transform: translateY(0); } }
+.demo-swap { animation: demo-swap 160ms ease-out; }
+@keyframes demo-progress { from { transform: scaleX(.6); } to { transform: scaleX(1); } }
+.demo-progress { transform-origin: left; animation: demo-progress 350ms ease-out; }
+.task-result { transition: border-color 160ms ease, transform 160ms ease; }
+.task-result:hover { border-color: var(--primary); transform: translateY(-2px); }
+.tasks-workspace .task-result { border-radius: 8px; }
+@media (max-width: 767px) {
+  .home-photo-hero { min-height: 600px; }
+  .home-photo-hero > div.relative { padding-top: 32px; padding-bottom: 240px; }
+  .hero-copy { max-width: 100%; }
+  .hero-photo { object-position: 69% bottom; }
+  .hero-photo-wash { background: linear-gradient(180deg, var(--background) 0%, var(--hero-wash) 42%, color-mix(in oklab, var(--background) 35%, transparent) 68%, transparent 100%); }
+  .home-saas h1 { font-size: 40px; }
+  .nav-redesign .nav-inner { gap: 4px; padding-inline: 12px; }
+  .nav-redesign .nav-logo { height: 36px; width: 36px; }
+  .tasks-workspace .task-result { padding: 0; }
+  .tasks-workspace .task-result > div { padding-inline: 16px; }
+  .tasks-workspace .task-search input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-redesign *, .home-saas *, .tasks-workspace * { animation: none !important; transition: none !important; }
+  .task-result:hover, .nav-redesign .nav-brand:hover .nav-logo { transform: none; }
+}
