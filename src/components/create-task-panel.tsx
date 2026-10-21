@@ -1,6 +1,6 @@
 import { CITIES } from "@/lib/cities";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Calendar, Clock, MapPin, Trash2, Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -136,26 +136,25 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
           <p className="text-xs text-muted-foreground">Skelbk savanorystės galimybes — mokiniai matys jas iškart.</p>
         </div>
         <button
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen(true)}
           id="create-task-btn"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"
 
         >
           <Plus className="h-3.5 w-3.5" />
-          {open ? "Uždaryti" : "Nauja užduotis"}
+          Nauja užduotis
         </button>
       </div>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="mt-5 overflow-hidden"
-          >
-            <div className="space-y-3 rounded-2xl border border-border bg-background/60 p-4">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="grid max-h-[min(92dvh,860px)] w-[calc(100%-1.5rem)] max-w-5xl grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0">
+          <DialogHeader className="border-b border-border p-5 text-left">
+            <DialogTitle className="text-xl">Nauja veikla</DialogTitle>
+            <DialogDescription>Užpildyk laukus — dešinėje matai, kaip mokiniai ją matys /tasks puslapyje.</DialogDescription>
+          </DialogHeader>
+          <div className="grid min-h-0 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="p-5">
+            <div className="space-y-3">
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -253,9 +252,26 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
                 </button>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+            <aside className="border-t border-border bg-muted/30 p-5 lg:border-l lg:border-t-0">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Peržiūra /tasks</p>
+              <div className="task-invite-card rounded-2xl border border-border p-4 shadow-sm lg:sticky lg:top-0">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-primary">{city}</span>
+                <p className="mt-1 text-lg font-bold leading-snug">{title.trim() || "Veiklos pavadinimas"}</p>
+                <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{description.trim() || "Trumpas aprašymas atsiras čia."}</p>
+                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" />{date}</span>
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{start}–{end}</span>
+                  {(location || address) && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{location || address}</span>}
+                </div>
+                {tags.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{tags.map((tg) => <span key={tg} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{tg}</span>)}</div>}
+                <div className="mt-4 flex items-center justify-between rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"><span>{hours} val. · {spots} vietos</span><span>Rezervuoti →</span></div>
+                {recurrence !== "none" && <p className="mt-2 text-[11px] text-muted-foreground">Kartosis: {recurrence === "weekly" ? "kas savaitę" : recurrence === "biweekly" ? "kas antrą savaitę" : "kas mėnesį"}</p>}
+              </div>
+            </aside>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="mt-5 space-y-2">
         {tasks.length === 0 && (
