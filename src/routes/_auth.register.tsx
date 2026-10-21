@@ -52,6 +52,9 @@ function RegisterPage() {
   const [adminCodes, setAdminCodes] = useState<{ id: string; school_id: string; class_year: string; class_letter: string; signup_code: string }[]>([]);
   const [adminCodeId, setAdminCodeId] = useState("");
   const [skipEmail, setSkipEmail] = useState(false);
+  const [adminRole, setAdminRole] = useState<"student" | "school_admin" | "organization">("student");
+  const [adminHours, setAdminHours] = useState("");
+  const [adminEarned, setAdminEarned] = useState("");
   useEffect(() => {
     const ticket = new URL(window.location.href).searchParams.get("ticket");
     if (!ticket) return;
@@ -128,7 +131,7 @@ function RegisterPage() {
     try {
       if (adminGrant) {
         if (!adminCodeId) { toast.error("Pasirink klasės kodą."); return; }
-        const result = await adminCreate({ data: { ...adminGrant, codeId: adminCodeId, fullName, email: email.trim(), password, skipEmail } });
+        const result = await adminCreate({ data: { ...adminGrant, codeId: adminCodeId, fullName, email: email.trim(), password, skipEmail, role: adminRole, hoursOverride: adminHours.trim() ? Math.round(Number(adminHours)) : null, hoursEarned: adminEarned.trim() ? Math.round(Number(adminEarned)) : 0 } });
         toast.success(skipEmail ? "Mokinio paskyra sukurta ir aktyvuota." : result.mailSent ? "Mokinio paskyra laukia el. pašto patvirtinimo." : "Paskyra sukurta, bet laiško išsiųsti nepavyko. Mokinys gali pakartoti siuntimą patvirtinimo puslapyje.");
         setPassword(""); return;
       }
@@ -275,6 +278,13 @@ function RegisterPage() {
                     if (row) { setSchoolId(row.school_id); setSchoolCode(row.signup_code); setClassYear(row.class_year); setClassLetter(row.class_letter as "A" | "B"); }
                   }}><option value="">Pasirink kodą</option>{adminCodes.map((code) => <option key={code.id} value={code.id}>{schools.find((school) => school.id === code.school_id)?.name} · {code.class_year.split(" / ")[0]}{code.class_letter} · {code.signup_code}</option>)}</AuthSelect>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={skipEmail} onChange={(event) => setSkipEmail(event.target.checked)} />Aktyvuoti be el. pašto patvirtinimo</label>
+                  <AuthSelect id="admin-role" label="Paskyros tipas" value={adminRole} onChange={(event) => setAdminRole(event.target.value as typeof adminRole)}>
+                    <option value="student">Mokinys</option><option value="school_admin">Auklėtojas (kodo klasei)</option><option value="organization">Organizacija</option>
+                  </AuthSelect>
+                  {adminRole === "student" && <div className="grid grid-cols-2 gap-2">
+                    <label className="text-xs font-semibold text-muted-foreground">Privalomos val. (vietoj kodo)<input type="number" min={0} max={500} value={adminHours} onChange={(e) => setAdminHours(e.target.value)} placeholder="pagal kodą" className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-sm text-foreground" /></label>
+                    <label className="text-xs font-semibold text-muted-foreground">Jau turimos val.<input type="number" min={0} max={500} value={adminEarned} onChange={(e) => setAdminEarned(e.target.value)} placeholder="0" className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-2 text-sm text-foreground" /></label>
+                  </div>}
                 </div>}
                 <ClassCodeInput value={schoolCode} onChange={setSchoolCode} />
               </Section>
