@@ -102,6 +102,15 @@ function RegisterPage() {
   }
 
   useEffect(() => { void loadSchools(); }, []);
+  // Returning from login via the "Administracija" button: continue straight to the licence check.
+  useEffect(() => {
+    if (profile?.role !== "admin" || adminGrant) return;
+    if (new URLSearchParams(window.location.search).get("admin") !== "1") return;
+    startAdmin({ data: { returnUrl: `${window.location.origin}/register` } })
+      .then((r) => window.location.assign(r.url))
+      .catch((e) => toast.error(userError(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.role]);
 
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
