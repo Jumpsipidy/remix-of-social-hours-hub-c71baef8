@@ -9,18 +9,18 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Use the official Sentry TanStack Start SDK at client, router, middleware, and server-entry boundaries; this preserves full-stack traces and private source-map uploads.
-- Human chat uses a shared multiline MessageComposer and viewport-aware Radix dialogs; shared keyboard geometry keeps sending controls visible on phones.
+- Chat uses shared MessageComposer and viewport-aware Radix dialogs to keep sending controls visible.
 - Check-in presentation uses a stable canvas and authenticated server-issued tokens, refreshed while visible; rotating QR content never persists in browser storage.
-- Certificate verification recomputes the signed snapshot hash before HMAC verification, supports legacy snapshots and key rotation, and uses server-stamped approval identities; this detects altered history without inventing older approvers.
+- Certificates recompute snapshot hashes before HMAC verification, support legacy/key rotation and server-stamped approvers to detect altered history.
 - PDF generation and its libraries load only on download, paginate every activity and provide a clickable verification link; this keeps the student page light and exports complete history.
 - Certificate PDFs embed a bundled full-character sans-serif font; this preserves Lithuanian names without a remote font dependency.
 - Auxiliary root diagnostic widgets load behind independent Suspense boundaries; this keeps their loading from delaying the primary page.
 - City values live in src/lib/cities.ts and must match the DB `tg_validate_city` trigger; one list avoids filter/DB drift.
 - Privileged profile fields (role, school, hours, assigned classes) change only via service role or SECURITY DEFINER functions; the `tg_profiles_guard_privileged` trigger blocks direct client writes to stop self-promotion.
 - The security gateway does not render the app while blocked; hiding the overlay must never expose content.
-- Soci Guard verifies bounded, monotonic hold samples on the server; mouse guidance and keyboard/touch alternatives avoid treating stationary assistive input as automation. Client telemetry remains advisory, not an authorization boundary.
+- Soci Guard verifies bounded monotonic holds server-side; provide mouse guidance and keyboard/touch alternatives. Client telemetry is advisory, never authorization.
 - Maps use Leaflet with Mapbox raster tiles when VITE_MAPBOX_PUBLIC_TOKEN (pk.) is set, else OSM tiles; keeps one map component for both.
-- ThemeProvider owns device-level theme and continuous accent state inside the security gateway, animating a global numeric CSS tuning token; one owner synchronizes previews, settings and controls without exposing blocked content.
+- ThemeProvider owns theme/accent within the security gateway; one numeric CSS token synchronizes previews and controls without exposing blocked content.
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
 - LockdownGate wraps content, fails closed on unknown settings and never auto-unlocks; static isolated tokens follow theme without changing enforcement.
@@ -37,4 +37,3 @@
 - Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).
 - Signup confirmation emails use admin generateLink + Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
 
-- Header uses bounded primary links and an account dropdown; keep secondary role links reachable in both the dropdown and mobile Sheet to prevent overflow.

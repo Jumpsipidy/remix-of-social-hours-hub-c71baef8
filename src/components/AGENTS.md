@@ -2,3 +2,5 @@
 - Login and register live under the pathless `_auth` layout (AuthLayout in auth-shell.tsx) so the brand panel persists; CSS transforms move it between sides and only its copy swaps, avoiding remount and View Transition conflicts.
 - AuthSkeleton renders only form placeholders inside that frame and AuthStage owns the skeleton-to-form handoff; the global skeleton observer skips `.auth-shell` to avoid competing entrance animations.
 - Fixed overlays rendered from the auth form side portal to document.body, because the moving form side uses a transform that would trap them.
+
+- Navbar uses bounded primary links and an account dropdown; secondary role links stay reachable in both dropdown and mobile Sheet to prevent overflow.

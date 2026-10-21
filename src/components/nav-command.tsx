@@ -60,7 +60,7 @@ export function NavCommand({ extra }: { extra: Item[] }) {
           )}
           <CommandSeparator />
           <CommandGroup heading="Paslaptys">
-            <CommandItem value="vakarelis party sventė" onSelect={() => secret(() => {
+            <CommandItem value="vakarelis party sventė šventė šventės režimas" onSelect={() => secret(() => {
               document.documentElement.classList.add("sv-party");
               window.setTimeout(() => document.documentElement.classList.remove("sv-party"), 2600);
               toast.success("🎉 Radai slaptą šventę!");
