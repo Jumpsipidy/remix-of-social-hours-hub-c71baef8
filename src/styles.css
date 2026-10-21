@@ -942,7 +942,7 @@ html.sv-elegant { background-color: var(--background);
     linear-gradient(180deg, color-mix(in oklab, var(--background) 92%, var(--primary)), var(--background) 40%);
   background-attachment: fixed;
 }
-html.sv-elegant body { background: transparent; }
+html.sv-elegant body { background: transparent; isolation: isolate; }
 html.sv-elegant body::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .55;
   background:
@@ -950,7 +950,11 @@ html.sv-elegant body::before {
   -webkit-mask-image: linear-gradient(180deg, transparent 20%, #000 75%); mask-image: linear-gradient(180deg, transparent 20%, #000 75%);
   animation: sv-elegant-drift 26s ease-in-out infinite alternate;
 }
-html.sv-elegant :is(.bg-card, .bg-background\/60, .bg-background\/40) { background-color: color-mix(in oklab, var(--card) 82%, transparent); }
+html.sv-elegant :is(.bg-card, .bg-background\/60, .bg-background\/40) { background-color: color-mix(in oklab, var(--card) 94%, transparent); }
+html.school-eyes.sv-elegant {
+  background-image: linear-gradient(155deg, color-mix(in oklab, var(--primary) 7%, var(--background)), var(--background) 45%, color-mix(in oklab, var(--primary) 5%, var(--background)));
+}
+html.school-eyes.sv-elegant body::before { opacity: .3; }
 html.sv-elegant .site-navbar { background-color: color-mix(in oklab, var(--background) 72%, transparent); backdrop-filter: blur(14px); }
 html.sv-elegant .home-ui-hero { background: transparent; }
 @keyframes sv-elegant-drift { from { transform: translateY(0) scale(1); } to { transform: translateY(-3%) scale(1.04); } }

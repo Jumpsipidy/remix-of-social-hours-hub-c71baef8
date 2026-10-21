@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { reservationTimeLabel } from "@/lib/reservation-time";
+import { VerifyCloseDialog } from "@/components/verify-close-dialog";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarPlus, Megaphone, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
@@ -69,6 +72,7 @@ function TeacherReservations() {
   const [busy, setBusy] = useState(false);
 
   const [editing, setEditing] = useState<SchoolReservation | null>(null);
+  const [verifying, setVerifying] = useState<SchoolReservation | null>(null);
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
 
   const [search, setSearch] = useState("");
@@ -148,7 +152,7 @@ function TeacherReservations() {
 
   const submitCreate = async () => {
     if (busy) return;
-    if (!form.date || !form.start || !form.end) { toast.error("Užpildyk datą ir laiką."); return; }
+    if (!form.date) { toast.error("Pasirink datą."); return; }
     if (selectedIds.size === 0) { toast.error("Pasirink bent vieną mokinį."); return; }
     setBusy(true);
     try {
@@ -182,8 +186,8 @@ function TeacherReservations() {
     setEditing(r);
     setEditForm({
       date: r.reservation_date,
-      start: String(r.start_time).slice(0, 5),
-      end: String(r.end_time).slice(0, 5),
+      start: r.start_time?.slice(0, 5) ?? "",
+      end: r.end_time?.slice(0, 5) ?? "",
       hours: Number(r.hours_to_earn),
       kind: r.kind ?? "event",
       note: r.note ?? "",
@@ -233,10 +237,10 @@ function TeacherReservations() {
       <label className="text-xs font-semibold text-muted-foreground">Valandos
         <Input type="number" min={0} max={8} value={state.hours} onChange={(e) => set({ ...state, hours: Number(e.target.value) })} className="mt-1" />
       </label>
-      <label className="text-xs font-semibold text-muted-foreground">Pradžia
+      <label className="text-xs font-semibold text-muted-foreground">Pradžia (nebūtina)
         <Input type="time" value={state.start} onChange={(e) => set({ ...state, start: e.target.value })} className="mt-1" />
       </label>
-      <label className="text-xs font-semibold text-muted-foreground">Pabaiga
+      <label className="text-xs font-semibold text-muted-foreground">Pabaiga (nebūtina)
         <Input type="time" value={state.end} onChange={(e) => set({ ...state, end: e.target.value })} className="mt-1" />
       </label>
       <label className="text-xs font-semibold text-muted-foreground">Tipas
@@ -306,7 +310,7 @@ function TeacherReservations() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{studentName(r.student_id)}</p>
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
-                  <Clock className="h-3.5 w-3.5" /> {r.reservation_date} · {String(r.start_time).slice(0, 5)}–{String(r.end_time).slice(0, 5)} · {r.hours_to_earn} val. · {KIND_LT[r.kind ?? ""] ?? "Savanorystė"}
+                  <Clock className="h-3.5 w-3.5" /> {r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {r.hours_to_earn} val. · {KIND_LT[r.kind ?? ""] ?? "Savanorystė"}
                 </p>
                 {r.note && <p className="mt-1 truncate text-xs text-muted-foreground">{r.note}</p>}
               </div>
@@ -317,6 +321,7 @@ function TeacherReservations() {
               }`}>{STATUS_LT[r.status] ?? r.status}</span>
               {!finished && (
                 <div className="flex gap-1">
+                  {r.status === "approved" && <Button size="sm" onClick={() => setVerifying(r)}>Patvirtinti valandas</Button>}
                   <Button variant="outline" size="sm" className="gap-1.5" aria-label="Siųsti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
                     <Users className="h-4 w-4" /> Siųsti klasei
                   </Button>
@@ -418,6 +423,12 @@ function TeacherReservations() {
       </Dialog>
 
       {/* Edit dialog */}
+      <VerifyCloseDialog open={!!verifying} hours={Number(verifying?.hours_to_earn ?? 0)} studentName={verifying ? studentName(verifying.student_id) : ""} onCancel={() => setVerifying(null)} onConfirm={async (hours) => {
+        if (!verifying) return;
+        const { error } = await supabase.rpc("school_complete_reservation", { _reservation_id: verifying.id, _hours: hours, _decline: false });
+        if (error) { toast.error("Nepavyko patvirtinti valandų. Bandyk dar kartą."); throw new Error("Nepavyko patvirtinti"); }
+        setVerifying(null); toast.success(`${hours} val. įskaityta`); await refresh();
+      }} />
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
