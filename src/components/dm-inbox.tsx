@@ -1,3 +1,4 @@
+import { messagePreview } from "@/lib/task-invite";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +35,7 @@ export function DmInbox({ me, showTeachers = false }: { me: string; showTeachers
         const m = ((msgs ?? []) as { room_id: string; content: string; created_at: string }[]).find((x) => x.room_id === r.id);
         if (!m) continue;
         const other = r.user_a === me ? r.user_b : r.user_a;
-        out.push({ room: r.id, other, name: nameOf[other] ?? "Naudotojas", last: m.content, at: m.created_at });
+        out.push({ room: r.id, other, name: nameOf[other] ?? "Naudotojas", last: messagePreview(m.content), at: m.created_at });
       }
       out.sort((a, b) => b.at.localeCompare(a.at));
       if (alive) setRows(out);
