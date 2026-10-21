@@ -1,3 +1,4 @@
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { Users } from "lucide-react";
 import { DmInbox } from "@/components/dm-inbox";
@@ -394,7 +395,7 @@ function StudentDashboard() {
             {nextRes ? (
               <div className="mt-4">
                 <p className="font-display text-xl font-bold">{orgName(nextRes.organization_id)}</p>
-                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {nextRes.reservation_date} · {nextRes.start_time.slice(0, 5)}–{nextRes.end_time.slice(0, 5)}</p>
+                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5"><CalendarDays className="h-4 w-4" /> {nextRes.reservation_date} · {reservationTimeLabel(nextRes.start_time, nextRes.end_time)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{Number(nextRes.hours_to_earn)} val. socialinių</p>
                 {nextRes.tags && nextRes.tags.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
@@ -585,7 +586,7 @@ function StudentDashboard() {
                     <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-sm font-bold text-primary-foreground shadow-glow">{orgInitial(r.organization_id)}</div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{orgName(r.organization_id)}</p>
-                      <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"><KindBadge kind={r.kind} />{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                      <p className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"><KindBadge kind={r.kind} />{r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {Number(r.hours_to_earn)} val.</p>
                     </div>
                     <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 sm:col-span-1 sm:flex-row">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>

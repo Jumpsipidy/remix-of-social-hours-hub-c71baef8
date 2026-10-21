@@ -50,6 +50,7 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
       .from("reservations")
       .select("id, check_in_code, checked_in_at, status, reservation_date, start_time, end_time, organization_id, task_id")
       .eq("student_id", userId)
+      .eq("requires_checkin", true)
       .eq("status", "approved");
 
     // Group participant rows

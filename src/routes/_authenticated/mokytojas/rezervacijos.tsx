@@ -119,7 +119,7 @@ function TeacherReservations() {
       const ids = inviteStudents.map((s) => s.id);
       const teacherName = profile?.full_name ?? "Auklėtojas";
       const link = `${window.location.origin}/student`;
-      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)}–${String(inviteFor.end_time).slice(0, 5)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
+      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${reservationTimeLabel(inviteFor.start_time, inviteFor.end_time)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
       const res = await inviteFn({ data: { studentIds: ids, message } });
       toast.success(`Kvietimai išsiųsti: ${res.sent}/${res.total}.`);
       setInviteFor(null);
@@ -168,7 +168,7 @@ function TeacherReservations() {
       });
       const teacherName = profile?.full_name ?? "Auklėtojas";
       const link = `${window.location.origin}/student`;
-      const message = `Auklėtojas ${teacherName} siūlo rezervaciją: ${KIND_LT[form.kind] ?? form.kind} — ${form.date} ${form.start}–${form.end} (${form.hours} val.).${form.note ? ` ${form.note}` : ""}\n${link}`;
+      const message = `Auklėtojas ${teacherName} siūlo rezervaciją: ${KIND_LT[form.kind] ?? form.kind} — ${form.date} ${reservationTimeLabel(form.start, form.end)} (${form.hours} val.).${form.note ? ` ${form.note}` : ""}\n${link}`;
       const inviteRes = await inviteFn({ data: { studentIds: ids, message } });
       toast.success(`Sukurta ${ids.length} rezervacijų. Kvietimai išsiųsti: ${inviteRes.sent}/${inviteRes.total}.`);
       setCreateOpen(false);

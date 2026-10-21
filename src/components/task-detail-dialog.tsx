@@ -7,6 +7,7 @@ import { LeafletMap } from "./leaflet-map";
 type T = {
   id: string; organization_id: string; title: string; description: string; task_date: string;
   start_time: string | null; end_time: string | null; available_hours: number; location: string;
+  event_host_name?: string | null;
   spots_total: number; address?: string | null; latitude?: number | null; longitude?: number | null; city?: string | null;
 };
 
@@ -39,9 +40,9 @@ export function TaskDetailDialog({ task, orgName, onClose, onReserve }: {
               <button onClick={() => onReserve(task)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground active:scale-95 sm:col-span-3">
                 <CalendarCheck className="h-4 w-4" /> Rezervuoti (galėsi pakviesti draugą)
               </button>
-              <Link to="/chat" search={{ org: task.organization_id } as any} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:col-span-2">
+              {!task.event_host_name?.endsWith("(mokykla)") && <Link to="/chat" search={{ org: task.organization_id } as any} className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent sm:col-span-2">
                 <MessageCircle className="h-4 w-4" /> Rašyti organizacijai
-              </Link>
+              </Link>}
               <Link to="/org/$id" params={{ id: task.organization_id }} className="inline-flex items-center justify-center rounded-xl border border-border px-3 py-2 text-sm font-semibold hover:bg-accent">
                 Profilis
               </Link>

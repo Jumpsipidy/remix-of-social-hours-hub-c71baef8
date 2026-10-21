@@ -1,3 +1,4 @@
+import { optionalReservationTimes, reservationTimeLabel } from "@/lib/reservation-time";
 import { Button } from "@/components/ui/button";
 import { QuickTimePicker } from "@/components/quick-time-picker";
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +24,8 @@ export type ReserveTarget = {
   town?: string | null;
   category?: string | null;
   rating?: number | null;
+  flexibleTime?: boolean;
+  plannedHours?: number;
   presetDate?: string;
   presetStart?: string;
   presetEnd?: string;
@@ -69,8 +72,8 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
   useEffect(() => {
     if (!target) return;
     if (target.presetDate) setDate(target.presetDate);
-    if (target.presetStart) setStart(target.presetStart);
-    if (target.presetEnd) setEnd(target.presetEnd);
+    setStart(target.presetStart ?? (target.flexibleTime ? "" : "14:00"));
+    setEnd(target.presetEnd ?? (target.flexibleTime ? "" : "17:00"));
     setWithFriends(false);
     setPicked([]);
     setFriends(null); setFriendsFailed(false);
@@ -93,14 +96,15 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
     return () => { alive = false; };
   }, [withFriends, friends, inviterId]);
 
-  const hours = useMemo(() => calcHours(start, end), [start, end]);
-  const valid = hours > 0 && !!date && (!withFriends || picked.length > 0);
+  const hours = useMemo(() => target?.flexibleTime ? Math.max(0, Math.min(8, Math.round(target.plannedHours ?? 0))) : calcHours(start, end), [start, end, target]);
+  const valid = (target?.flexibleTime || hours > 0) && !!date && (!start || !end || end > start) && (!withFriends || picked.length > 0);
   const togglePick = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const handleSubmit = async () => {
     if (!valid || submitting) return;
     setSubmitting(true);
     try {
+      optionalReservationTimes(start, end);
       await onConfirm({ date, start_time: start, end_time: end, hours, note, friendIds: withFriends ? picked : [] });
     } catch { /* Caller displays the failure; keep the dialog open for retry. */ } finally {
       setSubmitting(false);
@@ -167,7 +171,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
             </div>
 
             <div className="max-h-[55vh] sm:max-h-[60vh] overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
-              <QuickTimePicker date={date} start={start} end={end} fromTomorrow={false} onChange={(v) => { if (v.date) setDate(v.date); if (v.start) setStart(v.start); if (v.end) setEnd(v.end); }} />
+              {!target.flexibleTime && <QuickTimePicker date={date} start={start} end={end} fromTomorrow={false} onChange={(v) => { if (v.date) setDate(v.date); if (v.start) setStart(v.start); if (v.end) setEnd(v.end); }} />}
               {/* Date */}
               <Field icon={<Calendar className="h-4 w-4" />} label="Data">
                 <input
@@ -288,7 +292,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tu uždirbsi</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Numatomos valandos</p>
                     <AnimatePresence mode="wait">
                       <motion.p
                         key={`${start}-${end}`}
@@ -298,7 +302,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                         transition={{ duration: 0.2 }}
                         className="font-display text-lg font-bold leading-tight"
                       >
-                        {hours > 0 ? (
+                        {target.flexibleTime ? `${reservationTimeLabel(start, end)} · planuota ${hours} val.` : hours > 0 ? (
                           <>
                             {start} → {end}{" "}
                             <span className="text-gradient">= {hours} {hours === 1 ? "valandą" : hours < 10 && hours % 1 === 0 ? "valandas" : "val."}</span>
@@ -312,6 +316,7 @@ export function ReservationDialog({ target, inviterId, onClose, onConfirm }: Pro
                 </div>
               </motion.div>
 
+              <p className="mt-3 text-xs text-muted-foreground">Galutines valandas po atlikto darbo pasirenka veiklos organizatorius — jos nepriklauso nuo įrašyto laiko.</p>
               {/* Note */}
               <div className="mt-5">
                 <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
