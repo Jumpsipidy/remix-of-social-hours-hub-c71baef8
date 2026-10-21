@@ -1,5 +1,7 @@
 # Užduotys (2026-10-21, vakaras)
 
+- [ ] Mokyklos rezervacijos mokinio skydelyje iškart, be papildomo patvirtinimo
+
 - [x] Neprivalomas rezervacijų laikas, galutinis valandų pasirinkimas ir organizacijų pokalbis
 - [x] QR puslapio atnaujinimas ir elegantiška šviesi tema
 
