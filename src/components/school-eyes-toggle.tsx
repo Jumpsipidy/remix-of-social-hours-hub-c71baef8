@@ -11,7 +11,7 @@ export function useSchoolEyes() {
   return { on: theme === "light", toggle: () => choose(theme === "light" ? "dark" : "light") };
 }
 
-export function SchoolEyesToggle({ className = "" }: { className?: string }) {
+export function SchoolEyesToggle({ className = "", compact = false }: { className?: string; compact?: boolean }) {
   const { on, toggle } = useSchoolEyes();
   const { openSettings } = useSiteTheme();
 
@@ -25,12 +25,12 @@ export function SchoolEyesToggle({ className = "" }: { className?: string }) {
       aria-pressed={on}
       aria-label={on ? "Įjungti tamsią temą" : "Įjungti šviesią temą"}
       title={on ? "Tamsi tema" : "Mokyklos akys · šviesi tema"}
-      className="h-11 shrink-0 border-border bg-card px-3 text-muted-foreground hover:text-foreground"
+      className={compact ? "h-10 w-10 shrink-0 border-transparent bg-transparent p-0 text-muted-foreground shadow-none hover:text-foreground" : "h-11 shrink-0 border-border bg-card px-3 text-muted-foreground hover:text-foreground"}
     >
       {on ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-      <span className="hidden sm:inline">{on ? "Tamsi tema" : "Mokyklos akys"}</span>
+      {!compact && <span className="hidden sm:inline">{on ? "Tamsi tema" : "Mokyklos akys"}</span>}
     </Button>
-    <Button variant="ghost" className="h-11 shrink-0 px-3 text-muted-foreground" onClick={openSettings} aria-label="Temos nustatymai" title="Temos nustatymai"><Settings2 /><span className="hidden lg:inline">Nustatymai</span></Button>
+    <Button variant="ghost" className={compact ? "hidden h-10 w-10 p-0 text-muted-foreground md:inline-flex" : "h-11 shrink-0 px-3 text-muted-foreground"} onClick={openSettings} aria-label="Temos nustatymai" title="Temos nustatymai"><Settings2 />{!compact && <span className="hidden lg:inline">Nustatymai</span>}</Button>
     </div>
   );
 }
