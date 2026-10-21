@@ -349,7 +349,7 @@ function StudentDashboard() {
         </div>
       </aside>
       <div className="min-w-0">
-      <div className="flex flex-col">
+      <div className="flex flex-col [&>section]:w-full">
       <section id="pradzia" className="order-1 scroll-mt-20 mx-auto max-w-7xl px-4 pt-8 sm:px-6">
         <DashHero
           eyebrow="Mokinio sritis"
