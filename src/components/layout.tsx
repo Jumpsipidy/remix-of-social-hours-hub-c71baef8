@@ -136,7 +136,6 @@ export function Navbar() {
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
           <SchoolEyesToggle compact />
-          <Button variant="ghost" size="icon" className="nav-settings h-10 w-10" onClick={openSettings} aria-label="Nustatymai" title="Nustatymai"><Settings2 /></Button>
           <NotificationBell />
           {isAuthenticated ? <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="secondary" className="hidden h-10 gap-2 px-2.5 sm:inline-flex" aria-label="Paskyros meniu"><UserRound /><span className="hidden max-w-24 truncate xl:inline">{profile?.full_name?.split(" ")[0] ?? "Paskyra"}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
