@@ -419,6 +419,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          merged_into: string | null
           organization_id: string | null
           reservation_id: string | null
           school_admin_id: string | null
@@ -427,6 +428,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          merged_into?: string | null
           organization_id?: string | null
           reservation_id?: string | null
           school_admin_id?: string | null
@@ -435,12 +437,20 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          merged_into?: string | null
           organization_id?: string | null
           reservation_id?: string | null
           school_admin_id?: string | null
           student_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_rooms_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_rooms_reservation_id_fkey"
             columns: ["reservation_id"]
@@ -1542,6 +1552,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      ensure_chat_participants: {
+        Args: {
+          _org: string
+          _reservation?: string
+          _student: string
+          _teacher: string
+        }
+        Returns: string
+      }
       ensure_check_in_code: {
         Args: { _participant_id?: string; _reservation_id?: string }
         Returns: string
@@ -1632,6 +1651,7 @@ export type Database = {
       open_chat_with: { Args: { _other: string }; Returns: string }
       open_dm_room: { Args: { _other: string }; Returns: string }
       open_org_chat: { Args: { _org: string }; Returns: string }
+      open_reservation_chat: { Args: { _reservation: string }; Returns: string }
       open_school_student_chat: {
         Args: { _org: string; _student: string }
         Returns: string
@@ -1639,6 +1659,7 @@ export type Database = {
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      resolve_chat_room: { Args: { _room: string }; Returns: string }
       revoke_certificate: {
         Args: { _code: string; _reason: string }
         Returns: boolean
