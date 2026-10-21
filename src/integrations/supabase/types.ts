@@ -1067,7 +1067,7 @@ export type Database = {
           checked_in_by: string | null
           city: string | null
           created_at: string
-          end_time: string
+          end_time: string | null
           hours_approved_at: string | null
           hours_approved_by: string | null
           hours_to_earn: number
@@ -1082,7 +1082,7 @@ export type Database = {
           requires_checkin: boolean
           reservation_date: string
           source: string
-          start_time: string
+          start_time: string | null
           status: Database["public"]["Enums"]["reservation_status"]
           student_id: string
           task_id: string | null
@@ -1095,7 +1095,7 @@ export type Database = {
           checked_in_by?: string | null
           city?: string | null
           created_at?: string
-          end_time: string
+          end_time?: string | null
           hours_approved_at?: string | null
           hours_approved_by?: string | null
           hours_to_earn?: number
@@ -1110,7 +1110,7 @@ export type Database = {
           requires_checkin?: boolean
           reservation_date: string
           source?: string
-          start_time: string
+          start_time?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id: string
           task_id?: string | null
@@ -1123,7 +1123,7 @@ export type Database = {
           checked_in_by?: string | null
           city?: string | null
           created_at?: string
-          end_time?: string
+          end_time?: string | null
           hours_approved_at?: string | null
           hours_approved_by?: string | null
           hours_to_earn?: number
@@ -1138,7 +1138,7 @@ export type Database = {
           requires_checkin?: boolean
           reservation_date?: string
           source?: string
-          start_time?: string
+          start_time?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
           student_id?: string
           task_id?: string | null
