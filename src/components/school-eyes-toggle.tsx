@@ -30,7 +30,7 @@ export function SchoolEyesToggle({ className = "", compact = false }: { classNam
       {on ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
       {!compact && <span className="hidden sm:inline">{on ? "Tamsi tema" : "Mokyklos akys"}</span>}
     </Button>
-    <Button variant="ghost" className={compact ? "hidden h-10 w-10 p-0 text-muted-foreground md:inline-flex" : "h-11 shrink-0 px-3 text-muted-foreground"} onClick={openSettings} aria-label="Temos nustatymai" title="Temos nustatymai"><Settings2 />{!compact && <span className="hidden lg:inline">Nustatymai</span>}</Button>
+    <Button variant="ghost" className={compact ? "h-10 w-10 p-0 text-muted-foreground" : "h-11 shrink-0 px-3 text-muted-foreground"} onClick={openSettings} aria-label="Temos nustatymai" title="Temos nustatymai"><Settings2 />{!compact && <span className="hidden lg:inline">Nustatymai</span>}</Button>
     </div>
   );
 }

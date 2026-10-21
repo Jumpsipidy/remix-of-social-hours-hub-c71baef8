@@ -8,3 +8,5 @@
 - [x] Naujas SaaS pradžios puslapis
 - [x] Užduočių puslapio perdarymas
 - [ ] Laiškai mokiniams per Resend — laukia RESEND_API_KEY / RESEND_FROM patikros Vercel'yje
+- [x] Pradžia be sugeneruotų nuotraukų: modernūs UI elementai, svarbi informacija slenkant
+- [x] Temos spalvos ir nustatymų patikra kompiuteryje bei telefone
