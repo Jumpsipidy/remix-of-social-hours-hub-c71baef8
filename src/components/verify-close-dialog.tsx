@@ -18,7 +18,7 @@ export function VerifyCloseDialog({
   const [accepted, setAccepted] = useState(false);
   const planned = Math.max(0, Math.min(8, Math.round(hours || 0)));
   const [chosen, setChosen] = useState(planned);
-  useEffect(() => { if (open) setChosen(planned); }, [open, planned]);
+  useEffect(() => { if (open) { setChosen(planned); setAccepted(false); } }, [open, planned]);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -81,7 +81,7 @@ export function VerifyCloseDialog({
                   ))}
                 </div>
                 <p className="mt-1.5 text-xs text-muted-foreground">
-                  Tik sveikos valandos. {chosen === planned ? "Paliksi planuotas valandas." : `Pakeista: ${planned} → ${chosen} val.`}
+                  Tik sveikos valandos. Pasirink pagal atliktą darbą, o ne rezervacijos laiką. {chosen === planned ? "" : `Pakeista: ${planned} → ${chosen} val.`}
                 </p>
               </div>
               <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-foreground">

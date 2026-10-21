@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fetchAdminProfile } from "./school-data.server";
+import { optionalReservationTimes } from "./reservation-time";
 
 async function requireTeacher(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -18,12 +19,12 @@ export const teacherCreateReservations = createServerFn({ method: "POST" })
     date: string; start: string; end: string; hours: number; kind: string; note?: string;
   }) => {
     if (!Array.isArray(input?.studentIds) || input.studentIds.length === 0) throw new Error("Pasirink bent vieną mokinį.");
-    if (!input.date || !input.start || !input.end) throw new Error("Užpildyk datą ir laiką.");
+    if (!input.date) throw new Error("Pasirink datą.");
     return {
       studentIds: input.studentIds.map(String).slice(0, 200),
       organizationId: input.organizationId ? String(input.organizationId) : null,
       taskId: input.taskId ? String(input.taskId) : null,
-      date: String(input.date), start: String(input.start), end: String(input.end),
+      date: String(input.date), ...optionalReservationTimes(input.start, input.end),
       hours: Math.max(0, Math.min(8, Math.round(Number(input.hours) || 0))),
       kind: ["volunteer", "consultation", "event", "other"].includes(input.kind) ? input.kind : "volunteer",
       note: String(input.note ?? "").slice(0, 1000),
@@ -52,7 +53,7 @@ export const teacherUpdateReservation = createServerFn({ method: "POST" })
     if (!input?.id) throw new Error("Rezervacija nenurodyta.");
     return {
       id: String(input.id),
-      date: String(input.date), start: String(input.start), end: String(input.end),
+      date: String(input.date), ...optionalReservationTimes(input.start, input.end),
       hours: Math.max(0, Math.min(8, Math.round(Number(input.hours) || 0))),
       kind: ["volunteer", "consultation", "event", "other"].includes(input.kind) ? input.kind : "volunteer",
       note: String(input.note ?? "").slice(0, 1000),
@@ -60,7 +61,8 @@ export const teacherUpdateReservation = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await requireTeacher(context.userId);
-    const { error } = await supabaseAdmin.rpc("school_update_reservation", {
+    // RPC argument metadata omits SQL's nullable time arguments.
+    const { error } = await (supabaseAdmin.rpc as typeof context.supabase.rpc & ((name: "school_update_reservation", args: Record<string, unknown>) => ReturnType<typeof context.supabase.rpc>))("school_update_reservation", {
       _caller: context.userId,
       _reservation_id: data.id,
       _date: data.date,
@@ -126,10 +128,9 @@ export const teacherPublishTask = createServerFn({ method: "POST" })
     const title = String(input?.title ?? "").trim();
     if (title.length < 3) throw new Error("Įrašyk pavadinimą (bent 3 simboliai).");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(input.date))) throw new Error("Pasirink datą.");
-    if (!input.start || !input.end || input.end <= input.start) throw new Error("Pabaiga turi būti vėliau nei pradžia.");
     return {
       title: title.slice(0, 140), description: String(input.description ?? "").slice(0, 2000),
-      date: String(input.date), start: String(input.start).slice(0, 5), end: String(input.end).slice(0, 5),
+      date: String(input.date), ...optionalReservationTimes(input.start, input.end),
       hours: Math.max(0, Math.min(8, Math.round(Number(input.hours) || 0))),
       city: String(input.city ?? "").slice(0, 60) || null, location: String(input.location ?? "").slice(0, 200),
       spots: Math.max(1, Math.min(500, Math.round(Number(input.spots) || 1))),

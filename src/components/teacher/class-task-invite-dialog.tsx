@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { CalendarDays, Check, ChevronLeft, Clock, Loader2, MapPin, Megaphone, Search, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -159,7 +160,7 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
   const { profile } = useAuth();
   const publishFn = useServerFn(teacherPublishTask);
   const inviteFn = useServerFn(teacherSendInvites);
-  const [f, setF] = useState({ title: "", description: "", date: "", start: "14:00", end: "16:00", hours: 2, city: "Šeduva", location: "", spots: 20 });
+  const [f, setF] = useState({ title: "", description: "", date: "", start: "", end: "", hours: 2, city: "Šeduva", location: "", spots: 20 });
   const [notify, setNotify] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -172,7 +173,7 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
       const { id } = await publishFn({ data: f });
       let sent = 0;
       if (notify && selected.size) {
-        const res = await sendCards(inviteFn, { id, title: f.title, date: f.date, time: `${f.start}–${f.end}`, place: [f.city, f.location].filter(Boolean).join(", "), hours: String(f.hours) }, [...selected], "", profile?.full_name ?? "Auklėtojas");
+        const res = await sendCards(inviteFn, { id, title: f.title, date: f.date, time: reservationTimeLabel(f.start, f.end), place: [f.city, f.location].filter(Boolean).join(", "), hours: String(f.hours) }, [...selected], "", profile?.full_name ?? "Auklėtojas");
         sent = res.sent;
       }
       toast.success(sent ? `Veikla paskelbta visiems ir išsiųsta ${sent} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
@@ -192,8 +193,8 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
           <label className="block text-xs font-semibold text-muted-foreground">Aprašymas<textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} rows={2} className={`${field} h-auto resize-none py-2`} /></label>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <label className="col-span-2 block text-xs font-semibold text-muted-foreground"><CalendarDays className="mr-1 inline h-3 w-3" />Data<input type="date" value={f.date} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setF({ ...f, date: e.target.value })} className={field} /></label>
-            <label className="block text-xs font-semibold text-muted-foreground">Pradžia<input type="time" value={f.start} onChange={(e) => setF({ ...f, start: e.target.value })} className={field} /></label>
-            <label className="block text-xs font-semibold text-muted-foreground">Pabaiga<input type="time" value={f.end} onChange={(e) => setF({ ...f, end: e.target.value })} className={field} /></label>
+            <label className="block text-xs font-semibold text-muted-foreground">Pradžia (nebūtina)<input type="time" value={f.start} onChange={(e) => setF({ ...f, start: e.target.value })} className={field} /></label>
+            <label className="block text-xs font-semibold text-muted-foreground">Pabaiga (nebūtina)<input type="time" value={f.end} onChange={(e) => setF({ ...f, end: e.target.value })} className={field} /></label>
             <label className="block text-xs font-semibold text-muted-foreground">Valandos<input type="number" min={0} max={8} value={f.hours} onChange={(e) => setF({ ...f, hours: Math.round(Number(e.target.value) || 0) })} className={field} /></label>
             <label className="block text-xs font-semibold text-muted-foreground">Vietų<input type="number" min={1} value={f.spots} onChange={(e) => setF({ ...f, spots: Number(e.target.value) || 1 })} className={field} /></label>
             <label className="col-span-2 block text-xs font-semibold text-muted-foreground">Miestas<select value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={field}>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></label>

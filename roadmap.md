@@ -1,5 +1,8 @@
 # Užduotys (2026-10-21, vakaras)
 
+- [x] Neprivalomas rezervacijų laikas, galutinis valandų pasirinkimas ir organizacijų pokalbis
+- [x] QR puslapio atnaujinimas ir elegantiška šviesi tema
+
 - [x] Logotipo užrašas su šriftu ir spalvų perėjimu
 - [x] Sklandus perėjimas iš pradžios į prisijungimą / registraciją
 - [x] Nustatymų mygtukas meniu + „Elegantiškas“ fono režimas

@@ -8,7 +8,7 @@
  */
 export function BackgroundFX({ isDashboard }: { isDashboard?: boolean }) {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden className="site-background-fx pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {/* Deep editorial base */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.15_0.018_248)_0%,oklch(0.11_0.015_250)_100%)]" />
 

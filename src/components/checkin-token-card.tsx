@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Copy, Maximize, RefreshCw, WifiOff } from "lucide-react";
+import { Copy, Maximize, RefreshCw, WifiOff, ShieldCheck, CalendarDays } from "lucide-react";
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,14 +23,14 @@ export function CheckinTokenCard({ token, now, onRefresh, refreshing = false }: 
     <p role="status" className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground"><RefreshCw className="h-3 w-3" /> {seconds > 0 ? `Atnaujinamas · ${seconds}s` : "Naudok kodą be interneto"}</p>
   </div>;
   return <>
-    <div className="checkin-token sv-reveal grid gap-5 rounded-lg border border-border bg-card p-4 sm:grid-cols-[minmax(0,288px)_minmax(0,1fr)] sm:p-6">
-      {qr}
-      <div className="min-w-0 space-y-4">
-        <div><p className="text-xs font-semibold text-primary">{token.kind === "participant" ? "Grupės narys" : "Rezervacija"}</p><h2 className="mt-1 break-words text-lg font-bold">{token.org_name}</h2><p className="mt-1 text-sm text-muted-foreground">{token.date} · {token.start}–{token.end}</p>{token.title && <p className="mt-1 break-words text-sm">{token.title}</p>}</div>
+    <div className="checkin-token grid overflow-hidden rounded-lg border border-border bg-card sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid gap-4 border-b border-border bg-muted/30 p-5 sm:border-b-0 sm:border-r sm:p-6"><p className="flex items-center justify-center gap-2 text-xs font-semibold text-primary"><ShieldCheck className="h-4 w-4" /> Saugus atvykimo kodas</p>{qr}</div>
+      <div className="min-w-0 space-y-5 p-5 sm:p-6">
+        <div><p className="text-xs font-semibold text-primary">{token.kind === "participant" ? "Su draugais" : "Tavo vizitas"}</p><h2 className="mt-2 break-words text-2xl font-bold">{token.title || token.org_name}</h2>{token.title && <p className="mt-1 text-sm text-muted-foreground">{token.org_name}</p>}<p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{token.date} · {reservationTimeLabel(token.start, token.end)}</p></div>
         <Button className="h-12 w-full" onClick={() => setPresenting(true)}><Maximize /> Parodyti QR kodą</Button>
         <div className="rounded-lg border border-dashed border-border bg-background p-3"><p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"><WifiOff className="h-4 w-4" /> Kodas be interneto</p><div className="mt-2 flex items-center justify-between gap-2"><span className="font-mono text-3xl font-bold tabular-nums">{grouped}</span><Button variant="ghost" size="icon" className="h-11 w-11 shrink-0" aria-label="Kopijuoti 6 skaitmenų kodą" onClick={copy}><Copy /></Button></div></div>
       </div>
     </div>
-    <Dialog open={presenting} onOpenChange={setPresenting}><DialogContent className="qr-presentation max-w-lg"><DialogHeader><DialogTitle>{token.org_name}</DialogTitle><DialogDescription>{token.date} · {token.start}–{token.end}</DialogDescription></DialogHeader>{qr}<p className="text-center font-mono text-3xl font-bold tabular-nums">{grouped}</p></DialogContent></Dialog>
+    <Dialog open={presenting} onOpenChange={setPresenting}><DialogContent className="qr-presentation max-w-lg"><DialogHeader><DialogTitle>{token.org_name}</DialogTitle><DialogDescription>{token.date} · {reservationTimeLabel(token.start, token.end)}</DialogDescription></DialogHeader>{qr}<p className="text-center font-mono text-3xl font-bold tabular-nums">{grouped}</p></DialogContent></Dialog>
   </>;
 }

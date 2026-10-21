@@ -42,8 +42,8 @@ export function ChangeReservationDialog({ open, reservation, onClose, onSaved }:
   useState(() => {
     if (reservation) {
       setDate(reservation.reservation_date);
-      setStart(reservation.start_time.slice(0, 5));
-      setEnd(reservation.end_time.slice(0, 5));
+      setStart(reservation.start_time?.slice(0, 5) ?? "");
+      setEnd(reservation.end_time?.slice(0, 5) ?? "");
       setHours(Number(reservation.hours_to_earn));
     }
   });

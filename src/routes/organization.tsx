@@ -1,3 +1,4 @@
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from "react";
@@ -680,7 +681,7 @@ function OrgDashboard() {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
-                        <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                        <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {Number(r.hours_to_earn)} val.</p>
                         {groupBadge(r) && <div className="mt-1.5">{groupBadge(r)}</div>}
                       </div>
                     </div>
@@ -735,7 +736,7 @@ function OrgDashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{s?.full_name ?? "Mokinys"}</p>
-                          <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} · {Number(r.hours_to_earn)} val.</p>
+                          <p className="truncate text-xs text-muted-foreground">{r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {Number(r.hours_to_earn)} val.</p>
                         {groupBadge(r) && <div className="mt-1.5">{groupBadge(r)}</div>}
                         </div>
                       </div>

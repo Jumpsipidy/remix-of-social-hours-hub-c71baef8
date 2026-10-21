@@ -1,3 +1,4 @@
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -360,7 +361,7 @@ function TodayList({ refreshKey }: { refreshKey: number }) {
       <div className="space-y-2">
         {rows.map((r) => (
           <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border p-3 text-sm sm:flex ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
-            <span className="col-span-2 sm:w-24 shrink-0 font-mono text-xs tabular-nums">{r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}</span>
+            <span className="col-span-2 sm:w-24 shrink-0 font-mono text-xs tabular-nums">{reservationTimeLabel(r.start_time, r.end_time)}</span>
             <span className="min-w-0 flex-1 truncate font-semibold">
               {names[r.student_id] ?? "Mokinys"}
               {counts[r.student_id] > 1 && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">{counts[r.student_id]} vizitai šiandien</span>}

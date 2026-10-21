@@ -55,7 +55,7 @@ function CheckinPage() {
   const current = active.find((t) => keyOf(t) === sel) ?? active.find((t) => t.date === today) ?? active[0];
   return <PageShell><div className="mx-auto max-w-3xl px-3 py-4 sm:px-6 sm:py-6">
     <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"><Button variant="ghost" asChild className="h-11 w-fit"><Link to="/student"><ArrowLeft /> Atgal</Link></Button><Button variant="outline" size="icon" className="h-11 w-11" aria-label="Atnaujinti QR kodus" disabled={refreshing} onClick={() => { void load(); }}><RefreshCw className={refreshing ? "animate-spin" : ""} /></Button></div>
-    <h1 className="mb-4 flex items-center gap-2 text-xl font-bold sm:text-2xl"><ShieldCheck className="h-6 w-6 shrink-0 text-primary" /> Mano QR kodas</h1>
+    <header className="mb-6 border-b border-border pb-5"><p className="mb-2 text-xs font-semibold text-primary">ATVYKIMAS</p><h1 className="flex items-center gap-2 text-3xl font-bold"><ShieldCheck className="h-7 w-7 shrink-0 text-primary" /> Mano QR kodas</h1><p className="mt-2 text-sm text-muted-foreground">Organizacija pažymi atvykimą. Atlikus darbą, patvirtina suteikiamas valandas.</p></header>
     <CheckinSetupBanner />
     {loading && <CheckinSkeleton />}
     {error && <div role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-card p-4"><p className="text-sm">Nepavyko atnaujinti kodų. Jei kodas jau įkeltas, gali parodyti 6 skaitmenis.</p><Button variant="outline" className="mt-3 h-11" disabled={refreshing} onClick={() => { void load(); }}>Bandyti dar kartą</Button></div>}

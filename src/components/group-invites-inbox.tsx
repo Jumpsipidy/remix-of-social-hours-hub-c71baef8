@@ -1,3 +1,4 @@
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarDays, Check, X, Loader2, Users } from "lucide-react";
@@ -95,7 +96,7 @@ export function GroupInvitesInbox({ userId }: { userId: string }) {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{orgName}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {r ? `${r.reservation_date} · ${r.start_time.slice(0,5)}–${r.end_time.slice(0,5)} · ${Number(r.hours_to_earn)} val.` : "…"}
+                      {r ? `${r.reservation_date} · ${reservationTimeLabel(r.start_time, r.end_time)} · ${Number(r.hours_to_earn)} val.` : "…"}
                     </p>
                   </div>
                 </div>
