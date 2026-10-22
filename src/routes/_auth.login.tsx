@@ -101,10 +101,22 @@ function LoginPage() {
       let uid = confirmedUid;
       if (!uid) {
         // Preview session persistence can take several round trips to its host.
-        const { data: signIn, error } = await withLoadingDeadline(supabase.auth.signInWithPassword({ email, password }), 30000);
-        if (error) throw error;
-        uid = signIn.user?.id ?? null;
-        if (!uid) throw new Error("Negautas prisijungimo patvirtinimas. Bandyk dar kartą.");
+        uid = await recoverPasswordSignIn(
+          async () => {
+            const { data: signIn, error } = await withLoadingDeadline(supabase.auth.signInWithPassword({ email, password }), 30000);
+            if (error) throw error;
+            return signIn.user?.id ?? null;
+          },
+          async () => {
+            const { data } = await withLoadingDeadline(supabase.auth.getSession(), 8000);
+            const u = data.session?.user;
+            return u && u.email?.toLowerCase() === email.trim().toLowerCase() ? u.id : null;
+          },
+          () => {
+            // Only our own diagnostic caches; never auth keys.
+            for (const k of ["sv_error_outbox_v1", "sv:webvitals:session"]) { try { localStorage.removeItem(k); } catch {} }
+          },
+        );
         authenticated = true;
         setConfirmedUid(uid);
         try { localStorage.removeItem(FAIL_KEY); } catch {}
