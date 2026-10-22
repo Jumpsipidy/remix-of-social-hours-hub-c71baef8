@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureSignedInProfile } from "@/lib/auth-profile.functions";
 import { logActivity } from "@/lib/activity-log";
+import { singleFlightByKey, withLoadingDeadline } from "@/lib/loading-control";
 
 export type AppRole = "student" | "school_admin" | "organization" | "admin";
 
@@ -97,45 +98,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    const loadProfile = async (uid: string) => {
-      try {
-        const ensured = await ensureProfileRef.current();
-        if (mounted && ensured.profile) {
-          setProfile(ensured.profile as Profile);
-          try { localStorage.setItem(ROLE_CACHE_KEY, ensured.profile.role); localStorage.setItem(ROLE_CACHE_UID_KEY, uid); } catch {}
-          return;
-        }
-      } catch {
-        // Fall back to a normal RLS read; this keeps auth usable even if the
-        // privileged repair path is temporarily unavailable.
-      }
-
+    let activeUid: string | null = null;
+    let authRevision = 0;
+    const loadProfile = singleFlightByKey(async (uid: string) => {
       const fetchProfile = async () => {
-        const result = await supabase
+        const result = await withLoadingDeadline(supabase
           .from("profiles")
           .select(PROFILE_COLUMNS)
           .eq("id", uid)
-          .maybeSingle();
+          .maybeSingle());
         if (!result.error) return normalizeProfile(result.data);
         if (!isAssignedClassesSchemaError(result.error)) throw result.error;
 
-        const fallback = await supabase
+        const fallback = await withLoadingDeadline(supabase
           .from("profiles")
           .select(PROFILE_COLUMNS_SAFE)
           .eq("id", uid)
-          .maybeSingle();
+          .maybeSingle());
         if (fallback.error) throw fallback.error;
         return normalizeProfile(fallback.data);
       };
 
       let nextProfile = await fetchProfile();
+      // Existing accounts need one RLS read, not a repair request on every visit.
+      if (!nextProfile) {
+        const ensured = await withLoadingDeadline(ensureProfileRef.current());
+        nextProfile = normalizeProfile(ensured.profile);
+      }
 
-      if (mounted) {
+      if (mounted && activeUid === uid) {
         setProfile(nextProfile);
         if (nextProfile?.role) {
           try { localStorage.setItem(ROLE_CACHE_KEY, nextProfile.role); localStorage.setItem(ROLE_CACHE_UID_KEY, uid); } catch {}
         }
       }
+    });
+    const settleProfile = (uid: string) => {
+      void loadProfile(uid).catch(() => {
+        if (mounted && activeUid === uid) setProfile(null);
+      }).finally(() => {
+        if (mounted && activeUid === uid) setLoading(false);
+      });
     };
 
     // A password-reset link signs the user in temporarily. If they leave the
@@ -154,7 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       // Ignore TOKEN_REFRESHED — it fires on tab focus and would otherwise
       // reset component state (scroll, form inputs). INITIAL_SESSION is handled by getSession.
-      if (event === "TOKEN_REFRESHED") return;
+      if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION" || !mounted) return;
+      authRevision += 1;
       
       if (event === "SIGNED_IN") {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
@@ -162,12 +166,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       const u = session?.user ?? null;
+      activeUid = u?.id ?? null;
       setUser(u);
       
       if (u) {
-        loadProfile(u.id).finally(() => {
-          if (mounted) setLoading(false);
-        });
+        // Supabase holds its auth lock during this callback. Start network work
+        // on the next task so it cannot wait on the lock that called it.
+        setTimeout(() => { if (mounted && activeUid === u.id) settleProfile(u.id); }, 0);
       } else {
         if (event === "SIGNED_OUT") {
           (async () => {
@@ -182,19 +187,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void withLoadingDeadline(supabase.auth.getSession()).then(({ data: { session }, error }) => {
+      if (error) throw error;
       const u = session?.user ?? null;
-      if (mounted) {
+      if (mounted && authRevision === 0) {
+        activeUid = u?.id ?? null;
         setUser(u);
         if (u) {
-          loadProfile(u.id).finally(() => {
-            if (mounted) setLoading(false);
-          });
+          settleProfile(u.id);
         } else {
           setLoading(false);
         }
       }
-    });
+    }).catch(() => { if (mounted) setLoading(false); });
 
     return () => {
       mounted = false;
@@ -213,18 +218,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signOut: async () => {
         setLeaving(true);
-        const started = Date.now();
-        try {
+        void (async () => { try {
           const { deviceMeta } = await import("@/lib/device-meta");
           await logActivity("auth.signed_out", { meta: deviceMeta() });
-        } catch {}
+        } catch {} })();
         try { localStorage.removeItem(MOCK_KEY); } catch {}
         try { localStorage.removeItem(ROLE_CACHE_KEY); localStorage.removeItem(ROLE_CACHE_UID_KEY); } catch {}
         setMock(null);
-        await supabase.auth.signOut();
-        const wait = 300 - (Date.now() - started);
-        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-        setTimeout(() => setLeaving(false), 150);
+        try { await withLoadingDeadline(supabase.auth.signOut()); }
+        finally { setLeaving(false); }
       },
       impersonate: (p: Profile) => {
         try { localStorage.setItem(MOCK_KEY, JSON.stringify({ profile: p })); } catch {}

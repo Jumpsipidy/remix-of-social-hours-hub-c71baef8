@@ -1,4 +1,8 @@
-# Užduotys (2026-10-21, vakaras)
+# Užduotys
+- [x] Greitis: sesijos užrakto kliūtis, dubliuotos profilio užklausos ir dirbtinis prisijungimo laukimas pašalinti; formų perėjimai sutrumpinti, laukimas apribotas.
+- [x] Pradžios puslapis: nauja perjungiama veiklos eiga ir auditorijų skiltis; tamsus ir šviesus 390 px vaizdas patikrinti.
+- [x] 75 testai praėjo; naršyklėje forma atsivėrė per 0,93 s, neteisingas prisijungimas neužstrigo, registracija atsivėrė, horizontalaus perslinkimo ir vykdymo klaidų nėra.
+- [ ] Prisijungusių paskyrų įkėlimo greičio patikra — išorinio Supabase sesijos čia neprieinamos.
 - [x] Pradžia: animuotas pavadinimas, išplėstas simbolių meniu, širdelės sukimasis, perėjimai ir matomas elegantiškas šviesus fonas; naršyklėje patikrintas meniu, penki paspaudimai, prisijungimas ir 390 px vaizdas.
 - [x] Soci Guard: laikymas patvirtintas serveryje naršyklėje, reCAPTCHA matoma, galima grįžti prie laikymo; ryšio klaidos nebepakeičia patikros į matematiką. Tikro domeno nustatymai nepatikrinti.
 - [x] Animuotas 404 / blokavimo elementas be nuotraukos; PIN tik įvedus jumpsipidy; atskiras viešas būsenos klientas. Naršyklės patikra ir 10 testų praėjo; tikrą domeną sustabdė roboto patikra.

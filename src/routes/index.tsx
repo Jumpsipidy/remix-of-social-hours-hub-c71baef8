@@ -5,7 +5,7 @@ import { PageShell, DASHBOARD_BY_ROLE } from "../components/layout";
 import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Search, QrCode, FileCheck2, ShieldCheck, MapPin, Check, ChevronDown, Users, MessageCircle, GraduationCap, Building2, School, Play, RotateCcw, Heart, ArrowUpRight } from "lucide-react";
+import { ArrowRight, Search, QrCode, FileCheck2, ShieldCheck, MapPin, Check, ChevronDown, Users, MessageCircle, GraduationCap, Building2, School, Heart, ArrowUpRight } from "lucide-react";
 
 import { useSiteTheme } from "@/components/theme-provider";
 
@@ -87,41 +87,25 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const DEMO_QUERY = "gyvūnų prieglauda";
+const JOURNEY = [
+  { icon: Search, label: "Rask", title: "Veikla, į kurią norisi eiti.", body: "Gyvūnai, renginiai ar pagalba bendruomenei — pasirink, kas tau artima.", to: "/tasks", cta: "Peržiūrėti veiklas" },
+  { icon: Users, label: "Dalyvauk", title: "Geri darbai geriau kartu.", body: "Pakviesk draugus arba rinkis auklėtojos pasiūlytą veiklą. Organizacijos veikloje atvykimą patvirtink QR kodu.", to: "/register", cta: "Prisijungti prie bendruomenės" },
+  { icon: FileCheck2, label: "Matyk rezultatą", title: "Ne lapeliuose. Tavo paskyroje.", body: "Organizacijos ar auklėtojos patvirtintos valandos papildo tavo progresą. Pažymėjimas — kai jo prireikia.", to: "/login", cta: "Mano valandos" },
+] as const;
 
 function ProductPreview() {
-  const [playing, setPlaying] = useState(false);
   const [step, setStep] = useState(0);
-  const [text, setText] = useState("");
-  useEffect(() => {
-    if (!playing) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setText(DEMO_QUERY); setStep(2); setPlaying(false); return; }
-    let tick = 0;
-    const timer = window.setInterval(() => {
-      if (document.hidden) return;
-      tick += 1;
-      setText(DEMO_QUERY.slice(0, tick));
-      if (tick > 25) setStep(1);
-      if (tick > 42) setStep(2);
-      if (tick > 55) { setPlaying(false); window.clearInterval(timer); }
-    }, 70);
-    return () => window.clearInterval(timer);
-  }, [playing]);
-  const start = () => { setStep(0); setText(""); setPlaying(true); };
-  return <section className="product-demo-band border-y border-border bg-card/70 px-4 py-10 sm:px-6 sm:py-14" aria-labelledby="demo-title">
+  const active = JOURNEY[step];
+  return <section className="home-journey border-y border-border px-4 py-14 sm:px-6 sm:py-20" aria-labelledby="demo-title">
     <div className="mx-auto max-w-6xl">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <div><p className="text-xs font-semibold text-primary">NUO VEIKLOS IKI PAŽYMĖJIMO</p><h2 id="demo-title" className="mt-2 text-2xl font-bold sm:text-3xl">Mažiau rūpesčių. Daugiau gerų darbų.</h2></div>
-        <Button variant="outline" onClick={start} disabled={playing}>{step === 2 ? <RotateCcw /> : <Play />}{step === 2 ? "Pakartoti" : "Pamatyti eigą"}</Button>
-      </div>
-      <div className="product-workspace grid overflow-hidden rounded-lg border border-border bg-background shadow-elegant md:grid-cols-[200px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-border bg-muted/35 p-5 md:block"><div className="flex items-center gap-2 text-sm font-bold"><Heart className="h-4 w-4 text-primary" /> Mano erdvė</div><div className="mt-6 space-y-2">{[{i:Search,t:"Veiklos"},{i:QrCode,t:"Rezervacijos"},{i:FileCheck2,t:"Pažymėjimas"}].map((x,i)=><div key={x.t} className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm ${step === i ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground"}`}><x.i className="h-4 w-4" />{x.t}</div>)}</div><p className="mt-14 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4" /> SV Guard</p></aside>
-        <div className="min-w-0 p-5 sm:p-8">
-          <div className="mb-5 flex items-center justify-between gap-3"><h3 className="font-semibold">{step === 0 ? "Rask savo veiklą" : step === 1 ? "Mano rezervacijos" : "Mano valandos"}</h3><span className="font-mono text-xs text-muted-foreground">0{step + 1} / 03</span></div>
-          <div className="demo-stage">
-            {step === 0 ? <div><div className="flex h-12 items-center gap-3 rounded-md border border-border bg-card px-4"><Search className="h-4 w-4 text-primary" /><span className={`text-sm ${text ? "text-foreground" : "text-muted-foreground"}`}>{text || "Ieškoti veiklos…"}</span>{playing && <span className="home-caret h-4 w-px bg-primary" />}</div><div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border p-4"><div><p className="text-sm font-semibold">Pagalba gyvūnų prieglaudoje</p><p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />Šeduva · 3 val.</p></div><span className="rounded-md bg-primary/10 px-3 py-2 text-xs font-bold text-primary">Rezervuoti</span></div></div> : step === 1 ? <div className="demo-swap flex items-center gap-5 py-5"><QrCode className="h-20 w-20 shrink-0 text-foreground" /><div><p className="text-lg font-semibold">Vieta rezervuota</p><p className="mt-2 text-sm text-muted-foreground">Pagalba gyvūnų prieglaudoje</p><p className="mt-4 flex items-center gap-2 text-xs font-semibold text-success"><Check className="h-4 w-4" />Atvykus — tavo QR kodas</p></div></div> : <div className="demo-swap py-4"><div className="flex items-end justify-between"><p className="text-3xl font-bold">17 <span className="text-lg font-normal text-muted-foreground">/ 20 val.</span></p><FileCheck2 className="h-8 w-8 text-primary" /></div><div className="mt-5 h-2 rounded-full bg-muted"><div className="demo-progress h-full w-[85%] rounded-full bg-primary" /></div><p className="mt-5 text-sm text-muted-foreground">Patvirtintos valandos — viename pažymėjime.</p></div>}
+      <div className="flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-semibold text-primary">TAVO KELIAS</p><h2 id="demo-title" className="mt-3 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">Išsirink. Sudalyvauk.<br /><span className="text-primary">Didžiuokis savimi.</span></h2></div><span className="font-mono text-sm text-muted-foreground">01 — 03</span></div>
+      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+        <div><div role="tablist" aria-label="Veiklos eiga" className="grid grid-cols-3 border-b border-border">{JOURNEY.map((item, i) => <Button key={item.label} id={`journey-tab-${i}`} role="tab" aria-selected={i === step} aria-controls="journey-panel" variant="ghost" onClick={() => setStep(i)} className={`h-14 rounded-none border-b-2 px-2 text-xs sm:text-sm ${i === step ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}><item.icon className="h-4 w-4" />{item.label}</Button>)}</div><div role="tabpanel" id="journey-panel" aria-labelledby={`journey-tab-${step}`} className="min-h-64 pt-8"><h3 className="max-w-sm text-2xl font-semibold leading-tight">{active.title}</h3><p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">{active.body}</p><Button asChild variant="link" className="mt-5 px-0"><Link to={active.to}>{active.cta}<ArrowUpRight /></Link></Button></div></div>
+        <div className="journey-canvas relative flex min-h-80 items-center justify-center overflow-hidden border border-border bg-background p-6 sm:p-10" aria-label="Veiklos kelio pavyzdys">
+          <span className="journey-number absolute right-4 top-0 select-none font-bold text-primary/10" aria-hidden="true">0{step + 1}</span>
+          <div key={step} className="demo-swap relative w-full max-w-sm">
+            {step === 0 ? <><div className="flex h-12 items-center gap-3 border-b-2 border-primary bg-card px-3"><Search className="h-5 w-5 text-primary" /><span className="text-sm">gyvūnų prieglauda</span><ArrowRight className="ml-auto h-4 w-4 text-primary" /></div><article className="mt-5 rounded-lg border border-border bg-card p-5"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-success/10 text-success"><Heart className="h-5 w-5" /></span><div><p className="text-sm font-semibold">Pagalba gyvūnų prieglaudoje</p><p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" />Šeduva · pavyzdys</p></div></div><div className="mt-5 flex items-center justify-between border-t border-border pt-4"><span className="text-xs text-muted-foreground">Laisvas atvykimas</span><ArrowUpRight className="h-5 w-5 text-primary" /></div></article></> : step === 1 ? <div className="space-y-5"><div className="flex items-center justify-center -space-x-2">{[GraduationCap, Users, Heart].map((Icon, i) => <span key={i} className="grid h-16 w-16 place-items-center rounded-full border-4 border-background bg-secondary text-primary"><Icon className="h-6 w-6" /></span>)}</div><p className="text-center text-xl font-semibold">Susitinkam veikloje.</p><div className="flex items-center justify-between rounded-lg border border-border bg-card p-4"><div><p className="text-sm font-semibold">Atvykimas į organizaciją</p><p className="mt-1 text-xs text-muted-foreground">Kiekvienam — savas QR kodas</p></div><QrCode className="h-10 w-10 text-foreground" /></div><p className="text-center text-xs text-muted-foreground">Auklėtojos veikloms QR nereikia.</p></div> : <div><div className="flex items-center justify-between"><span className="flex items-center gap-2 text-xs font-semibold text-success"><Check className="h-4 w-4" />PATVIRTINTA</span><FileCheck2 className="h-7 w-7 text-primary" /></div><p className="mt-6 text-5xl font-semibold tabular-nums">17<span className="text-xl text-muted-foreground"> / 20 val.</span></p><div className="mt-5 h-3 overflow-hidden rounded-full bg-muted"><div className="demo-progress h-full w-[85%] bg-primary" /></div><div className="mt-6 flex items-center gap-3 border-t border-border pt-5"><FileCheck2 className="h-5 w-5 text-primary" /><div><p className="text-sm font-semibold">Socialinių valandų pažymėjimas</p><p className="mt-1 text-xs text-muted-foreground">PDF · su autentiškumo patikra</p></div></div><p className="mt-5 text-xs text-muted-foreground">Progreso pavyzdys</p></div>}
           </div>
-          <div className="mt-5 flex flex-wrap gap-4 border-t border-border pt-4 text-xs text-muted-foreground"><span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />Su draugais</span><span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />Su auklėtoja</span><span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" />Patikrinamas pažymėjimas</span></div>
         </div>
       </div>
     </div>
@@ -129,15 +113,13 @@ function ProductPreview() {
 }
 
 const ROLE_TABS = [
-  { id: "student", label: "Mokiniams", icon: GraduationCap, title: "Tavo geri darbai turi savo vietą.", points: ["Veiklos šalia tavęs", "Rezervacijos su draugais", "Valandos ir pažymėjimas"], to: "/tasks", cta: "Rasti veiklą" },
-  { id: "org", label: "Organizacijoms", icon: Building2, title: "Daugiau pagalbos. Mažiau apskaitos.", points: ["Užduotys ir savanoriai", "Atvykimo patikra QR kodu", "Patvirtintos valandos"], to: "/register", cta: "Sukurti paskyrą" },
-  { id: "school", label: "Mokykloms", icon: School, title: "Visa klasė — aiškiai ir ramiai.", points: ["Atskiri klasių kodai", "Tik priskirtų klasių mokiniai", "Kvietimai ir pokalbiai"], to: "/socialines-valandos-mokykloms", cta: "Plačiau mokykloms" },
+  { label: "Mokiniams", icon: GraduationCap, number: "01", title: "Tavo veiklos. Tavo progresas.", body: "Rask veiklą, eik su draugais ir matyk patvirtintas valandas.", to: "/tasks", cta: "Rasti veiklą" },
+  { label: "Organizacijoms", icon: Building2, number: "02", title: "Pagalba, kuri pasiekia jus.", body: "Skelbk veiklas, susisiek su savanoriais ir patvirtink jų indėlį.", to: "/register", cta: "Pateikti prašymą" },
+  { label: "Mokykloms", icon: School, number: "03", title: "Klasė vienoje vietoje.", body: "Klasių kodai, mokinių progresas ir auklėtojos veiklų pasiūlymai.", to: "/socialines-valandos-mokykloms", cta: "Plačiau mokykloms" },
 ] as const;
 
 function RoleTabs() {
-  const [tab, setTab] = useState<(typeof ROLE_TABS)[number]["id"]>("student");
-  const r = ROLE_TABS.find((x) => x.id === tab) ?? ROLE_TABS[0];
-  return <section className="px-4 py-14 sm:px-6 sm:py-20"><div className="mx-auto max-w-6xl"><div role="tablist" aria-label="Kam skirta" className="flex flex-wrap gap-2 border-b border-border pb-4">{ROLE_TABS.map((t)=><Button key={t.id} variant={tab === t.id ? "secondary" : "ghost"} role="tab" aria-selected={tab === t.id} onClick={()=>setTab(t.id)}><t.icon />{t.label}</Button>)}</div><div key={r.id} role="tabpanel" className="demo-swap mt-8 grid gap-8 md:grid-cols-2"><div><h2 className="max-w-lg text-3xl font-bold leading-tight">{r.title}</h2><Button asChild variant="link" className="mt-5 px-0"><Link to={r.to}>{r.cta}<ArrowRight /></Link></Button></div><ul className="divide-y divide-border">{r.points.map((x)=><li key={x} className="flex items-center gap-3 py-4 text-sm font-medium"><Check className="h-4 w-4 text-primary" />{x}</li>)}</ul></div></div></section>;
+  return <section className="px-4 py-14 sm:px-6 sm:py-20"><div className="mx-auto max-w-6xl"><p className="text-xs font-semibold text-primary">KIEKVIENAM SAVO ERDVĖ</p><h2 className="mt-3 text-3xl font-bold sm:text-4xl">Viena bendruomenė.<br />Trys perspektyvos.</h2><div className="mt-10 grid gap-8 md:grid-cols-3">{ROLE_TABS.map((role) => <article key={role.label} className="border-t border-border pt-6"><div className="flex items-center justify-between"><role.icon className="h-6 w-6 text-primary" /><span className="font-mono text-xs text-muted-foreground">{role.number}</span></div><p className="mt-6 text-xs font-semibold text-muted-foreground">{role.label}</p><h3 className="mt-2 text-xl font-semibold">{role.title}</h3><p className="mt-3 min-h-16 text-sm leading-relaxed text-muted-foreground">{role.body}</p><Button asChild variant="link" className="mt-4 px-0"><Link to={role.to}>{role.cta}<ArrowUpRight /></Link></Button></article>)}</div></div></section>;
 }
 
 function Home() {
