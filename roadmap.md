@@ -1,4 +1,5 @@
 # Užduotys
+- [ ] Prisijungimas po sėkmingos slaptažodžio patikros ir viešų skaičių sesijos laukimo regresija.
 - [x] Greitis: sesijos užrakto kliūtis, dubliuotos profilio užklausos ir dirbtinis prisijungimo laukimas pašalinti; formų perėjimai sutrumpinti, laukimas apribotas.
 - [x] Pradžios puslapis: nauja perjungiama veiklos eiga ir auditorijų skiltis; tamsus ir šviesus 390 px vaizdas patikrinti.
 - [x] 75 testai praėjo; naršyklėje forma atsivėrė per 0,93 s, neteisingas prisijungimas neužstrigo, registracija atsivėrė, horizontalaus perslinkimo ir vykdymo klaidų nėra.
