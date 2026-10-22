@@ -25,6 +25,7 @@
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
 - LockdownGate wraps content, fails closed on unknown settings and never auto-unlocks; static isolated tokens follow theme without changing enforcement.
+- Public lockdown checks try the public RPC before the server fallback, reject malformed states and retry transient failures; administrative entry stays available in unknown and blocked states.
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
 - Student reservation presentation uses shared source-aware rules; school reservations stay active until teacher completion and omit organization confirmation, QR and group-invite actions.
 - Class letters use profiles.class_letter/assigned_letter; class_year stays canonical for promotion. Student class, letter and required hours derive only from the protected school_class_codes row server-side; assigning classes to a school admin auto-creates missing codes.
