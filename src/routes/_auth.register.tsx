@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { AuthField, AuthHeading, AuthLegal, AuthSelect, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 import { ClassCodeInput } from "@/components/class-code-input";
+import { AuthFeedback, authInvalidMessage } from "@/components/auth-feedback";
 
 export const Route = createFileRoute("/_auth/register")({
   ssr: false,
@@ -42,6 +43,7 @@ const CLASS_YEARS = ["5", "6", "7", "8", "9 / I gimn.", "10 / II gimn.", "11 / I
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const [formError, setFormError] = useState<string | null>(null);
   const signUpStudent = useServerFn(signUpStudentWithCode);
   const { profile, isImpersonating } = useAuth();
   const startAdmin = useServerFn(createSignupAdminTicket);
@@ -62,7 +64,7 @@ function RegisterPage() {
     void consumeAdmin({ data: { ticketId: ticket } }).then(async (grant) => {
       const codes = await loadAdminCodes({ data: grant });
       setAdminGrant(grant); setAdminCodes(codes);
-    }).catch((error) => toast.error(userError(error)));
+    }).catch((error) => setFormError(userError(error)));
   }, [consumeAdmin, loadAdminCodes]);
   const [mode, setMode] = useState<Mode>("student");
   const [schools, setSchools] = useState<SchoolRow[]>([]);
@@ -111,26 +113,27 @@ function RegisterPage() {
     if (new URLSearchParams(window.location.search).get("admin") !== "1") return;
     startAdmin({ data: { returnUrl: `${window.location.origin}/register` } })
       .then((r) => window.location.assign(r.url))
-      .catch((e) => toast.error(userError(e)));
+      .catch((e) => setFormError(userError(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.role]);
 
   async function handleAccountSignup(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
+    setFormError(null);
     if (mode === "student") {
-      if (!schoolId) { toast.error("Pasirink mokyklą ir klasę."); return; }
-      if (fullName.trim().split(/\s+/).length < 2) { toast.error("Įvesk tikrą vardą ir pavardę."); return; }
-      if (!schoolCode.trim() && !adminGrant) { toast.error("Įvesk mokyklos prisijungimo kodą."); return; }
-      if (!agree && !adminGrant) { toast.error("Patvirtink, kad duomenys yra tikri."); return; }
+      if (!schoolId) { setFormError("Pasirink mokyklą ir klasę."); return; }
+      if (fullName.trim().split(/\s+/).length < 2) { setFormError("Įvesk tikrą vardą ir pavardę."); return; }
+      if (!schoolCode.trim() && !adminGrant) { setFormError("Įvesk savo klasės registracijos kodą. Jį suteikia auklėtojas."); return; }
+      if (!agree && !adminGrant) { setFormError("Patvirtink, kad duomenys yra tikri."); return; }
 
     }
     const pwErr = await checkPassword(password, email.trim());
-    if (pwErr) { toast.error(pwErr); return; }
+    if (pwErr) { setFormError(pwErr); return; }
     setLoading(true);
     try {
       if (adminGrant) {
-        if (!adminCodeId) { toast.error("Pasirink klasės kodą."); return; }
+        if (!adminCodeId) { setFormError("Pasirink klasės kodą."); return; }
         const result = await adminCreate({ data: { ...adminGrant, codeId: adminCodeId, fullName, email: email.trim(), password, skipEmail, role: adminRole, hoursOverride: adminHours.trim() ? Math.round(Number(adminHours)) : null, hoursEarned: adminEarned.trim() ? Math.round(Number(adminEarned)) : 0 } });
         toast.success(skipEmail ? "Mokinio paskyra sukurta ir aktyvuota." : result.mailSent ? "Mokinio paskyra laukia el. pašto patvirtinimo." : "Paskyra sukurta, bet laiško išsiųsti nepavyko. Mokinys gali pakartoti siuntimą patvirtinimo puslapyje.");
         setPassword(""); return;
@@ -146,7 +149,7 @@ function RegisterPage() {
         },
       });
       if (!res.ok) {
-        if (res.reason === "bad_code") { toast.error("Neteisingas mokyklos kodas. Gauk jį iš klasės auklėtojo."); return; }
+        if (res.reason === "bad_code") { setFormError("Šis kodas netinka pasirinktai mokyklai arba nebegalioja. Patikrink kodą arba paprašyk jo auklėtojo."); return; }
         throw new Error(res.reason === "signup" && res.message ? res.message : "Nepavyko sukurti paskyros");
       }
       sessionStorage.setItem("sv_signup_email", email.trim());
@@ -154,16 +157,17 @@ function RegisterPage() {
       else toast.success("Laiškas išsiųstas! Patikrink el. paštą (ir „Spam“ aplanką).");
       navigate({ to: "/verify-email" });
     } catch (err) {
-      toast.error(userError(err, "Nepavyko sukurti paskyros."));
+      setFormError(userError(err, "Nepavyko sukurti paskyros."));
     } finally { setLoading(false); }
   }
 
   async function handleOrgRequest(e: React.FormEvent) {
     e.preventDefault();
     if (loading) return;
-    if (!confirmReal) { toast.error("Patvirtink, kad pateikta informacija yra tikra."); return; }
+    setFormError(null);
+    if (!confirmReal) { setFormError("Patvirtink, kad pateikta informacija yra tikra."); return; }
     if (orgName.trim().length < 3 || description.trim().length < 30) {
-      toast.error("Užpildyk visus laukelius (aprašymas – bent 30 simbolių)."); return;
+      setFormError("Užpildyk visus laukelius (aprašymas – bent 30 simbolių)."); return;
     }
     setLoading(true);
     try {
@@ -180,7 +184,7 @@ function RegisterPage() {
       toast.success("Prašymas pateiktas! Administratorius peržiūrės ir susisieks.");
       setOrgName(""); setLegalCode(""); setContactPhone(""); setWebsite(""); setDescription(""); setConfirmReal(false);
     } catch (err: any) {
-      toast.error(userError(err, "Nepavyko išsiųsti prašymo."));
+      setFormError(userError(err, "Nepavyko išsiųsti prašymo."));
     } finally { setLoading(false); }
   }
 
@@ -197,7 +201,7 @@ function RegisterPage() {
         ] as { k: Mode; label: string; icon: typeof GraduationCap; hint: string }[]).map((opt) => {
           const active = mode === opt.k;
           return (
-            <button key={opt.k} type="button" role="radio" aria-checked={active} onClick={() => setMode(opt.k)}
+            <button key={opt.k} type="button" role="radio" aria-checked={active} onClick={() => { setMode(opt.k); setFormError(null); }}
               className={`auth-choice relative flex items-center gap-3 rounded-2xl border p-3 text-left ${active ? "is-active border-primary bg-primary/10" : "border-border bg-background hover:border-primary/40"}`}>
               <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${active ? "bg-gradient-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}><opt.icon className="h-5 w-5" /></span>
               <span className="min-w-0">
@@ -210,6 +214,7 @@ function RegisterPage() {
         })}
       </div>
 
+      <div className="mt-4"><AuthFeedback message={formError} onDismiss={() => setFormError(null)} /></div>
       <AnimatePresence mode="wait" initial={false}>
         {mode === "org_request" ? (
           <motion.div key="org" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: "easeOut" }}>
@@ -217,7 +222,7 @@ function RegisterPage() {
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
               <p>Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins organizaciją ir sukurs paskyrą.</p>
             </div>
-            <form onSubmit={handleOrgRequest} className="mt-5 space-y-4">
+            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} onSubmit={handleOrgRequest} className="mt-5 space-y-4">
               <AuthField id="org-name" label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="VšĮ „Žalioji Karta“" required />
               <AuthField id="org-code" label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={(e) => setLegalCode(e.target.value)} placeholder="123456789" />
               <AuthField id="org-contact" label="Kontaktinis asmuo" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jonas Jonaitis" required autoComplete="name" />
@@ -244,7 +249,7 @@ function RegisterPage() {
           <motion.div key="student" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: "easeOut" }}>
             <div className="mt-6"><OAuthButtons /></div>
             <OrDivider />
-            <form className="space-y-6" onSubmit={handleAccountSignup}>
+            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} className="space-y-6" onSubmit={handleAccountSignup}>
               <Section n={1} title="Apie tave">
                 <AuthField id="reg-name" label="Vardas Pavardė" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Emilija Kazlauskaitė" required autoComplete="name" />
               </Section>
@@ -324,9 +329,9 @@ function RegisterPage() {
               window.location.assign("/login");
               return;
             }
-            if (profile.role !== "admin") { toast.error("Ši parinktis skirta tik Super Admin paskyrai."); return; }
+            if (profile.role !== "admin") { setFormError("Ši parinktis skirta tik Super Admin paskyrai."); return; }
             try { const result = await startAdmin({ data: { returnUrl: `${window.location.origin}/register` } }); window.location.assign(result.url); }
-            catch (error) { toast.error(userError(error)); }
+            catch (error) { setFormError(userError(error)); }
           }}
         ><KeyRound className="h-3 w-3" />Administracija</button>
       )}
