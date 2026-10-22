@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { RefreshCw, ShieldCheck, Loader2 } from "lucide-react";
 import { issueMathChallenge, solveCaptcha, captchaConfig } from "@/lib/captcha.functions";
 import { Button } from "@/components/ui/button";
+import { captchaMode } from "@/lib/captcha-state";
 
 type Props = {
   onVerify: (proof: string, expiresAt: number) => void;
@@ -29,7 +30,7 @@ function loadRecaptchaScript(): Promise<void> {
   if (recaptchaScriptPromise) return recaptchaScriptPromise;
   recaptchaScriptPromise = new Promise<void>((resolve, reject) => {
     const s = document.createElement("script");
-    s.src = "https://www.google.com/recaptcha/api.js?render=explicit";
+    s.src = "https://www.google.com/recaptcha/api.js?render=explicit&hl=lt";
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
@@ -134,10 +135,11 @@ export function Captcha({ onVerify, tone = "dark" }: Props) {
   const containerCls = "rounded-lg border border-border bg-card p-3 text-card-foreground";
   const labelCls = "text-muted-foreground";
   const inputCls = "min-w-0 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary";
+  const mode = captchaMode(siteKey, configError);
 
-  if (configError) return <div className={containerCls}><p role="alert" className="text-sm text-destructive">Nepavyko įkelti reCAPTCHA nustatymų. Prieiga dar nepatvirtinta.</p><Button variant="outline" className="mt-3" onClick={() => setRetry((v) => v + 1)}><RefreshCw className="h-4 w-4" />Bandyti dar kartą</Button></div>;
+  if (mode === "config-error") return <div className={containerCls}><p role="alert" className="text-sm text-destructive">Nepavyko įkelti reCAPTCHA nustatymų. Prieiga dar nepatvirtinta.</p><Button variant="outline" className="mt-3" onClick={() => setRetry((v) => v + 1)}><RefreshCw className="h-4 w-4" />Bandyti dar kartą</Button></div>;
 
-  if (siteKey === undefined) {
+  if (mode === "loading") {
     return (
       <div className={containerCls}>
         <p className={`flex items-center gap-2 text-xs ${labelCls}`}>
@@ -157,7 +159,7 @@ export function Captcha({ onVerify, tone = "dark" }: Props) {
     );
   }
 
-  if (siteKey) {
+  if (mode === "recaptcha") {
     return (
       <div className={containerCls}>
         <p className={`mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] ${labelCls}`}>Saugumo patikra</p>
