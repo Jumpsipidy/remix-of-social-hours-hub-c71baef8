@@ -123,7 +123,8 @@ function LoginPage() {
         setFails(0);
         setCaptchaProof(null);
       }
-      const signedInUid = uid;
+      if (!uid) throw new Error("Negautas prisijungimo patvirtinimas. Bandyk dar kartą.");
+      const signedInUid: string = uid;
       const resolved = await resolveLoginProfile(async () => {
         if (user?.id === signedInUid && profile?.role) return profile;
         const { data, error } = await withLoadingDeadline(supabase.from("profiles")
@@ -171,7 +172,8 @@ function LoginPage() {
       });
       }
 
-      setFormError(userError(err, "Prisijungti nepavyko. Bandyk dar kartą po minutės."));
+      console.error("[login]", err);
+      setFormError(userError(err, `Prisijungti nepavyko (kodas: ${loginFailureReason(err)}). Bandyk dar kartą.`));
     } finally {
       setBusy(false);
 
