@@ -39,6 +39,7 @@
 - Destructive admin actions and temporary signup options require external licence-confirmed tickets. Main site never accepts the key; signup grants stay in page memory and every privileged call rechecks them.
 - Subdirectories may have their own AGENTS.md (e.g. src/components/AGENTS.md); read it before changing files there.
 - Soci Guard challenges are single-use: server persists nonces in gate_nonces, burns after 5 failed tries, and decides step count from server signals only (client risk input is advisory).
+- Soci Guard keeps transport/configuration errors distinct from failed verification; retry never grants access and reCAPTCHA never silently becomes a math challenge after a configuration request fails.
 - Signup confirmation emails use admin generateLink + Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
 - Authentication errors stay in a shared persistent inline feedback surface with localized validation and recovery links; transient toasts must not replace form errors.
 

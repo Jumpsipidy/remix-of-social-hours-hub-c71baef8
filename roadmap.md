@@ -1,4 +1,5 @@
 # Užduotys (2026-10-21, vakaras)
+- [ ] Soci Guard: laikymo užkrovimas, reCAPTCHA ir aiškus pakartojimas po ryšio klaidos.
 - [x] Animuotas 404 / blokavimo elementas be nuotraukos; PIN tik įvedus jumpsipidy; atskiras viešas būsenos klientas. Naršyklės patikra ir 10 testų praėjo; tikrą domeną sustabdė roboto patikra.
 - [x] Automatiniai grėsmės lygiai: 2 techninių gedimų patikros, 3 sveikos atkūrimui; rankiniai / saugumo blokavimai neatveriami automatiškai. 7 SQL klasifikavimo patikros praėjo; tikras incidentas nebuvo sukeltas.
 - [x] Pradžios puslapio paveikslėlis pagal pavyzdžius — tik maketas, svetainė nepakeista.

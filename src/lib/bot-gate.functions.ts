@@ -67,11 +67,12 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Issuance limit per browser fingerprint (DB-backed, survives serverless workers).
     const since = new Date(Date.now() - 3600_000).toISOString();
-    const { count } = await supabaseAdmin
+    const { count, error: countError } = await supabaseAdmin
       .from("gate_nonces")
       .select("nonce", { count: "exact", head: true })
       .eq("ua_hash", uaHash)
       .gte("created_at", since);
+    if (countError) throw new Error("gate_storage_unavailable");
     if ((count ?? 0) >= 60) throw new Error("gate_rate_limited");
     const nonce = crypto.randomUUID();
     const issuedAt = Date.now();
@@ -91,11 +92,12 @@ export const issueGateChallenge = createServerFn({ method: "POST" })
     const spot = 15 + randInt(70), tx = 12 + randInt(76), ty = 15 + randInt(70);
     const sig = await hmac(`c|${nonce}|${issuedAt}|${difficulty}|${uaHash}|${steps}|${grid.join(",")}|${answer}|${kind}|${spot}|${tx}|${ty}`);
     // Persist the nonce so a solved challenge cannot be replayed; the row expires with the challenge.
-    await supabaseAdmin.from("gate_nonces").insert({
+    const { error: insertError } = await supabaseAdmin.from("gate_nonces").insert({
       nonce,
       ua_hash: uaHash,
       expires_at: new Date(issuedAt + 6 * 60_000).toISOString(),
     });
+    if (insertError) throw new Error("gate_storage_unavailable");
     // Occasionally clear expired rows so the table stays small.
     if (randInt(20) === 0) {
       await supabaseAdmin.from("gate_nonces").delete().lt("expires_at", new Date().toISOString());

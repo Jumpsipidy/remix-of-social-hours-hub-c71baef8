@@ -43,6 +43,8 @@ export function SecurityGatewayInternal() {
   const [fails, setFails] = useState(0);
   const [failReasons, setFailReasons] = useState<string[]>([]);
   const [serverReasons, setServerReasons] = useState<string[]>([]);
+  const [challengeLoading, setChallengeLoading] = useState(false);
+  const [challengeError, setChallengeError] = useState(false);
   const [showWhy, setShowWhy] = useState(false);
   const points = useRef<{ x: number; y: number; t: number }[]>([]);
   const start = useRef(0);
@@ -58,13 +60,16 @@ export function SecurityGatewayInternal() {
 
   const testMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("patikra") === "testas";
   const loadChallenge = (forceKind?: Challenge["kind"]) => {
+    setChallengeLoading(true);
+    setChallengeError(false);
+    setCurrent(null);
     challenge.current = issueChallenge({ data: { clientRisk: Math.min(50, reasons.length), forceKind } }).then(async (c) => {
       setServerReasons(c.serverReasons);
       setCurrent(c);
       setTaps([]);
       return { c, solution: await solvePow(c.nonce, c.difficulty) };
     });
-    challenge.current.catch(() => setStage("captcha"));
+    challenge.current.catch(() => setChallengeError(true)).finally(() => setChallengeLoading(false));
   };
 
   useEffect(() => { if (isBlocked) loadChallenge(); }, [isBlocked]);
@@ -92,7 +97,7 @@ export function SecurityGatewayInternal() {
     else void finish(true);
   };
   const begin = (e: React.PointerEvent) => {
-    if (stage !== "hold") return;
+    if (stage !== "hold" || challengeLoading || challengeError) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     setHolding(true);
     setMoving(false);
@@ -137,7 +142,7 @@ export function SecurityGatewayInternal() {
         setStage("tap");
         return;
       }
-    } catch { setStage("captcha"); return; }
+    } catch { setChallengeError(true); setStage("hold"); return; }
     robotRun.current = false;
     await submit(c0Answer());
   };
@@ -184,7 +189,8 @@ export function SecurityGatewayInternal() {
       setStage(f >= 2 ? "captcha" : "hold");
       if (f < 2) loadChallenge();
     } catch {
-      setStage("captcha");
+      setChallengeError(true);
+      setStage("hold");
     }
   };
 
@@ -304,7 +310,7 @@ export function SecurityGatewayInternal() {
                 onPointerLeave={() => void finish(false)}
                 onContextMenu={(e) => e.preventDefault()}
                 onKeyDown={(e) => {
-                  if ((e.key === " " || e.key === "Enter") && !e.repeat && stage === "hold" && !start.current) {
+                  if ((e.key === " " || e.key === "Enter") && !e.repeat && stage === "hold" && !challengeLoading && !challengeError && !start.current) {
                     e.preventDefault();
                     trusted.current = e.isTrusted;
                     inputMode.current = "keyboard";
@@ -318,7 +324,7 @@ export function SecurityGatewayInternal() {
                   }
                 }}
                 onKeyUp={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); void finish(false); } }}
-                disabled={stage !== "hold"}
+                disabled={stage !== "hold" || challengeLoading || challengeError}
                 whileTap={{ scale: 0.96 }}
                 className="relative grid h-40 w-40 touch-none select-none place-items-center rounded-full bg-transparent p-0 hover:bg-transparent [&_svg]:size-auto"
                 style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
@@ -337,7 +343,7 @@ export function SecurityGatewayInternal() {
                     <span className="flex flex-col items-center gap-1 px-4">
                       <Fingerprint className="!h-9 !w-9" style={{ color: holding && moving ? "var(--sg-ok)" : "var(--foreground)", opacity: .6 + progress / 2.5 }} />
                       <span className="text-[11px] font-bold leading-tight" style={{ color: holding && moving ? "var(--sg-ok)" : "var(--foreground)" }}>
-                        {coarsePointer ? "Palaikyk" : holding ? (moving || pointerType.current !== "mouse" ? "Laikyk…" : "Judink pelę!") : "Laikyk ir judink pelę"}
+                        {challengeLoading ? "Ruošiama…" : challengeError ? "Bandyk dar kartą" : coarsePointer ? "Palaikyk" : holding ? (moving || pointerType.current !== "mouse" ? "Laikyk…" : "Judink pelę!") : "Laikyk ir judink pelę"}
                       </span>
                     </span>
                   )}
@@ -345,6 +351,18 @@ export function SecurityGatewayInternal() {
             )}
           </AnimatePresence>
         </div>
+
+        {stage === "hold" && challengeError && <p role="alert" className="mt-4 text-sm text-destructive">Nepavyko paruošti laikymo patikros. Bandyk dar kartą arba rinkis reCAPTCHA.</p>}
+        {(stage === "hold" || stage === "captcha") && (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {stage === "hold" && challengeError && <Button variant="outline" onClick={() => loadChallenge()}>Bandyti dar kartą</Button>}
+            <Button variant="outline" onClick={() => {
+              setProgress(0); setFailReasons([]);
+              if (stage === "captcha") { setStage("hold"); loadChallenge(); }
+              else { void finish(false); setStage("captcha"); }
+            }}>{stage === "captcha" ? "Grįžti prie laikymo" : "Naudoti reCAPTCHA"}</Button>
+          </div>
+        )}
 
         <p id="sv-hold-status" role="status" className="mt-6 min-h-10 text-xs text-muted-foreground">
           {stage === "checking" ? "Tikrinama serveryje…" : stage === "ok" ? "Patvirtinta. Įleidžiame…" : stage === "hold" && holding && pointerType.current === "mouse" ? moving ? "Judesys užfiksuotas. Laikyk toliau…" : "Neatleisk mygtuko — šiek tiek pajudink pelę" : fails > 0 && stage === "hold" ? "Pabandyk dar kartą. Gali naudoti ir tarpo klavišą." : stage === "hold" ? "Laikyk paspaudęs, kol ratas užsipildys" : ""}
@@ -402,7 +420,8 @@ function SliderStep({ spot, onDone }: { spot: number; onDone: (v: number, truste
 function TargetStep({ tx, ty, onDone }: { tx: number; ty: number; onDone: (hit: { x: number; y: number }, trusted: boolean) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const click = (e: React.MouseEvent) => {
-    const r = box.current!.getBoundingClientRect();
+    if (!box.current) return;
+    const r = box.current.getBoundingClientRect();
     // Keyboard activation has no pointer position: use the button centre.
     const hit = e.detail === 0 ? { x: tx, y: ty } : { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 };
     onDone(hit, e.isTrusted);
