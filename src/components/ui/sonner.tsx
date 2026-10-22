@@ -16,10 +16,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme}
-      position="top-right"
+      position="bottom-right"
       offset={16}
       gap={10}
-      visibleToasts={4}
+      visibleToasts={3}
+      closeButton
       className="sv-toaster"
       icons={{
         success: (
@@ -50,11 +51,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       toastOptions={{
         unstyled: true,
-        duration: 4200,
+        duration: 6000,
         classNames: {
           toast:
-            "sv-toast group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-2xl border border-border/70 bg-card/85 p-4 pl-5 text-foreground shadow-2xl backdrop-blur-xl",
-          title: "text-sm font-semibold leading-tight",
+            "sv-toast group pointer-events-auto relative flex w-full items-start gap-3 rounded-lg border border-border bg-popover p-4 text-popover-foreground shadow-lg",
+          title: "text-sm font-semibold leading-relaxed [overflow-wrap:anywhere]",
           description: "mt-0.5 text-xs leading-snug text-muted-foreground",
           icon: "mt-0.5",
           content: "min-w-0 flex-1",

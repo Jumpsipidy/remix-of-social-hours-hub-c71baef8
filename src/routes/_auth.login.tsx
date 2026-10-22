@@ -10,7 +10,8 @@ import { insertActivityLogRow } from "@/lib/activity-log";
 import { AuthProvidersStatus } from "@/components/auth-providers-status";
 import { Captcha } from "@/components/captcha";
 import { AuthSuccessOverlay } from "@/components/auth-success-overlay";
-import { toast } from "sonner";
+import { userError } from "@/lib/user-error";
+import { AuthFeedback, authInvalidMessage } from "@/components/auth-feedback";
 import { AuthField, AuthHeading, AuthLegal, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 
@@ -57,6 +58,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { profile, isAuthenticated, loading, clearImpersonation } = useAuth();
   const ensureProfile = useServerFn(ensureSignedInProfile);
+  const [formError, setFormError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -84,8 +86,9 @@ function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
+    setFormError(null);
     if (captchaRequired && !captchaProof) {
-      toast.error("Mums reikia patvirtinti ar ne robotas. Paspauskite saugumo patikrą.");
+      setFormError("Užbaik saugumo patikrą ir bandyk prisijungti dar kartą.");
       return;
     }
     setBusy(true);
@@ -146,7 +149,7 @@ function LoginPage() {
         meta: { email, attempt: next, path: "/login", reason: err instanceof Error ? err.message : "Unknown" }
       });
 
-      toast.error(err instanceof Error ? err.message : "Nepavyko prisijungti");
+      setFormError(userError(err, "Prisijungti nepavyko. Bandyk dar kartą po minutės."));
     } finally {
       setBusy(false);
 
@@ -160,7 +163,8 @@ function LoginPage() {
       <div className="mt-6"><OAuthButtons disabled={busy} beforeStart={clearImpersonation} /></div>
       <div className="mt-3"><AuthProvidersStatus /></div>
       <OrDivider />
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector("input:invalid, select:invalid, textarea:invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }}>
+        <AuthFeedback message={formError} onDismiss={() => setFormError(null)} />
         <AuthField id="login-email" label="El. paštas" icon={Mail} type="email" autoComplete="email" value={email}
           onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" />
         <AuthField id="login-password" label="Slaptažodis" icon={Lock} type={showPassword ? "text" : "password"} autoComplete="current-password"
@@ -173,7 +177,7 @@ function LoginPage() {
           } />
         {captchaRequired && (
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-primary"><ShieldCheck className="h-3.5 w-3.5" /> Per daug nesėkmingų bandymų. Įrodyk, kad esi žmogus.</p>
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-primary"><ShieldCheck className="h-3.5 w-3.5" /> Prieš tęsiant — trumpa saugumo patikra.</p>
             <Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} />
           </div>
         )}
