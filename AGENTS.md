@@ -46,3 +46,4 @@
 - Auth initialization reads profiles through RLS before repairing missing rows, deduplicates concurrent reads and schedules work outside auth callbacks; bounded loading prevents auth-lock deadlocks without granting access on failure.
 - Session-function middleware replaces the generated attacher to keep public counters independent of preview session storage; protected calls still attach tokens and use server authorization. Login distinguishes credential rejection from profile-loading failure and never invents roles.
 
+- Client entry installs a localStorage fallback before Supabase loads; broken browser storage (Firefox NS_ERROR_FAILURE) must not block sign-in.

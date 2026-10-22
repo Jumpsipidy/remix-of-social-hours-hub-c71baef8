@@ -1,3 +1,4 @@
+import "./lib/storage-fallback";
 import "./instrument.client";
 
 import { StrictMode, startTransition } from "react";
