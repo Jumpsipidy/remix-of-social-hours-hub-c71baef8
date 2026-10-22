@@ -163,7 +163,7 @@ function LoginPage() {
       <div className="mt-6"><OAuthButtons disabled={busy} beforeStart={clearImpersonation} /></div>
       <div className="mt-3"><AuthProvidersStatus /></div>
       <OrDivider />
-      <form className="space-y-4" onSubmit={handleSubmit} onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector(":invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }}>
+      <form className="space-y-4" onSubmit={handleSubmit} onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector("input:invalid, select:invalid, textarea:invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }}>
         <AuthFeedback message={formError} onDismiss={() => setFormError(null)} />
         <AuthField id="login-email" label="El. paštas" icon={Mail} type="email" autoComplete="email" value={email}
           onChange={(e) => setEmail(e.target.value)} required placeholder="vardas@mokykla.lt" />

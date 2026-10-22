@@ -222,7 +222,7 @@ function RegisterPage() {
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
               <p>Organizacijų paskyros <b>nekuriamos savarankiškai</b>. Pateik prašymą — administratorius patikrins organizaciją ir sukurs paskyrą.</p>
             </div>
-            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector(":invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} onSubmit={handleOrgRequest} className="mt-5 space-y-4">
+            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector("input:invalid, select:invalid, textarea:invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} onSubmit={handleOrgRequest} className="mt-5 space-y-4">
               <AuthField id="org-name" label="Organizacijos pavadinimas" icon={Building2} value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="VšĮ „Žalioji Karta“" required />
               <AuthField id="org-code" label="Juridinio asmens kodas" icon={Building2} value={legalCode} onChange={(e) => setLegalCode(e.target.value)} placeholder="123456789" />
               <AuthField id="org-contact" label="Kontaktinis asmuo" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jonas Jonaitis" required autoComplete="name" />
@@ -249,7 +249,7 @@ function RegisterPage() {
           <motion.div key="student" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: "easeOut" }}>
             <div className="mt-6"><OAuthButtons /></div>
             <OrDivider />
-            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector(":invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} className="space-y-6" onSubmit={handleAccountSignup}>
+            <form onInvalid={(e) => { e.preventDefault(); const input = e.target as HTMLInputElement; if (input.form?.querySelector("input:invalid, select:invalid, textarea:invalid") !== input) return; input.setAttribute("aria-invalid", "true"); setFormError(authInvalidMessage(input)); }} onInput={(e) => { (e.target as HTMLInputElement).removeAttribute("aria-invalid"); }} className="space-y-6" onSubmit={handleAccountSignup}>
               <Section n={1} title="Apie tave">
                 <AuthField id="reg-name" label="Vardas Pavardė" icon={User} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Emilija Kazlauskaitė" required autoComplete="name" />
               </Section>
