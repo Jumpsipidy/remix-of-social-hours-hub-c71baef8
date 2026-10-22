@@ -24,7 +24,7 @@
 - ThemeProvider owns theme/accent within the security gateway; one numeric CSS token synchronizes previews and controls without exposing blocked content.
 - Mobile PageShell navigation uses a focus-trapped left Sheet instead of a bottom tab bar; shared role-aware links avoid two competing navigation systems.
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
-- LockdownGate wraps content, fails closed on unknown settings and never auto-unlocks; static isolated tokens follow theme without changing enforcement.
+- LockdownGate wraps content and fails closed on unknown settings; a session-free public status client avoids auth refresh delays, and theme-aware procedural eclipse motion never changes enforcement.
 - Public lockdown checks try the public RPC before the server fallback, reject malformed states and retry transient failures; administrative entry stays available in unknown and blocked states.
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
 - Student reservation presentation uses shared source-aware rules; school reservations stay active until teacher completion and omit organization confirmation, QR and group-invite actions.

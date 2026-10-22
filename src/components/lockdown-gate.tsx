@@ -52,10 +52,11 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
   }, [verifyToken]);
 
   async function readStatus() {
-    // The public RPC is independent of privileged credentials and cold SSR.
+    // A session-free client avoids auth refresh locks or an expired visitor JWT
+    // delaying the public status RPC. No user credentials are required here.
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc("get_lockdown_public");
+      const { readPublicLockdown } = await import("@/lib/public-lockdown");
+      const { data, error } = await readPublicLockdown();
       const state = parseLockdownState(data);
       if (!error && state) return state;
     } catch { /* Try the independent server path. */ }
@@ -92,10 +93,10 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
 
   useEffect(() => {
     if (bypassed || (lockdown === false && !settingsFailed)) return;
-    setAutoTick(60);
+    setAutoTick(15);
     const tick = setInterval(() => {
       setAutoTick((s) => {
-        if (s <= 1) { runCheck(true); return 60; }
+        if (s <= 1) return 15;
         return s - 1;
       });
     }, 1000);
@@ -106,7 +107,7 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
   useEffect(() => {
     if (bypassed || (lockdown === false && !settingsFailed)) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key.length !== 1) return;
+      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       bufferRef.current = appendAccessKey(bufferRef.current, e.key);
       if (bufferRef.current === TRIGGER_WORD) { bufferRef.current = ""; setShowCodeModal(true); }
     };
@@ -209,14 +210,14 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
           <IncidentScreen
             mark={settingsFailed ? "!" : "SV"}
             code={displayCode}
-            title={settingsFailed ? "Ryšio patikra nepavyko" : errInfo?.title ?? "Sistema laikinai nepasiekiama"}
-            description={settingsFailed ? "Negalime patvirtinti svetainės būsenos. Patikrink interneto ryšį ir bandyk dar kartą. Tavo duomenys lieka apsaugoti." : message?.trim() || errInfo?.description || "Šiuo metu svetainė laikinai uždaryta. Prieiga bus atverta, kai administratorius patvirtins, kad saugu tęsti."}
+            title={settingsFailed ? "Nepavyksta susisiekti" : errInfo?.title ?? "Sistema laikinai nepasiekiama"}
+            description={settingsFailed ? "Svetainės būsena dar nepatvirtinta. Bandome prisijungti iš naujo — tau nieko daryti nereikia. Tai ryšio sutrikimas, ne patvirtintas saugumo incidentas." : (message?.startsWith("[auto]") ? errInfo?.description : message?.trim()) || errInfo?.description || "Šiuo metu svetainė laikinai uždaryta. Prieiga bus atverta, kai administratorius patvirtins, kad saugu tęsti."}
             icon={<ShieldAlert className="h-4 w-4" />}
             details={<div className="flex flex-wrap items-start justify-between gap-4 text-xs">
-              <div><p className="text-muted-foreground">Incidento kodas</p><Button variant="ghost" onClick={copyCode} aria-label="Kopijuoti incidento kodą" className="mt-1 h-9 px-0 font-mono">{displayCode}{copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}</Button></div>
+              <div><p className="text-muted-foreground">{settingsFailed ? "Patikros kodas" : "Incidento kodas"}</p><Button variant="ghost" onClick={copyCode} aria-label="Kopijuoti incidento kodą" className="mt-1 h-9 px-0 font-mono">{displayCode}{copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}</Button></div>
               <div className="text-right"><p className="text-muted-foreground">{settingsFailed ? "Ryšio būsena" : "Numatoma trukmė"}</p><p className="mt-2 font-semibold">{settingsFailed ? "Laukiama patvirtinimo" : errInfo?.eta ?? "Dar nepatvirtinta"}</p><p className="mt-2 text-muted-foreground">Kita patikra po {autoTick} s</p></div>
             </div>}
-            actions={<><Button onClick={() => runCheck(false)} disabled={refreshing} className="min-h-12"><RefreshCw className="h-4 w-4" />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}</Button><Button variant="outline" onClick={() => setShowGuide(true)} className="min-h-12"><BookOpen className="h-4 w-4" />Apie sutrikimą</Button><Button variant="ghost" onClick={() => setShowCodeModal(true)} className="min-h-12">Administracinė prieiga</Button><p role="status" className="w-full min-h-5 text-xs text-muted-foreground">{refreshOk === false ? "Prieiga dar neatverta. Patikra bus kartojama." : "Būsena tikrinama automatiškai."}</p></>}
+            actions={<><Button onClick={() => runCheck(false)} disabled={refreshing} className="min-h-12"><RefreshCw className="h-4 w-4" />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}</Button>{!settingsFailed && <Button variant="outline" onClick={() => setShowGuide(true)} className="min-h-12"><BookOpen className="h-4 w-4" />Apie sutrikimą</Button>}<p role="status" className="w-full min-h-5 text-xs text-muted-foreground">{refreshOk === false ? "Prieiga dar neatverta. Patikra bus kartojama." : "Būsena tikrinama automatiškai."}</p></>}
           />
           <Dialog open={showGuide} onOpenChange={setShowGuide}>
             <DialogPortal>
