@@ -1,24 +1,30 @@
 import { type ReactNode } from "react";
 import { Mail, Unplug } from "lucide-react";
+import eclipse from "@/assets/incident-eclipse.jpg";
 
 /** Presentation only: boundaries retain their own recovery and reporting logic. */
-export function IncidentScreen({ title, description, code, icon, details, actions }: {
-  title: string; description: string; code: string; icon?: ReactNode; details: ReactNode; actions: ReactNode;
+export function IncidentScreen({ title, description, code, icon, details, actions, mark }: {
+  title: string; description: string; code: string; icon?: ReactNode; details: ReactNode; actions: ReactNode; mark?: string;
 }) {
-  return <main className="incident-ui flex min-h-dvh items-center justify-center bg-background px-4 py-8 text-foreground">
-    <section className="incident-panel w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card" aria-labelledby="incident-title">
-      <header className="incident-header flex items-center justify-between gap-3 px-6 py-4">
-        <span className="text-xs font-semibold">Socialinės Valandos · Sistemos pranešimas</span>
-        <span className="hidden font-mono text-xs sm:block">{code}</span>
+  return <main className="incident-ui incident-scene min-h-dvh bg-background text-foreground">
+    <section className="relative mx-auto flex min-h-dvh w-full max-w-6xl flex-col" aria-labelledby="incident-title">
+      <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-border px-6 py-5 sm:px-10">
+        <span className="text-sm font-bold">Socialinės Valandos<span className="ml-2 text-primary">✦</span></span>
+        <span className="font-mono text-xs text-muted-foreground">{code === "404" ? "PUSLAPIS NERASTAS" : "SV GUARD · SISTEMOS BŪSENA"}</span>
       </header>
-      <div className="px-6 py-8 sm:px-10 sm:py-10">
-        <div className="mb-6 grid h-16 w-16 place-items-center rounded-lg bg-accent text-primary" aria-hidden>{icon ?? <Unplug className="h-8 w-8" strokeWidth={1.5} />}</div>
-        <h1 id="incident-title" className="font-sans text-3xl font-bold leading-tight sm:text-4xl">{title}</h1>
-        <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">{description}</p>
-        <div className="my-7 border-y border-border py-5">{details}</div>
-        <div className="grid gap-3 sm:grid-cols-2">{actions}</div>
+      <div className="relative flex flex-1 flex-col items-center justify-center px-6 py-10 text-center sm:px-10">
+        <div className="incident-horizon" aria-hidden><img src={eclipse} width={1536} height={768} alt="" /></div>
+        <div className="relative z-10 w-full max-w-xl">
+          <div className="incident-mark" aria-hidden>{mark ?? (code === "404" ? "404" : "!")}</div>
+          <div className="mb-4 flex items-center justify-center gap-2 text-xs font-semibold text-primary">{icon ?? <Unplug className="h-4 w-4" />}<span>{code === "404" ? "PASIKLYDUSI NUORODA" : code}</span></div>
+          <h1 id="incident-title" className="font-sans text-2xl font-bold leading-tight sm:text-4xl">{title}</h1>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">{description}</p>
+          <div className="mx-auto my-6 max-w-md border-y border-border py-4 text-left">{details}</div>
+          <div className="flex flex-wrap justify-center gap-3">{actions}</div>
+        </div>
       </div>
-      <footer className="flex flex-wrap items-center gap-3 border-t border-border bg-muted px-6 py-5 text-sm text-muted-foreground">
+      <footer className="relative z-10 flex flex-wrap items-center justify-center gap-3 border-t border-border px-6 py-5 text-xs text-muted-foreground">
+        <span>socialinesvalandos.dev</span><span aria-hidden>·</span>
         <Mail className="h-4 w-4" /><a className="break-all underline underline-offset-4 hover:text-primary" href={`mailto:pagalba@socialinesvalandos.dev?subject=${encodeURIComponent(`Incidentas ${code}`)}`}>pagalba@socialinesvalandos.dev</a>
       </footer>
     </section>
