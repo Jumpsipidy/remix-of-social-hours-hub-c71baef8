@@ -99,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let activeUid: string | null = null;
+    let authRevision = 0;
     const loadProfile = singleFlightByKey(async (uid: string) => {
       const fetchProfile = async () => {
         const result = await withLoadingDeadline(supabase
@@ -157,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Ignore TOKEN_REFRESHED — it fires on tab focus and would otherwise
       // reset component state (scroll, form inputs). INITIAL_SESSION is handled by getSession.
       if (event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION" || !mounted) return;
+      authRevision += 1;
       
       if (event === "SIGNED_IN") {
         try { localStorage.removeItem(MOCK_KEY); } catch {}
@@ -188,7 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void withLoadingDeadline(supabase.auth.getSession()).then(({ data: { session }, error }) => {
       if (error) throw error;
       const u = session?.user ?? null;
-      if (mounted) {
+      if (mounted && authRevision === 0) {
         activeUid = u?.id ?? null;
         setUser(u);
         if (u) {

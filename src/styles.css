@@ -400,7 +400,7 @@ html.school-eyes, .theme-sample-light {
    First open: the blue panel slides in from its own side carrying its text.
    Switching: the panel glides to the other side, the form glides the other way,
    only the copy changes. Mobile: the panel is a top band that drops in. */
-.auth-shell { --auth-split: 44%; --auth-move: 860ms; --auth-ease: cubic-bezier(.76,0,.24,1); --auth-out: cubic-bezier(.22,1,.36,1); }
+.auth-shell { --auth-split: 44%; --auth-move: 420ms; --auth-ease: cubic-bezier(.76,0,.24,1); --auth-out: cubic-bezier(.22,1,.36,1); }
 .auth-brand {
   position: relative; z-index: 20; overflow: hidden; isolation: isolate;
   margin: .75rem .75rem 0; padding: 1.25rem 1.25rem 1.5rem; border-radius: 1.5rem;
@@ -460,7 +460,7 @@ html.school-eyes, .theme-sample-light {
 @keyframes auth-brand-in-right { from { transform: translateX(227.2727%); } to { transform: translateX(127.2727%); } }
 
 /* Mode switch pill follows the active tab. */
-.auth-switch-indicator { transition: transform 560ms var(--auth-ease); }
+.auth-switch-indicator { transition: transform 240ms var(--auth-ease); }
 .auth-shell[data-auth-mode="register"] .auth-switch-indicator { transform: translateX(100%); }
 
 /* Controls */
@@ -492,16 +492,9 @@ html.school-eyes, .theme-sample-light {
   animation: auth-shimmer 1.5s linear infinite;
 }
 @keyframes auth-shimmer { from { background-position: 100% 0; } to { background-position: -60% 0; } }
-.auth-reveal > *, .auth-reveal form > * { animation: auth-rise 520ms var(--auth-out) backwards; }
-.auth-reveal > :nth-child(2) { animation-delay: 50ms; }
-.auth-reveal > :nth-child(3) { animation-delay: 100ms; }
-.auth-reveal > :nth-child(4) { animation-delay: 150ms; }
-.auth-reveal > :nth-child(n+5) { animation-delay: 200ms; }
-.auth-reveal form > :nth-child(1) { animation-delay: 160ms; }
-.auth-reveal form > :nth-child(2) { animation-delay: 210ms; }
-.auth-reveal form > :nth-child(3) { animation-delay: 260ms; }
-.auth-reveal form > :nth-child(n+4) { animation-delay: 310ms; }
-@keyframes auth-rise { from { opacity: 0; transform: translateY(12px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.auth-reveal > *, .auth-reveal form > * { animation: auth-rise 180ms var(--auth-out) backwards; }
+.auth-reveal > :nth-child(n+2), .auth-reveal form > :nth-child(n+1) { animation-delay: 0ms; }
+@keyframes auth-rise { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes auth-fade { from { opacity: 0; } to { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
@@ -880,6 +873,10 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 .home-saas, .tasks-workspace, .nav-redesign { font-family: var(--font-sans); }
 .home-saas :is(h1,h2,h3), .tasks-workspace :is(h1,h2,h3), .nav-redesign :is(a,button) { font-family: var(--font-sans); letter-spacing: 0; }
 .demo-stage { min-height: 172px; }
+.home-journey { background: color-mix(in oklab, var(--primary) 4%, var(--background)); }
+.journey-canvas { border-radius: 8px; min-height: 350px; }
+.journey-number { font-size: 160px; line-height: 1; }
+@media (max-width: 639px) { .journey-canvas { min-height: 310px; } .journey-number { font-size: 120px; } }
 @keyframes demo-swap { from { transform: translateY(5px); } to { transform: translateY(0); } }
 .demo-swap { animation: demo-swap 160ms ease-out; }
 @keyframes demo-progress { from { transform: scaleX(.6); } to { transform: scaleX(1); } }
