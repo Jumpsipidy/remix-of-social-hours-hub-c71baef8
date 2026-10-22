@@ -6,6 +6,8 @@ import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdo
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
 
+import { IncidentScreen } from "@/components/incident-screen";
+import { appendAccessKey, lockdownBlocks, parseLockdownState } from "@/lib/lockdown-state";
 import { Captcha } from "@/components/captcha";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -49,45 +51,47 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
     return () => { alive = false; };
   }, [verifyToken]);
 
+  async function readStatus() {
+    // The public RPC is independent of privileged credentials and cold SSR.
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.rpc("get_lockdown_public");
+      const state = parseLockdownState(data);
+      if (!error && state) return state;
+    } catch { /* Try the independent server path. */ }
+    const { data, error } = await readPublicSettings();
+    const state = parseLockdownState(data);
+    if (error || !state) throw new Error("Būsena negauta");
+    return state;
+  }
+
   useEffect(() => {
     let mounted = true;
+    let inFlight = false;
     const load = async () => {
+      if (inFlight) return;
+      inFlight = true;
       try {
-        const { data, error } = await readPublicSettings();
-        if (!mounted) return;
-        if (error) throw new Error(error.message);
-        if (!data) throw new Error("Būsena negauta");
-        setSettingsFailed(false);
-        setLockdown(Boolean(data.lockdown_enabled));
-        setMessage(data?.lockdown_message ?? null);
-        setCodeId(data?.lockdown_code ?? null);
-      } catch {
-        // Server function not reachable (e.g. Lovable preview / cold worker) →
-        // fall back to the public RPC exposed on the database directly.
-        try {
-          const { supabase } = await import("@/integrations/supabase/client");
-          const { data, error } = await supabase.rpc("get_lockdown_public");
-          if (error) throw error;
-          const row = Array.isArray(data) ? data[0] : data;
-          if (!mounted) return;
-          if (!row || typeof row.lockdown_enabled !== "boolean") throw new Error("Būsena negauta");
-          setSettingsFailed(false);
-          setLockdown(row.lockdown_enabled);
-          setMessage(row?.lockdown_message ?? null);
-          setCodeId(row?.lockdown_code ?? null);
-        } catch {
-          if (mounted) setSettingsFailed(true);
+        let state = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try { state = await readStatus(); break; }
+          catch { if (attempt < 2) await new Promise((r) => setTimeout(r, 500)); }
         }
-      }
-
+        if (!mounted) return;
+        if (!state) { setSettingsFailed(true); return; }
+        setSettingsFailed(false);
+        setLockdown(state.lockdown_enabled);
+        setMessage(state.lockdown_message);
+        setCodeId(state.lockdown_code);
+      } finally { inFlight = false; }
     };
-    load();
+    void load();
     const poll = setInterval(load, 15_000);
     return () => { mounted = false; clearInterval(poll); };
-  }, []);
+  }, [readPublicSettings]);
 
   useEffect(() => {
-    if (!lockdown || bypassed) return;
+    if (bypassed || (lockdown === false && !settingsFailed)) return;
     setAutoTick(60);
     const tick = setInterval(() => {
       setAutoTick((s) => {
@@ -97,20 +101,20 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
     }, 1000);
     return () => clearInterval(tick);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lockdown, bypassed]);
+  }, [lockdown, bypassed, settingsFailed]);
 
   useEffect(() => {
-    if (!lockdown || bypassed) return;
+    if (bypassed || (lockdown === false && !settingsFailed)) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key.length !== 1) return;
-      bufferRef.current = (bufferRef.current + e.key.toLowerCase()).slice(-TRIGGER_WORD.length);
+      bufferRef.current = appendAccessKey(bufferRef.current, e.key);
       if (bufferRef.current === TRIGGER_WORD) { bufferRef.current = ""; setShowCodeModal(true); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lockdown, bypassed]);
+  }, [lockdown, bypassed, settingsFailed]);
 
-  const visible = !bypassed && (lockdown !== false || settingsFailed);
+  const visible = lockdownBlocks(lockdown, settingsFailed, bypassed);
   useEffect(() => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: visible })); return () => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: false })); }; }, [visible]);
   const errInfo = getLockdownCode(codeId);
   const severity = errInfo?.severity ?? "warn";
@@ -158,26 +162,10 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
   async function runCheck(_auto = false) {
     setRefreshing(true); setRefreshOk(null);
     try {
-      let enabled = false;
-      let msg: string | null = null;
-      let cid: string | null = null;
-      try {
-        const { data, error } = await readPublicSettings();
-        if (error) throw new Error(error.message);
-        if (!data) throw new Error("Būsena negauta");
-        enabled = Boolean(data.lockdown_enabled);
-        msg = data?.lockdown_message ?? null;
-        cid = data?.lockdown_code ?? null;
-      } catch {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data, error } = await supabase.rpc("get_lockdown_public");
-        if (error) throw error;
-        const row = Array.isArray(data) ? data[0] : data;
-        if (!row || typeof row.lockdown_enabled !== "boolean") throw new Error("Būsena negauta");
-        enabled = row.lockdown_enabled;
-        msg = row?.lockdown_message ?? null;
-        cid = row?.lockdown_code ?? null;
-      }
+      const state = await readStatus();
+      const enabled = state.lockdown_enabled;
+      const msg = state.lockdown_message;
+      const cid = state.lockdown_code;
       setSettingsFailed(false);
       if (!enabled) {
         setRefreshOk(true);
@@ -215,59 +203,18 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
           </div>
         ) : (
         <div key="lockdown" role="alert" className="lockdown-ui fixed inset-0 z-[9999] overflow-y-auto bg-background text-foreground">
-          <div className="flex min-h-dvh items-center justify-center p-4 sm:p-8">
-            <section aria-labelledby="lockdown-title" className="lockdown-panel w-full max-w-2xl overflow-hidden rounded-lg border border-border bg-card">
-              <header className="lockdown-header flex items-center justify-between gap-3 px-6 py-4 sm:px-8">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
-                  <span className="text-xs font-bold">Socialinės Valandos · Sistemos pranešimas</span>
-                </div>
-                <span className="hidden shrink-0 font-mono text-xs sm:block">{displayCode}</span>
-              </header>
-              <div className="px-6 py-8 text-center sm:px-16 sm:py-12">
-                <div className="mb-8 flex justify-center" aria-hidden>
-                  <div className="lockdown-symbol grid h-24 w-24 place-items-center rounded-lg bg-accent text-primary">
-                    {severity === "info" ? <Wrench className="h-12 w-12" strokeWidth={1.5} /> : severity === "critical" ? <ShieldAlert className="h-12 w-12" strokeWidth={1.5} /> : <Unplug className="h-12 w-12" strokeWidth={1.5} />}
-                  </div>
-                </div>
-                <h1 id="lockdown-title" className="text-3xl font-black leading-tight sm:text-5xl">{settingsFailed ? "Nepavyko patikrinti saugios prieigos" : lockdown === null ? "Tikrinama saugi prieiga" : errInfo?.title ?? "Sistema laikinai nepasiekiama"}</h1>
-                <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
-                  {settingsFailed ? "Svetainės būsena nepasiekiama. Prieiga neatveriama, kol nepavyks jos patikrinti. Pabandyk dar kartą." : lockdown === null ? "Palauk, kol bus patikrinta svetainės būsena." : message?.trim() || errInfo?.description || "Įvyko sistemos sutrikimas. Šiuo metu platforma nepasiekiama. Pabandyk patikrinti būseną po kelių minučių."}
-                </p>
-                <dl className="my-8 grid grid-cols-1 gap-4 text-left sm:grid-cols-2">
-                  <div className="rounded-lg border border-border bg-muted p-5">
-                    <dt className="text-xs font-semibold text-muted-foreground">Incidento kodas</dt>
-                    <dd className="mt-2">
-                      <Button variant="ghost" onClick={copyCode} title="Kopijuoti kodą" aria-label="Kopijuoti incidento kodą" className="h-auto min-h-11 justify-start gap-3 px-0 font-mono text-lg font-bold hover:bg-transparent hover:text-primary">
-                        {displayCode}{copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </dd>
-                    <dt className="mt-3 text-xs text-muted-foreground">Numatoma trukmė</dt>
-                    <dd className="mt-1 text-sm font-medium">{errInfo?.eta ?? "Nežinoma"}</dd>
-                  </div>
-                  <div className="rounded-lg border border-border bg-muted p-5">
-                    <dt className="text-xs font-semibold text-muted-foreground">Dabartinė būsena</dt>
-                    <dd className="mt-2 flex min-h-11 items-center gap-2.5 text-lg font-bold"><span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />{severity === "info" ? "Techninė priežiūra" : severity === "critical" ? "Saugumo patikra" : "Sistemos sutrikimas"}</dd>
-                    <dt className="mt-3 text-xs text-muted-foreground">Kitas patikrinimas</dt>
-                    <dd className="mt-1 text-sm font-medium tabular-nums">{autoTick} s</dd>
-                  </div>
-                </dl>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Button onClick={() => runCheck(false)} disabled={refreshing} className="lockdown-primary h-auto min-h-14 whitespace-normal rounded-lg px-4 py-4 text-sm font-bold">
-                    <RefreshCw className={refreshing ? "h-4 w-4" : "h-4 w-4"} />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowGuide(true)} className="h-auto min-h-14 whitespace-normal rounded-lg border-2 px-4 py-4 text-sm font-bold"><BookOpen className="h-4 w-4 shrink-0" />Ką reiškia šis kodas?</Button>
-                </div>
-                <div role="status" className="mt-4 min-h-5 text-xs text-muted-foreground">
-                  {refreshOk === false ? "Sistema vis dar nepasiekiama — pabandyk po minutės." : refreshOk === true ? "Sistema veikia. Grįžtame." : "Būsena tikrinama automatiškai."}
-                </div>
-              </div>
-              <footer className="flex flex-col items-center justify-center gap-3 border-t border-border bg-muted px-6 py-6 text-center sm:flex-row sm:text-left">
-                <div className="grid h-12 w-12 place-items-center rounded-xl border border-border bg-card text-muted-foreground"><Mail className="h-5 w-5" /></div>
-                <div><p className="text-xs font-semibold text-muted-foreground">Techninė pagalba</p><a href="mailto:pagalba@socialinesvalandos.dev" className="mt-1 block break-all text-sm font-bold underline decoration-border underline-offset-4 hover:text-primary">pagalba@socialinesvalandos.dev</a></div>
-              </footer>
-            </section>
-          </div>
+          <IncidentScreen
+            mark={settingsFailed ? "!" : "SV"}
+            code={displayCode}
+            title={settingsFailed ? "Ryšio patikra nepavyko" : errInfo?.title ?? "Sistema laikinai nepasiekiama"}
+            description={settingsFailed ? "Negalime patvirtinti svetainės būsenos. Patikrink interneto ryšį ir bandyk dar kartą. Tavo duomenys lieka apsaugoti." : message?.trim() || errInfo?.description || "Šiuo metu svetainė laikinai uždaryta. Prieiga bus atverta, kai administratorius patvirtins, kad saugu tęsti."}
+            icon={<ShieldAlert className="h-4 w-4" />}
+            details={<div className="flex flex-wrap items-start justify-between gap-4 text-xs">
+              <div><p className="text-muted-foreground">Incidento kodas</p><Button variant="ghost" onClick={copyCode} aria-label="Kopijuoti incidento kodą" className="mt-1 h-9 px-0 font-mono">{displayCode}{copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}</Button></div>
+              <div className="text-right"><p className="text-muted-foreground">{settingsFailed ? "Ryšio būsena" : "Numatoma trukmė"}</p><p className="mt-2 font-semibold">{settingsFailed ? "Laukiama patvirtinimo" : errInfo?.eta ?? "Dar nepatvirtinta"}</p><p className="mt-2 text-muted-foreground">Kita patikra po {autoTick} s</p></div>
+            </div>}
+            actions={<><Button onClick={() => runCheck(false)} disabled={refreshing} className="min-h-12"><RefreshCw className="h-4 w-4" />{refreshing ? "Tikrinama…" : "Patikrinti dar kartą"}</Button><Button variant="outline" onClick={() => setShowGuide(true)} className="min-h-12"><BookOpen className="h-4 w-4" />Apie sutrikimą</Button><Button variant="ghost" onClick={() => setShowCodeModal(true)} className="min-h-12">Administracinė prieiga</Button><p role="status" className="w-full min-h-5 text-xs text-muted-foreground">{refreshOk === false ? "Prieiga dar neatverta. Patikra bus kartojama." : "Būsena tikrinama automatiškai."}</p></>}
+          />
           <Dialog open={showGuide} onOpenChange={setShowGuide}>
             <DialogPortal>
               <DialogOverlay className="lockdown-dialog-overlay z-[10001]" />
@@ -295,7 +242,7 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
               <DialogOverlay className="lockdown-dialog-overlay z-[10001]" />
               <DialogPrimitive.Content className="lockdown-ui fixed inset-x-4 top-[50%] z-[10002] mx-auto max-h-[85dvh] max-w-sm translate-y-[-50%] overflow-y-auto rounded-lg border border-border bg-card p-6">
                 <div className="flex items-start justify-between gap-3"><div><DialogTitle>Administracinė prieiga</DialogTitle><DialogDescription className="mt-2">Įvesk prieigos kodą.</DialogDescription></div><DialogPrimitive.Close asChild><Button variant="ghost" size="icon" aria-label="Uždaryti prieigos langą"><X className="h-4 w-4" /></Button></DialogPrimitive.Close></div>
-                <input autoFocus aria-label="Prieigos kodas" type="password" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submitCode()} disabled={codeChecking} maxLength={10} className={`mt-5 w-full rounded-xl border bg-muted px-4 py-3 text-center font-mono text-2xl outline-none focus:ring-2 focus:ring-ring ${codeError ? "border-destructive" : "border-border"}`} placeholder="••••" />
+                <input autoFocus aria-label="Prieigos kodas" type="password" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submitCode()} disabled={codeChecking} maxLength={32} className={`mt-5 w-full rounded-xl border bg-muted px-4 py-3 text-center font-mono text-2xl outline-none focus:ring-2 focus:ring-ring ${codeError ? "border-destructive" : "border-border"}`} placeholder="••••" />
                 {codeError && <p role="alert" className="mt-2 text-center text-xs text-destructive">{codeError}</p>}
                 {captchaRequired && <div className="mt-4"><Captcha tone="light" onVerify={(proof) => setCaptchaProof(proof)} /></div>}
                 <Button onClick={submitCode} disabled={codeChecking || (captchaRequired && !captchaProof)} className="lockdown-primary mt-4 min-h-12 w-full rounded-xl">{codeChecking && <RefreshCw className="h-4 w-4" />}{codeChecking ? "Tikrinama…" : "Patvirtinti"}</Button>
