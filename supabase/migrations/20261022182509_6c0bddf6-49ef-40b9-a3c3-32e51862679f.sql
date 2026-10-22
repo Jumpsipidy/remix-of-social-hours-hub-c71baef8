@@ -1,0 +1,1 @@
+CREATE POLICY "Service maintains health decisions" ON public.lockdown_health_state FOR ALL TO service_role USING (true) WITH CHECK (true);
