@@ -1,4 +1,5 @@
 # Užduotys (2026-10-21, vakaras)
+- [ ] Sutvarkyti saugios prieigos nuskaitymą ir administracinio įėjimo langą; perdaryti 404 ir blokavimo ekranus pagal pavyzdį.
 
 - [x] Nauja klaidų pranešimų išvaizda ir lietuviški prisijungimo / registracijos paaiškinimai (formų patikra naršyklėje, 8 testai)
 
