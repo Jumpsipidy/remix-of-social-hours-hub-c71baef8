@@ -1,5 +1,5 @@
 # Užduotys (2026-10-21, vakaras)
-- [ ] Pradžia: animuotas pavadinimas, išplėstas simbolių meniu, širdelės sukimasis, perėjimai ir matomas elegantiškas šviesus fonas.
+- [x] Pradžia: animuotas pavadinimas, išplėstas simbolių meniu, širdelės sukimasis, perėjimai ir matomas elegantiškas šviesus fonas; naršyklėje patikrintas meniu, penki paspaudimai, prisijungimas ir 390 px vaizdas.
 - [x] Soci Guard: laikymas patvirtintas serveryje naršyklėje, reCAPTCHA matoma, galima grįžti prie laikymo; ryšio klaidos nebepakeičia patikros į matematiką. Tikro domeno nustatymai nepatikrinti.
 - [x] Animuotas 404 / blokavimo elementas be nuotraukos; PIN tik įvedus jumpsipidy; atskiras viešas būsenos klientas. Naršyklės patikra ir 10 testų praėjo; tikrą domeną sustabdė roboto patikra.
 - [x] Automatiniai grėsmės lygiai: 2 techninių gedimų patikros, 3 sveikos atkūrimui; rankiniai / saugumo blokavimai neatveriami automatiškai. 7 SQL klasifikavimo patikros praėjo; tikras incidentas nebuvo sukeltas.
