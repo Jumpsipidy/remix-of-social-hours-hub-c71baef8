@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Use the official Sentry TanStack Start SDK at client, router, middleware, and server-entry boundaries; this preserves full-stack traces and private source-map uploads.
-- Chat uses shared MessageComposer and viewport-aware Radix dialogs to keep sending controls visible.
+- Chat uses shared MessageComposer and atomic participant-scoped RPCs; merged room aliases preserve links/history, preventing duplicates without mixing audiences.
 - Optional reservation times are normalized to null through reservation-time helpers; displays handle missing times without inventing an arrival interval.
 - Check-in presentation uses a stable canvas and authenticated server-issued tokens, refreshed while visible; rotating QR content never persists in browser storage.
 - Certificates recompute snapshot hashes before HMAC verification, support legacy/key rotation and server-stamped approvers to detect altered history.
