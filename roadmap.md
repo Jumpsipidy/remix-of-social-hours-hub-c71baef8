@@ -1,5 +1,7 @@
 # Užduotys (2026-10-21, vakaras)
 
+- [ ] Nauja klaidų pranešimų išvaizda ir lietuviški prisijungimo / registracijos paaiškinimai
+
 - [x] Suvienodinti tos pačios sudėties pokalbius, 12 dienų ištrynimas, organizacijų filtrai ir datos (prisijungusio naudotojo gyva patikra neprieinama)
 
 - [x] Mokyklos rezervacijos mokinio skydelyje iškart, be papildomo patvirtinimo (9 testai; prisijungusio mokinio gyva patikra neprieinama)
