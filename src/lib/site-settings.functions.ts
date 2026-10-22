@@ -42,13 +42,8 @@ export const getPublicSiteSettings = createServerFn({ method: "GET" }).handler(a
     if (!error) {
       return { data: shape(data as Partial<PublicSiteSettings> | null), error: null, schemaMissing: false };
     }
-    if (!isSchemaError(error)) {
-      return {
-        data: null,
-        error: { message: error.message, code: error.code ?? null },
-        schemaMissing: false,
-      };
-    }
+    // Any failed privileged read must try the public read path too, not only
+    // schema errors: an expired service credential must not block public status.
   } catch {
     // Missing service-role env or cold worker → fall through to the public RPC.
   }
@@ -96,6 +91,6 @@ export const getPublicSiteSettings = createServerFn({ method: "GET" }).handler(a
     };
   }
 
-  // Never throw: treat "unknown" as "site is open".
+  // Unknown remains unknown; the access gate must never interpret it as open.
   return { data: null, error: null, schemaMissing: true };
 });

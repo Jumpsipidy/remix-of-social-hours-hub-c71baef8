@@ -42,8 +42,14 @@ function ThemeExample({ mode }: { mode: SiteTheme }) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<SiteTheme>("dark");
-  const [accessBlocked, setAccessBlocked] = useState(false);
-  useEffect(() => { const update = (event: Event) => setAccessBlocked(Boolean((event as CustomEvent<boolean>).detail)); window.addEventListener("sv:access-blocked", update); return () => window.removeEventListener("sv:access-blocked", update); }, []);
+  const [accessBlocked, setAccessBlocked] = useState(true);
+  useEffect(() => {
+    const sync = () => setAccessBlocked(document.documentElement.dataset.accessBlocked !== "false");
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-access-blocked"] });
+    sync();
+    return () => observer.disconnect();
+  }, []);
   const [ask, setAsk] = useState(false);
   const [accent, setAccent] = useState(0);
   const [elegant, setElegant] = useState(false);
