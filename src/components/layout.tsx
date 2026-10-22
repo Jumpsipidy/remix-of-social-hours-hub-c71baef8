@@ -1,6 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck, School, CircleHelp, Settings2 } from "lucide-react";
+import { useSiteTheme } from "@/components/theme-provider";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
@@ -27,6 +29,7 @@ const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { openSettings } = useSiteTheme();
   const { isAuthenticated, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -102,7 +105,10 @@ export function Navbar() {
 
   const [scrolled, setScrolled] = useState(false);
   const [egg, setEgg] = useState(false);
-  const [taps, setTaps] = useState(0);
+  const taps = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spinTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (tapTimer.current) clearTimeout(tapTimer.current); if (spinTimer.current) clearTimeout(spinTimer.current); }, []);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 12);
     on(); window.addEventListener("scroll", on, { passive: true });
@@ -110,26 +116,33 @@ export function Navbar() {
   }, []);
   // Secret: tap the logo 5 times quickly.
   const onLogo = () => {
-    const n = taps + 1;
-    setTaps(n);
-    window.setTimeout(() => setTaps(0), 1500);
-    if (n >= 5) { setTaps(0); setEgg(true); toast("💙 Ačiū, kad padedi bendruomenei!"); window.setTimeout(() => setEgg(false), 700); }
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    taps.current += 1;
+    tapTimer.current = setTimeout(() => { taps.current = 0; }, 1500);
+    if (taps.current >= 5) {
+      taps.current = 0; setEgg(true);
+      toast("Ačiū, kad padedi bendruomenei!", { icon: <Heart className="h-4 w-4 text-primary" /> });
+      if (spinTimer.current) clearTimeout(spinTimer.current);
+      spinTimer.current = setTimeout(() => setEgg(false), 900);
+    }
   };
 
   return (
     <header className={`site-navbar nav-redesign sticky top-0 z-50 border-b bg-background/95 ${scrolled ? "is-scrolled border-border shadow-sm" : "border-border/60"}`}>
       <div className="nav-inner mx-auto flex h-[72px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
-        <Link to="/" onClick={onLogo} className="nav-brand group flex shrink-0 items-center gap-2.5" aria-label="Socialinės Valandos — pradžia">
-          <span className={`nav-logo grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
+        <div className="nav-brand group flex shrink-0 items-center gap-2.5">
+          <Button variant="ghost" size="icon" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo h-10 w-10 shrink-0 rounded-lg bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
             <Heart className="h-5 w-5" fill="currentColor" />
-          </span>
-          <span className="brand-wordmark hidden leading-none sm:block"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span><span className="sr-only"> socialinesvalandos.dev</span></span>
-        </Link>
-        <nav aria-label="Pagrindinis meniu" className="ml-4 hidden min-w-0 items-center gap-1 lg:flex">
+          </Button>
+          <Link to="/" className="brand-wordmark hidden leading-none sm:flex" aria-label="Socialinės Valandos — pradžia"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span></Link>
+        </div>
+        <nav aria-label="Pagrindinis meniu" className="nav-dock ml-3 hidden min-w-0 items-center gap-1 lg:flex">
           {links.filter((l) => l.to === "/" || l.to === "/tasks" || l.to === DASHBOARD_BY_ROLE[activeRole ?? "student"]?.to).map((l) => {
             const active = isActive(l.to, l.to === "/");
-            return <Button key={l.to} asChild variant="ghost" className={`nav-link relative h-11 px-3 text-sm ${active ? "text-primary" : "text-muted-foreground"}`}><Link to={l.to} aria-current={active ? "page" : undefined}>{l.to === "/tasks" ? "Veiklos" : l.label}</Link></Button>;
+            const Icon = l.to === "/" ? Home : l.to === "/tasks" ? ListTodo : LayoutDashboard;
+            return <Button key={l.to} asChild variant="ghost" className={`nav-link relative h-11 gap-2 px-3 text-sm ${active ? "text-primary" : "text-muted-foreground"}`}><Link to={l.to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-md bg-primary/10" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}<Icon className="relative h-4 w-4" /><span className="relative">{l.to === "/tasks" ? "Veiklos" : l.to === "/" ? "Pradžia" : "Mano sritis"}</span></Link></Button>;
           })}
+          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-11 gap-2 text-muted-foreground"><CircleHelp className="h-4 w-4" />Daugiau<ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start" sideOffset={12} className="w-64 p-2"><DropdownMenuLabel>Atrask daugiau</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem asChild><Link to="/socialines-valandos-mokykloms"><School />Mokykloms</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/securityguard"><ShieldCheck />SV Guard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/versijos"><History />Kas naujo</Link></DropdownMenuItem><DropdownMenuItem asChild><a href="/#faq"><CircleHelp />Klausimai ir pagalba</a></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onSelect={openSettings}><Settings2 />Išvaizdos nustatymai</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
@@ -243,7 +256,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:p-3 focus:text-foreground">Pereiti prie turinio</a>
       <BackgroundFX isDashboard={isDashboard} />
       <Navbar />
-      <main id="page-content" tabIndex={-1} className="min-w-0">
+      <main key={pathname} id="page-content" tabIndex={-1} className="page-enter min-w-0">
         {children}
       </main>
       {!isFocused && <Footer />}
