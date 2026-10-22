@@ -19,7 +19,9 @@ const EMPTY: PublicStats = { students: 0, orgs: 0, hours: 0, schools: 0 };
  * surface as a broken createServerFn request for every visitor. Any failure
  * (missing service-role env, missing table, network hiccup) degrades to zeros.
  */
-export const getPublicStats = createServerFn({ method: "GET" }).handler(
+export const getPublicStats = createServerFn({ method: "GET" })
+  .inputValidator((input: { publicStats: true }) => ({ publicStats: input.publicStats === true }))
+  .handler(
   async (): Promise<PublicStats> => {
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
