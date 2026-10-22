@@ -29,3 +29,44 @@ export function isPublicStatsFunction(id: string): boolean {
       && metadata.export?.startsWith("getPublicStats_") === true;
   } catch { return false; }
 }
+/** Storage-full errors happen after the password was accepted. */
+export function isStorageQuotaError(error: unknown): boolean {
+  const value = error as { name?: string; message?: string } | null;
+  return value?.name === "QuotaExceededError" || /quota|exceeded the quota/i.test(value?.message ?? "");
+}
+
+/** Short, non-sensitive reason shown with a generic login failure for support. */
+export function loginFailureReason(error: unknown): string {
+  const value = error as { name?: string; code?: string; status?: number; message?: string } | null;
+  const raw = value?.code || value?.name || (value?.status ? `HTTP ${value.status}` : "") || "unknown";
+  return String(raw).replace(/[^\w .-]/g, "").slice(0, 40) || "unknown";
+}
+
+/**
+ * The password request can succeed while a later local step fails (full browser
+ * storage, a state listener error). Recover the stored session instead of
+ * reporting a failed sign-in; never invents a session.
+ */
+export async function recoverPasswordSignIn(
+  signIn: () => Promise<string | null>,
+  currentUid: () => Promise<string | null>,
+  freeStorage: () => void,
+): Promise<string> {
+  let first: unknown;
+  try {
+    const uid = await signIn();
+    if (uid) return uid;
+    first = new Error("Negautas prisijungimo patvirtinimas. Bandyk dar kartą.");
+  } catch (error) {
+    if (isCredentialRejection(error)) throw error;
+    first = error;
+  }
+  const existing = await currentUid().catch(() => null);
+  if (existing) return existing;
+  if (isStorageQuotaError(first)) {
+    freeStorage();
+    const uid = await signIn();
+    if (uid) return uid;
+  }
+  throw first;
+}
