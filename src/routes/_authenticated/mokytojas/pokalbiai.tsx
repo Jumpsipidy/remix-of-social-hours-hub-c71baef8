@@ -1,4 +1,5 @@
 import { messagePreview } from "@/lib/task-invite";
+import { chatDate, messageIsRetained } from "@/lib/chat-list";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -72,6 +73,17 @@ function TeacherChatPage() {
   const followLatest = useRef(true);
   const sendLock = useRef(false);
   const activeId = search.room ?? null;
+  const currentRoom = useRef(activeId);
+  currentRoom.current = activeId;
+
+  useEffect(() => {
+    if (!activeId) return;
+    let alive = true;
+    void supabase.rpc("resolve_chat_room", { _room: activeId }).then(({ data }) => {
+      if (alive && data && data !== activeId) void navigate({ to: "/mokytojas/pokalbiai", search: { room: data }, replace: true });
+    });
+    return () => { alive = false; };
+  }, [activeId]);
 
   const loadConvs = useCallback(async () => {
     const { data, error } = await (supabase.rpc as any)("list_my_conversations");
@@ -173,6 +185,7 @@ function TeacherChatPage() {
     sendLock.current = false;
     setSending(false);
     if (error) { toast.error(userError(error)); return; }
+    if (currentRoom.current !== activeId) { void loadConvs(); return; }
     setText((current) => (current.trim() === content ? "" : current));
     followLatest.current = true;
     notifyStop();
@@ -302,7 +315,7 @@ function TeacherChatPage() {
                   <p className="pt-10 text-center text-sm text-muted-foreground">Parašyk pirmą žinutę 👋 Šablonai – viršuje.</p>
                 ) : (
                   <AnimatePresence initial={false}>
-                    {msgs.map((m) => {
+                    {msgs.filter((m) => messageIsRetained(m.created_at)).map((m) => {
                       const mine = m.sender_id === user?.id;
                       return (
                         <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
@@ -313,7 +326,7 @@ function TeacherChatPage() {
                                 {r && <span className={`rounded-full px-1.5 py-px text-[9px] font-bold ${mine ? "bg-primary-foreground/20 text-primary-foreground" : r.cls}`}>{r.label}</span>}
                               </p>); })()}
                             <LinkifiedText text={m.content} className="whitespace-pre-wrap [overflow-wrap:anywhere]" />
-                            <p className="mt-0.5 text-right text-[10px] opacity-60">{new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}</p>
+                            <p className="mt-0.5 text-right text-[10px] opacity-60">{chatDate(m.created_at)} · {new Date(m.created_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Vilnius" })}</p>
                           </div>
                         </motion.div>
                       );

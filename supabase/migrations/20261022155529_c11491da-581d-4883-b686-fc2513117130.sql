@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.chat_rooms_direct_admin_org_uniq;
