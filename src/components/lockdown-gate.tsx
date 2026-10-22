@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { useServerFn } from "@tanstack/react-start";
-import { RefreshCw, X, Copy, Check, BookOpen, ChevronDown, Wrench, Unplug, ShieldAlert, Mail } from "lucide-react";
+import { RefreshCw, X, Copy, Check, BookOpen, ChevronDown, ShieldAlert } from "lucide-react";
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
@@ -115,9 +115,12 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
   }, [lockdown, bypassed, settingsFailed]);
 
   const visible = lockdownBlocks(lockdown, settingsFailed, bypassed);
-  useEffect(() => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: visible })); return () => { window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: false })); }; }, [visible]);
+  useEffect(() => {
+    document.documentElement.dataset.accessBlocked = String(visible);
+    window.dispatchEvent(new CustomEvent("sv:access-blocked", { detail: visible }));
+    return () => { document.documentElement.dataset.accessBlocked = "true"; };
+  }, [visible]);
   const errInfo = getLockdownCode(codeId);
-  const severity = errInfo?.severity ?? "warn";
   const displayCode = settingsFailed ? "E-4001" : errInfo?.code ?? codeId ?? "E-9000";
 
   const submitCode = async () => {
