@@ -8,7 +8,7 @@ export type LockdownCode = {
 };
 
 export const LOCKDOWN_CODES: LockdownCode[] = [
-  { code: "E-4002", title: "Sistemos patikra nepavyko", short: "Tikrinamas sutrikimas", description: "Sistemos patikra aptiko sutrikimą. Prieiga laikinai apribota, kol administratorius patvirtins, kad saugu tęsti.", severity: "critical", eta: "nežinoma" },
+  { code: "E-4002", title: "Tikrinamas sistemos sutrikimas", short: "Vyksta būsenos patikros", description: "Aptiktas sistemos sutrikimas. Automatinės patikros stebi atkūrimą; jei blokavimą įjungė administratorius, prieigą atvers tik jis.", severity: "warn", eta: "pagal patikrų rezultatus" },
   { code: "E-5002", title: "Pasikartojantis sutrikimas", short: "Ribojama prieiga", description: "Aptikta pasikartojančių sistemos klaidų. Prieiga laikinai apribota.", severity: "warn", eta: "nežinoma" },
   { code: "E-5003", title: "Kritinių klaidų incidentas", short: "Vyksta incidento patikra", description: "Prieiga sustabdyta dėl kritinių klaidų. Administratorius tikrina sistemos būseną.", severity: "critical", eta: "nežinoma" },
   {
@@ -67,12 +67,12 @@ export const LOCKDOWN_CODES: LockdownCode[] = [
   },
   {
     code: "E-5001",
-    title: "Diegiama nauja versija",
-    short: "Į platformą diegiama nauja versija",
+    title: "Kritinių klaidų incidentas",
+    short: "Prieiga ribojama dėl kritinių klaidų",
     description:
-      "Diegiame naujausią platformos versiją su patobulinimais ir klaidų taisymais.",
-    severity: "info",
-    eta: "5–15 min.",
+      "Aptikta kritinių sistemos klaidų. Prieiga bus atverta tik administratoriui patvirtinus, kad saugu tęsti.",
+    severity: "critical",
+    eta: "po administratoriaus patikros",
   },
   {
     code: "E-9000",

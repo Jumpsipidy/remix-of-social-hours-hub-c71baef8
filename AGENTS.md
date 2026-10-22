@@ -26,6 +26,7 @@
 - Public school reads filter only active schools; administrator checks stay in authenticated-only policies so anonymous registration never evaluates restricted role functions.
 - LockdownGate wraps content and fails closed on unknown settings; a session-free public status client avoids auth refresh delays, and theme-aware procedural eclipse motion never changes enforcement.
 - Public lockdown checks try the public RPC before the server fallback, reject malformed states and retry transient failures; administrative entry stays available in unknown and blocked states.
+- Scheduled health decisions persist consecutive results and exact technical-lock provenance; only that matching technical lock can recover after healthy scans, while manual/security locks never auto-clear.
 - School-made reservations use reservations.source='school' with requires_checkin=false and are created/completed only via SECURITY DEFINER RPCs (school_create_reservations, school_complete_reservation) gated by school_admin_can_manage(); keeps QR-free flow from bypassing class scoping.
 - Student reservation presentation uses shared source-aware rules; school reservations stay active until teacher completion and omit organization confirmation, QR and group-invite actions.
 - Class letters use profiles.class_letter/assigned_letter; class_year stays canonical for promotion. Student class, letter and required hours derive only from the protected school_class_codes row server-side; assigning classes to a school admin auto-creates missing codes.
