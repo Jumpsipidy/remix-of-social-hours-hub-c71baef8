@@ -28,18 +28,21 @@ export const getPublicStats = createServerFn({ method: "GET" }).handler(
         supabaseAdmin
           .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("role", "student"),
+          .eq("role", "student").abortSignal(AbortSignal.timeout(5000)),
         supabaseAdmin
           .from("profiles")
           .select("id", { count: "exact", head: true })
-          .eq("role", "organization"),
+          .eq("role", "organization").abortSignal(AbortSignal.timeout(5000)),
         supabaseAdmin
           .from("profiles")
           .select("hours_earned")
           .eq("role", "student")
-          .not("hours_earned", "is", null),
-        supabaseAdmin.from("schools").select("id", { count: "exact", head: true }),
+          .not("hours_earned", "is", null).abortSignal(AbortSignal.timeout(5000)),
+        supabaseAdmin.from("schools").select("id", { count: "exact", head: true }).abortSignal(AbortSignal.timeout(5000)),
       ]);
+      for (const result of [students, orgs, hoursCount, schools]) {
+        if (result.error) throw new Error("Viešų skaičių užklausa nepavyko.");
+      }
 
       const totalHours = (hoursCount.data ?? []).reduce(
         (a: number, r: { hours_earned: number | null }) => a + (Number(r.hours_earned) || 0),
