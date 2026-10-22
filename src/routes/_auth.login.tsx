@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mail, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
@@ -15,6 +15,7 @@ import { AuthFeedback, authInvalidMessage } from "@/components/auth-feedback";
 import { AuthField, AuthHeading, AuthLegal, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 import { withLoadingDeadline } from "@/lib/loading-control";
+import { isCredentialRejection, resolveLoginProfile } from "@/lib/login-result";
 
 const FAIL_KEY = "sv_login_fails_v1";
 const FAIL_THRESHOLD = 3;
@@ -56,8 +57,7 @@ export const Route = createFileRoute("/_auth/login")({
 });
 
 function LoginPage() {
-  const navigate = useNavigate();
-  const { profile, isAuthenticated, loading, clearImpersonation } = useAuth();
+  const { user, profile, isAuthenticated, loading, clearImpersonation } = useAuth();
   const ensureProfile = useServerFn(ensureSignedInProfile);
   const [formError, setFormError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -65,6 +65,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [successRole, setSuccessRole] = useState<string | null>(null);
+  const [confirmedUid, setConfirmedUid] = useState<string | null>(null);
   const [fails, setFails] = useState<number>(0);
   useEffect(() => {
     try {
@@ -93,46 +94,46 @@ function LoginPage() {
       return;
     }
     setBusy(true);
+    let authenticated = !!confirmedUid;
     try {
       clearImpersonation();
       try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-      const { data: signIn, error } = await withLoadingDeadline(supabase.auth.signInWithPassword({ email, password }));
-      if (error) throw error;
-      // Prisijungimas jau pavyko. Profilio „remontas" serveryje yra tik
-      // pagalbinis — jei jis nulūžta (pvz. tinklo/modulio klaida), nemesk
-      // vartotojo atgal į login formą, o pasiimk rolę tiesiai iš DB.
-      let ensured: { profile?: { role?: string } | null } = {};
-      try {
-        const { data: existing, error: readError } = await withLoadingDeadline(supabase
-          .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
-        if (readError) throw readError;
-        ensured = existing ? { profile: existing } : await withLoadingDeadline(ensureProfile());
-      } catch (e) {
-        console.warn("[login] ensureSignedInProfile failed, falling back", e);
-        if (signIn.user?.id) {
-          const { data: fallback } = await withLoadingDeadline(supabase
-            .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
-          if (fallback) ensured = { profile: fallback as { role?: string } };
-        }
+      let uid = confirmedUid;
+      if (!uid) {
+        // Preview session persistence can take several round trips to its host.
+        const { data: signIn, error } = await withLoadingDeadline(supabase.auth.signInWithPassword({ email, password }), 30000);
+        if (error) throw error;
+        uid = signIn.user?.id ?? null;
+        if (!uid) throw new Error("Negautas prisijungimo patvirtinimas. Bandyk dar kartą.");
+        authenticated = true;
+        setConfirmedUid(uid);
+        try { localStorage.removeItem(FAIL_KEY); } catch {}
+        setFails(0);
+        setCaptchaProof(null);
       }
-      if (signIn.user?.id) {
+      const signedInUid = uid;
+      const resolved = await resolveLoginProfile(async () => {
+        if (user?.id === signedInUid && profile?.role) return profile;
+        const { data, error } = await withLoadingDeadline(supabase.from("profiles")
+          .select("role").eq("id", signedInUid).maybeSingle(), 15000);
+        if (error) throw error;
+        return data;
+      }, async () => (await withLoadingDeadline(ensureProfile(), 20000)).profile ?? null);
+      const role = resolved.role;
+      // Analytics is optional, including synchronous device metadata errors.
+      try {
         void insertActivityLogRow({
-          user_id: signIn.user.id,
+          user_id: signedInUid,
           action: "auth.signed_in",
           entity_type: "user",
-          entity_id: signIn.user.id,
+          entity_id: signedInUid,
           meta: deviceMeta({ method: "password", path: "/login" }),
-        });
-      }
-      let role = ensured.profile?.role as string | undefined;
-      if (!role) {
-        const { data: prof } = await withLoadingDeadline(supabase.from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
-        role = (prof as { role?: string } | null)?.role ?? "student";
-      }
+        }).catch(() => {});
+      } catch { /* login must not depend on analytics */ }
       let target = DASH_BY_ROLE[role] ?? "/";
       // Admin pressed "Administracija" on /register while signed out: return there once.
       try { if (sessionStorage.getItem("sv_admin_signup_return") === "1") { sessionStorage.removeItem("sv_admin_signup_return"); if (role === "admin") target = "/register?admin=1"; } } catch {}
-      if (role) { try { localStorage.setItem("sv_last_role_v1", role); localStorage.setItem("sv_last_role_uid_v1", signIn.user.id); } catch {} }
+      if (role) { try { localStorage.setItem("sv_last_role_v1", role); localStorage.setItem("sv_last_role_uid_v1", signedInUid); } catch {} }
       try { localStorage.removeItem(FAIL_KEY); } catch {}
       setFails(0);
       setCaptchaProof(null);
@@ -141,6 +142,11 @@ function LoginPage() {
       // Hard nav — avoids router transient state crashes after auth change
       window.location.assign(target);
     } catch (err) {
+      if (authenticated) {
+        setFormError("Prisijungimas patvirtintas, bet paskyros duomenys neįsikrovė. Spausk „Tęsti į paskyrą“ — slaptažodžio kartoti nereikia.");
+        return;
+      }
+      if (isCredentialRejection(err)) {
       const next = fails + 1;
       setFails(next);
       setCaptchaProof(null);
@@ -151,6 +157,7 @@ function LoginPage() {
         action: "security.login_failed",
         meta: { email, attempt: next, path: "/login", reason: err instanceof Error ? err.message : "Unknown" }
       });
+      }
 
       setFormError(userError(err, "Prisijungti nepavyko. Bandyk dar kartą po minutės."));
     } finally {
@@ -185,7 +192,7 @@ function LoginPage() {
           </div>
         )}
         <div className="pt-1">
-          <AuthSubmit busy={busy} busyLabel="Jungiama…" disabled={captchaRequired && !captchaProof}>Prisijungti</AuthSubmit>
+          <AuthSubmit busy={busy} busyLabel={confirmedUid ? "Gaunami paskyros duomenys…" : "Jungiama…"} disabled={!confirmedUid && captchaRequired && !captchaProof}>{confirmedUid ? "Tęsti į paskyrą" : "Prisijungti"}</AuthSubmit>
         </div>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">

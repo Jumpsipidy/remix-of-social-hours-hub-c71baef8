@@ -124,7 +124,7 @@ function RoleTabs() {
 
 function Home() {
   const { profile, isAuthenticated } = useAuth();
-  const { data: counts } = useQuery({ queryKey: ["public-stats"], queryFn: () => getPublicStats(), staleTime: 60_000 });
+  const { data: counts } = useQuery({ queryKey: ["public-stats"], queryFn: () => getPublicStats({ data: { publicStats: true } }), staleTime: 60_000 });
   const dash = profile?.role ? DASHBOARD_BY_ROLE[profile.role] : null;
   const { openSettings } = useSiteTheme();
   useEffect(() => {

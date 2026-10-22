@@ -44,4 +44,5 @@
 - Signup confirmation emails use admin generateLink + Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
 - Authentication errors stay in a shared persistent inline feedback surface with localized validation and recovery links; transient toasts must not replace form errors.
 - Auth initialization reads profiles through RLS before repairing missing rows, deduplicates concurrent reads and schedules work outside auth callbacks; bounded loading prevents auth-lock deadlocks without granting access on failure.
+- Session-function middleware replaces the generated attacher to keep public counters independent of preview session storage; protected calls still attach tokens and use server authorization. Login distinguishes credential rejection from profile-loading failure and never invents roles.
 
