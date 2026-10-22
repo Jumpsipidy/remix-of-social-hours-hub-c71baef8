@@ -34,6 +34,7 @@
 - Bug reporting uses a shared portaled, viewport-aware dialog with opt-in bounded JPEG upload; success requires a saved report so the admin board stays the source of truth.
 - Visitor error boundaries share a presentation-only incident frame with isolated theme-aware tokens; recovery, logging and routing remain at their existing boundaries.
 - The public homepage presents the primary action immediately and keeps its process animation user-triggered; anonymous visitors do not receive release or guide overlays.
+- Homepage title motion is finite and reduced-motion aware; the heart button is separate from the home link, and elegant texture is layered on PageShell so opaque root surfaces cannot hide it.
 - Group reservation participant rows change only through status (invitee accepts/declines, owner/org removes); the tg_participants_guard trigger blocks client writes to check-in and hours fields, so friends cannot self-check-in.
 - Vite server.fs.allow includes real node_modules because sandbox dependencies are symlinked.
 - Destructive admin actions and temporary signup options require external licence-confirmed tickets. Main site never accepts the key; signup grants stay in page memory and every privileged call rechecks them.

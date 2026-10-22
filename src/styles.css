@@ -927,7 +927,7 @@ html:not(.dark) .student-v4, .light .student-v4 { --primary: oklch(0.52 0.15 152
 
 /* ── Brand wordmark ─────────────────────────────── */
 .brand-wordmark { display: flex; flex-direction: column; gap: 1px; }
-.brand-word { font-family: var(--font-sans); font-weight: 800; font-size: 0.95rem; letter-spacing: -0.035em; color: var(--foreground); }
+.brand-word { font-family: "Sora", var(--font-sans); font-weight: 800; font-size: 0.95rem; letter-spacing: 0; color: var(--foreground); }
 .brand-word-accent {
   font-family: "Fraunces", var(--font-display), serif; font-style: italic; font-weight: 700; font-size: 1.05rem;
   background: linear-gradient(100deg, var(--primary), color-mix(in oklab, var(--primary) 55%, var(--foreground)) 55%, var(--primary));
@@ -962,12 +962,42 @@ html.sv-elegant body::before {
 }
 html.sv-elegant :is(.bg-card, .bg-background\/60, .bg-background\/40) { background-color: color-mix(in oklab, var(--card) 94%, transparent); }
 html.school-eyes.sv-elegant {
-  background-image: linear-gradient(155deg, color-mix(in oklab, var(--primary) 7%, var(--background)), var(--background) 45%, color-mix(in oklab, var(--primary) 5%, var(--background)));
+  --elegant-surface: color-mix(in oklab, var(--background) 88%, var(--primary));
+  --elegant-line: color-mix(in oklab, var(--primary) 23%, transparent);
+  background-image: linear-gradient(155deg, var(--elegant-surface), var(--background) 55%, var(--elegant-surface));
 }
-html.school-eyes.sv-elegant body::before { opacity: .3; }
+html.school-eyes.sv-elegant body::before { opacity: 1; }
 html.school-eyes .site-background-fx, html.sv-elegant .site-background-fx { display: none; }
 html.sv-elegant .site-navbar { background-color: color-mix(in oklab, var(--background) 72%, transparent); backdrop-filter: blur(14px); }
 html.sv-elegant .home-ui-hero { background: transparent; }
+/* Visible flowing texture is attached to the page, not hidden behind an opaque root. */
+html.sv-elegant .page-shell::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+  background: repeating-radial-gradient(ellipse 150% 100% at 110% 115%, transparent 0 53px, var(--elegant-line, color-mix(in oklab, var(--primary) 14%, transparent)) 54px 55px, transparent 56px 95px), var(--elegant-surface, var(--background));
+}
+html.sv-elegant .page-shell { isolation: isolate; }
+html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-band { background-color: transparent; }
+.home-brand-title { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 20px; font-size: 76px; line-height: 1.08; letter-spacing: 0; }
+.home-title-first { font-family: "Sora", var(--font-sans); font-weight: 700; animation: home-letter-arrive 600ms cubic-bezier(.2,.8,.2,1) both; }
+.home-saas .home-title-second { font-family: "Fraunces", var(--font-display); font-style: italic; font-weight: 600; color: var(--primary); animation: home-letter-arrive 650ms 90ms cubic-bezier(.2,.8,.2,1) both; }
+.home-title-dot { display: inline-block; transform-origin: bottom; animation: home-dot-pop 700ms 280ms both; }
+.home-brand-line { width: 48px; height: 1px; background: var(--border); }
+.home-brand-symbol { animation: home-letter-arrive 450ms ease-out both; }
+.home-tagline { animation: home-letter-arrive 550ms 150ms both; }
+.hero-ui-item { animation: home-letter-arrive 500ms 180ms both; }
+.hero-ui-item:nth-child(2) { animation-delay: 240ms; }
+.hero-ui-item:nth-child(3) { animation-delay: 300ms; }
+.nav-dock { padding: 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
+.nav-link a { position: relative; }
+.nav-link::after { display: none; }
+.nav-active-pill { pointer-events: none; }
+.page-enter, .auth-shell { animation: page-arrive 320ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes home-letter-arrive { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes home-dot-pop { 0% { opacity: 0; transform: scale(0); } 60% { opacity: 1; transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes page-arrive { from { opacity: .65; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 1023px) { .home-brand-title { font-size: 60px; gap: 0 16px; } }
+@media (max-width: 639px) { .home-ui-hero .home-brand-title { font-size: 44px; flex-direction: column; gap: 3px; } .home-ui-hero .hero-type { padding-block: 28px; } }
+@media (prefers-reduced-motion: reduce) { .page-enter, .auth-shell, .home-brand-title span, .home-brand-symbol, .home-tagline, .hero-ui-item { animation: none; } }
 @keyframes sv-elegant-drift { from { transform: translateY(0) scale(1); } to { transform: translateY(-3%) scale(1.04); } }
 @media (prefers-reduced-motion: reduce) { html.sv-elegant body::before { animation: none; } }
 
