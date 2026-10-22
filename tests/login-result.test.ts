@@ -41,3 +41,19 @@ describe("session-independent public counters", () => {
     expect(isPublicStatsFunction("unknown-id")).toBe(false);
   });
 });
+import { recoverPasswordSignIn } from "../src/lib/login-result";
+describe("recoverPasswordSignIn", () => {
+  it("uses the saved session when a step after the password check fails", async () => {
+    await expect(recoverPasswordSignIn(async () => { throw new TypeError("listener"); }, async () => "u1", () => {})).resolves.toBe("u1");
+  });
+  it("frees storage and retries once when browser storage is full", async () => {
+    let calls = 0; let freed = false;
+    const quota = Object.assign(new Error("exceeded the quota"), { name: "QuotaExceededError" });
+    const uid = await recoverPasswordSignIn(async () => { calls++; if (calls === 1) throw quota; return "u2"; }, async () => null, () => { freed = true; });
+    expect(uid).toBe("u2"); expect(freed).toBe(true); expect(calls).toBe(2);
+  });
+  it("never recovers a rejected password", async () => {
+    const bad = { code: "invalid_credentials", message: "Invalid login credentials" };
+    await expect(recoverPasswordSignIn(async () => { throw bad; }, async () => "u1", () => {})).rejects.toBe(bad);
+  });
+});
