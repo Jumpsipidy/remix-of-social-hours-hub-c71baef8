@@ -1,6 +1,5 @@
 import { type ReactNode } from "react";
 import { Mail, Unplug } from "lucide-react";
-import eclipse from "@/assets/incident-eclipse.jpg";
 
 /** Presentation only: boundaries retain their own recovery and reporting logic. */
 export function IncidentScreen({ title, description, code, icon, details, actions, mark }: {
@@ -13,7 +12,7 @@ export function IncidentScreen({ title, description, code, icon, details, action
         <span className="font-mono text-xs text-muted-foreground">{code === "404" ? "PUSLAPIS NERASTAS" : "SV GUARD · SISTEMOS BŪSENA"}</span>
       </header>
       <div className="relative flex flex-1 flex-col items-center justify-center px-6 py-10 text-center sm:px-10">
-        <div className="incident-horizon" aria-hidden><img src={eclipse} width={1536} height={768} alt="" /></div>
+        <div className="incident-horizon" aria-hidden><div className="incident-eclipse"><span className="incident-orbit" /></div></div>
         <div className="relative z-10 w-full max-w-xl">
           <div className="incident-mark" aria-hidden>{mark ?? (code === "404" ? "404" : "!")}</div>
           <div className="mb-4 flex items-center justify-center gap-2 text-xs font-semibold text-primary">{icon ?? <Unplug className="h-4 w-4" />}<span>{code === "404" ? "PASIKLYDUSI NUORODA" : code}</span></div>
