@@ -780,6 +780,39 @@ export type Database = {
           },
         ]
       }
+      lockdown_health_state: {
+        Row: {
+          created_at: string
+          failures: number
+          healthy: number
+          id: boolean
+          locked_at: string | null
+          locked_message: string | null
+          threat_level: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          failures?: number
+          healthy?: number
+          id?: boolean
+          locked_at?: string | null
+          locked_message?: string | null
+          threat_level?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          failures?: number
+          healthy?: number
+          id?: boolean
+          locked_at?: string | null
+          locked_message?: string | null
+          threat_level?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_room_id: string
@@ -1541,6 +1574,7 @@ export type Database = {
       }
       can_view_profile: { Args: { _target: string }; Returns: boolean }
       check_in_by_code: { Args: { _code: string }; Returns: Json }
+      classify_lockdown_health: { Args: { _scan: Json }; Returns: string }
       complete_student_setup: {
         Args: {
           _class_letter: string
