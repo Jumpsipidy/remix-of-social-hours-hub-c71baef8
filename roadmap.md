@@ -1,6 +1,6 @@
 # Užduotys (2026-10-21, vakaras)
 
-- [ ] Nauja klaidų pranešimų išvaizda ir lietuviški prisijungimo / registracijos paaiškinimai
+- [x] Nauja klaidų pranešimų išvaizda ir lietuviški prisijungimo / registracijos paaiškinimai (formų patikra naršyklėje, 8 testai)
 
 - [x] Suvienodinti tos pačios sudėties pokalbius, 12 dienų ištrynimas, organizacijų filtrai ir datos (prisijungusio naudotojo gyva patikra neprieinama)
 
