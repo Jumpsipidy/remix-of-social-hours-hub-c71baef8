@@ -1,4 +1,7 @@
-# Užduotys (2026-10-21, vakaras)
+# Užduotys
+- [ ] Greitis: užstrigusi sesijos patikra, prisijungimo laukimas ir trumpesni formų perėjimai.
+- [ ] Pradžios puslapis: nauja slenkama veiklos eiga ir auditorijų skiltis.
+- [ ] Bent 40 tikrų testų ir viešų puslapių patikra naršyklėje.
 - [x] Pradžia: animuotas pavadinimas, išplėstas simbolių meniu, širdelės sukimasis, perėjimai ir matomas elegantiškas šviesus fonas; naršyklėje patikrintas meniu, penki paspaudimai, prisijungimas ir 390 px vaizdas.
 - [x] Soci Guard: laikymas patvirtintas serveryje naršyklėje, reCAPTCHA matoma, galima grįžti prie laikymo; ryšio klaidos nebepakeičia patikros į matematiką. Tikro domeno nustatymai nepatikrinti.
 - [x] Animuotas 404 / blokavimo elementas be nuotraukos; PIN tik įvedus jumpsipidy; atskiras viešas būsenos klientas. Naršyklės patikra ir 10 testų praėjo; tikrą domeną sustabdė roboto patikra.

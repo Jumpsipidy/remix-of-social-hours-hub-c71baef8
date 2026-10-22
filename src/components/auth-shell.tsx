@@ -200,7 +200,7 @@ function AuthModeSwitch({ mode }: { mode: AuthMode }) {
 /** Skeleton ↔ form handoff inside the persistent frame (no artificial wait). */
 export function AuthStage({ mode, loading = false, children }: { mode: AuthMode; loading?: boolean; children: ReactNode }) {
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="sync" initial={false}>
       {loading ? (
         <motion.div key="skeleton" exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
           <AuthLoadingContent mode={mode} />
@@ -287,8 +287,6 @@ export function OAuthButtons({ disabled, beforeStart }: { disabled?: boolean; be
     beforeStart?.();
     setBusy(provider);
     try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-    // Leidžiam animacijai pasirodyti prieš paliekant puslapį
-    await new Promise((r) => setTimeout(r, 120));
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {

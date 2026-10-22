@@ -43,4 +43,5 @@
 - Soci Guard keeps transport/configuration errors distinct from failed verification; retry never grants access and reCAPTCHA never silently becomes a math challenge after a configuration request fails.
 - Signup confirmation emails use admin generateLink + Resend (token_hash link to /verify-email); Supabase's built-in mailer only reaches team members.
 - Authentication errors stay in a shared persistent inline feedback surface with localized validation and recovery links; transient toasts must not replace form errors.
+- Auth initialization reads profiles through RLS before repairing missing rows, deduplicates concurrent reads and schedules work outside auth callbacks; bounded loading prevents auth-lock deadlocks without granting access on failure.
 

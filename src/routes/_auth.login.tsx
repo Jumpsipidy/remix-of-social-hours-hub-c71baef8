@@ -14,6 +14,7 @@ import { userError } from "@/lib/user-error";
 import { AuthFeedback, authInvalidMessage } from "@/components/auth-feedback";
 import { AuthField, AuthHeading, AuthLegal, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
+import { withLoadingDeadline } from "@/lib/loading-control";
 
 const FAIL_KEY = "sv_login_fails_v1";
 const FAIL_THRESHOLD = 3;
@@ -77,11 +78,11 @@ function LoginPage() {
 
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || busy || successRole) return;
     if (isAuthenticated && profile?.role) {
       window.location.assign(DASH_BY_ROLE[profile.role] ?? "/");
     }
-  }, [isAuthenticated, profile?.role, loading]);
+  }, [isAuthenticated, profile?.role, loading, busy, successRole]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,24 +96,27 @@ function LoginPage() {
     try {
       clearImpersonation();
       try { localStorage.removeItem("sv_last_role_v1"); } catch {}
-      const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signIn, error } = await withLoadingDeadline(supabase.auth.signInWithPassword({ email, password }));
       if (error) throw error;
       // Prisijungimas jau pavyko. Profilio „remontas" serveryje yra tik
       // pagalbinis — jei jis nulūžta (pvz. tinklo/modulio klaida), nemesk
       // vartotojo atgal į login formą, o pasiimk rolę tiesiai iš DB.
       let ensured: { profile?: { role?: string } | null } = {};
       try {
-        ensured = await ensureProfile();
+        const { data: existing, error: readError } = await withLoadingDeadline(supabase
+          .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
+        if (readError) throw readError;
+        ensured = existing ? { profile: existing } : await withLoadingDeadline(ensureProfile());
       } catch (e) {
         console.warn("[login] ensureSignedInProfile failed, falling back", e);
         if (signIn.user?.id) {
-          const { data: fallback } = await supabase
-            .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle();
+          const { data: fallback } = await withLoadingDeadline(supabase
+            .from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
           if (fallback) ensured = { profile: fallback as { role?: string } };
         }
       }
       if (signIn.user?.id) {
-        await insertActivityLogRow({
+        void insertActivityLogRow({
           user_id: signIn.user.id,
           action: "auth.signed_in",
           entity_type: "user",
@@ -122,7 +126,7 @@ function LoginPage() {
       }
       let role = ensured.profile?.role as string | undefined;
       if (!role) {
-        const { data: prof } = await supabase.from("profiles").select("role").eq("id", signIn.user.id).maybeSingle();
+        const { data: prof } = await withLoadingDeadline(supabase.from("profiles").select("role").eq("id", signIn.user.id).maybeSingle());
         role = (prof as { role?: string } | null)?.role ?? "student";
       }
       let target = DASH_BY_ROLE[role] ?? "/";
@@ -134,7 +138,6 @@ function LoginPage() {
       setCaptchaProof(null);
       // Sėkmės perėjimas — kitoks nei OAuth „skeneris“: trumpas patvirtinimas.
       setSuccessRole(ROLE_LABELS[role] ?? "Naudotojas");
-      await new Promise((r) => setTimeout(r, 350));
       // Hard nav — avoids router transient state crashes after auth change
       window.location.assign(target);
     } catch (err) {
@@ -157,7 +160,7 @@ function LoginPage() {
   }
 
   return (
-    <AuthStage mode="login" loading={loading}>
+    <AuthStage mode="login">
       {successRole && <AuthSuccessOverlay roleLabel={successRole} />}
       <AuthHeading title="Prisijungti" subtitle="Sistema pati nukreips į tavo skydelį pagal rolę." />
       <div className="mt-6"><OAuthButtons disabled={busy} beforeStart={clearImpersonation} /></div>
