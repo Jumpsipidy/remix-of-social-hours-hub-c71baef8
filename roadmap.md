@@ -1,7 +1,7 @@
 # Užduotys (2026-10-21, vakaras)
-- [ ] Animuotas 404 / blokavimo elementas be nuotraukos, paslėptas PIN įėjimas ir prieigos klaidos patikra.
-- [ ] Automatinio blokavimo grėsmės lygių ir saugaus atkūrimo patobulinimas.
-- [ ] Pradžios puslapio paveikslėlis pagal pavyzdžius — tik maketas, svetainės nekeisti.
+- [x] Animuotas 404 / blokavimo elementas be nuotraukos; PIN tik įvedus jumpsipidy; atskiras viešas būsenos klientas. Naršyklės patikra ir 10 testų praėjo; tikrą domeną sustabdė roboto patikra.
+- [x] Automatiniai grėsmės lygiai: 2 techninių gedimų patikros, 3 sveikos atkūrimui; rankiniai / saugumo blokavimai neatveriami automatiškai. 7 SQL klasifikavimo patikros praėjo; tikras incidentas nebuvo sukeltas.
+- [x] Pradžios puslapio paveikslėlis pagal pavyzdžius — tik maketas, svetainė nepakeista.
 - [x] Saugios prieigos nuskaitymas, administracinis įėjimas ir nauji 404 / blokavimo ekranai (17 testų; tikra vieša būsena, atkūrimas ir imituotas blokavimas patikrinti naršyklėje).
 
 - [x] Nauja klaidų pranešimų išvaizda ir lietuviški prisijungimo / registracijos paaiškinimai (formų patikra naršyklėje, 8 testai)
