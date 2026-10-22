@@ -15,7 +15,7 @@ import { AuthFeedback, authInvalidMessage } from "@/components/auth-feedback";
 import { AuthField, AuthHeading, AuthLegal, AuthStage, AuthSubmit, OAuthButtons, OrDivider } from "@/components/auth-shell";
 import { AuthSkeleton } from "@/components/auth-skeleton";
 import { withLoadingDeadline } from "@/lib/loading-control";
-import { isCredentialRejection, resolveLoginProfile } from "@/lib/login-result";
+import { isCredentialRejection, loginFailureReason, recoverPasswordSignIn, resolveLoginProfile } from "@/lib/login-result";
 
 const FAIL_KEY = "sv_login_fails_v1";
 const FAIL_THRESHOLD = 3;
