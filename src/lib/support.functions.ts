@@ -224,7 +224,7 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
         ? "Visada prašom! 🙂 Jei dar kas nors neaišku — tiesiog parašyk."
         : "Labas! 👋 Esu SV Pagalba. Galiu padėti prisijungti, rasti veiklą, susitvarkyti QR kodą ar valandas. Ko reikia?";
       await db.from("support_messages").insert({ thread_id: thread.id, role: "assistant", content, provider: "local" });
-      return { status: "ai" as const, messages: await loadMessages(thread.id), options: ["Kaip prisijungti?", "Kaip rasti veiklą?", "Kur mano QR kodas?"] };
+      return { status: "ai" as const, messages: await loadMessages(thread.id), options: ["Kaip prisijungti?", "Kaip rasti veiklą?", "Kur mano QR kodas?"], askHuman: false, form: null, signedIn: Boolean(user) };
     }
     const simple = data.message.length < 120 && history.length < 4 && SIMPLE.test(data.message);
     const ai = await askAi([
