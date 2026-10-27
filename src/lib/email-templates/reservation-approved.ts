@@ -13,8 +13,8 @@ type Props = {
 export function renderReservationApprovedEmail(p: Props): string {
   const time = p.startTime && p.endTime ? `${p.startTime.slice(0, 5)}–${p.endTime.slice(0, 5)}` : "—";
   const body = `
-    <b style="color:#e2e8f0;">${escape(p.orgName)}</b> patvirtino tavo rezervaciją.<br/>
-    Statusas: <span style="display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;font-weight:700;font-size:12px;letter-spacing:.08em;">ON WORK</span><br/><br/>
+    <b style="color:#334155;">${escape(p.orgName)}</b> patvirtino tavo rezervaciją.<br/>
+    Statusas: <span style="display:inline-block;margin-top:6px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#0f172a;font-weight:700;font-size:12px;letter-spacing:.08em;">ON WORK</span><br/><br/>
     Ateik nurodytu laiku. Valandos bus įskaitytos tik po to, kai organizacija galutinai patvirtins darbo užbaigimą.
   `;
   const meta = metaGrid([

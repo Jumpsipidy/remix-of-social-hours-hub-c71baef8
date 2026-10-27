@@ -27,11 +27,11 @@ export function renderHoursConfirmedEmail(p: Props): string {
     userInitial: p.initial,
     heading: `Sveikas, ${escape(p.studentName)} 🎉`,
     bodyHtml: `
-      <b style="color:#e2e8f0;">${escape(p.orgName)}</b> ką tik teisiškai patvirtino tavo atliktą darbą.
+      <b style="color:#334155;">${escape(p.orgName)}</b> ką tik teisiškai patvirtino tavo atliktą darbą.
       Valandos automatiškai įskaitytos į tavo profilį ir persiųstos mokyklos administracijai.
       
-      <div style="margin:28px auto 0;display:inline-block;padding:2px;border-radius:22px;background:linear-gradient(135deg,#6366f1,#22d3ee,#10b981);">
-        <div style="padding:18px 34px;border-radius:20px;background:#0d0c1d;">
+      <div style="margin:28px auto 0;display:inline-block;padding:2px;border-radius:22px;background:linear-gradient(135deg,#0ea5e9,#22d3ee,#10b981);">
+        <div style="padding:18px 34px;border-radius:20px;background:#ffffff;">
           <div style="font-size:11px;font-weight:700;letter-spacing:.18em;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;">Įskaityta</div>
           <div style="font-size:44px;font-weight:900;line-height:1;color:#10b981;">+${p.hours} val.</div>
         </div>
@@ -42,15 +42,15 @@ export function renderHoursConfirmedEmail(p: Props): string {
     extraBlocksHtml: `
       <!-- Progress card -->
       <tr><td style="padding-top:24px;">
-        <div style="background:linear-gradient(180deg,#111a35 0%,#0d1530 100%); border:1px solid rgba(148,163,184,.15); border-radius:22px; padding:24px 26px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:22px; padding:24px 26px;">
           <table width="100%" style="margin-bottom:14px;">
             <tr>
-              <td style="font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:.02em;">Tavo pažanga</td>
+              <td style="font-size:13px;font-weight:700;color:#334155;letter-spacing:.02em;">Tavo pažanga</td>
               <td align="right" style="font-size:13px;font-weight:800;color:#a5b4fc;">${p.totalHours} / ${p.neededHours} val.</td>
             </tr>
           </table>
-          <div style="height:14px;border-radius:999px;background:#0b1226;border:1px solid rgba(148,163,184,.12);overflow:hidden;">
-            <div style="height:100%;width:${progress}%;border-radius:999px;background:linear-gradient(90deg,#6366f1 0%,#22d3ee 55%,#10b981 100%);"></div>
+          <div style="height:14px;border-radius:999px;background:#e2e8f0;border:1px solid rgba(148,163,184,.12);overflow:hidden;">
+            <div style="height:100%;width:${progress}%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9 0%,#22d3ee 55%,#10b981 100%);"></div>
           </div>
           <p style="margin:14px 0 0;font-size:13px;color:#94a3b8;line-height:1.6;">
             ${done
