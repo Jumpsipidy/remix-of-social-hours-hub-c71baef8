@@ -80,7 +80,7 @@ export function SupportChat() {
     const token = getToken();
     if (!token) return;
     let alive = true;
-    const load = () => fetchThread({ data: { token } }).then((r) => { if (alive) { setMsgs(r.messages); setStatus(r.status); } }).catch(() => {});
+    const load = () => fetchThread({ data: { token } }).then((r) => { if (alive) { setMsgs((cur) => (cur.some((x) => x.id.startsWith("tmp-")) ? cur : r.messages)); setStatus(r.status); } }).catch(() => {});
     load();
     const id = status === "escalated" ? window.setInterval(load, 10_000) : undefined;
     return () => { alive = false; if (id) clearInterval(id); };
@@ -113,7 +113,7 @@ export function SupportChat() {
         {open ? <X className="h-5 w-5" /> : <MessageCircleQuestion className="h-5 w-5" />}
       </button>
       {open && (
-        <div role="dialog" aria-label="SV Pagalba" className="fixed bottom-32 right-3 z-50 flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-2 sm:right-4">
+        <div role="dialog" aria-label="SV Pagalba" className="fixed bottom-32 right-3 z-50 flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-2 sm:right-4">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary"><ShieldCheck className="h-4 w-4" /></div>
             <div className="flex-1">
