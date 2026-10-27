@@ -266,7 +266,7 @@ function TeacherChatPage() {
             ) : shown.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <MessageCircle className="mx-auto mb-2 h-8 w-8" />
-                Pokalbių dar nėra. Parašyk mokiniui mygtuku „Rašyti mokiniui".
+                Pokalbių dar nėra. Parašyk organizacijai mygtuku „Rašyti organizacijai“.
               </div>
             ) : shown.map((c) => {
               const Icon = !c.student_id ? Building2 : c.student_id === c.school_admin_id ? GraduationCap : UserIcon;
@@ -293,7 +293,7 @@ function TeacherChatPage() {
         <section aria-label="Pokalbio žinutės" className={`min-h-0 min-w-0 flex-col ${activeId ? "flex" : "hidden md:flex"}`}>
           {!activeId ? (
             <div className="grid flex-1 place-items-center p-8 text-center text-muted-foreground">
-              <div><MessageCircle className="mx-auto mb-3 h-10 w-10" /><p className="text-sm">Pasirink pokalbį kairėje arba parašyk mokiniui.</p></div>
+              <div><MessageCircle className="mx-auto mb-3 h-10 w-10" /><p className="text-sm">Pasirink pokalbį kairėje arba parašyk organizacijai.</p></div>
             </div>
           ) : (
             <>
