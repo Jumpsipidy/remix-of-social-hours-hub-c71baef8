@@ -7,7 +7,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarPlus, Megaphone, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useSchoolData } from "@/components/teacher/use-school-data";
-import { useAuth } from "@/hooks/use-auth";
 import {
   teacherCreateReservations,
   teacherDeleteReservation,

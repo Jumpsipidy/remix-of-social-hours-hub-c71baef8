@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { reservationTimeLabel } from "@/lib/reservation-time";
 import { CalendarDays, Check, ChevronLeft, Clock, Loader2, MapPin, Megaphone, Search, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CITIES } from "@/lib/cities";
-import { encodeTaskInvite, type TaskInvite } from "@/lib/task-invite";
-import { teacherPublishTask, teacherSendInvites } from "@/lib/teacher.functions";
+import { teacherAssignTask, teacherPublishTask } from "@/lib/teacher.functions";
 import type { SchoolStudent } from "@/lib/school-data.functions";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
