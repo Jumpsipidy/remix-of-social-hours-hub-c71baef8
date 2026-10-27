@@ -1098,9 +1098,9 @@ html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-ban
 @keyframes scene-pulse { 50% { box-shadow: 0 0 0 2px color-mix(in oklab, var(--sc-glow1) 90%, transparent), 0 0 90px 18px color-mix(in oklab, var(--sc-glow1) 55%, transparent); } }
 .scene-layer { position: absolute; left: -4%; width: 108%; height: 46vh; bottom: 18vh; }
 .scene-layer path { transition: fill .6s; }
-.scene-far { transform: translate(calc(var(--mx) * -10px), calc(var(--p) * 8vh)); } .scene-far path { fill: var(--sc-far); }
-.scene-mid { bottom: 15vh; transform: translate(calc(var(--mx) * -20px), calc(var(--p) * 16vh)); } .scene-mid path { fill: var(--sc-mid); }
-.scene-near { bottom: 13vh; height: 30vh; transform: translate(calc(var(--mx) * -34px), calc(var(--p) * 26vh)); } .scene-near path { fill: var(--sc-near); }
+.scene-far { transform: translate(calc(var(--mx) * -10px), calc(var(--p) * 8vh)); }
+.scene-mid { bottom: 15vh; transform: translate(calc(var(--mx) * -20px), calc(var(--p) * 16vh)); }
+.scene-near { bottom: 13vh; height: 30vh; transform: translate(calc(var(--mx) * -34px), calc(var(--p) * 26vh)); }
 .scene-lake { position: absolute; left: 0; right: 0; bottom: 0; height: calc(16vh + var(--p) * 30vh); background: linear-gradient(to bottom, var(--sc-lake), var(--sc-sky1)); overflow: hidden; }
 .scene-glint { position: absolute; left: calc(50% + var(--p) * 22vw); top: 0; width: 6px; height: 100%; transform: translateX(-50%); background: linear-gradient(to bottom, var(--sc-glow1), transparent); filter: blur(3px); opacity: .7; animation: scene-shimmer 2.4s ease-in-out infinite; }
 @keyframes scene-shimmer { 50% { width: 18px; opacity: .45; } }
@@ -1125,3 +1125,23 @@ body:has(.home-scene) .site-background-fx { display: none; }
 .nav-pill { background: color-mix(in oklab, var(--card) 55%, transparent); border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent); backdrop-filter: blur(16px); box-shadow: 0 8px 30px -12px color-mix(in oklab, var(--foreground) 25%, transparent); }
 .nav-center .nav-pop { animation-name: none; }
 @media (max-width: 640px) { .nav-mark { width: 36px; height: 36px; } }
+/* Scene v2 — larger eclipse above the ridge, haze between layers */
+.scene-eclipse { top: 46%; width: clamp(260px, 30vw, 460px); }
+.scene-halo { position: absolute; inset: -110%; border-radius: 50%; background: radial-gradient(circle, color-mix(in oklab, var(--sc-glow1) 28%, transparent) 0%, color-mix(in oklab, var(--sc-glow2) 14%, transparent) 30%, transparent 60%); animation: scene-breathe 7s ease-in-out infinite; }
+@keyframes scene-breathe { 50% { transform: scale(1.08); opacity: .8; } }
+.scene-corona { inset: -18%; filter: blur(18px); mask: radial-gradient(circle, transparent 54%, black 58%, transparent 72%); }
+.scene-corona-2 { inset: -4%; filter: blur(2px); mask: radial-gradient(circle, transparent 66%, black 68.5%, transparent 72%); }
+.scene-moon { box-shadow: inset 0 0 40px color-mix(in oklab, var(--sc-glow2) 15%, transparent), 0 0 0 1.5px color-mix(in oklab, var(--sc-glow1) 80%, transparent), 0 0 80px 14px color-mix(in oklab, var(--sc-glow1) 35%, transparent); }
+.scene-layer { height: 44vh; bottom: 20vh; }
+.scene-mid { bottom: 17vh; } .scene-near { bottom: 14vh; height: 26vh; }
+.scene-haze { position: absolute; left: 0; right: 0; height: 18vh; background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--sc-sky3) 35%, transparent), transparent); filter: blur(10px); animation: scene-drift 16s ease-in-out infinite alternate; }
+.scene-haze-1 { bottom: 26vh; } .scene-haze-2 { bottom: 18vh; opacity: .6; animation-duration: 22s; }
+@keyframes scene-drift { from { transform: translateX(-3%); } to { transform: translateX(3%); } }
+.scene-lake { height: calc(14.5vh + var(--p) * 30vh); background: linear-gradient(to bottom, color-mix(in oklab, var(--sc-lake) 80%, var(--sc-glow2)), var(--sc-sky1)); }
+.scene-ripples { position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0 7px, color-mix(in oklab, var(--sc-glow2) 10%, transparent) 7px 8px); animation: scene-ripple 6s linear infinite; }
+@keyframes scene-ripple { to { background-position: 0 40px; } }
+.scene-glint { width: 60px; background: radial-gradient(ellipse 50% 100% at 50% 0, var(--sc-glow1), transparent 80%); filter: blur(6px); }
+@keyframes scene-shimmer { 50% { width: 90px; opacity: .5; } }
+.home-live h1 { text-shadow: 0 6px 40px color-mix(in oklab, var(--background) 80%, transparent); }
+@media (prefers-reduced-motion: reduce) { .scene-halo, .scene-haze, .scene-ripples { animation: none; } }
+@media (max-width: 640px) { .scene-eclipse { top: 52%; width: 62vw; } }
