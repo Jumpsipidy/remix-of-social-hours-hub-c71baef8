@@ -12,12 +12,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 type TaskRow = { id: string; title: string; task_date: string; start_time: string | null; end_time: string | null; available_hours: number; location: string | null; city: string | null; organization_id: string; spots_total: number };
 
-const toInvite = (t: TaskRow): TaskInvite => ({
-  id: t.id, title: t.title, date: t.task_date,
-  time: t.start_time && t.end_time ? `${t.start_time.slice(0, 5)}–${t.end_time.slice(0, 5)}` : "",
-  place: [t.city, t.location].filter(Boolean).join(", "), hours: String(Number(t.available_hours)),
-});
-
 function classKey(s: SchoolStudent) { return `${s.class_year ?? "?"}${s.class_letter ? s.class_letter : ""}`; }
 
 /** Mokinių pasirinkimas su „pažymėti visus“ kiekvienai klasei. */
@@ -119,8 +113,8 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,760px)] w-[calc(100%-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border p-5 pb-4 text-left">
-          <DialogTitle className="flex items-center gap-2">{picked && <button type="button" aria-label="Atgal" onClick={() => setPicked(null)} className="grid size-8 place-items-center rounded-lg hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}{picked ? "Kam siųsti?" : "Kviesti klasę į veiklą"}</DialogTitle>
-          <DialogDescription>{picked ? `Mokiniai pokalbyje gaus kortelę „${picked.title}“ su tavo žinute.` : "Pasirink veiklą iš visos svetainės — tokios pačios kaip /tasks puslapyje."}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">{picked && <button type="button" aria-label="Atgal" onClick={() => setPicked(null)} className="grid size-8 place-items-center rounded-lg hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}{picked ? "Kam priskirti?" : "Priskirti veiklą klasei"}</DialogTitle>
+          <DialogDescription>{picked ? `Mokiniai gaus rezervaciją „${picked.title}“ savo paskyrose su tavo pastaba.` : "Pasirink veiklą iš visos svetainės — tokios pačios kaip /tasks puslapyje."}</DialogDescription>
           {!picked && <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
             <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-3"><Search className="h-4 w-4 text-muted-foreground" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškok veiklos ar organizacijos…" className="h-10 w-full bg-transparent text-sm outline-none" /></div>
             <select value={city} onChange={(e) => setCity(e.target.value)} aria-label="Miestas" className="h-10 rounded-lg border border-input bg-background px-2 text-sm"><option value="">Visi miestai</option>{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
