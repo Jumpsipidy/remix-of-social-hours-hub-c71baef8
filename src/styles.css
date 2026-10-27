@@ -1119,3 +1119,9 @@ body:has(.home-scene) .site-navbar:not(.is-scrolled) { background: transparent !
 body:has(.home-scene) .site-navbar.is-scrolled { background: color-mix(in oklab, var(--background) 60%, transparent) !important; backdrop-filter: blur(16px); }
 body:has(.home-scene) .page-shell { position: relative; z-index: 1; }
 body:has(.home-scene) .site-background-fx { display: none; }
+/* Navbar v3: ring mark + centered glass pill, theme-aware */
+.nav-mark { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 9999px; color: var(--primary); border: 1.5px solid color-mix(in oklab, var(--primary) 55%, transparent); background: color-mix(in oklab, var(--primary) 10%, transparent); box-shadow: 0 0 18px -4px color-mix(in oklab, var(--primary) 60%, transparent); transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; }
+.nav-mark:hover { transform: scale(1.06); box-shadow: 0 0 26px -2px color-mix(in oklab, var(--primary) 70%, transparent); }
+.nav-pill { background: color-mix(in oklab, var(--card) 55%, transparent); border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent); backdrop-filter: blur(16px); box-shadow: 0 8px 30px -12px color-mix(in oklab, var(--foreground) 25%, transparent); }
+.nav-center .nav-pop { animation-name: none; }
+@media (max-width: 640px) { .nav-mark { width: 36px; height: 36px; } }
