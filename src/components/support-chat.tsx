@@ -1,7 +1,52 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircleQuestion, Send, X, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { getSupportThread, sendSupportMessage } from "@/lib/support.functions";
+
+// Tiny safe markdown: **bold**, [label](/path), numbered and dash lists.
+function inline(text: string, key: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\(\/[^)\s]*\))/g);
+  return parts.map((p, i) => {
+    const b = p.match(/^\*\*([^*]+)\*\*$/);
+    if (b) return <strong key={`${key}-${i}`}>{b[1]}</strong>;
+    const l = p.match(/^\[([^\]]+)\]\((\/[^)\s]*)\)$/);
+    if (l) return <Link key={`${key}-${i}`} to={l[2] as "/"} className="font-medium text-primary underline underline-offset-2">{l[1]}</Link>;
+    return <span key={`${key}-${i}`}>{p}</span>;
+  });
+}
+function Rich({ text }: { text: string }) {
+  const lines = text.split("\n");
+  const out: React.ReactNode[] = [];
+  let list: { n: string; t: string }[] = [];
+  const flush = (k: number) => {
+    if (!list.length) return;
+    out.push(<ol key={`l${k}`} className="my-1 space-y-1.5">{list.map((it, i) => (
+      <li key={i} className="flex gap-2"><span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-[11px] font-semibold text-primary">{it.n}</span><span>{inline(it.t, `li${k}-${i}`)}</span></li>
+    ))}</ol>);
+    list = [];
+  };
+  lines.forEach((ln, k) => {
+    const m = ln.match(/^\s*(\d+)[.)]\s+(.*)$/) || ln.match(/^\s*([-•])\s+(.*)$/);
+    if (m) { list.push({ n: m[1] === "-" || m[1] === "•" ? "•" : m[1], t: m[2] }); return; }
+    flush(k);
+    if (ln.trim()) out.push(<p key={k} className="leading-relaxed">{inline(ln, `p${k}`)}</p>);
+  });
+  flush(lines.length);
+  return <div className="space-y-2">{out}</div>;
+}
+
+// Reveals new assistant text word by word.
+function Typewriter({ text, onDone }: { text: string; onDone: () => void }) {
+  const words = text.split(/(\s+)/);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (n >= words.length) { onDone(); return; }
+    const id = window.setTimeout(() => setN((x) => x + 3), 28);
+    return () => clearTimeout(id);
+  }, [n, words.length, onDone]);
+  return <Rich text={words.slice(0, n).join("")} />;
+}
 
 type Msg = { id: string; role: string; content: string; created_at: string };
 const KEY = "sv-support-token";
@@ -22,6 +67,7 @@ export function SupportChat() {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [typingId, setTypingId] = useState<string | null>(null);
   const hp = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const fetchThread = useServerFn(getSupportThread);
@@ -49,7 +95,7 @@ export function SupportChat() {
     try {
       const r = await send({ data: { token, message: m, page: window.location.pathname, website: hp.current?.value || undefined } });
       if ("error" in r && r.error) { setErr(r.error); setMsgs((x) => x.filter((y) => !y.id.startsWith("tmp-"))); }
-      else if ("messages" in r) { setMsgs(r.messages); setStatus(r.status); setOptions(r.options ?? []); }
+      else if ("messages" in r) { const lastA = [...r.messages].reverse().find((x) => x.role !== "user"); setTypingId(lastA?.id ?? null); setMsgs(r.messages); setStatus(r.status); setOptions(r.options ?? []); }
     } catch { setErr("Nepavyko išsiųsti. Bandyk dar kartą."); }
     finally { setBusy(false); }
   }
@@ -82,14 +128,19 @@ export function SupportChat() {
               <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
                 <div className={m.role === "user"
                   ? "max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-primary px-3 py-2 text-primary-foreground"
-                  : "max-w-[90%] whitespace-pre-wrap"}>
+                  : "max-w-[92%] animate-in fade-in slide-in-from-bottom-1 duration-300"}>
                   {m.role === "admin" && <div className="mb-0.5 text-xs font-semibold text-primary">Administratorius</div>}
-                  {m.content}
+                  {m.role === "user" ? m.content : m.id === typingId ? <Typewriter text={m.content} onDone={() => setTypingId(null)} /> : <Rich text={m.content} />}
                 </div>
               </div>
             ))}
-            {busy && <div className="text-muted-foreground animate-pulse">Rašo…</div>}
-            {options.length > 0 && !busy && (
+            {busy && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground" aria-live="polite">
+                <span className="flex gap-1">{[0, 1, 2].map((i) => <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" style={{ animationDelay: `${i * 140}ms` }} />)}</span>
+                Galvoja…
+              </div>
+            )}
+            {options.length > 0 && !busy && !typingId && (
               <div className="flex flex-wrap gap-2">
                 {options.map((o) => (
                   <button key={o} type="button" onClick={() => submit(o)} className="rounded-full border border-border px-3 py-1 text-xs hover:bg-accent hover:text-accent-foreground">{o}</button>
