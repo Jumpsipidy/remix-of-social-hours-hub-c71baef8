@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { CalendarCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Users, X } from "lucide-react";
+import { CalendarCheck, GraduationCap, Home, LayoutDashboard, LogOut, Menu, MessageCircle, Sparkles, Users, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -53,6 +53,23 @@ export function TeacherShell({ children }: { children: ReactNode }) {
           {item.label}
         </Link>
       ))}
+      <div className="my-2 border-t border-border" />
+      <Link
+        to="/tasks"
+        onClick={() => setMenuOpen(false)}
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <Sparkles className="h-4 w-4 shrink-0" />
+        Visos veiklos
+      </Link>
+      <Link
+        to="/"
+        onClick={() => setMenuOpen(false)}
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <Home className="h-4 w-4 shrink-0" />
+        Grįžti į svetainę
+      </Link>
     </nav>
   );
 

@@ -1,7 +1,8 @@
 import { createFileRoute, Navigate, Outlet } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { TeacherShell } from "@/components/teacher/teacher-shell";
-import { schoolSnapshotQuery } from "@/components/teacher/use-school-data";
+import { SchoolClaimPanel } from "@/components/school-claim-panel";
+import { schoolSnapshotQuery, useSchoolData } from "@/components/teacher/use-school-data";
 
 export const Route = createFileRoute("/_authenticated/mokytojas")({
   // Duomenys pradedami krauti iš karto – visi vaikiniai puslapiai dalijasi talpykla.
