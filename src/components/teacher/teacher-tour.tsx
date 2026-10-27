@@ -223,7 +223,7 @@ export function TeacherTour({ open, onDone }: { open: boolean; onDone: () => voi
                 onClick={next}
                 className="inline-flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md transition hover:opacity-90"
               >
-                {phase + 1 >= TEACHER_TOUR_STEPS.length ? "Baigti" : "Toliau"} <ArrowRight className="h-3.5 w-3.5" />
+                {(typeof phase === "number" ? phase : 0) + 1 >= TEACHER_TOUR_STEPS.length ? "Baigti" : "Toliau"} <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

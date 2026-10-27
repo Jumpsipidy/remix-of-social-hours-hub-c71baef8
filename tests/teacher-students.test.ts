@@ -11,8 +11,8 @@ import {
 const s = (over: Partial<StudentLike>): StudentLike => ({
   id: over.id ?? Math.random().toString(36).slice(2),
   full_name: over.full_name ?? "Vardas Pavardė",
-  class_year: over.class_year ?? "7",
-  class_letter: over.class_letter ?? "A",
+  class_year: "class_year" in over ? (over.class_year ?? null) : "7",
+  class_letter: "class_letter" in over ? (over.class_letter ?? null) : "A",
   hours_earned: over.hours_earned ?? 0,
   hours_needed: over.hours_needed ?? 20,
   login_streak: over.login_streak ?? 0,
