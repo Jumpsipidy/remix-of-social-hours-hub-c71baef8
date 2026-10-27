@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck, School, CircleHelp, Settings2 } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck } from "lucide-react";
 import { useSiteTheme } from "@/components/theme-provider";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
@@ -29,7 +29,6 @@ const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { openSettings } = useSiteTheme();
   const { isAuthenticated, profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -149,6 +148,7 @@ export function Navbar() {
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
+          <SchoolEyesToggle compact />
           <NotificationBell />
           {isAuthenticated ? <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="secondary" className="hidden h-10 gap-2 px-2.5 sm:inline-flex" aria-label="Paskyros meniu"><UserRound /><span className="hidden max-w-24 truncate xl:inline">{profile?.full_name?.split(" ")[0] ?? "Paskyra"}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
