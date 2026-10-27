@@ -7,7 +7,7 @@ vi.mock("@tanstack/react-start", () => ({
     const chain = {
       middleware: () => chain,
       inputValidator: (fn: typeof validate) => { validate = fn; return chain; },
-      handler: (fn: (input: unknown) => unknown) => (data: unknown) => fn({
+      handler: (fn: (input: unknown) => unknown) => async (data: unknown) => fn({
         data: validate(data), context: { userId: "test-teacher", supabase: { rpc: mocks.rpc } },
       }),
     };
