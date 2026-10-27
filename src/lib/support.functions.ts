@@ -55,13 +55,20 @@ async function callModel(
   url: string, key: string, body: Record<string, unknown>,
   messages: { role: string; content: string }[],
 ): Promise<AiOut | { status: number }> {
-  const resp = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ ...body, messages, response_format: { type: "json_object" } }),
-  });
+  let resp: Response;
+  try {
+    resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ ...body, messages, response_format: { type: "json_object" } }),
+    });
+  } catch (e) {
+    // Dropped connections ("socket hang up") fall through to the next provider instead of crashing.
+    console.error("support ai network", url, (e as Error).message);
+    return { status: 0 };
+  }
   if (!resp.ok) { console.error("support ai", url, resp.status, (await resp.text()).slice(0, 200)); return { status: resp.status }; }
-  const json = await resp.json();
+  const json = await resp.json().catch(() => ({}));
   const content: string = json.choices?.[0]?.message?.content ?? "{}";
   let p: Record<string, unknown> = {};
   try { p = JSON.parse(content); } catch { const m = content.match(/\{[\s\S]*\}/); if (m) try { p = JSON.parse(m[0]); } catch { /* ignore */ } }
