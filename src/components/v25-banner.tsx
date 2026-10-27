@@ -3,7 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { X, PartyPopper } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-const KEY = "sv_v26_banner_closed";
+const KEY = "sv_v265_banner_closed";
 const BITS = ["🎉", "✨", "🎊", "⭐", "🥳", "💙", "🎈", "✨"];
 
 /** Šventinė V2.6.5 kortelė su konfeti — uždaroma, rodoma vieną kartą įrenginyje. */

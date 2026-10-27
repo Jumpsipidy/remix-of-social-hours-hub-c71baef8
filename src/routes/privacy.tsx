@@ -174,7 +174,7 @@ function PrivacyPage() {
               <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-rose-300">🚫 Jokios reklamos</span>
             </div>
             <p className="mt-4 text-[11px] uppercase tracking-[0.24em] text-white/40">
-              Paskutinį kartą atnaujinta · 2026-07-24 · Versija 2.0
+              Paskutinį kartą atnaujinta · 2026-10-27 · Versija 2.6.5
 
             </p>
           </div>

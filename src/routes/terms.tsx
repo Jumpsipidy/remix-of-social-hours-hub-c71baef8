@@ -109,7 +109,16 @@ const SECTIONS: { h: string; body: string[] }[] = [
     ],
   },
   {
-    h: "11. Taikoma teisė ir ginčų sprendimas",
+    h: "11. Klasių kodai, mokyklos rezervacijos ir pokalbiai",
+    body: [
+      "Mokinys, registruodamasis su klasės registracijos kodu (MKC-XXXXX-X), automatiškai priskiriamas tai mokyklai, klasei ir privalomų valandų skaičiui. Šių duomenų mokinys pats keisti negali — juos keičia tik Super administratorius.",
+      "Mokyklos administratorius (auklėtojas) mato tik jam priskirtų klasių mokinius, gali kurti mokyklos rezervacijas ir pats patvirtinti galutinį sveikų valandų skaičių. Mokyklos rezervacijoms QR kodas nereikalingas.",
+      "Pokalbiai galimi tarp organizacijos ir mokinio bei tarp auklėtojo ir organizacijos. Tiesioginiai auklėtojo ir mokinio pokalbiai platformoje išjungti. Pokalbių žinutės automatiškai ištrinamos po 12 dienų.",
+      "Svetainę saugo SV Guard patikra ir automatinis karantinas. Bandymas apeiti patikras, automatizuoti veiksmus ar perkrauti sistemą laikomas Taisyklių pažeidimu.",
+    ],
+  },
+  {
+    h: "12. Taikoma teisė ir ginčų sprendimas",
     body: [
       "Šioms Taisyklėms ir bet kokiems iš jų kylantiems santykiams taikoma Lietuvos Respublikos teisė.",
       "Ginčai pirmiausia sprendžiami derybų būdu. Nepavykus susitarti, ginčas nagrinėjamas Lietuvos Respublikos bendrosios kompetencijos teisme pagal Platformos savininko buveinės vietą.",
@@ -117,12 +126,12 @@ const SECTIONS: { h: string; body: string[] }[] = [
     ],
   },
   {
-    h: "12. Baigiamosios nuostatos",
+    h: "13. Baigiamosios nuostatos",
     body: [
       "Jei kuri nors Taisyklių nuostata pripažįstama negaliojančia, likusios nuostatos lieka galioti.",
       "Platforma turi teisę bet kada nutraukti paslaugų teikimą, apie tai iš anksto informuodama Naudotojus prieinamais kanalais.",
-      "Kontaktai bendravimui teisiniais ir techniniais klausimais nurodomi Platformos apačioje bei prieinami per „Pranešti apie klaidą“ formą.",
-      "Šios Taisyklės paskutinį kartą atnaujintos: 2026 m. liepos 2 d.",
+      "Kontaktai teisiniais ir techniniais klausimais: pagalba@socialinesvalandos.dev arba „Pranešti apie klaidą“ forma. Platformą kuria Lietuvos moksleivis su kūrėjų grupe Jumpsipidy studios.",
+      "Šios Taisyklės paskutinį kartą atnaujintos: 2026 m. spalio 27 d. (V2.6.5)",
     ],
   },
 ];
