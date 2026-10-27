@@ -30,10 +30,10 @@ export const Route = createFileRoute("/_authenticated/mokytojas/pokalbiai")({
   head: () => ({
     meta: [
       { title: "Pokalbiai — Auklėtojo sritis" },
-      { name: "description", content: "Auklėtojo pokalbiai su mokiniais ir organizacijomis, su greitaisiais veiksmais." },
+      { name: "description", content: "Auklėtojo pokalbiai su organizacijomis, su greitaisiais veiksmais." },
       { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: "Pokalbiai — Auklėtojo sritis" },
-      { property: "og:description", content: "Pokalbiai su priskirtų klasių mokiniais." },
+      { property: "og:description", content: "Pokalbiai su organizacijomis dėl rezervacijų ir valandų." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -48,11 +48,11 @@ type Conv = {
 };
 type Msg = { id: string; chat_room_id: string; sender_id: string | null; content: string; created_at: string };
 
-/** Greitieji šablonai – vienu paspaudimu įrašomi į žinutę. */
+/** Greitieji šablonai organizacijoms – vienu paspaudimu įrašomi į žinutę. */
 const TEMPLATES = [
-  { icon: Bell, label: "Priminimas apie valandas", text: "Labas! Primenu, kad iki termino pabaigos reikia surinkti visas privalomas socialines valandas. Jei reikia pagalbos – parašyk man. 🙂" },
-  { icon: CalendarCheck, label: "Rezervacijos patvirtinimas", text: "Labas! Tavo rezervacija peržiūrėta ir patvirtinta. Nepamiršk atvykti laiku ir pasirūpinti QR patvirtinimu. ✅" },
-  { icon: Sparkles, label: "Paskatinimas", text: "Labas! Matau tavo progresą – puikiai sekasi! Taip toliau, liko visai nedaug. 💪" },
+  { icon: Sparkles, label: "Padėka", text: "Labas! Dėkojame už bendradarbiavimą — mokiniai grįžo labai patenkinti. 🙂" },
+  { icon: CalendarCheck, label: "Rezervacijos patvirtinimas", text: "Labas! Patvirtiname, kad mokiniai atvyks pagal susitarimą. Jei kils klausimų — parašykite. ✅" },
+  { icon: Bell, label: "Klausimas apie valandas", text: "Labas! Norėtume patikslinti valandų įskaitymą už praėjusią veiklą. Ar galėtumėte patvirtinti?" },
 ] as const;
 
 function TeacherChatPage() {
