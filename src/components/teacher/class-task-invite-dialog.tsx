@@ -152,9 +152,8 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
 
 /** Auklėtojo veikla visiems /tasks puslapyje, su galimybe iškart pranešti klasei. */
 export function PublishTaskDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
-  const { profile } = useAuth();
   const publishFn = useServerFn(teacherPublishTask);
-  const inviteFn = useServerFn(teacherSendInvites);
+  const assignFn = useServerFn(teacherAssignTask);
   const [f, setF] = useState({ title: "", description: "", date: "", start: "", end: "", hours: 2, city: "Šeduva", location: "", spots: 20 });
   const [notify, setNotify] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -166,12 +165,12 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
     setBusy(true);
     try {
       const { id } = await publishFn({ data: f });
-      let sent = 0;
+      let assigned = 0;
       if (notify && selected.size) {
-        const res = await sendCards(inviteFn, { id, title: f.title, date: f.date, time: reservationTimeLabel(f.start, f.end), place: [f.city, f.location].filter(Boolean).join(", "), hours: String(f.hours) }, [...selected], "", profile?.full_name ?? "Auklėtojas");
-        sent = res.sent;
+        const res = await assignFn({ data: { studentIds: [...selected], taskId: id, date: f.date, start: f.start, end: f.end, hours: f.hours, note: "" } });
+        assigned = res.created;
       }
-      toast.success(sent ? `Veikla paskelbta visiems ir išsiųsta ${sent} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
+      toast.success(assigned ? `Veikla paskelbta visiems ir priskirta ${assigned} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
       onOpenChange(false);
     } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko paskelbti."); } finally { setBusy(false); }
   };
@@ -195,7 +194,7 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
             <label className="col-span-2 block text-xs font-semibold text-muted-foreground">Miestas<select value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={field}>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></label>
           </div>
           <label className="block text-xs font-semibold text-muted-foreground">Vieta<input value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} placeholder="Pvz.: Mokyklos aktų salė" className={field} /></label>
-          <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm font-semibold"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-[var(--primary)]" /> Taip pat nusiųsti pasiūlymą mano klasės mokiniams</label>
+          <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm font-semibold"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-[var(--primary)]" /> Taip pat priskirti mano klasės mokiniams</label>
           {notify && <StudentPicker students={students} selected={selected} setSelected={setSelected} />}
         </div>
         <div className="flex justify-end border-t border-border p-4"><Button onClick={submit} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />} Paskelbti</Button></div>
