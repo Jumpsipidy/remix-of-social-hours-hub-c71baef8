@@ -135,7 +135,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
           ) : (
             <div className="space-y-4">
               <StudentPicker students={students} selected={selected} setSelected={setSelected} />
-              <label className="block text-xs font-semibold text-muted-foreground">Tavo žinutė (nebūtina)
+              <label className="block text-xs font-semibold text-muted-foreground">Pastaba mokiniams (nebūtina)
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={600} placeholder="Pvz.: Puiki proga surinkti valandų prieš atostogas!" className="mt-1 w-full resize-none rounded-lg border border-input bg-background p-2.5 text-sm text-foreground outline-none focus:border-primary" />
               </label>
             </div>
@@ -143,7 +143,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
         </div>
         {picked && <div className="flex items-center justify-between gap-3 border-t border-border p-4">
           <span className="text-sm text-muted-foreground">Pažymėta: <b className="text-foreground">{selected.size}</b></span>
-          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Siųsti mano klasei</Button>
+          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Priskirti mano klasei</Button>
         </div>}
       </DialogContent>
     </Dialog>
