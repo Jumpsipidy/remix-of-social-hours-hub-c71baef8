@@ -1039,3 +1039,30 @@ html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-ban
   .tour-spot { transition: none; }
   .tour-card-in, .tour-ring, .tour-dot { animation: none; }
 }
+
+/* V2.6.5 navbar motion */
+.nav-redesign { backdrop-filter: blur(14px) saturate(1.4); }
+.nav-redesign.is-scrolled .nav-inner { height: 66px; }
+.nav-redesign .nav-inner { transition: height 220ms cubic-bezier(.2,.8,.2,1); }
+.nav-redesign .brand-wordmark { font-size: 1.05rem; }
+.nav-heart { position: relative; overflow: visible; box-shadow: 0 6px 20px -6px color-mix(in oklab, var(--primary) 70%, transparent); }
+.nav-heart-icon { animation: nav-heartbeat 2.4s ease-in-out infinite; transform-origin: center; }
+.nav-heart-ring { position: absolute; inset: -4px; border-radius: 16px; border: 2px solid var(--primary); opacity: 0; animation: nav-ring 2.4s ease-out infinite; pointer-events: none; }
+.nav-heart:active .nav-heart-icon { transform: scale(.8); }
+@keyframes nav-heartbeat { 0%,60%,100% { transform: scale(1); } 10% { transform: scale(1.22); } 20% { transform: scale(.95); } 30% { transform: scale(1.14); } }
+@keyframes nav-ring { 0%,8% { opacity: 0; transform: scale(.9); } 15% { opacity: .55; } 45%,100% { opacity: 0; transform: scale(1.35); } }
+.nav-redesign .logo-celebrate { animation: logo-celebrate-big 900ms cubic-bezier(.2,.8,.2,1); }
+@keyframes logo-celebrate-big { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(200deg) scale(1.25); } 100% { transform: rotate(360deg) scale(1); } }
+.nav-pop { animation: nav-pop-in 420ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes nav-pop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.nav-link-icon { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
+.nav-link:hover .nav-link-icon { transform: translateY(-2px) rotate(-6deg) scale(1.08); }
+.nav-cta { transition: transform 180ms ease, box-shadow 180ms ease; }
+.nav-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -10px var(--primary); }
+@media (max-width: 640px) {
+  .nav-redesign .nav-inner { height: 64px; }
+  .nav-redesign .brand-wordmark { font-size: .9rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-heart-icon, .nav-heart-ring, .nav-pop { animation: none !important; }
+}

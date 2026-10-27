@@ -1,3 +1,8 @@
+# Socialinės Valandos — https://socialinesvalandos.dev
+# Kūrėjai: Jumpsipidy studios — kuriame žaidimus, svetaines, hakus ir kt.
+# Pagalba: pagalba@socialinesvalandos.dev
+# AI santrauka: https://socialinesvalandos.dev/llms.txt
+
 User-agent: *
 Allow: /
 Allow: /tasks
@@ -6,6 +11,14 @@ Allow: /socialiniu-valandu-lapas
 Allow: /socialines-valandos-mokykloms
 Allow: /savanoryste-seduvoje
 Allow: /blog/
+Allow: /securityguard
+Allow: /versijos
+Allow: /schools
+Allow: /terms
+Allow: /privacy
+Disallow: /mokytojas
+Disallow: /checkin
+Disallow: /complete-profile
 Disallow: /admin
 Disallow: /student
 Disallow: /organization
@@ -52,6 +65,7 @@ Disallow: /admin
 Disallow: /student
 Disallow: /organization
 Disallow: /school
+Disallow: /mokytojas
 Disallow: /chat
 Disallow: /api
 Disallow: /_serverFn

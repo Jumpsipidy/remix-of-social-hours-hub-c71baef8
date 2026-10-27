@@ -48,3 +48,4 @@
 - Session-function middleware replaces the generated attacher to keep public counters independent of preview session storage; protected calls still attach tokens and use server authorization. Login distinguishes credential rejection from profile-loading failure and never invents roles.
 
 - Client entry installs a localStorage fallback before Supabase loads; broken browser storage (Firefox NS_ERROR_FAILURE) must not block sign-in.
+- Every outgoing email renders through renderShell in src/lib/email-templates/_shell.ts (light card, bulletproof button, fallback link); keeps all messages consistent and readable in every mail client.

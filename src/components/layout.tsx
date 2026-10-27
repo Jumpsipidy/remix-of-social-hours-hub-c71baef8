@@ -129,20 +129,25 @@ export function Navbar() {
 
   return (
     <header className={`site-navbar nav-redesign sticky top-0 z-50 border-b bg-background/95 ${scrolled ? "is-scrolled border-border shadow-sm" : "border-border/60"}`}>
-      <div className="nav-inner mx-auto flex h-[72px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
+      <div className="nav-inner mx-auto flex h-[80px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
         <div className="nav-brand group flex shrink-0 items-center gap-2.5">
-          <Button variant="ghost" size="icon" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo h-10 w-10 shrink-0 rounded-lg bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
-            <Heart className="h-5 w-5" fill="currentColor" />
+          <Button variant="ghost" size="icon" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo nav-heart h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
+            <Heart className="nav-heart-icon h-5 w-5" fill="currentColor" /><span aria-hidden className="nav-heart-ring" />
           </Button>
-          <Link to="/" className="brand-wordmark hidden leading-none sm:flex" aria-label="Socialinės Valandos — pradžia"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span></Link>
+          <Link to="/" className="brand-wordmark flex leading-none" aria-label="Socialinės Valandos — pradžia"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span></Link>
         </div>
         <nav aria-label="Pagrindinis meniu" className="nav-dock ml-3 hidden min-w-0 items-center gap-1 lg:flex">
-          {links.filter((l) => l.to === "/" || l.to === "/tasks" || l.to === DASHBOARD_BY_ROLE[activeRole ?? "student"]?.to).map((l) => {
-            const active = isActive(l.to, l.to === "/");
-            const Icon = l.to === "/" ? Home : l.to === "/tasks" ? ListTodo : LayoutDashboard;
-            return <Button key={l.to} asChild variant="ghost" className={`nav-link relative h-11 gap-2 px-3 text-sm ${active ? "text-primary" : "text-muted-foreground"}`}><Link to={l.to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-md bg-primary/10" transition={{ type: "spring", stiffness: 450, damping: 35 }} />}<Icon className="relative h-4 w-4" /><span className="relative">{l.to === "/tasks" ? "Veiklos" : l.to === "/" ? "Pradžia" : "Mano sritis"}</span></Link></Button>;
+          {[
+            { to: "/", label: "Pradžia", Icon: Home },
+            { to: "/tasks", label: "Veiklos", Icon: ListTodo },
+            { to: "/socialines-valandos-mokykloms", label: "Mokykloms", Icon: School, wide: true },
+            { to: "/securityguard", label: "SV Guard", Icon: ShieldCheck, wide: true },
+            ...(activeRole && DASHBOARD_BY_ROLE[activeRole] ? [{ to: DASHBOARD_BY_ROLE[activeRole]!.to, label: "Mano sritis", Icon: LayoutDashboard }] : []),
+          ].map(({ to, label, Icon, wide }: { to: string; label: string; Icon: typeof Home; wide?: boolean }, i) => {
+            const active = isActive(to, to === "/");
+            return <Button key={to} asChild variant="ghost" className={`nav-link nav-pop relative h-12 ${wide ? "hidden xl:inline-flex" : ""} gap-2 px-3.5 text-[15px] font-semibold ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{ animationDelay: `${i * 45}ms` }}><Link to={to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-xl bg-primary/12 ring-1 ring-primary/25" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}<Icon className="nav-link-icon relative h-[18px] w-[18px]" /><span className="relative">{label}</span></Link></Button>;
           })}
-          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="h-11 gap-2 text-muted-foreground"><CircleHelp className="h-4 w-4" />Daugiau<ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start" sideOffset={12} className="w-64 p-2"><DropdownMenuLabel>Atrask daugiau</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem asChild><Link to="/socialines-valandos-mokykloms"><School />Mokykloms</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/securityguard"><ShieldCheck />SV Guard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/versijos"><History />Kas naujo</Link></DropdownMenuItem><DropdownMenuItem asChild><a href="/#faq"><CircleHelp />Klausimai ir pagalba</a></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onSelect={openSettings}><Settings2 />Išvaizdos nustatymai</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="nav-pop h-12 gap-2 px-3.5 text-[15px] font-semibold text-muted-foreground hover:text-foreground"><CircleHelp className="h-[18px] w-[18px]" />Daugiau<ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start" sideOffset={12} className="w-64 p-2"><DropdownMenuLabel>Atrask daugiau</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem asChild className="xl:hidden"><Link to="/socialines-valandos-mokykloms"><School />Mokykloms</Link></DropdownMenuItem><DropdownMenuItem asChild className="xl:hidden"><Link to="/securityguard"><ShieldCheck />SV Guard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/about-orgs"><UserRound />Organizacijoms</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/socialiniu-valandu-lapas"><ListTodo />Valandų lapas</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/versijos"><History />Kas naujo</Link></DropdownMenuItem><DropdownMenuItem asChild><a href="/#faq"><CircleHelp />Klausimai ir pagalba</a></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onSelect={openSettings}><Settings2 />Išvaizdos nustatymai</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
@@ -155,8 +160,8 @@ export function Navbar() {
               {links.filter((l) => l.to !== "/" && l.to !== "/tasks").map((l) => <DropdownMenuItem key={l.to} asChild className="min-h-10"><Link to={l.to}>{l.to.includes("chat") || l.to.includes("pokalbiai") ? <MessageCircle /> : l.to.includes("checkin") || l.to.includes("scan") ? <QrCode /> : <LayoutDashboard />}{l.label}</Link></DropdownMenuItem>)}
               <DropdownMenuSeparator /><DropdownMenuItem onSelect={() => void handleSignOut()} className="min-h-10"><LogOut />Atsijungti</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button size="sm" asChild className="h-10"><Link to="/register">Registruotis</Link></Button></div>}
-          <Button variant="ghost" size="icon" className="h-10 w-10 lg:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}><Menu /></Button>
+          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button asChild className="nav-cta h-11 rounded-xl px-5 font-semibold"><Link to="/register">Registruotis</Link></Button></div>}
+          <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}><Menu /></Button>
         </div>
       </div>
 
@@ -229,7 +234,7 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <span>© 2026 Socialinės Valandos. Visos teisės saugomos.</span>
+          <span>© 2026 Socialinės Valandos · Sukūrė Lietuvos moksleivis su <b className="font-semibold text-foreground">Jumpsipidy studios</b> · <a href="mailto:pagalba@socialinesvalandos.dev" className="hover:text-foreground">pagalba@socialinesvalandos.dev</a></span>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:text-foreground">🔐 Privatumas</Link>
             <Link to="/terms" className="hover:text-foreground font-semibold underline underline-offset-4">Teisės ir taisyklės →</Link>

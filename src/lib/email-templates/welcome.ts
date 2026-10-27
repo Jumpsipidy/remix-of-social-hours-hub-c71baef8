@@ -13,7 +13,7 @@ const ROLE_COPY: Record<Props["role"], { eyebrow: string; heading: (n: string) =
     eyebrow: "Sveikas atvykęs",
     heading: (n) => `Labas, ${n}! 👋`,
     body: (h) =>
-      `Tavo mokinio paskyra sukurta. Tavo tikslas: <b style="color:#e2e8f0;">${h} val.</b> socialinės-pilietinės veiklos.<br/><br/>
+      `Tavo mokinio paskyra sukurta. Tavo tikslas: <b style="color:#334155;">${h} val.</b> socialinės-pilietinės veiklos.<br/><br/>
        Naršyk užduotis, rezervuokis, atlik darbą — organizacija patvirtins ir valandos automatiškai įsiskaitys.`,
     cta: "Rasti pirmą užduotį",
     href: `${APP_URL}/tasks`,

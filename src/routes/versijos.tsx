@@ -3,9 +3,9 @@ import { PageShell } from "@/components/layout";
 import { useState } from "react";
 import { ArrowRight, PartyPopper, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-const TITLE = "V2.6 naujienos ir versijų istorija — Socialinės Valandos";
+const TITLE = "V2.6.5 naujienos ir versijų istorija — Socialinės Valandos";
 const DESC =
-  "Socialinės Valandos V2.6: auklėtojo sritis /mokytojas, grupinės rezervacijos su draugais, sustiprintas SV Guard, klasių registracijos kodai ir saugesnis slaptažodis.";
+  "Socialinės Valandos V2.6.5: naujas meniu, gražesni laiškai, auklėtojo vedlys, auklėtojo sritis /mokytojas, grupinės rezervacijos su draugais, sustiprintas SV Guard, klasių registracijos kodai ir saugesnis slaptažodis.";
 
 type Tag = "Nauja" | "Patobulinta" | "Sauga" | "Pataisyta" | "Dizainas";
 
@@ -19,6 +19,24 @@ type Version = {
 
 /** Newest first. Kiekviena eilutė = realus platformos pokytis. */
 const VERSIONS: Version[] = [
+  {
+    v: "V2.6.5",
+    title: "Gyvesnė sąsaja ir auklėtojo vedlys",
+    date: "2026 m. spalis",
+    summary:
+      "V2.6.5 atnaujina viršutinį meniu, el. laiškus, auklėtojo sritį ir telefonų išdėstymą — viskas greičiau, aiškiau ir su daugiau animacijų.",
+    items: [
+      { tag: "Nauja", text: "Visiškai naujas, didesnis viršutinis meniu su animuota širdele, judančiu aktyvaus puslapio žymekliu ir greitomis nuorodomis." },
+      { tag: "Nauja", text: "Auklėtojo sritis /mokytojas su nauju valdymo centru, grafikais ir interaktyviu sąsajos vedliu, kuris paryškina elementus ir prisimena, kad jį praėjai." },
+      { tag: "Nauja", text: "Perdarytas mokinių puslapis: progreso žiedai, klasių filtrai, rūšiavimas ir detalus mokinio vaizdas." },
+      { tag: "Nauja", text: "Mokyklos rezervacijos rodomos mokinio skydelyje be QR ir be organizacijos patvirtinimo; galutines valandas parenka auklėtojas." },
+      { tag: "Nauja", text: "Nauji el. laiškai: aiškus dizainas, dideli mygtukai, atsarginė nuoroda ir patvirtinimo kodas." },
+      { tag: "Patobulinta", text: "Pokalbiai sujungiami į vieną, rodomos datos, organizacijos gali filtruoti; žinutės ištrinamos po 12 dienų." },
+      { tag: "Patobulinta", text: "Prisijungimas veikia ir naršyklėse su sugadinta vietine atmintimi (pvz., Firefox)." },
+      { tag: "Sauga", text: "Tiesioginiai auklėtojo ir mokinio pokalbiai išjungti serveryje; lieka organizacija ↔ mokinys ir auklėtojas ↔ organizacija." },
+      { tag: "Sauga", text: "Automatinis karantinas pagal grėsmės lygį: atsigauna tik techniniai sutrikimai, rankiniai ir saugumo užraktai lieka." },
+    ],
+  },
   {
     v: "V2.6.0",
     title: "Auklėtojo sritis ir stipresnė apsauga",
@@ -448,7 +466,7 @@ function VersionsPage() {
             <PartyPopper className="h-3.5 w-3.5" /> Didžiausias atnaujinimas
           </span>
           <h1 className="relative mt-5 font-display text-6xl font-black leading-none tracking-tight sm:text-8xl">
-            <span className="sv-v25-title inline-block text-primary">V2.6</span> <span className="inline-block text-5xl sm:text-7xl">🎉</span>
+            <span className="sv-v25-title inline-block text-primary">V2.6.5</span> <span className="inline-block text-5xl sm:text-7xl">🎉</span>
           </h1>
           <p className="relative mt-4 max-w-xl text-base font-semibold sm:text-lg">
             Auklėtojo sritis, klasių registracijos kodai, grupinės rezervacijos ir dar stipresnė apsauga — viskas vienoje platformoje.
@@ -458,10 +476,10 @@ function VersionsPage() {
           </p>
           <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { k: big?.items.length ?? 0, l: "naujovių V2.6" },
+              { k: big?.items.length ?? 0, l: "naujovių V2.6.5" },
               { k: TOTAL_CHANGES, l: "pakeitimų iš viso" },
               { k: VERSIONS.length, l: "versijų" },
-              { k: "V2.6.0", l: "naujausia" },
+              { k: "V2.6.5", l: "naujausia" },
             ].map((x) => (
               <div key={x.l} className="rounded-2xl border border-border bg-background/60 p-4 text-center">
                 <p className="font-display text-2xl font-black sm:text-3xl">{x.k}</p>
@@ -476,7 +494,7 @@ function VersionsPage() {
 
 
         <section className="mt-10">
-          <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.6</h2>
+          <h2 className="font-display text-xl font-bold sm:text-2xl">Svarbiausia V2.6.5</h2>
           <p className="mt-1 text-sm text-muted-foreground">Nuo didžiausių naujovių iki smulkmenų — žemiau visas sąrašas.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {HIGHLIGHTS.map((h, i) => (
