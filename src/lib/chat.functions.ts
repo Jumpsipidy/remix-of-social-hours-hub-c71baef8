@@ -36,7 +36,8 @@ export const notifyNewMessage = createServerFn({ method: "POST" })
       if (!p.email) continue;
       if (prefs?.find((x) => x.user_id === p.id)?.new_message === false) continue;
       const link = `${APP_URL}/chat?room=${data.roomId}`;
-      const html = `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>Nauja žinutė</h2><p><b>${escapeHtml(sender)}</b> parašė tau žinutę platformoje Socialinės Valandos.</p><p><a href="${link}" style="display:inline-block;background:#3b82f6;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none">Atidaryti pokalbį</a></p></div>`;
+      const { renderShell } = await import("./email-templates/_shell");
+      const html = renderShell({ title: "Nauja žinutė", preview: `${sender} parašė tau žinutę`, accent: "indigo", eyebrow: "Nauja žinutė", medallionEmoji: "💬", heading: "Tau parašė žinutę", bodyHtml: `<b>${escapeHtml(sender)}</b> parašė tau žinutę Socialinėse Valandose. Atsakyk, kol pokalbis aktualus — žinutės ištrinamos po 12 dienų.`, ctaLabel: "Atidaryti pokalbį", ctaHref: link });
       try { await sendResendEmail(p.email, `💬 Nauja žinutė nuo ${sender}`, html, { text: `${sender} parašė tau žinutę: ${link}`, tag: "new-message" }); sent++; }
       catch (e) { console.error("[chat] email failed", e); }
     }

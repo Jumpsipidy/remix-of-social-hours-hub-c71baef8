@@ -1,4 +1,4 @@
-import { renderShell, escape } from "./email-templates/_shell";
+import { renderShell, escape, codeBox } from "./email-templates/_shell";
 
 /**
  * Sends the account confirmation email through Resend instead of the
@@ -14,7 +14,9 @@ export async function sendVerificationEmail(email: string, origin: string, props
     eyebrow: "Paskyros patvirtinimas",
     medallionEmoji: "✉️",
     heading: name ? `Labas, ${escape(name)}!` : "Patvirtink el. paštą",
-    bodyHtml: `Paspausk mygtuką, kad aktyvuotum savo Socialinių Valandų paskyrą.${code ? `<br/><br/>Arba įvesk šį kodą patvirtinimo puslapyje:<br/><b style="font-size:26px;letter-spacing:6px;">${code}</b>` : ""}<br/><br/>Jei registracijos nepradėjai — tiesiog ignoruok šį laišką.`,
+    title: "Patvirtink paskyrą",
+    preview: "Vienas paspaudimas ir tavo paskyra aktyvi.",
+    bodyHtml: `Liko vienas žingsnis — patvirtink el. paštą ir galėsi rinktis veiklas, rezervuoti laiką ir matyti savo valandas.${code ? codeBox(code, "Arba įvesk kodą") : ""}<p style="margin:16px 0 0;font-size:13px;color:#64748b;">Nuoroda galioja ribotą laiką. Jei registracijos nepradėjai — ignoruok šį laišką.</p>`,
     ctaLabel: "Patvirtinti paskyrą",
     ctaHref: link,
   } as never);
@@ -31,11 +33,13 @@ export async function sendRecoveryEmail(email: string, origin: string, props: { 
   const link = `${origin}/update-password?token_hash=${encodeURIComponent(props.hashed_token)}&type=recovery`;
   const code = props.email_otp ? escape(props.email_otp) : "";
   const html = renderShell({
-    accent: "indigo",
     eyebrow: "Slaptažodžio atkūrimas",
     medallionEmoji: "🔑",
     heading: "Atkurk slaptažodį",
-    bodyHtml: `Paspausk mygtuką ir nustatyk naują slaptažodį.${code ? `<br/><br/>Arba įvesk šį kodą:<br/><b style="font-size:26px;letter-spacing:6px;">${code}</b>` : ""}<br/><br/>Jei to neprašei — ignoruok šį laišką.`,
+    title: "Slaptažodžio atkūrimas",
+    preview: "Nustatyk naują slaptažodį per kelias sekundes.",
+    accent: "amber",
+    bodyHtml: `Gavome prašymą atkurti tavo slaptažodį. Paspausk mygtuką ir susikurk naują.${code ? codeBox(code, "Arba įvesk kodą") : ""}<p style="margin:16px 0 0;font-size:13px;color:#64748b;">Jei to neprašei — niekas nepasikeis, tiesiog ignoruok šį laišką.</p>`,
     ctaLabel: "Nustatyti naują slaptažodį",
     ctaHref: link,
   } as never);
