@@ -31,3 +31,4 @@
 - [ ] QR / atvykimo / PDF gyva patikra — reikia tikro domeno ir paskyrų
 - [x] Auklėtojas↔mokinys pokalbiai išjungti (DB + UI); lieka org↔mokinys ir auklėtojas↔org; klasės kvietimai pakeisti rezervacijų priskyrimu
 - [x] Auklėtojo skydelio taisyklės: „null“ laiko žymos, mokyklos priskyrimo vedlys, grįžimo nuorodos, klasių progreso suvestinė, greitieji veiksmai (329 testai, build OK)
+- [x] Auklėtojo skydelio „peak“ perdarymas: KPI kortelės, valandų dinamikos ir klasių grafikai (recharts), sąrašai su avatarų inicialais, pasisveikinimas, Edaca-stiliaus šoninis meniu (339 testai, DB apribojimai patvirtinti gyvai, RPC parašai sutikrinti)

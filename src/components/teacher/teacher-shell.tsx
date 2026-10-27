@@ -12,9 +12,28 @@ const NAV = [
   { to: "/mokytojas/pokalbiai", label: "Pokalbiai", icon: MessageCircle, exact: false },
 ] as const;
 
+const LINKS = [
+  { to: "/tasks", label: "Visos veiklos", icon: Sparkles },
+  { to: "/", label: "Grįžti į svetainę", icon: Home },
+] as const;
+
 function initials(name: string | null | undefined) {
   const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
   return (parts[0]?.[0] ?? "A") + (parts[1]?.[0] ?? "");
+}
+
+function Brand() {
+  return (
+    <div className="flex items-center gap-2.5 px-1">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+        <GraduationCap className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-extrabold tracking-tight">Auklėtojo sritis</span>
+        <span className="block text-[11px] font-medium text-muted-foreground">Socialinės Valandos</span>
+      </span>
+    </div>
+  );
 }
 
 export function TeacherShell({ children }: { children: ReactNode }) {
@@ -37,39 +56,38 @@ export function TeacherShell({ children }: { children: ReactNode }) {
   const isActive = (to: string, exact: boolean) => (exact ? pathname === to : pathname.startsWith(to));
 
   const navLinks = (
-    <nav className="mt-6 flex flex-col gap-1">
-      {NAV.map((item) => (
+    <nav className="mt-6 flex flex-col gap-0.5">
+      <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Valdymas</p>
+      {NAV.map((item) => {
+        const active = isActive(item.to, item.exact);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={() => setMenuOpen(false)}
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+              active
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+          >
+            <item.icon className="h-4 w-4 shrink-0" />
+            {item.label}
+          </Link>
+        );
+      })}
+      <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Nuorodos</p>
+      {LINKS.map((item) => (
         <Link
           key={item.to}
           to={item.to}
           onClick={() => setMenuOpen(false)}
-          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
-            isActive(item.to, item.exact)
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          }`}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <item.icon className="h-4 w-4 shrink-0" />
           {item.label}
         </Link>
       ))}
-      <div className="my-2 border-t border-border" />
-      <Link
-        to="/tasks"
-        onClick={() => setMenuOpen(false)}
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <Sparkles className="h-4 w-4 shrink-0" />
-        Visos veiklos
-      </Link>
-      <Link
-        to="/"
-        onClick={() => setMenuOpen(false)}
-        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <Home className="h-4 w-4 shrink-0" />
-        Grįžti į svetainę
-      </Link>
     </nav>
   );
 
@@ -112,10 +130,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
           <div className="absolute inset-0 bg-foreground/30" onClick={() => setMenuOpen(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-card p-4 shadow-xl">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                <span className="text-sm font-bold">Auklėtojo sritis</span>
-              </div>
+              <Brand />
               <Button variant="ghost" size="icon" aria-label="Uždaryti" onClick={() => setMenuOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -129,11 +144,8 @@ export function TeacherShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex w-full max-w-7xl">
         {/* Desktop sidebar */}
         <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-card p-4 lg:flex">
-          <div className="flex items-center gap-2 px-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
-            <span className="text-sm font-bold">Auklėtojo sritis</span>
-          </div>
-          <div className="mt-6 rounded-2xl bg-primary/5 p-4">
+          <Brand />
+          <div className="mt-5 rounded-2xl bg-primary/8 p-4">
             <p className="text-xs text-muted-foreground">Labas,</p>
             <p className="truncate text-lg font-bold">{firstName}</p>
           </div>
