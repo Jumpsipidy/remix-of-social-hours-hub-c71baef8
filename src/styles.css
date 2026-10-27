@@ -1111,3 +1111,6 @@ html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-ban
 .home-live .scene-ink { color: var(--foreground); }
 .page-shell:has(.home-live) { background: transparent; }
 .page-shell:has(.home-live) .site-navbar:not(.is-scrolled) { background: transparent; border-color: transparent; box-shadow: none; }
+.home-hero-in > * { animation: home-hero-rise .7s cubic-bezier(.2,.8,.2,1) both; }
+.home-hero-in > *:nth-child(2) { animation-delay: .08s; } .home-hero-in > *:nth-child(3) { animation-delay: .16s; } .home-hero-in > *:nth-child(4) { animation-delay: .24s; }
+@media (prefers-reduced-motion: reduce) { .home-hero-in > * { animation: none; } }
