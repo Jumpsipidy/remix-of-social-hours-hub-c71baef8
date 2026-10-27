@@ -49,3 +49,4 @@
 
 - Client entry installs a localStorage fallback before Supabase loads; broken browser storage (Firefox NS_ERROR_FAILURE) must not block sign-in.
 - Every outgoing email renders through renderShell in src/lib/email-templates/_shell.ts (light card, bulletproof button, fallback link); keeps all messages consistent and readable in every mail client.
+- Support chat (SV Pagalba) runs server-side only: Groq first, OpenAI fallback, history in service-role-only support_threads/support_messages keyed by hashed browser token, with IP/thread/global limits; prevents spam and key exposure.

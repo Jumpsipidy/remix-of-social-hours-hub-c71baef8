@@ -55,7 +55,7 @@ export function SupportChat() {
   }
 
   return (
-    <>
+    <div className="sv-support">
       <button
         type="button"
         aria-label="Pagalba"
@@ -113,6 +113,6 @@ export function SupportChat() {
           </form>
         </div>
       )}
-    </>
+    </div>
   );
 }
