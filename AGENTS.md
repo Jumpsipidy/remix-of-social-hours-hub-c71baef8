@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 - Use the official Sentry TanStack Start SDK at client, router, middleware, and server-entry boundaries; this preserves full-stack traces and private source-map uploads.
 - Chat uses shared MessageComposer and atomic participant-scoped RPCs; merged room aliases preserve links/history, preventing duplicates without mixing audiences.
+- Direct school_admin↔student chat is disabled server-side (open_chat_with, list_chat_contacts, list_my_conversations, list_my_teachers); teachers reach students by assigning reservations, and chat only via organization↔student and school_admin↔organization pairs.
 - Optional reservation times are normalized to null through reservation-time helpers; displays handle missing times without inventing an arrival interval.
 - Check-in presentation uses a stable canvas and authenticated server-issued tokens, refreshed while visible; rotating QR content never persists in browser storage.
 - Certificates recompute snapshot hashes before HMAC verification, support legacy/key rotation and server-stamped approvers to detect altered history.

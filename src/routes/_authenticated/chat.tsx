@@ -214,7 +214,7 @@ function ChatPage() {
   return (
     <PageShell>
       <div className={`chat-page mx-auto max-w-6xl px-3 py-4 sm:px-6 sm:py-8 ${activeId ? "chat-page-active" : ""}`}>
-        {user && <div className={`mb-4 ${activeId ? "hidden md:block" : ""}`}><DmInbox me={user.id} showTeachers={profile?.role === "student"} /></div>}
+        {user && <div className={`mb-4 ${activeId ? "hidden md:block" : ""}`}><DmInbox me={user.id} /></div>}
         <div className={`chat-heading mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between ${activeId ? "hidden md:flex" : ""}`}>
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-bold sm:text-3xl">Pokalbiai</h1>

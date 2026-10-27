@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Bell, Building2, CalendarCheck, Clock, GraduationCap,
-  MessageCircle, Search, ShieldCheck, Sparkles, User as UserIcon, Users,
+  MessageCircle, Search, ShieldCheck, Sparkles, User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,10 +30,10 @@ export const Route = createFileRoute("/_authenticated/mokytojas/pokalbiai")({
   head: () => ({
     meta: [
       { title: "Pokalbiai — Auklėtojo sritis" },
-      { name: "description", content: "Auklėtojo pokalbiai su mokiniais ir organizacijomis, su greitaisiais veiksmais." },
+      { name: "description", content: "Auklėtojo pokalbiai su organizacijomis, su greitaisiais veiksmais." },
       { name: "robots", content: "noindex, nofollow" },
       { property: "og:title", content: "Pokalbiai — Auklėtojo sritis" },
-      { property: "og:description", content: "Pokalbiai su priskirtų klasių mokiniais." },
+      { property: "og:description", content: "Pokalbiai su organizacijomis dėl rezervacijų ir valandų." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -48,11 +48,11 @@ type Conv = {
 };
 type Msg = { id: string; chat_room_id: string; sender_id: string | null; content: string; created_at: string };
 
-/** Greitieji šablonai – vienu paspaudimu įrašomi į žinutę. */
+/** Greitieji šablonai organizacijoms – vienu paspaudimu įrašomi į žinutę. */
 const TEMPLATES = [
-  { icon: Bell, label: "Priminimas apie valandas", text: "Labas! Primenu, kad iki termino pabaigos reikia surinkti visas privalomas socialines valandas. Jei reikia pagalbos – parašyk man. 🙂" },
-  { icon: CalendarCheck, label: "Rezervacijos patvirtinimas", text: "Labas! Tavo rezervacija peržiūrėta ir patvirtinta. Nepamiršk atvykti laiku ir pasirūpinti QR patvirtinimu. ✅" },
-  { icon: Sparkles, label: "Paskatinimas", text: "Labas! Matau tavo progresą – puikiai sekasi! Taip toliau, liko visai nedaug. 💪" },
+  { icon: Sparkles, label: "Padėka", text: "Labas! Dėkojame už bendradarbiavimą — mokiniai grįžo labai patenkinti. 🙂" },
+  { icon: CalendarCheck, label: "Rezervacijos patvirtinimas", text: "Labas! Patvirtiname, kad mokiniai atvyks pagal susitarimą. Jei kils klausimų — parašykite. ✅" },
+  { icon: Bell, label: "Klausimas apie valandas", text: "Labas! Norėtume patikslinti valandų įskaitymą už praėjusią veiklą. Ar galėtumėte patvirtinti?" },
 ] as const;
 
 function TeacherChatPage() {
@@ -134,7 +134,6 @@ function TeacherChatPage() {
 
   const active = convs?.find((c) => c.room_id === activeId) ?? null;
   const titleFor = (c: Conv) => {
-    if (!c.organization_id) return c.student_name ?? "Mokinys"; // tiesioginis auklėtojas ↔ mokinys
     const schoolOnly = !c.student_id;
     return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
@@ -160,16 +159,17 @@ function TeacherChatPage() {
 
   const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(activeId ? `room-${activeId}` : null, user?.id);
 
-  // „Rašyti mokiniui" – tik priskirtų klasių mokiniai iš mokyklos momentinės kopijos.
+  // „Rašyti organizacijai" – tiesioginis auklėtojas ↔ organizacija pokalbis.
+  // Su mokiniais auklėtojas bendrauja mokykloje, todėl čia jų nėra.
   const [picker, setPicker] = useState(false);
-  const [studentQ, setStudentQ] = useState("");
-  const students = school?.students ?? [];
-  const shownStudents = useMemo(
-    () => students.filter((s) => (s.full_name ?? "").toLowerCase().includes(studentQ.toLowerCase())),
-    [students, studentQ],
+  const [orgQ, setOrgQ] = useState("");
+  const orgs = school?.organizations ?? [];
+  const shownOrgs = useMemo(
+    () => orgs.filter((o) => `${o.organization_name ?? ""} ${o.full_name ?? ""}`.toLowerCase().includes(orgQ.toLowerCase())),
+    [orgs, orgQ],
   );
-  async function startWith(studentId: string) {
-    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: studentId });
+  async function startWithOrg(orgId: string) {
+    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: orgId });
     if (error) { toast.error(userError(error)); return; }
     setPicker(false);
     await loadConvs();
@@ -204,13 +204,13 @@ function TeacherChatPage() {
 
       {/* Greitieji veiksmai auklėtojui */}
       <div className={`flex flex-wrap gap-2 ${activeId ? "hidden md:flex" : ""}`}>
-        <Button type="button" size="sm" onClick={() => { setPicker(true); setStudentQ(""); }}>
-          <Users className="h-4 w-4" /> Rašyti mokiniui
+        <Button type="button" size="sm" onClick={() => { setPicker(true); setOrgQ(""); }}>
+          <Building2 className="h-4 w-4" /> Rašyti organizacijai
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={() => setClassInvite(true)}>
-          <CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją
+          <CalendarCheck className="h-4 w-4" /> Priskirti veiklą klasei
         </Button>
-        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={students} />
+        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={school?.students ?? []} />
         {TEMPLATES.map((t) => (
           <Button
             key={t.label}
@@ -229,20 +229,20 @@ function TeacherChatPage() {
       <Dialog open={picker} onOpenChange={setPicker}>
         <DialogContent className="max-w-md gap-0 p-0">
           <div className="border-b border-border p-4">
-            <DialogHeader><DialogTitle>Rašyti mokiniui</DialogTitle><DialogDescription>Tik tavo priskirtų klasių mokiniai.</DialogDescription></DialogHeader>
-            <input aria-label="Ieškoti mokinio" value={studentQ} onChange={(e) => setStudentQ(e.target.value)} placeholder="Ieškoti pagal vardą…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
+            <DialogHeader><DialogTitle>Rašyti organizacijai</DialogTitle><DialogDescription>Susisiek su savanorystės organizacija tiesiogiai.</DialogDescription></DialogHeader>
+            <input aria-label="Ieškoti organizacijos" value={orgQ} onChange={(e) => setOrgQ(e.target.value)} placeholder="Ieškoti pagal pavadinimą…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div className="max-h-[55vh] overflow-y-auto p-2">
             {!school ? (
               <div className="space-y-2 p-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}</div>
-            ) : shownStudents.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">Mokinių nerasta.</p>
-            ) : shownStudents.map((s) => (
-              <button key={s.id} type="button" onClick={() => void startWith(s.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted"><GraduationCap className="h-4 w-4" /></span>
+            ) : shownOrgs.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">Organizacijų nerasta.</p>
+            ) : shownOrgs.map((o) => (
+              <button key={o.id} type="button" onClick={() => void startWithOrg(o.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted"><Building2 className="h-4 w-4" /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{s.full_name ?? "Mokinys"}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{s.class_year ?? "—"}{s.class_letter ?? ""} klasė · {s.hours_earned}/{s.hours_needed} val.</span>
+                  <span className="block truncate text-sm font-semibold">{o.organization_name ?? o.full_name ?? "Organizacija"}</span>
+                  {o.email && <span className="block truncate text-xs text-muted-foreground">{o.email}</span>}
                 </span>
               </button>
             ))}
@@ -266,7 +266,7 @@ function TeacherChatPage() {
             ) : shown.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
                 <MessageCircle className="mx-auto mb-2 h-8 w-8" />
-                Pokalbių dar nėra. Parašyk mokiniui mygtuku „Rašyti mokiniui".
+                Pokalbių dar nėra. Parašyk organizacijai mygtuku „Rašyti organizacijai“.
               </div>
             ) : shown.map((c) => {
               const Icon = !c.student_id ? Building2 : c.student_id === c.school_admin_id ? GraduationCap : UserIcon;
@@ -293,7 +293,7 @@ function TeacherChatPage() {
         <section aria-label="Pokalbio žinutės" className={`min-h-0 min-w-0 flex-col ${activeId ? "flex" : "hidden md:flex"}`}>
           {!activeId ? (
             <div className="grid flex-1 place-items-center p-8 text-center text-muted-foreground">
-              <div><MessageCircle className="mx-auto mb-3 h-10 w-10" /><p className="text-sm">Pasirink pokalbį kairėje arba parašyk mokiniui.</p></div>
+              <div><MessageCircle className="mx-auto mb-3 h-10 w-10" /><p className="text-sm">Pasirink pokalbį kairėje arba parašyk organizacijai.</p></div>
             </div>
           ) : (
             <>

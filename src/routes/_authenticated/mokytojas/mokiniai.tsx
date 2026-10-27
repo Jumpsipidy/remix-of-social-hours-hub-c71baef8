@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarCheck, Clock, Flame, Mail, QrCode, Search, Users } from "lucide-react";
+import { reservationTimeLabel } from "@/lib/reservation-time";
 import { useSchoolData } from "@/components/teacher/use-school-data";
 import { getSchoolStudentReservations, type SchoolReservation, type SchoolStudent } from "@/lib/school-data.functions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -186,7 +187,13 @@ function StudentDetail({
               </div>
 
               {student.email && (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" /> {student.email}</p>
+                <a
+                  href={`mailto:${student.email}`}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                >
+                  <Mail className="h-4 w-4 text-primary" /> {student.email}
+                  <span className="ml-auto text-xs font-normal text-muted-foreground">Rašyti el. paštu</span>
+                </a>
               )}
 
               <div>
@@ -205,7 +212,7 @@ function StudentDetail({
                         }`}>{STATUS_LT[r.status] ?? r.status}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground tabular-nums">
-                        {r.reservation_date} · {String(r.start_time).slice(0, 5)}–{String(r.end_time).slice(0, 5)} · {r.hours_to_earn} val.
+                        {r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {r.hours_to_earn} val.
                         {r.checked_in_at ? " · QR patvirtinta" : ""}
                       </p>
                       {r.note && <p className="mt-1 text-xs text-muted-foreground">{r.note}</p>}

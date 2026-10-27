@@ -92,30 +92,43 @@ export const teacherDeleteReservation = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Išsiunčia mokiniams asmeninę žinutę su kvietimu (rodoma /chat kaip auklėtojo žinutė). */
-export const teacherSendInvites = createServerFn({ method: "POST" })
+/**
+ * Priskiria esamą veiklą (task) pasirinktiems mokiniams – sukuria mokyklos
+ * rezervacijas, kurias mokiniai mato savo paskyrose. Pokalbiai su mokiniais
+ * nenaudojami (auklėtojas su jais bendrauja mokykloje).
+ */
+export const teacherAssignTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { studentIds: string[]; message: string }) => {
+  .inputValidator((input: { studentIds: string[]; taskId: string; date: string; start?: string; end?: string; hours: number; note?: string }) => {
     if (!Array.isArray(input?.studentIds) || input.studentIds.length === 0) throw new Error("Pasirink bent vieną mokinį.");
-    if (!input.message?.trim()) throw new Error("Žinutė tuščia.");
-    return { studentIds: input.studentIds.map(String).slice(0, 200), message: input.message.trim().slice(0, 2400) };
+    if (!input?.taskId) throw new Error("Veikla nenurodyta.");
+    if (!input?.date) throw new Error("Pasirink datą.");
+    return {
+      studentIds: input.studentIds.map(String).slice(0, 200),
+      taskId: String(input.taskId),
+      date: String(input.date), ...optionalReservationTimes(input.start ?? "", input.end ?? ""),
+      hours: Math.max(0, Math.min(8, Math.round(Number(input.hours) || 0))),
+      note: String(input.note ?? "").slice(0, 1000),
+    };
   })
   .handler(async ({ context, data }) => {
-    await requireTeacher(context.userId);
-    let sent = 0;
-    for (const sid of data.studentIds) {
-      // open_chat_with pats patikrina, ar auklėtojas gali rašyti šiam mokiniui (priskirtos klasės).
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: roomId, error: roomErr } = await (context.supabase.rpc as any)("open_chat_with", { _other: sid });
-      if (roomErr || !roomId) continue;
-      const { error: msgErr } = await context.supabase.from("messages").insert({
-        chat_room_id: roomId as string,
-        sender_id: context.userId,
-        content: data.message,
-      });
-      if (!msgErr) sent += 1;
-    }
-    return { sent, total: data.studentIds.length };
+    const { supabaseAdmin } = await requireTeacher(context.userId);
+    const { data: task } = await supabaseAdmin.from("tasks").select("organization_id").eq("id", data.taskId).maybeSingle();
+    if (!task) throw new Error("Veikla nerasta.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error, data: created } = await (context.supabase.rpc as any)("school_create_reservations", {
+      _student_ids: data.studentIds,
+      _organization_id: (task as { organization_id: string }).organization_id,
+      _task_id: data.taskId,
+      _date: data.date,
+      _start: data.start,
+      _end: data.end,
+      _hours: data.hours,
+      _kind: "volunteer",
+      _note: data.note,
+    });
+    if (error) throw new Error(error.message);
+    return { created: Number(created ?? 0), total: data.studentIds.length };
   });
 
 /** Auklėtojas paskelbia veiklą, kurią mato visi /tasks puslapyje. */

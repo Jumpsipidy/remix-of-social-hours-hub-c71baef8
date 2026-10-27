@@ -1,25 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { reservationTimeLabel } from "@/lib/reservation-time";
 import { CalendarDays, Check, ChevronLeft, Clock, Loader2, MapPin, Megaphone, Search, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CITIES } from "@/lib/cities";
-import { encodeTaskInvite, type TaskInvite } from "@/lib/task-invite";
-import { teacherPublishTask, teacherSendInvites } from "@/lib/teacher.functions";
+import { teacherAssignTask, teacherPublishTask } from "@/lib/teacher.functions";
 import type { SchoolStudent } from "@/lib/school-data.functions";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type TaskRow = { id: string; title: string; task_date: string; start_time: string | null; end_time: string | null; available_hours: number; location: string | null; city: string | null; organization_id: string; spots_total: number };
-
-const toInvite = (t: TaskRow): TaskInvite => ({
-  id: t.id, title: t.title, date: t.task_date,
-  time: t.start_time && t.end_time ? `${t.start_time.slice(0, 5)}–${t.end_time.slice(0, 5)}` : "",
-  place: [t.city, t.location].filter(Boolean).join(", "), hours: String(Number(t.available_hours)),
-});
 
 function classKey(s: SchoolStudent) { return `${s.class_year ?? "?"}${s.class_letter ? s.class_letter : ""}`; }
 
@@ -65,15 +56,9 @@ function StudentPicker({ students, selected, setSelected }: { students: SchoolSt
   );
 }
 
-async function sendCards(inviteFn: (a: { data: { studentIds: string[]; message: string } }) => Promise<{ sent: number; total: number }>, invite: TaskInvite, ids: string[], note: string, teacher: string) {
-  const message = encodeTaskInvite(invite, `${teacher}: ${note.trim() || "Siūlau šią veiklą — rezervuokite vietą!"}`);
-  return inviteFn({ data: { studentIds: ids, message } });
-}
-
-/** „Kviesti klasę“: visos svetainės veiklos su filtrais → mokiniai → kortelė pokalbyje. */
+/** „Priskirti veiklą klasei“: visos svetainės veiklos su filtrais → mokiniai → rezervacijos jų paskyrose. */
 export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
-  const { profile } = useAuth();
-  const inviteFn = useServerFn(teacherSendInvites);
+  const assignFn = useServerFn(teacherAssignTask);
   const [tasks, setTasks] = useState<TaskRow[] | null>(null);
   const [orgNames, setOrgNames] = useState<Record<string, string>>({});
   const [q, setQ] = useState(""); const [city, setCity] = useState(""); const [from, setFrom] = useState("");
@@ -108,18 +93,28 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
     if (selected.size === 0) { toast.error("Pažymėk bent vieną mokinį."); return; }
     setBusy(true);
     try {
-      const res = await sendCards(inviteFn, toInvite(picked), [...selected], note, profile?.full_name ?? "Auklėtojas");
-      toast.success(`Pasiūlymas išsiųstas ${res.sent} iš ${res.total} mokinių.`);
+      const res = await assignFn({
+        data: {
+          studentIds: [...selected],
+          taskId: picked.id,
+          date: picked.task_date,
+          start: picked.start_time ?? "",
+          end: picked.end_time ?? "",
+          hours: Math.min(8, Math.round(Number(picked.available_hours) || 0)),
+          note: note.trim(),
+        },
+      });
+      toast.success(`Veikla priskirta ${res.created} iš ${res.total} mokinių — jie ją mato savo paskyrose.`);
       onOpenChange(false);
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti."); } finally { setBusy(false); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko priskirti veiklos."); } finally { setBusy(false); }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,760px)] w-[calc(100%-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border p-5 pb-4 text-left">
-          <DialogTitle className="flex items-center gap-2">{picked && <button type="button" aria-label="Atgal" onClick={() => setPicked(null)} className="grid size-8 place-items-center rounded-lg hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}{picked ? "Kam siųsti?" : "Kviesti klasę į veiklą"}</DialogTitle>
-          <DialogDescription>{picked ? `Mokiniai pokalbyje gaus kortelę „${picked.title}“ su tavo žinute.` : "Pasirink veiklą iš visos svetainės — tokios pačios kaip /tasks puslapyje."}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">{picked && <button type="button" aria-label="Atgal" onClick={() => setPicked(null)} className="grid size-8 place-items-center rounded-lg hover:bg-muted"><ChevronLeft className="h-4 w-4" /></button>}{picked ? "Kam priskirti?" : "Priskirti veiklą klasei"}</DialogTitle>
+          <DialogDescription>{picked ? `Mokiniai gaus rezervaciją „${picked.title}“ savo paskyrose su tavo pastaba.` : "Pasirink veiklą iš visos svetainės — tokios pačios kaip /tasks puslapyje."}</DialogDescription>
           {!picked && <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
             <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-3"><Search className="h-4 w-4 text-muted-foreground" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ieškok veiklos ar organizacijos…" className="h-10 w-full bg-transparent text-sm outline-none" /></div>
             <select value={city} onChange={(e) => setCity(e.target.value)} aria-label="Miestas" className="h-10 rounded-lg border border-input bg-background px-2 text-sm"><option value="">Visi miestai</option>{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
@@ -140,7 +135,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
           ) : (
             <div className="space-y-4">
               <StudentPicker students={students} selected={selected} setSelected={setSelected} />
-              <label className="block text-xs font-semibold text-muted-foreground">Tavo žinutė (nebūtina)
+              <label className="block text-xs font-semibold text-muted-foreground">Pastaba mokiniams (nebūtina)
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={600} placeholder="Pvz.: Puiki proga surinkti valandų prieš atostogas!" className="mt-1 w-full resize-none rounded-lg border border-input bg-background p-2.5 text-sm text-foreground outline-none focus:border-primary" />
               </label>
             </div>
@@ -148,7 +143,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
         </div>
         {picked && <div className="flex items-center justify-between gap-3 border-t border-border p-4">
           <span className="text-sm text-muted-foreground">Pažymėta: <b className="text-foreground">{selected.size}</b></span>
-          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Siųsti mano klasei</Button>
+          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Priskirti mano klasei</Button>
         </div>}
       </DialogContent>
     </Dialog>
@@ -157,9 +152,8 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
 
 /** Auklėtojo veikla visiems /tasks puslapyje, su galimybe iškart pranešti klasei. */
 export function PublishTaskDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
-  const { profile } = useAuth();
   const publishFn = useServerFn(teacherPublishTask);
-  const inviteFn = useServerFn(teacherSendInvites);
+  const assignFn = useServerFn(teacherAssignTask);
   const [f, setF] = useState({ title: "", description: "", date: "", start: "", end: "", hours: 2, city: "Šeduva", location: "", spots: 20 });
   const [notify, setNotify] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -171,12 +165,12 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
     setBusy(true);
     try {
       const { id } = await publishFn({ data: f });
-      let sent = 0;
+      let assigned = 0;
       if (notify && selected.size) {
-        const res = await sendCards(inviteFn, { id, title: f.title, date: f.date, time: reservationTimeLabel(f.start, f.end), place: [f.city, f.location].filter(Boolean).join(", "), hours: String(f.hours) }, [...selected], "", profile?.full_name ?? "Auklėtojas");
-        sent = res.sent;
+        const res = await assignFn({ data: { studentIds: [...selected], taskId: id, date: f.date, start: f.start, end: f.end, hours: f.hours, note: "" } });
+        assigned = res.created;
       }
-      toast.success(sent ? `Veikla paskelbta visiems ir išsiųsta ${sent} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
+      toast.success(assigned ? `Veikla paskelbta visiems ir priskirta ${assigned} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
       onOpenChange(false);
     } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko paskelbti."); } finally { setBusy(false); }
   };
@@ -200,7 +194,7 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
             <label className="col-span-2 block text-xs font-semibold text-muted-foreground">Miestas<select value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className={field}>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></label>
           </div>
           <label className="block text-xs font-semibold text-muted-foreground">Vieta<input value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} placeholder="Pvz.: Mokyklos aktų salė" className={field} /></label>
-          <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm font-semibold"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-[var(--primary)]" /> Taip pat nusiųsti pasiūlymą mano klasės mokiniams</label>
+          <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-sm font-semibold"><input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="accent-[var(--primary)]" /> Taip pat priskirti mano klasės mokiniams</label>
           {notify && <StudentPicker students={students} selected={selected} setSelected={setSelected} />}
         </div>
         <div className="flex justify-end border-t border-border p-4"><Button onClick={submit} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />} Paskelbti</Button></div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarCheck, Clock, Flame, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarPlus, Clock, Flame, Megaphone, MessageCircle, TrendingUp, Users } from "lucide-react";
 import { useSchoolData } from "@/components/teacher/use-school-data";
+import { reservationTimeLabel } from "@/lib/reservation-time";
 
 export const Route = createFileRoute("/_authenticated/mokytojas/")({
   head: () => ({
@@ -39,6 +40,21 @@ function TeacherOverview() {
     .slice(0, 6);
   const studentName = (id: string) => students.find((s) => s.id === id)?.full_name ?? "Mokinys";
 
+  // Klasių suvestinė: kiek mokinių ir vidutinis progresas kiekvienoje klasėje.
+  const classGroups = (() => {
+    const map = new Map<string, { count: number; sum: number }>();
+    for (const s of students) {
+      const key = `${s.class_year ?? "—"}${s.class_letter ? ` ${s.class_letter}` : ""}`;
+      const g = map.get(key) ?? { count: 0, sum: 0 };
+      g.count += 1;
+      g.sum += pct(s);
+      map.set(key, g);
+    }
+    return [...map.entries()]
+      .map(([key, g]) => ({ key, count: g.count, avg: g.count ? Math.round(g.sum / g.count) : 0 }))
+      .sort((a, b) => a.key.localeCompare(b.key, "lt", { numeric: true }));
+  })();
+
   if (loading && !data) {
     return <div className="grid min-h-[40dvh] place-items-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
   }
@@ -52,6 +68,19 @@ function TeacherOverview() {
             ? `Priskirtos klasės: ${data.scope.assigned_classes.join(", ") || "visos"}${data.scope.assigned_letter ? ` · ${data.scope.assigned_letter}` : ""}`
             : "Visos mokyklos klasės"}
         </p>
+      </div>
+
+      {/* Greitieji veiksmai */}
+      <div className="flex flex-wrap gap-2">
+        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+          <CalendarPlus className="h-4 w-4" /> Nauja rezervacija
+        </Link>
+        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
+          <Megaphone className="h-4 w-4" /> Veikla visiems
+        </Link>
+        <Link to="/mokytojas/pokalbiai" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
+          <MessageCircle className="h-4 w-4" /> Rašyti organizacijai
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -83,7 +112,7 @@ function TeacherOverview() {
               <li key={r.id} className="flex items-center justify-between rounded-xl bg-muted/60 px-3 py-2 text-sm">
                 <span className="min-w-0 flex-1 truncate font-medium">{studentName(r.student_id)}</span>
                 <span className="ml-3 shrink-0 text-xs text-muted-foreground tabular-nums">
-                  {r.reservation_date} · {String(r.start_time).slice(0, 5)} · {r.hours_to_earn} val.
+                  {r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {r.hours_to_earn} val.
                 </span>
               </li>
             ))}
@@ -110,6 +139,25 @@ function TeacherOverview() {
           </ul>
         </section>
       </div>
+
+      {classGroups.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-primary" /> Klasių progresas</h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {classGroups.map((g) => (
+              <li key={g.key} className="rounded-xl bg-muted/60 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold">{g.key} klasė</span>
+                  <span className="text-xs text-muted-foreground">{g.count} mok. · {g.avg}%</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${g.avg}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 font-bold"><Flame className="h-4 w-4 text-primary" /> Streak lyderiai</h2>

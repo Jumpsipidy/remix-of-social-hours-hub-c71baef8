@@ -7,11 +7,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { CalendarPlus, Megaphone, Clock, Pencil, Search, Send, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useSchoolData } from "@/components/teacher/use-school-data";
-import { useAuth } from "@/hooks/use-auth";
 import {
   teacherCreateReservations,
   teacherDeleteReservation,
-  teacherSendInvites,
   teacherUpdateReservation,
 } from "@/lib/teacher.functions";
 import type { SchoolReservation, SchoolStudent } from "@/lib/school-data.functions";
@@ -55,12 +53,10 @@ type FormState = {
 const emptyForm = (): FormState => ({ date: "", start: "", end: "", hours: 1, kind: "event", note: "", organizationId: "" });
 
 function TeacherReservations() {
-  const { profile } = useAuth();
   const { data, loading, refresh } = useSchoolData();
   const createFn = useServerFn(teacherCreateReservations);
   const updateFn = useServerFn(teacherUpdateReservation);
   const deleteFn = useServerFn(teacherDeleteReservation);
-  const inviteFn = useServerFn(teacherSendInvites);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [classInviteOpen, setClassInviteOpen] = useState(false);
@@ -111,21 +107,33 @@ function TeacherReservations() {
   }, [schoolRes, search, students]);
 
   const inviteStudents = inviteClass ? (classGroups.find(([k]) => k === inviteClass)?.[1] ?? []) : [];
+  // „Priskirti klasei“ – visiems klasės mokiniams sukuriamos tokios pačios mokyklos
+  // rezervacijos; mokiniai jas mato savo paskyrose (pokalbiai su mokiniais nenaudojami).
   const submitClassInvite = async () => {
     if (!inviteFor || busy) return;
     if (!inviteClass || inviteStudents.length === 0) { toast.error("Pasirink klasę su mokiniais."); return; }
     setBusy(true);
     try {
       const ids = inviteStudents.map((s) => s.id);
-      const teacherName = profile?.full_name ?? "Auklėtojas";
-      const link = `${window.location.origin}/student#mano-rezervacijos`;
-      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${reservationTimeLabel(inviteFor.start_time, inviteFor.end_time)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
-      const res = await inviteFn({ data: { studentIds: ids, message } });
-      toast.success(`Kvietimai išsiųsti: ${res.sent}/${res.total}.`);
+      await createFn({
+        data: {
+          studentIds: ids,
+          organizationId: null,
+          taskId: inviteFor.task_id ?? null,
+          date: inviteFor.reservation_date,
+          start: inviteFor.start_time ?? "",
+          end: inviteFor.end_time ?? "",
+          hours: Number(inviteFor.hours_to_earn),
+          kind: inviteFor.kind ?? "event",
+          note: inviteFor.note ?? "",
+        },
+      });
+      toast.success(`Rezervacijos priskirtos klasei ${inviteClass} (${ids.length} mok.).`);
       setInviteFor(null);
       setInviteClass(null);
+      await refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti kvietimų.");
+      toast.error(e instanceof Error ? e.message : "Nepavyko priskirti rezervacijų.");
     } finally {
       setBusy(false);
     }
@@ -166,11 +174,7 @@ function TeacherReservations() {
           hours: form.hours, kind: form.kind, note: form.note,
         },
       });
-      const teacherName = profile?.full_name ?? "Auklėtojas";
-      const link = `${window.location.origin}/student#mano-rezervacijos`;
-      const message = `Auklėtojas ${teacherName} sukūrė tau rezervaciją: ${KIND_LT[form.kind] ?? form.kind} — ${form.date} ${reservationTimeLabel(form.start, form.end)} (${form.hours} val.).${form.note ? ` ${form.note}` : ""} Papildomai patvirtinti nereikia.\n${link}`;
-      const inviteRes = await inviteFn({ data: { studentIds: ids, message } });
-      toast.success(`Sukurta ${ids.length} rezervacijų. Kvietimai išsiųsti: ${inviteRes.sent}/${inviteRes.total}.`);
+      toast.success(`Sukurta ${ids.length} rezervacijų — mokiniai jas mato savo paskyrose.`);
       setCreateOpen(false);
       setForm(emptyForm());
       setSelectedIds(new Set());
@@ -322,8 +326,8 @@ function TeacherReservations() {
               {!finished && (
                 <div className="flex gap-1">
                   {r.status === "approved" && <Button size="sm" onClick={() => setVerifying(r)}>Patvirtinti valandas</Button>}
-                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Siųsti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
-                    <Users className="h-4 w-4" /> Siųsti klasei
+                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Priskirti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
+                    <Users className="h-4 w-4" /> Priskirti klasei
                   </Button>
                   <Button variant="ghost" size="icon" aria-label="Redaguoti" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label="Ištrinti" onClick={() => void submitDelete(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -344,17 +348,17 @@ function TeacherReservations() {
         )}
       </ul>
 
-      {/* Class invite dialog */}
+      {/* Class assign dialog */}
       <Dialog open={!!inviteFor} onOpenChange={(o) => { if (!o) { setInviteFor(null); setInviteClass(null); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Siųsti klasei</DialogTitle>
+            <DialogTitle>Priskirti klasei</DialogTitle>
             <DialogDescription>
-              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)} · ${studentName(inviteFor.student_id)}` : ""}
+              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${reservationTimeLabel(inviteFor.start_time, inviteFor.end_time)} · ${studentName(inviteFor.student_id)}` : ""}
             </DialogDescription>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Pasirink klasę — visi jos mokiniai gaus kvietimą į pokalbį. Rodomos tik tavo priskirtos klasės.
+            Pasirink klasę — visiems jos mokiniams bus sukurta tokia pati rezervacija, kurią jie matys savo paskyrose. Rodomos tik tavo priskirtos klasės.
           </p>
           <div className="max-h-64 space-y-1 overflow-y-auto">
             {classGroups.map(([key, list]) => (
@@ -374,7 +378,7 @@ function TeacherReservations() {
             )}
           </div>
           <Button onClick={() => void submitClassInvite()} disabled={busy || !inviteClass} className="w-full gap-2">
-            <Send className="h-4 w-4" /> {busy ? "Siunčiama…" : `Siųsti kvietimus${inviteClass ? ` (${inviteStudents.length})` : ""}`}
+            <Send className="h-4 w-4" /> {busy ? "Priskiriama…" : `Priskirti klasei${inviteClass ? ` (${inviteStudents.length})` : ""}`}
           </Button>
         </DialogContent>
       </Dialog>
@@ -384,7 +388,7 @@ function TeacherReservations() {
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nauja rezervacija</DialogTitle>
-            <DialogDescription>Pasirink laiką, klasę ir mokinius — jie gaus kvietimą į pokalbį.</DialogDescription>
+            <DialogDescription>Pasirink laiką, klasę ir mokinius — rezervacijos iškart atsiras jų paskyrose.</DialogDescription>
           </DialogHeader>
           <div className="space-y-5">
             {formFields(form, setForm, true)}
