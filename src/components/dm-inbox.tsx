@@ -7,13 +7,8 @@ import { Button } from "@/components/ui/button";
 
 type Row = { room: string; other: string; name: string; last: string; at: string };
 
-/** Asmeninės žinutės (pvz. auklėtojos rekomendacijos) mokinio skydelyje. */
-export function DmInbox({ me, showTeachers = false }: { me: string; showTeachers?: boolean }) {
-  const [teachers, setTeachers] = useState<{ id: string; full_name: string | null }[]>([]);
-  useEffect(() => {
-    if (!showTeachers) return;
-    (supabase.rpc as any)("list_my_teachers").then(({ data }: { data: unknown }) => setTeachers((data as never[]) ?? []));
-  }, [showTeachers]);
+/** Asmeninės žinutės tarp draugų mokinio skydelyje. */
+export function DmInbox({ me }: { me: string }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [open, setOpen] = useState<{ id: string; name: string } | null>(null);

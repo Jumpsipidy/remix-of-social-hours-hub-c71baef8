@@ -247,7 +247,8 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   const isDashboard = pathname !== "/" && (
     pathname.startsWith("/student") || 
     pathname.startsWith("/organization") || 
-    pathname.startsWith("/school") || 
+    pathname.startsWith("/school") ||
+    pathname.startsWith("/mokytojas") ||
     pathname.startsWith("/admin")
   );
 
