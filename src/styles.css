@@ -1215,3 +1215,5 @@ body:has(.home-scene) { background: transparent; }
 }
 html { transition: background-color .5s ease, color .35s ease; }
 .page-shell, .auth-shell, .auth-form-side { transition: background-color .5s ease, color .35s ease; }
+@media (min-width: 1024px) { .auth-brand { top: 0; bottom: auto; height: 100dvh !important; min-height: 0 !important; max-height: 100dvh; } }
+.auth-brand .home-scene { z-index: 0; } .auth-brand-inner { z-index: 1; }
