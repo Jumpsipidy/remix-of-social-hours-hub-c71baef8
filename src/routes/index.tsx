@@ -142,8 +142,8 @@ function Home() {
   const dash = profile?.role ? DASHBOARD_BY_ROLE[profile.role] : null;
   const fmt = (n?: number) => n === undefined ? "—" : new Intl.NumberFormat("lt-LT").format(n);
   return <PageShell><div className="home-saas">
-    <section className="home-eclipse-hero relative flex min-h-[calc(100svh-72px)] items-start justify-center overflow-hidden px-4 pt-[9vh] text-center sm:px-6" aria-labelledby="home-title">
-      <img src={heroImg} alt="" width={1920} height={1088} fetchPriority="high" className="home-eclipse-img absolute inset-0 h-full w-full object-cover object-[50%_40%]" />
+    <section className="home-eclipse-hero relative flex min-h-[calc(100svh-72px)] items-start justify-center overflow-hidden px-4 pt-[6vh] text-center sm:px-6" aria-labelledby="home-title">
+      <img src={heroImg} alt="" width={1920} height={1088} fetchPriority="high" className="home-eclipse-img absolute inset-0 h-full w-full object-cover object-[50%_0%]" />
       <div className="home-eclipse-shade absolute inset-0" aria-hidden="true" />
       <div className="relative z-10 mx-auto max-w-3xl">
         <p className="home-hero-chip mx-auto inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-medium"><span className="h-2 w-2 rounded-full bg-success" />Nemokama mokiniams, mokykloms ir organizacijoms</p>
