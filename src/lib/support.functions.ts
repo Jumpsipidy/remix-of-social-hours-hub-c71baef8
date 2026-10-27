@@ -219,10 +219,18 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     const { count: oaDay } = await db.from("support_messages").select("id", { count: "exact", head: true })
       .eq("provider", "openai").gte("created_at", new Date(now - 86400_000).toISOString());
     const oaThread = history.filter((m) => (m as { provider?: string }).provider === "openai").length;
+    if (SMALL_TALK.test(data.message)) {
+      const content = /ač|ac|dėk|dek|thank/i.test(data.message)
+        ? "Visada prašom! 🙂 Jei dar kas nors neaišku — tiesiog parašyk."
+        : "Labas! 👋 Esu SV Pagalba. Galiu padėti prisijungti, rasti veiklą, susitvarkyti QR kodą ar valandas. Ko reikia?";
+      await db.from("support_messages").insert({ thread_id: thread.id, role: "assistant", content, provider: "local" });
+      return { status: "ai" as const, messages: await loadMessages(thread.id), options: ["Kaip prisijungti?", "Kaip rasti veiklą?", "Kur mano QR kodas?"] };
+    }
+    const simple = data.message.length < 120 && history.length < 4 && SIMPLE.test(data.message);
     const ai = await askAi([
       { role: "system", content: `${SUPPORT_SYSTEM_PROMPT}\nŽmogus dabar puslapyje: ${data.page ?? "?"}. ${user ? "Žmogus prisijungęs." : "Žmogus NEprisijungęs — perduoti administratoriui gali tik prisijungę."}` },
       ...convo,
-    ], (oaDay ?? 0) < OPENAI_GLOBAL_DAY && oaThread < OPENAI_PER_THREAD);
+    ], (oaDay ?? 0) < OPENAI_GLOBAL_DAY && oaThread < OPENAI_PER_THREAD, simple);
     if (!ai) return { error: "Pagalbininkas laikinai nepasiekiamas. Rašyk pagalba@socialinesvalandos.dev." };
 
     // Reliable bug detection: open the report form even if the model forgets.
