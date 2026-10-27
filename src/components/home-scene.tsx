@@ -52,11 +52,11 @@ export function HomeScene() {
     <div className="scene-stars" />
     <div className="scene-stars scene-stars-2" />
     <div className="scene-eclipse"><span className="scene-halo" /><span className="scene-corona" /><span className="scene-corona scene-corona-2" /><span className="scene-moon" /></div>
-    <svg className="scene-layer scene-far" viewBox="0 0 1440 400" preserveAspectRatio="none"><defs><linearGradient id="sc-g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--sc-far)" /><stop offset="1" stopColor="var(--sc-mid)" /></linearGradient></defs><path d={FAR} fill="url(#sc-g1)" /></svg>
+    <svg className="scene-layer scene-far" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="sc-g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--sc-far)" /><stop offset="1" stopColor="var(--sc-mid)" /></linearGradient></defs><path d={FAR} fill="url(#sc-g1)" /></svg>
     <div className="scene-haze scene-haze-1" />
-    <svg className="scene-layer scene-mid" viewBox="0 0 1440 400" preserveAspectRatio="none"><defs><linearGradient id="sc-g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--sc-mid)" /><stop offset="1" stopColor="var(--sc-near)" /></linearGradient></defs><path d={MID} fill="url(#sc-g2)" /></svg>
+    <svg className="scene-layer scene-mid" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="sc-g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--sc-mid)" /><stop offset="1" stopColor="var(--sc-near)" /></linearGradient></defs><path d={MID} fill="url(#sc-g2)" /></svg>
     <div className="scene-haze scene-haze-2" />
-    <svg className="scene-layer scene-near" viewBox="0 0 1440 400" preserveAspectRatio="none"><path d={NEAR} fill="var(--sc-near)" /></svg>
+    <svg className="scene-layer scene-near" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice"><path d={NEAR} fill="var(--sc-near)" /></svg>
     <div className="scene-lake"><span className="scene-glint" /><span className="scene-ripples" /></div>
     <div className="scene-fog" />
   </div>, document.body);
