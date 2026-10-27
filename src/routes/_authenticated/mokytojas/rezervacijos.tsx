@@ -59,7 +59,6 @@ function TeacherReservations() {
   const createFn = useServerFn(teacherCreateReservations);
   const updateFn = useServerFn(teacherUpdateReservation);
   const deleteFn = useServerFn(teacherDeleteReservation);
-  const inviteFn = useServerFn(teacherSendInvites);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [classInviteOpen, setClassInviteOpen] = useState(false);
@@ -110,21 +109,33 @@ function TeacherReservations() {
   }, [schoolRes, search, students]);
 
   const inviteStudents = inviteClass ? (classGroups.find(([k]) => k === inviteClass)?.[1] ?? []) : [];
+  // „Priskirti klasei“ – visiems klasės mokiniams sukuriamos tokios pačios mokyklos
+  // rezervacijos; mokiniai jas mato savo paskyrose (pokalbiai su mokiniais nenaudojami).
   const submitClassInvite = async () => {
     if (!inviteFor || busy) return;
     if (!inviteClass || inviteStudents.length === 0) { toast.error("Pasirink klasę su mokiniais."); return; }
     setBusy(true);
     try {
       const ids = inviteStudents.map((s) => s.id);
-      const teacherName = profile?.full_name ?? "Auklėtojas";
-      const link = `${window.location.origin}/student#mano-rezervacijos`;
-      const message = `Auklėtojas ${teacherName} kviečia klasę ${inviteClass}: ${KIND_LT[inviteFor.kind ?? ""] ?? "Savanorystė"} — ${inviteFor.reservation_date} ${reservationTimeLabel(inviteFor.start_time, inviteFor.end_time)} (${inviteFor.hours_to_earn} val.).${inviteFor.note ? ` ${inviteFor.note}` : ""}\n${link}`;
-      const res = await inviteFn({ data: { studentIds: ids, message } });
-      toast.success(`Kvietimai išsiųsti: ${res.sent}/${res.total}.`);
+      await createFn({
+        data: {
+          studentIds: ids,
+          organizationId: null,
+          taskId: inviteFor.task_id ?? null,
+          date: inviteFor.reservation_date,
+          start: inviteFor.start_time ?? "",
+          end: inviteFor.end_time ?? "",
+          hours: Number(inviteFor.hours_to_earn),
+          kind: inviteFor.kind ?? "event",
+          note: inviteFor.note ?? "",
+        },
+      });
+      toast.success(`Rezervacijos priskirtos klasei ${inviteClass} (${ids.length} mok.).`);
       setInviteFor(null);
       setInviteClass(null);
+      await refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti kvietimų.");
+      toast.error(e instanceof Error ? e.message : "Nepavyko priskirti rezervacijų.");
     } finally {
       setBusy(false);
     }
