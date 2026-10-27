@@ -1352,6 +1352,80 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          ip_hash: string | null
+          provider: string | null
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          provider?: string | null
+          role: string
+          thread_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          provider?: string | null
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "support_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_threads: {
+        Row: {
+          created_at: string
+          id: string
+          ip_hash: string | null
+          page: string | null
+          status: string
+          summary: string | null
+          token_hash: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          page?: string | null
+          status?: string
+          summary?: string | null
+          token_hash: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          page?: string | null
+          status?: string
+          summary?: string | null
+          token_hash?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           address: string | null
