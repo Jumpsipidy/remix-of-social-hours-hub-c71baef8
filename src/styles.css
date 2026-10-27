@@ -1176,3 +1176,6 @@ body:has(.home-scene) .site-background-fx { display: none; }
 .auth-brand { background: var(--sc-sky1); color: var(--foreground); --primary-foreground: var(--foreground); }
 .auth-brand-copy h1, .auth-brand-copy { text-shadow: 0 4px 24px color-mix(in oklab, var(--background) 70%, transparent); }
 .home-scene.is-contained .scene-eclipse { left: 68%; top: 42%; } .home-scene.is-contained .scene-glint { left: 68%; } @media (max-width: 1023px) { .home-scene.is-contained .scene-eclipse { left: 78%; top: 62%; width: 150px; } .home-scene.is-contained .scene-glint { left: 78%; } }
+/* Mountain scene must stay visible in elegant mode */
+html.sv-elegant body:has(.home-scene)::before, html.sv-elegant body:has(.home-scene) .page-shell::before { display: none; }
+body:has(.home-scene) { background: transparent; }
