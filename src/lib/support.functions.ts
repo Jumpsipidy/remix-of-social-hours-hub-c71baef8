@@ -42,8 +42,9 @@ function clean(v: unknown, n: number) { return String(v ?? "").trim().slice(0, n
 
 // Builds one markdown message from the structured answer.
 function compose(p: Record<string, unknown>) {
-  let out = clean(p.reply, 1500).split("\n").filter((l) => !/^\s*"?(report|bug|escalate|ask_human)"?\s*:/i.test(l)).join("\n").trim() || "Atsiprašau, nesupratau. Gal gali paaiškinti kitaip?";
-  const steps = Array.isArray(p.steps) ? p.steps.map((x) => clean(x, 200).replace(/^\s*(\d+[.)]|[-•])\s*/, "")).filter((x) => x && !/^\/[\w/-]*$/.test(x) && !/^\S+@\S+$/.test(x)).slice(0, 8) : [];
+  const junk = (l: string) => /\[object Object\]/.test(l) || /^\s*"?(report|bug|escalate|ask_human|links|options|steps|form|reply)"?\s*:?\s*$/i.test(l) || /^\s*"?(report|bug|escalate|ask_human|links|options|steps|form)"?\s*:/i.test(l) || /^\s*[:,{}\[\]]+\s*$/.test(l);
+  let out = clean(typeof p.reply === "string" ? p.reply : "", 1500).split("\n").filter((l) => !junk(l)).join("\n").trim() || "Atsiprašau, nesupratau. Gal gali paaiškinti kitaip?";
+  const steps = Array.isArray(p.steps) ? p.steps.filter((x) => typeof x === "string" && !junk(x) && x.trim().length > 3).map((x) => clean(x, 200).replace(/^\s*(\d+[.)]|[-•])\s*/, "")).filter((x) => x && !/^\/[\w/-]*$/.test(x) && !/^\S+@\S+$/.test(x)).slice(0, 8) : [];
   if (steps.length) out += "\n\n" + steps.map((x, i) => `${i + 1}. ${x}`).join("\n");
   const links = Array.isArray(p.links) ? (p.links as { label?: unknown; href?: unknown }[])
     .map((l) => ({ label: clean(l?.label, 60), href: clean(l?.href, 120) }))
@@ -55,7 +56,7 @@ function compose(p: Record<string, unknown>) {
 async function callModel(
   url: string, key: string, body: Record<string, unknown>,
   messages: { role: string; content: string }[],
-): Promise<AiOut | { status: number }> {
+): Promise<AiOut | { status: number; detail?: string }> {
   let resp: Response;
   try {
     resp = await fetch(url, {
@@ -66,9 +67,14 @@ async function callModel(
   } catch (e) {
     // Dropped connections ("socket hang up") fall through to the next provider instead of crashing.
     console.error("support ai network", url, (e as Error).message);
-    return { status: 0 };
+    return { status: 0, detail: (e as Error).message.slice(0, 160) };
   }
-  if (!resp.ok) { console.error("support ai", url, resp.status, (await resp.text()).slice(0, 200)); return { status: resp.status }; }
+  if (!resp.ok) {
+    const t = (await resp.text()).slice(0, 300);
+    console.error("support ai", url, resp.status, t);
+    let detail = t; try { detail = JSON.parse(t)?.error?.message ?? t; } catch { /* raw */ }
+    return { status: resp.status, detail: String(detail).slice(0, 200) };
+  }
   const json = await resp.json().catch(() => ({}));
   const content: string = json.choices?.[0]?.message?.content ?? "{}";
   let p: Record<string, unknown> = {};
@@ -76,7 +82,7 @@ async function callModel(
   const bug = p.bug && typeof p.bug === "object" ? (p.bug as Bug) : null;
   return {
     reply: compose(p),
-    options: Array.isArray(p.options) ? p.options.map((o) => clean(o, 60)).filter(Boolean).slice(0, 4) : [],
+    options: Array.isArray(p.options) ? p.options.filter((o) => typeof o === "string").map((o) => clean(o, 60)).filter(Boolean).slice(0, 4) : [],
     escalate: Boolean(p.escalate) || Boolean(bug),
     askHuman: Boolean(p.ask_human),
     report: clean(p.report, 800),
@@ -98,8 +104,8 @@ async function askAi(messages: { role: string; content: string }[], allowOpenai:
   const lite = [{ role: "system", content: LITE_PROMPT + messages[0].content.slice(SUPPORT_SYSTEM_PROMPT.length) }, ...messages.slice(1).slice(-6)];
   const url = "https://api.groq.com/openai/v1/chat/completions";
   if (!groq) { console.error("support ai: GROQ_API_KEY missing"); why.push("G-nera"); }
-  if (groq && !simple) {
-    const r = await callModel(url, groq, { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 1500 }, messages);
+  if (groq) {
+    const r = await callModel(url, groq, { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: simple ? 900 : 1500 }, simple ? lite : messages);
     if ("reply" in r) return { ...r, provider: "groq" };
     why.push(`G1-${r.status}`);
   }
@@ -236,6 +242,7 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
       { role: "system", content: `${SUPPORT_SYSTEM_PROMPT}\nŽmogus dabar puslapyje: ${data.page ?? "?"}. ${user ? "Žmogus prisijungęs." : "Žmogus NEprisijungęs — perduoti administratoriui gali tik prisijungę."}` },
       ...convo,
     ], (oaDay ?? 0) < OPENAI_GLOBAL_DAY && oaThread < OPENAI_PER_THREAD, simple, why);
+    if (!ai) console.error("support ai all failed", why.join(" "));
     if (!ai) return { error: `Pagalbininkas laikinai nepasiekiamas. Rašyk pagalba@socialinesvalandos.dev. (kodas: ${why.join(" ") || "?"})` };
 
     // Reliable bug detection: open the report form even if the model forgets.
@@ -354,4 +361,24 @@ export const adminReplySupport = createServerFn({ method: "POST" })
     if (data.join) data.status = "escalated";
     await db.from("support_threads").update({ updated_at: new Date().toISOString(), ...(data.status ? { status: data.status } : {}) }).eq("id", data.id);
     return loadMessages(data.id);
+  });
+
+// Super Admin: tiny live test of each AI provider, shows the real error.
+export const adminTestSupportAi = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context as never);
+    const msgs = [{ role: "system", content: 'Atsakyk JSON: {"reply":"ok"}' }, { role: "user", content: "testas" }];
+    const out: { name: string; keySet: boolean; ok: boolean; status?: number; detail?: string; ms: number }[] = [];
+    const run = async (name: string, key: string | undefined, url: string, body: Record<string, unknown>) => {
+      const k = key?.trim(); const t = Date.now();
+      if (!k) { out.push({ name, keySet: false, ok: false, detail: "Raktas nerastas šioje aplinkoje", ms: 0 }); return; }
+      const r = await callModel(url, k, body, msgs);
+      out.push({ name, keySet: true, ok: "reply" in r, status: "reply" in r ? 200 : r.status, detail: "reply" in r ? "Veikia" : r.detail, ms: Date.now() - t });
+    };
+    const g = "https://api.groq.com/openai/v1/chat/completions";
+    await run("Groq gpt-oss-20b", process.env.GROQ_API_KEY, g, { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 200 });
+    await run("Groq llama-3.1-8b", process.env.GROQ_API_KEY, g, { model: "llama-3.1-8b-instant", max_completion_tokens: 100 });
+    await run("OpenAI gpt-5-nano", process.env.OPENAI_API_KEY, "https://api.openai.com/v1/chat/completions", { model: "gpt-5-nano", reasoning_effort: "minimal", max_completion_tokens: 200 });
+    return { results: out, host: process.env.VERCEL ? "Vercel" : "Lovable", at: new Date().toISOString() };
   });
