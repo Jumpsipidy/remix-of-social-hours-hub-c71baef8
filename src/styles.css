@@ -1066,3 +1066,18 @@ html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-ban
 @media (prefers-reduced-motion: reduce) {
   .nav-heart-icon, .nav-heart-ring, .nav-pop { animation: none !important; }
 }
+
+/* Eclipse homepage hero — always night-scene, independent of theme */
+:root { --hero-ink: oklch(0.97 0.01 250); --hero-ink-muted: oklch(0.85 0.02 250); --hero-accent: oklch(0.8 0.13 70); --hero-shade: oklch(0.13 0.03 260); }
+.home-eclipse-img { animation: home-eclipse-zoom 18s ease-out both; }
+@keyframes home-eclipse-zoom { from { transform: scale(1.08); } to { transform: scale(1); } }
+.home-eclipse-shade { background: linear-gradient(to bottom, color-mix(in oklab, var(--hero-shade) 55%, transparent), transparent 45%, color-mix(in oklab, var(--hero-shade) 30%, transparent) 75%, var(--background)); }
+.home-hero-title { color: var(--hero-ink); text-shadow: 0 4px 30px color-mix(in oklab, var(--hero-shade) 60%, transparent); }
+.home-hero-accent { color: var(--hero-accent); }
+.home-hero-sub { color: var(--hero-ink-muted); }
+.home-hero-chip { color: var(--hero-ink); border-color: color-mix(in oklab, var(--hero-ink) 25%, transparent); background: color-mix(in oklab, var(--hero-shade) 45%, transparent); backdrop-filter: blur(8px); }
+.home-hero-ghost { color: var(--hero-ink); border-color: color-mix(in oklab, var(--hero-ink) 35%, transparent); background: color-mix(in oklab, var(--hero-shade) 35%, transparent); }
+.home-eclipse-hero .relative.z-10 > * { animation: home-hero-rise .7s cubic-bezier(.2,.8,.2,1) both; }
+.home-eclipse-hero .relative.z-10 > *:nth-child(2) { animation-delay: .08s; } .home-eclipse-hero .relative.z-10 > *:nth-child(3) { animation-delay: .16s; } .home-eclipse-hero .relative.z-10 > *:nth-child(4) { animation-delay: .24s; }
+@keyframes home-hero-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .home-eclipse-img, .home-eclipse-hero .relative.z-10 > * { animation: none; } }
