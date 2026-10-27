@@ -92,9 +92,18 @@ export function AuthLayout({ children }: { children: ReactNode }) {
     return () => { alive = false; };
   }, []);
   useEffect(() => { if (mode !== firstMode.current) setIntro(false); }, [mode]);
+  const [moving, setMoving] = useState(false);
+  const lastMode = useRef(mode);
+  useEffect(() => {
+    if (mode === lastMode.current) return;
+    lastMode.current = mode;
+    setMoving(true);
+    const t = window.setTimeout(() => setMoving(false), 950);
+    return () => window.clearTimeout(t);
+  }, [mode]);
 
   return (
-    <div data-auth-mode={mode} className="auth-shell relative min-h-dvh overflow-x-clip bg-background text-foreground">
+    <div data-auth-mode={mode} className={`auth-shell relative min-h-dvh overflow-x-clip bg-background text-foreground ${moving ? "is-moving" : ""}`}>
       <BrandPanel ref={brandRef} mode={mode} intro={intro} />
       <main className="auth-form-side flex flex-col lg:relative lg:min-h-dvh">
         <header className="auth-top absolute right-0 top-0 z-30 flex items-center pr-8 pt-8 lg:static lg:justify-between lg:px-8 lg:pt-6">
