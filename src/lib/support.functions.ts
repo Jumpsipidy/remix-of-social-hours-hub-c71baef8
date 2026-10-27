@@ -3,6 +3,7 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { SUPPORT_SYSTEM_PROMPT } from "@/lib/support-knowledge";
+import { SUPPORT_UI_GUIDE } from "@/lib/support-ui-guide";
 
 // Spam limits (all server-side).
 const MAX_LEN = 600;
@@ -84,18 +85,32 @@ async function callModel(
   };
 }
 
-// Cheap reasoning models: free Groq gpt-oss-20b first, paid OpenAI gpt-5-nano as fallback.
-async function askAi(messages: { role: string; content: string }[], allowOpenai: boolean) {
-  const groq = process.env.GROQ_API_KEY;
-  if (groq) {
-    const r = await callModel("https://api.groq.com/openai/v1/chat/completions", groq,
-      { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 1500 }, messages);
+// Lighter prompt (no detailed UI guide) for simple questions and Groq rate-limit retries.
+const LITE_PROMPT = SUPPORT_SYSTEM_PROMPT.replace(SUPPORT_UI_GUIDE, "");
+
+// Greetings/thanks get an instant reply with no model call at all.
+const SMALL_TALK = /^\s*(labas|labukas|sveik[iasu]*|hello|hi|hey|ačiū|aciu|dėkui|dekui|thanks|ok|gerai|aha|super|šaunu|saunu)[\s!.?😊🙂]*$/i;
+const SIMPLE = /(prisijung|registr|login|slaptažod|slaptazod|qr|tem[ąa]|kas tai|kaip veikia)/i;
+
+// Tiered, cost-aware routing: free Groq models first; paid OpenAI only when both Groq tiers fail.
+async function askAi(messages: { role: string; content: string }[], allowOpenai: boolean, simple: boolean) {
+  const groq = process.env.GROQ_API_KEY?.trim();
+  const lite = [{ role: "system", content: LITE_PROMPT + messages[0].content.slice(SUPPORT_SYSTEM_PROMPT.length) }, ...messages.slice(1).slice(-6)];
+  const url = "https://api.groq.com/openai/v1/chat/completions";
+  if (!groq) console.error("support ai: GROQ_API_KEY missing");
+  if (groq && !simple) {
+    const r = await callModel(url, groq, { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 1500 }, messages);
     if ("reply" in r) return { ...r, provider: "groq" };
   }
-  const openai = process.env.OPENAI_API_KEY;
+  if (groq) {
+    const r = await callModel(url, groq, { model: "llama-3.1-8b-instant", max_completion_tokens: 700 }, lite);
+    if ("reply" in r) return { ...r, provider: "groq" };
+  }
+  const openai = process.env.OPENAI_API_KEY?.trim();
+  if (!openai) console.error("support ai: OPENAI_API_KEY missing");
   if (openai && allowOpenai) {
     const r = await callModel("https://api.openai.com/v1/chat/completions", openai,
-      { model: "gpt-5-nano", reasoning_effort: "low", max_completion_tokens: 2500 }, messages);
+      { model: "gpt-5-nano", reasoning_effort: "minimal", max_completion_tokens: 1200 }, simple ? lite : messages);
     if ("reply" in r) return { ...r, provider: "openai" };
   }
   return null;
