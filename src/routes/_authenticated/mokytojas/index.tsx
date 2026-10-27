@@ -40,6 +40,21 @@ function TeacherOverview() {
     .slice(0, 6);
   const studentName = (id: string) => students.find((s) => s.id === id)?.full_name ?? "Mokinys";
 
+  // Klasių suvestinė: kiek mokinių ir vidutinis progresas kiekvienoje klasėje.
+  const classGroups = (() => {
+    const map = new Map<string, { count: number; sum: number }>();
+    for (const s of students) {
+      const key = `${s.class_year ?? "—"}${s.class_letter ? ` ${s.class_letter}` : ""}`;
+      const g = map.get(key) ?? { count: 0, sum: 0 };
+      g.count += 1;
+      g.sum += pct(s);
+      map.set(key, g);
+    }
+    return [...map.entries()]
+      .map(([key, g]) => ({ key, count: g.count, avg: g.count ? Math.round(g.sum / g.count) : 0 }))
+      .sort((a, b) => a.key.localeCompare(b.key, "lt", { numeric: true }));
+  })();
+
   if (loading && !data) {
     return <div className="grid min-h-[40dvh] place-items-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>;
   }
@@ -53,6 +68,19 @@ function TeacherOverview() {
             ? `Priskirtos klasės: ${data.scope.assigned_classes.join(", ") || "visos"}${data.scope.assigned_letter ? ` · ${data.scope.assigned_letter}` : ""}`
             : "Visos mokyklos klasės"}
         </p>
+      </div>
+
+      {/* Greitieji veiksmai */}
+      <div className="flex flex-wrap gap-2">
+        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+          <CalendarPlus className="h-4 w-4" /> Nauja rezervacija
+        </Link>
+        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
+          <Megaphone className="h-4 w-4" /> Veikla visiems
+        </Link>
+        <Link to="/mokytojas/pokalbiai" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
+          <MessageCircle className="h-4 w-4" /> Rašyti organizacijai
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
