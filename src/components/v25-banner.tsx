@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 const KEY = "sv_v26_banner_closed";
 const BITS = ["🎉", "✨", "🎊", "⭐", "🥳", "💙", "🎈", "✨"];
 
-/** Šventinė V2.6 kortelė su konfeti — uždaroma, rodoma vieną kartą įrenginyje. */
+/** Šventinė V2.6.5 kortelė su konfeti — uždaroma, rodoma vieną kartą įrenginyje. */
 export function V25Banner() {
   const { isAuthenticated } = useAuth();
   const [show, setShow] = useState(false);
@@ -36,7 +36,7 @@ export function V25Banner() {
           <span className="relative mt-1 text-lg">🎉</span>
         </div>
         <div className="min-w-0 flex-1 px-3.5 py-3">
-          <p className="text-sm font-black">V2.6 jau čia — švenčiame! 🥳</p>
+          <p className="text-sm font-black">V2.6.5 jau čia — švenčiame! 🥳</p>
           <p className="text-xs text-muted-foreground">Auklėtojo sritis, klasių kodai, grupinės rezervacijos, stipresnis SV Guard ir dar daugiau.</p>
           <Link to="/versijos" onClick={close} className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-primary-foreground active:scale-95">
             <PartyPopper className="h-3.5 w-3.5" /> Žiūrėti, kas naujo
