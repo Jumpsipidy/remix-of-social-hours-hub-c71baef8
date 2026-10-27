@@ -1180,3 +1180,41 @@ body:has(.home-scene) .site-background-fx { display: none; }
 html.sv-elegant body:has(.home-scene)::before, html.sv-elegant body:has(.home-scene) .page-shell::before { display: none; }
 body:has(.home-scene) { background: transparent; }
 .scene-veil { position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in oklab, var(--background) 20%, transparent), color-mix(in oklab, var(--background) 62%, transparent) 45%, color-mix(in oklab, var(--background) 78%, transparent)); }
+
+/* ---- Auth panel: anchor scene to viewport, compact copy, smooth slide ---- */
+.home-scene.is-contained { --v: 0 !important; --p: 0 !important; contain: strict; }
+.home-scene.is-contained .scene-eclipse { left: 70%; top: 34%; width: clamp(170px, 19vw, 300px); transform: translate(calc(-50% + var(--mx) * 10px), calc(-50% + var(--my) * 6px)); }
+.home-scene.is-contained .scene-glint { left: 70%; }
+@media (min-width: 1024px) {
+  .auth-brand { will-change: transform; backface-visibility: hidden; --auth-move: 900ms; --auth-ease: cubic-bezier(.65,0,.35,1); }
+  .auth-form-side { will-change: transform; }
+  .auth-brand-inner > div:last-child { justify-content: flex-start; padding-top: clamp(1.5rem, 9vh, 6rem); }
+  /* while sliding, freeze costly scene effects so the move stays at 60fps */
+  .auth-shell.is-moving .home-scene * { animation-play-state: paused !important; }
+}
+@media (min-width: 1024px) and (max-height: 820px) {
+  .auth-brand-note { display: none !important; }
+  .auth-brand-copy ul { margin-top: 1.25rem; }
+}
+@media (min-width: 1024px) and (max-height: 680px) { .auth-brand-copy ul { display: none !important; } }
+
+/* ---- Light theme readability: deeper text over bright backgrounds ---- */
+:root:not(.dark) {
+  --foreground: oklch(0.16 0.025 255);
+  --muted-foreground: oklch(0.38 0.025 255);
+}
+:root:not(.dark) body { -webkit-font-smoothing: antialiased; font-weight: 450; }
+:root:not(.dark) .text-muted-foreground { color: var(--muted-foreground); }
+
+/* ---- Skeletons blend with scene/backgrounds and cross-fade ---- */
+.sv-skeleton {
+  background-color: color-mix(in oklab, var(--card) 38%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2);
+  border-color: color-mix(in oklab, var(--foreground) 9%, transparent);
+  transition: background-color .5s ease, border-color .5s ease;
+}
+html { transition: background-color .5s ease, color .35s ease; }
+.page-shell, .auth-shell, .auth-form-side { transition: background-color .5s ease, color .35s ease; }
+@media (min-width: 1024px) { .auth-brand { top: 0; bottom: auto; height: 100dvh !important; min-height: 0 !important; max-height: 100dvh; } }
+.auth-brand .home-scene { z-index: 0; } .auth-brand-inner { z-index: 1; }
+@media (min-width: 1024px) { .home-scene.is-contained .scene-eclipse { left: 80%; top: 27%; width: clamp(150px, 15vw, 240px); } .home-scene.is-contained .scene-glint { left: 80%; } }
