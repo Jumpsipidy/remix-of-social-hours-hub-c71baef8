@@ -259,7 +259,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="page-shell relative min-h-screen pb-safe md:pb-0 selection:bg-primary/30 selection:text-primary-foreground" data-page={pathname}>
       <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:p-3 focus:text-foreground">Pereiti prie turinio</a>
-      {scenic ? <HomeScene /> : <BackgroundFX isDashboard={isDashboard} />}
+      {scenic ? <HomeScene soft={pathname !== "/"} /> : <BackgroundFX isDashboard={isDashboard} />}
       <Navbar />
       <main key={pathname} id="page-content" tabIndex={-1} className="page-enter min-w-0">
         {children}
