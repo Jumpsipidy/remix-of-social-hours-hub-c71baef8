@@ -76,6 +76,7 @@ const NAV_GROUPS = [
       { to: "/admin/errors", label: "Klaidos (live)", icon: AlertTriangle },
       { to: "/admin/autofix", label: "⚡ Auto-Fix Feed", icon: Sparkles },
       { to: "/admin/bugs", label: "Klaidų pranešimai", icon: Bug },
+      { to: "/admin/support", label: "Pagalbos pokalbiai", icon: Bug },
       { to: "/admin/incidents", label: "⚠️ Incidentai", icon: AlertTriangle },
       { to: "/admin/incident-lookup", label: "🔎 Incidento paieška", icon: Fingerprint },
       { to: "/admin/lockdown", label: "🔒 Lockdown", icon: Lock },

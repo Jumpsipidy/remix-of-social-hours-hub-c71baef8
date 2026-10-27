@@ -18,6 +18,7 @@ import appCss from "../styles.css?url";
 import { Toaster } from "../components/ui/sonner";
 const MockTesterPanel = lazy(() => import("../components/mock-tester-panel").then(m => ({ default: m.MockTesterPanel })));
 const BugReportWidget = lazy(() => import("../components/bug-report-widget").then(m => ({ default: m.BugReportWidget })));
+const SupportChat = lazy(() => import("../components/support-chat").then(m => ({ default: m.SupportChat })));
 import { CookieConsent } from "../components/cookie-consent";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
@@ -270,6 +271,7 @@ function RootComponent() {
           <CelebrationStage />
 
           <Suspense fallback={null}><BugReportWidget /></Suspense>
+          <Suspense fallback={null}><SupportChat /></Suspense>
           <CookieConsent />
           {import.meta.env.DEV && <Suspense fallback={null}><MockTesterPanel /></Suspense>}
 
