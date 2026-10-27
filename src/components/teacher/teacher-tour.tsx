@@ -181,7 +181,7 @@ export function TeacherTour({ open, onDone }: { open: boolean; onDone: () => voi
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-primary">
-                {phase + 1} / {TEACHER_TOUR_STEPS.length}
+                {(typeof phase === "number" ? phase : 0) + 1} / {TEACHER_TOUR_STEPS.length}
               </p>
               <h3 className="mt-1 text-base font-bold">{step.title}</h3>
             </div>
