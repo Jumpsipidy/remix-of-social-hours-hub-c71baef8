@@ -54,7 +54,6 @@ type FormState = {
 const emptyForm = (): FormState => ({ date: "", start: "", end: "", hours: 1, kind: "event", note: "", organizationId: "" });
 
 function TeacherReservations() {
-  const { profile } = useAuth();
   const { data, loading, refresh } = useSchoolData();
   const createFn = useServerFn(teacherCreateReservations);
   const updateFn = useServerFn(teacherUpdateReservation);
