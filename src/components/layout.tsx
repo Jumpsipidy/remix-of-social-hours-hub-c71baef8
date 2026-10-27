@@ -129,7 +129,7 @@ export function Navbar() {
 
   return (
     <header className={`site-navbar nav-redesign sticky top-0 z-50 border-b bg-background/95 ${scrolled ? "is-scrolled border-border shadow-sm" : "border-border/60"}`}>
-      <div className="nav-inner mx-auto flex h-[80px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
+      <div className="nav-inner mx-auto flex h-[88px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
         <div className="nav-brand group flex shrink-0 items-center gap-2.5">
           <Button variant="ghost" size="icon" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo nav-heart h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
             <Heart className="nav-heart-icon h-5 w-5" fill="currentColor" /><span aria-hidden className="nav-heart-ring" />
@@ -137,21 +137,18 @@ export function Navbar() {
           <Link to="/" className="brand-wordmark flex leading-none" aria-label="Socialinės Valandos — pradžia"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span></Link>
         </div>
         <nav aria-label="Pagrindinis meniu" className="nav-dock ml-3 hidden min-w-0 items-center gap-1 lg:flex">
-          {[
+          <div className="nav-fat flex items-center gap-1 rounded-2xl border border-border/70 bg-card/60 p-1.5 backdrop-blur-md">{[
             { to: "/", label: "Pradžia", Icon: Home },
             { to: "/tasks", label: "Veiklos", Icon: ListTodo },
-            { to: "/socialines-valandos-mokykloms", label: "Mokykloms", Icon: School, wide: true },
-            { to: "/securityguard", label: "SV Guard", Icon: ShieldCheck, wide: true },
             ...(activeRole && DASHBOARD_BY_ROLE[activeRole] ? [{ to: DASHBOARD_BY_ROLE[activeRole]!.to, label: "Mano sritis", Icon: LayoutDashboard }] : []),
-          ].map(({ to, label, Icon, wide }: { to: string; label: string; Icon: typeof Home; wide?: boolean }, i) => {
+            ...(activeRole && activeRole !== "admin" ? [{ to: activeRole === "school_admin" ? "/mokytojas/pokalbiai" : "/chat", label: "Pokalbiai", Icon: MessageCircle }] : []),
+          ].map(({ to, label, Icon }, i) => {
             const active = isActive(to, to === "/");
-            return <Button key={to} asChild variant="ghost" className={`nav-link nav-pop relative h-12 ${wide ? "hidden xl:inline-flex" : ""} gap-2 px-3.5 text-[15px] font-semibold ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{ animationDelay: `${i * 45}ms` }}><Link to={to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-xl bg-primary/12 ring-1 ring-primary/25" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}<Icon className="nav-link-icon relative h-[18px] w-[18px]" /><span className="relative">{label}</span></Link></Button>;
-          })}
-          <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="nav-pop h-12 gap-2 px-3.5 text-[15px] font-semibold text-muted-foreground hover:text-foreground"><CircleHelp className="h-[18px] w-[18px]" />Daugiau<ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start" sideOffset={12} className="w-64 p-2"><DropdownMenuLabel>Atrask daugiau</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem asChild className="xl:hidden"><Link to="/socialines-valandos-mokykloms"><School />Mokykloms</Link></DropdownMenuItem><DropdownMenuItem asChild className="xl:hidden"><Link to="/securityguard"><ShieldCheck />SV Guard</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/about-orgs"><UserRound />Organizacijoms</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/socialiniu-valandu-lapas"><ListTodo />Valandų lapas</Link></DropdownMenuItem><DropdownMenuItem asChild><Link to="/versijos"><History />Kas naujo</Link></DropdownMenuItem><DropdownMenuItem asChild><a href="/#faq"><CircleHelp />Klausimai ir pagalba</a></DropdownMenuItem><DropdownMenuSeparator /><DropdownMenuItem onSelect={openSettings}><Settings2 />Išvaizdos nustatymai</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+            return <Button key={to} asChild variant="ghost" className={`nav-link nav-pop relative h-12 gap-2.5 rounded-xl px-5 text-base font-bold ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{ animationDelay: `${i * 45}ms` }}><Link to={to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-xl bg-primary/15 ring-1 ring-primary/30" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}<Icon className="nav-link-icon relative h-5 w-5" /><span className="relative">{label}</span></Link></Button>;
+          })}</div>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
-          <SchoolEyesToggle compact />
           <NotificationBell />
           {isAuthenticated ? <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="secondary" className="hidden h-10 gap-2 px-2.5 sm:inline-flex" aria-label="Paskyros meniu"><UserRound /><span className="hidden max-w-24 truncate xl:inline">{profile?.full_name?.split(" ")[0] ?? "Paskyra"}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
@@ -160,7 +157,7 @@ export function Navbar() {
               {links.filter((l) => l.to !== "/" && l.to !== "/tasks").map((l) => <DropdownMenuItem key={l.to} asChild className="min-h-10"><Link to={l.to}>{l.to.includes("chat") || l.to.includes("pokalbiai") ? <MessageCircle /> : l.to.includes("checkin") || l.to.includes("scan") ? <QrCode /> : <LayoutDashboard />}{l.label}</Link></DropdownMenuItem>)}
               <DropdownMenuSeparator /><DropdownMenuItem onSelect={() => void handleSignOut()} className="min-h-10"><LogOut />Atsijungti</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button asChild className="nav-cta h-11 rounded-xl px-5 font-semibold"><Link to="/register">Registruotis</Link></Button></div>}
+          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button asChild className="nav-cta h-12 rounded-xl px-6 text-base font-bold"><Link to="/register">Registruotis</Link></Button></div>}
           <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}><Menu /></Button>
         </div>
       </div>
