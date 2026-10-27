@@ -1767,6 +1767,7 @@ export type Database = {
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      purge_support_messages: { Args: never; Returns: undefined }
       resolve_chat_room: { Args: { _room: string }; Returns: string }
       revoke_certificate: {
         Args: { _code: string; _reason: string }
