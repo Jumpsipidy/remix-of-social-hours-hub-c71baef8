@@ -62,15 +62,9 @@ function StudentPicker({ students, selected, setSelected }: { students: SchoolSt
   );
 }
 
-async function sendCards(inviteFn: (a: { data: { studentIds: string[]; message: string } }) => Promise<{ sent: number; total: number }>, invite: TaskInvite, ids: string[], note: string, teacher: string) {
-  const message = encodeTaskInvite(invite, `${teacher}: ${note.trim() || "Siūlau šią veiklą — rezervuokite vietą!"}`);
-  return inviteFn({ data: { studentIds: ids, message } });
-}
-
-/** „Kviesti klasę“: visos svetainės veiklos su filtrais → mokiniai → kortelė pokalbyje. */
+/** „Priskirti veiklą klasei“: visos svetainės veiklos su filtrais → mokiniai → rezervacijos jų paskyrose. */
 export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
-  const { profile } = useAuth();
-  const inviteFn = useServerFn(teacherSendInvites);
+  const assignFn = useServerFn(teacherAssignTask);
   const [tasks, setTasks] = useState<TaskRow[] | null>(null);
   const [orgNames, setOrgNames] = useState<Record<string, string>>({});
   const [q, setQ] = useState(""); const [city, setCity] = useState(""); const [from, setFrom] = useState("");
@@ -105,10 +99,20 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
     if (selected.size === 0) { toast.error("Pažymėk bent vieną mokinį."); return; }
     setBusy(true);
     try {
-      const res = await sendCards(inviteFn, toInvite(picked), [...selected], note, profile?.full_name ?? "Auklėtojas");
-      toast.success(`Pasiūlymas išsiųstas ${res.sent} iš ${res.total} mokinių.`);
+      const res = await assignFn({
+        data: {
+          studentIds: [...selected],
+          taskId: picked.id,
+          date: picked.task_date,
+          start: picked.start_time ?? "",
+          end: picked.end_time ?? "",
+          hours: Math.min(8, Math.round(Number(picked.available_hours) || 0)),
+          note: note.trim(),
+        },
+      });
+      toast.success(`Veikla priskirta ${res.created} iš ${res.total} mokinių — jie ją mato savo paskyrose.`);
       onOpenChange(false);
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko išsiųsti."); } finally { setBusy(false); }
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko priskirti veiklos."); } finally { setBusy(false); }
   };
 
   return (
