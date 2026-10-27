@@ -6,7 +6,6 @@ import { getPublicStats } from "@/lib/public-stats.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowDown, Search, QrCode, FileCheck2, ShieldCheck, MapPin, Check, ChevronDown, Users, Heart } from "lucide-react";
-import { HomeScene } from "@/components/home-scene";
 
 
 /**
@@ -141,7 +140,7 @@ function Home() {
   const { data: counts } = useQuery({ queryKey: ["public-stats"], queryFn: () => getPublicStats({ data: { publicStats: true } }), staleTime: 60_000 });
   const dash = profile?.role ? DASHBOARD_BY_ROLE[profile.role] : null;
   const fmt = (n?: number) => n === undefined ? "—" : new Intl.NumberFormat("lt-LT").format(n);
-  return <PageShell><HomeScene /><div className="home-saas home-live">
+  return <PageShell><div className="home-saas home-live">
     <section className="relative flex min-h-[calc(100svh-88px)] items-start justify-center px-4 pt-[7vh] text-center sm:px-6" aria-labelledby="home-title">
       <div className="home-hero-in mx-auto max-w-3xl">
         <p className="glass mx-auto inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium"><span className="h-2 w-2 rounded-full bg-success" />Nemokama mokiniams, mokykloms ir organizacijoms</p>

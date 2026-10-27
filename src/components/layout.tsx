@@ -7,6 +7,7 @@ import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { BackgroundFX } from "@/components/background-fx";
+import { HomeScene } from "@/components/home-scene";
 import { OnboardingTour } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -244,6 +245,8 @@ export function Footer() {
 export function PageShell({ children }: { children: React.ReactNode }) {
   useVisualViewport();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Theme-aware mountain scene on the public homepage, activities list and student dashboard.
+  const scenic = pathname === "/" || pathname === "/tasks" || pathname === "/student";
   const isFocused = pathname === "/chat" || pathname === "/checkin" || pathname === "/organization/scan";
   const isDashboard = pathname !== "/" && (
     pathname.startsWith("/student") || 
@@ -256,7 +259,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="page-shell relative min-h-screen pb-safe md:pb-0 selection:bg-primary/30 selection:text-primary-foreground" data-page={pathname}>
       <a href="#page-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-background focus:p-3 focus:text-foreground">Pereiti prie turinio</a>
-      <BackgroundFX isDashboard={isDashboard} />
+      {scenic ? <HomeScene soft={pathname !== "/"} /> : <BackgroundFX isDashboard={isDashboard} />}
       <Navbar />
       <main key={pathname} id="page-content" tabIndex={-1} className="page-enter min-w-0">
         {children}

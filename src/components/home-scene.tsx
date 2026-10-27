@@ -21,7 +21,7 @@ const NEAR = ridge(11, 320, 70, 40);
  * Living, code-drawn landscape behind the whole homepage.
  * Scroll (--p, --v) moves eclipse/mountains/lake as one scene; pointer adds parallax.
  */
-export function HomeScene({ contained = false }: { contained?: boolean } = {}) {
+export function HomeScene({ contained = false, soft = false }: { contained?: boolean; soft?: boolean } = {}) {
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -49,7 +49,7 @@ export function HomeScene({ contained = false }: { contained?: boolean } = {}) {
   }, [mounted]);
 
   if (!mounted) return null;
-  const scene = <div ref={ref} className={contained ? "home-scene is-contained" : "home-scene"} aria-hidden="true">
+  const scene = <div ref={ref} className={`home-scene${contained ? " is-contained" : ""}${soft ? " is-soft" : ""}`} aria-hidden="true">
     <div className="scene-sky" />
     <div className="scene-stars" />
     <div className="scene-stars scene-stars-2" />
@@ -61,6 +61,7 @@ export function HomeScene({ contained = false }: { contained?: boolean } = {}) {
     <svg className="scene-layer scene-near" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice"><path d={NEAR} fill="var(--sc-near)" /></svg>
     <div className="scene-lake"><span className="scene-glint" /><span className="scene-ripples" /></div>
     <div className="scene-fog" />
+    {soft && <div className="scene-veil" />}
   </div>;
   return contained ? scene : createPortal(scene, document.body);
 }
