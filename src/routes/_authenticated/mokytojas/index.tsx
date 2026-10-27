@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarCheck, Clock, Flame, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarPlus, Clock, Flame, Megaphone, MessageCircle, TrendingUp, Users } from "lucide-react";
 import { useSchoolData } from "@/components/teacher/use-school-data";
+import { reservationTimeLabel } from "@/lib/reservation-time";
 
 export const Route = createFileRoute("/_authenticated/mokytojas/")({
   head: () => ({
@@ -83,7 +84,7 @@ function TeacherOverview() {
               <li key={r.id} className="flex items-center justify-between rounded-xl bg-muted/60 px-3 py-2 text-sm">
                 <span className="min-w-0 flex-1 truncate font-medium">{studentName(r.student_id)}</span>
                 <span className="ml-3 shrink-0 text-xs text-muted-foreground tabular-nums">
-                  {r.reservation_date} · {String(r.start_time).slice(0, 5)} · {r.hours_to_earn} val.
+                  {r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {r.hours_to_earn} val.
                 </span>
               </li>
             ))}
