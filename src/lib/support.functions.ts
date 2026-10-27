@@ -30,40 +30,60 @@ async function admin() {
   return supabaseAdmin;
 }
 
-type AiOut = { reply: string; options: string[]; escalate: boolean; report: string };
+type Bug = { title?: string; page?: string; what_did?: string; what_saw?: string; expected?: string; device?: string; severity?: string };
+type AiOut = { reply: string; options: string[]; escalate: boolean; askHuman: boolean; report: string; bug: Bug | null };
+
+function clean(v: unknown, n: number) { return String(v ?? "").trim().slice(0, n); }
+
+// Builds one markdown message from the structured answer.
+function compose(p: Record<string, unknown>) {
+  let out = clean(p.reply, 1500) || "Atsiprašau, nesupratau. Gal gali paaiškinti kitaip?";
+  const steps = Array.isArray(p.steps) ? p.steps.map((x) => clean(x, 200)).filter(Boolean).slice(0, 8) : [];
+  if (steps.length) out += "\n\n" + steps.map((x, i) => `${i + 1}. ${x}`).join("\n");
+  const links = Array.isArray(p.links) ? (p.links as { label?: unknown; href?: unknown }[])
+    .map((l) => ({ label: clean(l?.label, 60), href: clean(l?.href, 120) }))
+    .filter((l) => l.label && /^\/[a-z0-9/_-]*$/i.test(l.href)).slice(0, 3) : [];
+  if (links.length) out += "\n\n" + links.map((l) => `→ [${l.label}](${l.href})`).join("\n");
+  return out;
+}
 
 async function callModel(
-  url: string, key: string, model: string,
+  url: string, key: string, body: Record<string, unknown>,
   messages: { role: string; content: string }[],
 ): Promise<AiOut | { status: number }> {
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ model, temperature: 0.3, max_tokens: 450, messages, response_format: { type: "json_object" } }),
+    body: JSON.stringify({ ...body, messages, response_format: { type: "json_object" } }),
   });
-  if (!resp.ok) return { status: resp.status };
+  if (!resp.ok) { console.error("support ai", url, resp.status, (await resp.text()).slice(0, 200)); return { status: resp.status }; }
   const json = await resp.json();
   const content: string = json.choices?.[0]?.message?.content ?? "{}";
-  let p: Partial<AiOut> = {};
+  let p: Record<string, unknown> = {};
   try { p = JSON.parse(content); } catch { const m = content.match(/\{[\s\S]*\}/); if (m) try { p = JSON.parse(m[0]); } catch { /* ignore */ } }
+  const bug = p.bug && typeof p.bug === "object" ? (p.bug as Bug) : null;
   return {
-    reply: String(p.reply ?? "").slice(0, 1500) || "Atsiprašau, nesupratau. Gal gali paaiškinti kitaip?",
-    options: Array.isArray(p.options) ? p.options.map(String).filter(Boolean).slice(0, 4).map((o) => o.slice(0, 60)) : [],
-    escalate: Boolean(p.escalate),
-    report: String(p.report ?? "").slice(0, 800),
+    reply: compose(p),
+    options: Array.isArray(p.options) ? p.options.map((o) => clean(o, 60)).filter(Boolean).slice(0, 4) : [],
+    escalate: Boolean(p.escalate) || Boolean(bug),
+    askHuman: Boolean(p.ask_human),
+    report: clean(p.report, 800),
+    bug,
   };
 }
 
-// Free Groq first, paid OpenAI if Groq is missing, out of quota or down.
+// Cheap reasoning models: free Groq gpt-oss-20b first, paid OpenAI gpt-5-nano as fallback.
 async function askAi(messages: { role: string; content: string }[]) {
   const groq = process.env.GROQ_API_KEY;
   if (groq) {
-    const r = await callModel("https://api.groq.com/openai/v1/chat/completions", groq, "llama-3.1-8b-instant", messages);
+    const r = await callModel("https://api.groq.com/openai/v1/chat/completions", groq,
+      { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 1500 }, messages);
     if ("reply" in r) return { ...r, provider: "groq" };
   }
   const openai = process.env.OPENAI_API_KEY;
   if (openai) {
-    const r = await callModel("https://api.openai.com/v1/chat/completions", openai, "gpt-4o-mini", messages);
+    const r = await callModel("https://api.openai.com/v1/chat/completions", openai,
+      { model: "gpt-5-nano", reasoning_effort: "low", max_completion_tokens: 2500 }, messages);
     if ("reply" in r) return { ...r, provider: "openai" };
   }
   return null;
@@ -158,13 +178,28 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     await db.from("support_messages").insert({ thread_id: thread.id, role: "assistant", content: reply, provider: ai.provider });
     if (escalate) {
       await db.from("support_threads").update({ status: "escalated", summary: ai.report || data.message, updated_at: new Date().toISOString() }).eq("id", thread.id);
+      if (ai.bug) {
+        const b = ai.bug;
+        const sev = ["low", "normal", "high", "critical"].includes(String(b.severity)) ? String(b.severity) : "normal";
+        const text = [
+          `[SV Pagalba] ${clean(b.title, 200) || "Pranešimas apie klaidą"}`,
+          b.what_did && `Ką darė:\n${clean(b.what_did, 800)}`,
+          b.what_saw && `Ką matė:\n${clean(b.what_saw, 800)}`,
+          b.expected && `Tikėjosi:\n${clean(b.expected, 600)}`,
+          b.device && `Įrenginys: ${clean(b.device, 200)}`,
+        ].filter(Boolean).join("\n\n");
+        await db.from("bug_reports").insert({
+          message: text, severity: sev, page_url: clean(b.page, 200) || data.page || null,
+          session_id: thread.id, diagnostics: { source: "sv-pagalba", support_thread: thread.id },
+        });
+      }
       const hook = process.env.DISCORD_WEBHOOK_URL;
       if (hook) {
         await fetch(hook, { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content: `🆘 Nauja pagalbos užklausa: ${(ai.report || data.message).slice(0, 400)}` }) }).catch(() => {});
       }
     }
-    return { status: (escalate ? "escalated" : "ai") as "ai" | "escalated", messages: await loadMessages(thread.id), options: escalate ? [] : ai.options };
+    return { status: (escalate ? "escalated" : "ai") as "ai" | "escalated", messages: await loadMessages(thread.id), options: escalate ? [] : ai.options, askHuman: ai.askHuman };
   });
 
 // ---------- Super Admin ----------
