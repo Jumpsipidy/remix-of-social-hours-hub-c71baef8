@@ -93,25 +93,29 @@ const SMALL_TALK = /^\s*(labas|labukas|sveik[iasu]*|hello|hi|hey|ačiū|aciu|dė
 const SIMPLE = /(prisijung|registr|login|slaptažod|slaptazod|qr|tem[ąa]|kas tai|kaip veikia)/i;
 
 // Tiered, cost-aware routing: free Groq models first; paid OpenAI only when both Groq tiers fail.
-async function askAi(messages: { role: string; content: string }[], allowOpenai: boolean, simple: boolean) {
+async function askAi(messages: { role: string; content: string }[], allowOpenai: boolean, simple: boolean, why: string[] = []) {
   const groq = process.env.GROQ_API_KEY?.trim();
   const lite = [{ role: "system", content: LITE_PROMPT + messages[0].content.slice(SUPPORT_SYSTEM_PROMPT.length) }, ...messages.slice(1).slice(-6)];
   const url = "https://api.groq.com/openai/v1/chat/completions";
-  if (!groq) console.error("support ai: GROQ_API_KEY missing");
+  if (!groq) { console.error("support ai: GROQ_API_KEY missing"); why.push("G-nera"); }
   if (groq && !simple) {
     const r = await callModel(url, groq, { model: "openai/gpt-oss-20b", reasoning_effort: "low", max_completion_tokens: 1500 }, messages);
     if ("reply" in r) return { ...r, provider: "groq" };
+    why.push(`G1-${r.status}`);
   }
   if (groq) {
     const r = await callModel(url, groq, { model: "llama-3.1-8b-instant", max_completion_tokens: 700 }, lite);
     if ("reply" in r) return { ...r, provider: "groq" };
+    why.push(`G2-${r.status}`);
   }
   const openai = process.env.OPENAI_API_KEY?.trim();
-  if (!openai) console.error("support ai: OPENAI_API_KEY missing");
+  if (!openai) { console.error("support ai: OPENAI_API_KEY missing"); why.push("O-nera"); }
+  else if (!allowOpenai) why.push("O-limitas");
   if (openai && allowOpenai) {
     const r = await callModel("https://api.openai.com/v1/chat/completions", openai,
       { model: "gpt-5-nano", reasoning_effort: "minimal", max_completion_tokens: 1200 }, simple ? lite : messages);
     if ("reply" in r) return { ...r, provider: "openai" };
+    why.push(`O-${r.status}`);
   }
   return null;
 }
@@ -226,12 +230,13 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
       await db.from("support_messages").insert({ thread_id: thread.id, role: "assistant", content, provider: "local" });
       return { status: "ai" as const, messages: await loadMessages(thread.id), options: ["Kaip prisijungti?", "Kaip rasti veiklą?", "Kur mano QR kodas?"], askHuman: false, form: null, signedIn: Boolean(user) };
     }
+    const why: string[] = [];
     const simple = data.message.length < 120 && history.length < 4 && SIMPLE.test(data.message);
     const ai = await askAi([
       { role: "system", content: `${SUPPORT_SYSTEM_PROMPT}\nŽmogus dabar puslapyje: ${data.page ?? "?"}. ${user ? "Žmogus prisijungęs." : "Žmogus NEprisijungęs — perduoti administratoriui gali tik prisijungę."}` },
       ...convo,
-    ], (oaDay ?? 0) < OPENAI_GLOBAL_DAY && oaThread < OPENAI_PER_THREAD, simple);
-    if (!ai) return { error: "Pagalbininkas laikinai nepasiekiamas. Rašyk pagalba@socialinesvalandos.dev." };
+    ], (oaDay ?? 0) < OPENAI_GLOBAL_DAY && oaThread < OPENAI_PER_THREAD, simple, why);
+    if (!ai) return { error: `Pagalbininkas laikinai nepasiekiamas. Rašyk pagalba@socialinesvalandos.dev. (kodas: ${why.join(" ") || "?"})` };
 
     // Reliable bug detection: open the report form even if the model forgets.
     if (/(neveikia|klaid|suged|nepavyk|nesiseka|neatsidaro|lūžt|luzt|strig|baltas ekranas|bug|error)/i.test(data.message)) { ai.form = "bug"; ai.bug = null; ai.escalate = false; ai.reply = ai.reply.split("\n\n")[0] ?? ai.reply; }
