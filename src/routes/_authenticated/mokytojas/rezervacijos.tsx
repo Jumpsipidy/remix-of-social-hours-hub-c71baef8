@@ -176,11 +176,7 @@ function TeacherReservations() {
           hours: form.hours, kind: form.kind, note: form.note,
         },
       });
-      const teacherName = profile?.full_name ?? "Auklėtojas";
-      const link = `${window.location.origin}/student#mano-rezervacijos`;
-      const message = `Auklėtojas ${teacherName} sukūrė tau rezervaciją: ${KIND_LT[form.kind] ?? form.kind} — ${form.date} ${reservationTimeLabel(form.start, form.end)} (${form.hours} val.).${form.note ? ` ${form.note}` : ""} Papildomai patvirtinti nereikia.\n${link}`;
-      const inviteRes = await inviteFn({ data: { studentIds: ids, message } });
-      toast.success(`Sukurta ${ids.length} rezervacijų. Kvietimai išsiųsti: ${inviteRes.sent}/${inviteRes.total}.`);
+      toast.success(`Sukurta ${ids.length} rezervacijų — mokiniai jas mato savo paskyrose.`);
       setCreateOpen(false);
       setForm(emptyForm());
       setSelectedIds(new Set());
@@ -332,8 +328,8 @@ function TeacherReservations() {
               {!finished && (
                 <div className="flex gap-1">
                   {r.status === "approved" && <Button size="sm" onClick={() => setVerifying(r)}>Patvirtinti valandas</Button>}
-                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Siųsti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
-                    <Users className="h-4 w-4" /> Siųsti klasei
+                  <Button variant="outline" size="sm" className="gap-1.5" aria-label="Priskirti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
+                    <Users className="h-4 w-4" /> Priskirti klasei
                   </Button>
                   <Button variant="ghost" size="icon" aria-label="Redaguoti" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label="Ištrinti" onClick={() => void submitDelete(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
