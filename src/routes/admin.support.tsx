@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin/support")({
   component: SupportAdmin,
 });
 
-type Thread = { id: string; status: string; summary: string | null; page: string | null; updated_at: string };
+type Thread = { id: string; status: string; summary: string | null; page: string | null; updated_at: string; who: string | null };
 type Msg = { id: string; role: string; content: string; created_at: string };
 const LABEL: Record<string, string> = { escalated: "Laukia atsakymo", ai: "Su pagalbininku", closed: "Uždaryta" };
 
@@ -33,12 +33,19 @@ function SupportAdmin() {
 
   const reload = () => list().then(setThreads).catch((e) => toast.error(e.message));
   useEffect(() => { void reload(); }, []);
-  useEffect(() => { if (sel) get({ data: { id: sel.id } }).then(setMsgs).catch(() => {}); }, [sel]);
+  useEffect(() => {
+    if (!sel) return;
+    const load = () => get({ data: { id: sel.id } }).then(setMsgs).catch(() => {});
+    load();
+    const id = window.setInterval(load, 4000);
+    return () => clearInterval(id);
+  }, [sel]);
+  useEffect(() => { const id = window.setInterval(() => void reload(), 15000); return () => clearInterval(id); }, []);
 
-  async function act(status?: "ai" | "closed") {
+  async function act(status?: "ai" | "closed", join?: boolean) {
     if (!sel) return;
     try {
-      setMsgs(await reply({ data: { id: sel.id, message: text.trim() || undefined, status } }));
+      setMsgs(await reply({ data: { id: sel.id, message: text.trim() || undefined, status, join } }));
       setText(""); void reload();
     } catch (e) { toast.error((e as Error).message); }
   }
@@ -59,7 +66,7 @@ function SupportAdmin() {
           {shown.length === 0 && <p className="text-sm text-muted-foreground">Pokalbių nėra.</p>}
           {shown.map((t) => (
             <button key={t.id} type="button" onClick={() => setSel(t)} className={`w-full rounded-xl border p-3 text-left text-sm ${sel?.id === t.id ? "border-primary bg-primary/10" : "border-border bg-card"}`}>
-              <div className="text-xs text-muted-foreground">{LABEL[t.status]} · {new Date(t.updated_at).toLocaleString("lt-LT")} · {t.page ?? ""}</div>
+              <div className="text-xs text-muted-foreground">{LABEL[t.status]} · {t.who ?? "Neprisijungęs"} · {new Date(t.updated_at).toLocaleString("lt-LT")} · {t.page ?? ""}</div>
               <div className="line-clamp-2">{t.summary || "Be santraukos"}</div>
             </button>
           ))}
@@ -75,8 +82,9 @@ function SupportAdmin() {
                   </div>
                 ))}
               </div>
-              <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="Atsakymas lankytojui…" className="w-full rounded-lg border border-input bg-background p-2 text-sm" />
+              <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && text.trim()) { e.preventDefault(); void act(); } }} rows={3} placeholder="Atsakymas lankytojui…" className="w-full rounded-lg border border-input bg-background p-2 text-sm" />
               <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" onClick={() => act(undefined, true)}>Prisijungti prie pokalbio</Button>
                 <Button onClick={() => act()} disabled={!text.trim()}>Atsakyti</Button>
                 <Button variant="outline" onClick={() => act("ai")}>Grąžinti pagalbininkui</Button>
                 <Button variant="outline" onClick={() => act("closed")}>Uždaryti</Button>
