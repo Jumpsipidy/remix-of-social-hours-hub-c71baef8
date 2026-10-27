@@ -64,6 +64,7 @@ import { Route as AdminPreviewRouteImport } from './routes/admin.preview'
 import { Route as AdminPushRouteImport } from './routes/admin.push'
 import { Route as AdminReservationsRouteImport } from './routes/admin.reservations'
 import { Route as AdminSchoolsRouteImport } from './routes/admin.schools'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminToolsRouteImport } from './routes/admin.tools'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as BlogKaipSurinktiSocialinesValandasRouteImport } from './routes/blog.kaip-surinkti-socialines-valandas'
@@ -357,6 +358,11 @@ const AdminSchoolsRoute = AdminSchoolsRouteImport.update({
   path: '/schools',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminToolsRoute = AdminToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
@@ -504,6 +510,7 @@ export interface FileRoutesByFullPath {
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
@@ -574,6 +581,7 @@ export interface FileRoutesByTo {
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
@@ -649,6 +657,7 @@ export interface FileRoutesById {
   '/admin/push': typeof AdminPushRoute
   '/admin/reservations': typeof AdminReservationsRoute
   '/admin/schools': typeof AdminSchoolsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/tools': typeof AdminToolsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/kaip-surinkti-socialines-valandas': typeof BlogKaipSurinktiSocialinesValandasRoute
@@ -723,6 +732,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
+    | '/admin/support'
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
@@ -793,6 +803,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
+    | '/admin/support'
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
@@ -867,6 +878,7 @@ export interface FileRouteTypes {
     | '/admin/push'
     | '/admin/reservations'
     | '/admin/schools'
+    | '/admin/support'
     | '/admin/tools'
     | '/auth/callback'
     | '/blog/kaip-surinkti-socialines-valandas'
@@ -1311,6 +1323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSchoolsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/tools': {
       id: '/admin/tools'
       path: '/tools'
@@ -1511,6 +1530,7 @@ interface AdminRouteChildren {
   AdminPushRoute: typeof AdminPushRoute
   AdminReservationsRoute: typeof AdminReservationsRoute
   AdminSchoolsRoute: typeof AdminSchoolsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminToolsRoute: typeof AdminToolsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -1540,6 +1560,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPushRoute: AdminPushRoute,
   AdminReservationsRoute: AdminReservationsRoute,
   AdminSchoolsRoute: AdminSchoolsRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminToolsRoute: AdminToolsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
