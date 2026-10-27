@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { adminGetSupport, adminListSupport, adminReplySupport } from "@/lib/support.functions";
+import { adminGetSupport, adminListSupport, adminReplySupport, adminTestSupportAi } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/admin/support")({
   head: () => ({ meta: [
@@ -54,6 +54,7 @@ function SupportAdmin() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Pagalbos pokalbiai</h1>
+      <AiHealth />
       <div className="flex gap-2">
         {["escalated", "ai", "closed", "all"].map((f) => (
           <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)}>
@@ -93,6 +94,39 @@ function SupportAdmin() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+type AiResult = { name: string; keySet: boolean; ok: boolean; status?: number; detail?: string; ms: number };
+function AiHealth() {
+  const test = useServerFn(adminTestSupportAi);
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<{ results: AiResult[]; host: string; at: string } | null>(null);
+  async function run() {
+    setBusy(true);
+    try { setRes(await test()); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="font-semibold">Pagalbininko AI patikra</p>
+          <p className="text-xs text-muted-foreground">Išbando kiekvieną AI tiekėją šioje svetainėje ir parodo tikrą klaidą.</p>
+        </div>
+        <Button size="sm" onClick={run} disabled={busy}>{busy ? "Tikrinama…" : "Patikrinti AI"}</Button>
+      </div>
+      {res && (
+        <div className="mt-3 space-y-2 text-sm">
+          <p className="text-xs text-muted-foreground">Serveris: {res.host} · {new Date(res.at).toLocaleTimeString("lt-LT")}</p>
+          {res.results.map((r) => (
+            <div key={r.name} className={`rounded-lg border p-2 ${r.ok ? "border-primary/40 bg-primary/5" : "border-destructive/40 bg-destructive/5"}`}>
+              <div className="flex justify-between gap-2 font-medium"><span>{r.ok ? "✅" : "❌"} {r.name}</span><span className="text-xs text-muted-foreground">{r.keySet ? `${r.status ?? ""} · ${r.ms} ms` : "be rakto"}</span></div>
+              {r.detail && <p className="mt-1 break-words text-xs text-muted-foreground">{r.detail}</p>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
