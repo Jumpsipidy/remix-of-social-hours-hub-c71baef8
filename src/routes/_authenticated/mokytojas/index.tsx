@@ -80,45 +80,70 @@ function TeacherOverview() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Antraštė su pasisveikinimu */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold sm:text-2xl">Apžvalga</h1>
-          <p className="text-sm text-muted-foreground">
-            {greeting}, {firstName}! Šiandien {today}.
-          </p>
+      {/* Hero juosta su gradientu */}
+      <section
+        data-tour="hero"
+        className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-8"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(620px 220px at 88% -30%, hsl(var(--primary) / 0.20), transparent 70%), radial-gradient(420px 200px at 8% 130%, hsl(var(--accent) / 0.40), transparent 70%)",
+          }}
+        />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-primary">{today}</p>
+            <h1 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">
+              {greeting}, {firstName}!
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {data?.scope.class_restricted
+                ? `Tavo klasės: ${data.scope.assigned_classes.join(", ") || "visos"}${data.scope.assigned_letter ? ` · ${data.scope.assigned_letter}` : ""}`
+                : "Matai visas mokyklos klases"}
+            </p>
+          </div>
+
+          {/* Greitieji veiksmai */}
+          <div data-tour="quick-actions" className="flex flex-wrap gap-2">
+            <Link
+              to="/mokytojas/rezervacijos"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90"
+            >
+              <CalendarPlus className="h-4 w-4" /> Nauja rezervacija
+            </Link>
+            <Link
+              to="/mokytojas/rezervacijos"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/70 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-muted"
+            >
+              <Megaphone className="h-4 w-4" /> Veikla visiems
+            </Link>
+            <Link
+              to="/mokytojas/pokalbiai"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/70 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-muted"
+            >
+              <MessageCircle className="h-4 w-4" /> Rašyti organizacijai
+            </Link>
+          </div>
         </div>
-        <p className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-          {data?.scope.class_restricted
-            ? `Klasės: ${data.scope.assigned_classes.join(", ") || "visos"}${data.scope.assigned_letter ? ` · ${data.scope.assigned_letter}` : ""}`
-            : "Visos mokyklos klasės"}
-        </p>
-      </div>
+      </section>
 
-      {/* Greitieji veiksmai */}
-      <div className="flex flex-wrap gap-2">
-        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
-          <CalendarPlus className="h-4 w-4" /> Nauja rezervacija
-        </Link>
-        <Link to="/mokytojas/rezervacijos" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
-          <Megaphone className="h-4 w-4" /> Veikla visiems
-        </Link>
-        <Link to="/mokytojas/pokalbiai" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">
-          <MessageCircle className="h-4 w-4" /> Rašyti organizacijai
-        </Link>
-      </div>
-
-      {/* KPI kortelės */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* KPI juosta — vientisa kortelė su skyriais */}
+      <section
+        data-tour="kpis"
+        className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-border bg-border lg:grid-cols-4"
+      >
         {kpis.map((m) => (
-          <div key={m.label} className="rounded-2xl border border-border bg-card p-4">
+          <div key={m.label} className="bg-card p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/12 text-primary">
                 <m.icon className="h-4.5 w-4.5" />
               </span>
               <ArrowUpRight className="h-4 w-4 text-muted-foreground/50" />
             </div>
-            <p className="mt-3 text-2xl font-bold tabular-nums">{m.value}</p>
+            <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight">{m.value}</p>
             <p className="text-sm font-semibold">{m.label}</p>
             <div className="mt-2 flex items-center justify-between border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
               <span>{m.sub}</span>
@@ -126,11 +151,11 @@ function TeacherOverview() {
             </div>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Grafikai */}
-      <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-        <section className="rounded-2xl border border-border bg-card p-5">
+      {/* Grafikai — bento tinklelis */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section data-tour="chart" className="rounded-3xl border border-border bg-card p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-bold">Valandų dinamika</h2>
@@ -158,7 +183,7 @@ function TeacherOverview() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section data-tour="class-hours" className="rounded-3xl border border-border bg-card p-5">
           <h2 className="font-bold">Valandos pagal klases</h2>
           <p className="text-xs text-muted-foreground">Surinkta kiekvienos klasės.</p>
           {byClass.length > 0 ? (
@@ -184,7 +209,7 @@ function TeacherOverview() {
 
       {/* Sąrašai */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section data-tour="upcoming" className="rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-bold">Artėjančios rezervacijos</h2>
             <Link to="/mokytojas/rezervacijos" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
@@ -213,7 +238,7 @@ function TeacherOverview() {
           </ul>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section data-tour="attention" className="rounded-3xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-bold">Reikia dėmesio</h2>
             <Link to="/mokytojas/mokiniai" className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
@@ -240,7 +265,7 @@ function TeacherOverview() {
 
       {/* Klasių progresas */}
       {classes.length > 0 && (
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section className="rounded-3xl border border-border bg-card p-5">
           <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-primary" /> Klasių progresas</h2>
           <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {classes.map((g) => (
@@ -258,13 +283,20 @@ function TeacherOverview() {
         </section>
       )}
 
-      {/* Streak lyderiai */}
-      <section className="rounded-2xl border border-border bg-card p-5">
+      {/* Streak lyderiai — pirmas išskirtas */}
+      <section data-tour="streaks" className="rounded-3xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 font-bold"><Flame className="h-4 w-4 text-primary" /> Streak lyderiai</h2>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {streakTop.map((s, i) => (
-            <li key={s.id} className="rounded-xl bg-muted/60 p-3 text-center">
-              <p className="text-xs font-bold text-muted-foreground">#{i + 1}</p>
+            <li
+              key={s.id}
+              className={`rounded-xl p-3 text-center ${
+                i === 0
+                  ? "border border-primary/30 bg-primary/10"
+                  : "bg-muted/60"
+              }`}
+            >
+              <p className={`text-xs font-bold ${i === 0 ? "text-primary" : "text-muted-foreground"}`}>#{i + 1}</p>
               <p className="mt-1 truncate text-sm font-semibold">{s.full_name ?? "—"}</p>
               <p className="text-xs text-muted-foreground">{s.login_streak ?? 0} d. iš eilės</p>
             </li>
