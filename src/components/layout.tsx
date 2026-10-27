@@ -229,7 +229,7 @@ export function Footer() {
 
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <span>© 2026 Socialinės Valandos. Visos teisės saugomos.</span>
+          <span>© 2026 Socialinės Valandos · Sukūrė Lietuvos moksleivis su <b className="font-semibold text-foreground">Jumpsipidy studios</b> · <a href="mailto:pagalba@socialinesvalandos.dev" className="hover:text-foreground">pagalba@socialinesvalandos.dev</a></span>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:text-foreground">🔐 Privatumas</Link>
             <Link to="/terms" className="hover:text-foreground font-semibold underline underline-offset-4">Teisės ir taisyklės →</Link>

@@ -8,16 +8,23 @@ Kalba: lietuvių. Šalis: Lietuva. Kaina: nemokama visoms pusėms.
 Socialinės Valandos yra Lietuvoje veikianti SaaS platforma, jungianti tris puses: moksleivius, savanorystės organizacijas / bendruomenes ir mokyklas. Platforma automatizuoja visą socialinių valandų procesą — nuo užduoties radimo iki oficialaus PDF sertifikato su parašu.
 
 
-## Naujausia versija: V2.5.0
+## Kūrėjas
 
-Informacija atnaujinta 2026-10-06. Pilnas pakeitimų sąrašas: [/versijos](/versijos).
+Platformą sukūrė Lietuvos moksleivis su kūrėjų grupe **Jumpsipidy studios** — kuriame žaidimus, svetaines, hakus ir kitus projektus.
+
+## Naujausia versija: V2.6.5
+
+Informacija atnaujinta 2026-10-27.
+
+- V2.6.5: naujas animuotas viršutinis meniu, auklėtojo sritis /mokytojas su vedliu ir grafikais, klasių registracijos kodai MKC-XXXXX-X, mokyklos rezervacijos be QR, nauji el. laiškai.
+- Tiesioginiai auklėtojo ir mokinio pokalbiai išjungti; pokalbiai vyksta tarp organizacijos ir mokinio bei tarp auklėtojo ir organizacijos. Pilnas pakeitimų sąrašas: [/versijos](/versijos).
 
 - Pokalbiai /chat: mokiniai, organizacijos ir mokyklos administratoriai; rodomi siuntėjų vaidmenys, žinutės automatiškai ištrinamos po 12 dienų.
-- Organizacija gali pradėti pokalbį su mokiniu, turėjusiu rezervaciją joje. Mokyklos administratorius gali pradėti pokalbį su savo mokiniu ir organizacija.
+- Organizacija gali pradėti pokalbį su mokiniu, turėjusiu rezervaciją joje. Mokyklos administratorius gali pradėti pokalbį su organizacija.
 - Užduočių žemėlapis ir miestų filtrai: Šeduva, Radviliškis, Šiauliai; organizacijų vieši profiliai.
 - Draugų pakvietimai ir grupinės rezervacijos; keli tos pačios dienos vizitai turi atskirus QR pasirinkimus.
 - Mokyklos renginiai: mokinys registruojasi, mokyklos administratorius priima arba atmeta ir patvirtina valandas; sąrašai ir pranešimai atnaujinami gyvai.
-- Organizacijų ir mokyklų skydeliai, mokinių rizikos centras, super administratoriaus rezervacijų ir QR apžvalga.
+- Organizacijų ir mokyklų skydeliai, super administratoriaus rezervacijų ir QR apžvalga.
 - SOCI GUARD: serverio patvirtinama robotų patikra su paaiškinimais; įtartinam įrenginiui gali reikėti papildomų užduočių, reCAPTCHA naudojama kaip atsarginė patikra.
 - Šviesi ir tamsi tema, du pasirinkimo pavyzdžiai, tolygus akcento spalvos slankiklis ir nustatymų atkūrimas. Pasirinkimas išsaugomas tame įrenginyje; telefono navigacija yra šoniniame meniu.
 - Įvedimo vedlys praleidžiamas ir nekartojamas tame pačiame įrenginyje; sklandžios užkrovimo būsenos.

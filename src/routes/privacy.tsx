@@ -39,7 +39,10 @@ const SECTIONS: Section[] = [
     bullets: [
       "Paskyros duomenys (vardas, pavardė, el. paštas, vaidmuo, mokykla, klasė) — teisinis pagrindas: BDAR 6 str. 1 d. b) p. (sutarties vykdymas — negalime suteikti paslaugos be jų).",
       "Rezervacijos, valandų istorija, QR įsiregistravimai — teisinis pagrindas: sutartis + teisėtas interesas (mokyklos ugdymo procesui pagrįsti).",
-      "Pokalbių žinutės (auto-ištrinamos: grupinės — 12 d., asmeninės — 2 d.) — sutarties vykdymas.",
+      "Pokalbių žinutės (automatiškai ištrinamos po 12 dienų) — sutarties vykdymas. Tiesioginiai auklėtojo ir mokinio pokalbiai išjungti.",
+      "Klasės registracijos kodas (MKC-XXXXX-X) ir iš jo nustatyta mokykla, klasė bei privalomos valandos — sutarties vykdymas; mokinys jų pakeisti negali.",
+      "SV Guard patikros duomenys (vienkartiniai iššūkiai, bandymų skaičius, techniniai signalai be asmens tapatybės) — teisėtas interesas apsaugoti svetainę nuo robotų; saugomi trumpai.",
+      "El. laiškai (patvirtinimas, slaptažodžio atkūrimas, pranešimai) siunčiami per Resend paslaugą; laiškuose naudojamas tik tavo el. paštas ir vardas.",
       "Techniniai metaduomenys ir klaidų žurnalai (naršyklė, IP hash, ne pats IP, anoniminis visitor_id) — teisėtas interesas (saugumas, klaidų diagnostika, sukčiavimo prevencija; BDAR 6 str. 1 d. f p.).",
       "Slapukų analitika — tik su tavo aiškiu sutikimu (BDAR 6 str. 1 d. a p. + ePrivacy 5(3) str.). Gali bet kada atšaukti /privatumas puslapyje.",
     ],
@@ -49,7 +52,8 @@ const SECTIONS: Section[] = [
     h: "3. Nepilnamečių apsauga (BDAR 8 str.)",
     body: [
       "Platforma naudojama mokykliniame kontekste, todėl dauguma naudotojų yra nepilnamečiai (< 16 m.). Lietuvoje BDAR informacinės visuomenės paslaugoms taikoma 14 m. amžiaus riba tėvų sutikimui.",
-      "SPRENDIMAS: moksleiviai NEregistruojasi patys. Paskyras kuria mokyklos administratorius, kuris savo veiksmais patvirtina, kad turi teisinį pagrindą tvarkyti mokinio duomenis (mokymo sutartis su tėvais + LR Švietimo įstatymas). Tai reiškia, kad tėvų sutikimo klausimas išspręstas mokyklos lygyje, o platforma veikia kaip mokyklos vidinis įrankis.",
+      "Mokiniai registruojasi tik su mokyklos išduotu klasės kodu, todėl paskyra visada susieta su mokykla, kuri turi teisinį pagrindą tvarkyti mokinio duomenis (mokymo sutartis su tėvais + LR Švietimo įstatymas). Auklėtojas mato tik jam priskirtų klasių mokinius.",
+      "Platformą kuria Lietuvos moksleivis su kūrėjų grupe Jumpsipidy studios.",
       "Nesirenkame ir nesaugome jautrių duomenų (sveikatos, religijos, politikos, seksualinės orientacijos — BDAR 9 str.). Jei toks duomuo netyčia patenka į pokalbio žinutę — ji ištrinama per 12 d. auto-purge.",
       "Nerodome viešai el. pašto adresų — kiti mokiniai mato tik vardą ir pavardę.",
     ],
