@@ -1118,3 +1118,4 @@ body:has(.home-scene) .page-shell, body:has(.home-scene) main { background: tran
 body:has(.home-scene) .site-navbar:not(.is-scrolled) { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
 body:has(.home-scene) .site-navbar.is-scrolled { background: color-mix(in oklab, var(--background) 60%, transparent) !important; backdrop-filter: blur(16px); }
 body:has(.home-scene) .page-shell { position: relative; z-index: 1; }
+body:has(.home-scene) .site-background-fx { display: none; }
