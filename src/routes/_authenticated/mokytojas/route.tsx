@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/mokytojas")({
 
 function TeacherLayout() {
   const { profile, loading } = useAuth();
+  const { data, refresh } = useSchoolData();
   if (loading) {
     return (
       <div className="grid min-h-dvh place-items-center bg-muted/30">
@@ -23,6 +24,16 @@ function TeacherLayout() {
   }
   if (!profile || (profile.role !== "school_admin" && profile.role !== "admin")) {
     return <Navigate to="/" />;
+  }
+  // Paskyra be priskirtos mokyklos: rodome mokyklos priskyrimo vedlį vietoj tuščio skydelio.
+  if (data?.scope.unscoped) {
+    return (
+      <TeacherShell>
+        <div className="mx-auto max-w-2xl pt-6">
+          <SchoolClaimPanel onClaimed={() => void refresh()} />
+        </div>
+      </TeacherShell>
+    );
   }
   return (
     <TeacherShell>
