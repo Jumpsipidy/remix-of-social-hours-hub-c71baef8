@@ -204,13 +204,13 @@ function TeacherChatPage() {
 
       {/* Greitieji veiksmai auklėtojui */}
       <div className={`flex flex-wrap gap-2 ${activeId ? "hidden md:flex" : ""}`}>
-        <Button type="button" size="sm" onClick={() => { setPicker(true); setStudentQ(""); }}>
-          <Users className="h-4 w-4" /> Rašyti mokiniui
+        <Button type="button" size="sm" onClick={() => { setPicker(true); setOrgQ(""); }}>
+          <Building2 className="h-4 w-4" /> Rašyti organizacijai
         </Button>
         <Button type="button" size="sm" variant="outline" onClick={() => setClassInvite(true)}>
-          <CalendarCheck className="h-4 w-4" /> Kviesti klasę į rezervaciją
+          <CalendarCheck className="h-4 w-4" /> Priskirti veiklą klasei
         </Button>
-        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={students} />
+        <ClassTaskInviteDialog open={classInvite} onOpenChange={setClassInvite} students={school?.students ?? []} />
         {TEMPLATES.map((t) => (
           <Button
             key={t.label}
@@ -229,20 +229,20 @@ function TeacherChatPage() {
       <Dialog open={picker} onOpenChange={setPicker}>
         <DialogContent className="max-w-md gap-0 p-0">
           <div className="border-b border-border p-4">
-            <DialogHeader><DialogTitle>Rašyti mokiniui</DialogTitle><DialogDescription>Tik tavo priskirtų klasių mokiniai.</DialogDescription></DialogHeader>
-            <input aria-label="Ieškoti mokinio" value={studentQ} onChange={(e) => setStudentQ(e.target.value)} placeholder="Ieškoti pagal vardą…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
+            <DialogHeader><DialogTitle>Rašyti organizacijai</DialogTitle><DialogDescription>Susisiek su savanorystės organizacija tiesiogiai.</DialogDescription></DialogHeader>
+            <input aria-label="Ieškoti organizacijos" value={orgQ} onChange={(e) => setOrgQ(e.target.value)} placeholder="Ieškoti pagal pavadinimą…" className="mt-3 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div className="max-h-[55vh] overflow-y-auto p-2">
             {!school ? (
               <div className="space-y-2 p-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}</div>
-            ) : shownStudents.length === 0 ? (
-              <p className="p-6 text-center text-sm text-muted-foreground">Mokinių nerasta.</p>
-            ) : shownStudents.map((s) => (
-              <button key={s.id} type="button" onClick={() => void startWith(s.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted"><GraduationCap className="h-4 w-4" /></span>
+            ) : shownOrgs.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted-foreground">Organizacijų nerasta.</p>
+            ) : shownOrgs.map((o) => (
+              <button key={o.id} type="button" onClick={() => void startWithOrg(o.id)} className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition hover:bg-muted">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted"><Building2 className="h-4 w-4" /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{s.full_name ?? "Mokinys"}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{s.class_year ?? "—"}{s.class_letter ?? ""} klasė · {s.hours_earned}/{s.hours_needed} val.</span>
+                  <span className="block truncate text-sm font-semibold">{o.organization_name ?? o.full_name ?? "Organizacija"}</span>
+                  {o.email && <span className="block truncate text-xs text-muted-foreground">{o.email}</span>}
                 </span>
               </button>
             ))}
