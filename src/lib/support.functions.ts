@@ -38,7 +38,7 @@ function clean(v: unknown, n: number) { return String(v ?? "").trim().slice(0, n
 // Builds one markdown message from the structured answer.
 function compose(p: Record<string, unknown>) {
   let out = clean(p.reply, 1500) || "Atsiprašau, nesupratau. Gal gali paaiškinti kitaip?";
-  const steps = Array.isArray(p.steps) ? p.steps.map((x) => clean(x, 200)).filter(Boolean).slice(0, 8) : [];
+  const steps = Array.isArray(p.steps) ? p.steps.map((x) => clean(x, 200).replace(/^\s*(\d+[.)]|[-•])\s*/, "")).filter(Boolean).slice(0, 8) : [];
   if (steps.length) out += "\n\n" + steps.map((x, i) => `${i + 1}. ${x}`).join("\n");
   const links = Array.isArray(p.links) ? (p.links as { label?: unknown; href?: unknown }[])
     .map((l) => ({ label: clean(l?.label, 60), href: clean(l?.href, 120) }))

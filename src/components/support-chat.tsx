@@ -45,7 +45,9 @@ function Typewriter({ text, onDone }: { text: string; onDone: () => void }) {
     const id = window.setTimeout(() => setN((x) => x + 3), 28);
     return () => clearTimeout(id);
   }, [n, words.length, onDone]);
-  return <Rich text={words.slice(0, n).join("")} />;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { ref.current?.scrollIntoView({ block: "end" }); }, [n]);
+  return <div ref={ref}><Rich text={words.slice(0, n).join("")} /></div>;
 }
 
 type Msg = { id: string; role: string; content: string; created_at: string };
