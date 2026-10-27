@@ -127,22 +127,22 @@ export function Navbar() {
 
   return (
     <header className={`site-navbar nav-redesign sticky top-0 z-50 border-b bg-background/95 ${scrolled ? "is-scrolled border-border shadow-sm" : "border-border/60"}`}>
-      <div className="nav-inner mx-auto flex h-[88px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
+      <div className="nav-inner relative mx-auto flex h-[84px] max-w-7xl min-w-0 items-center gap-3 px-4 sm:px-6">
         <div className="nav-brand group flex shrink-0 items-center gap-2.5">
-          <Button variant="ghost" size="icon" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo nav-heart h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground ${egg ? "logo-celebrate" : ""}`}>
-            <Heart className="nav-heart-icon h-5 w-5" fill="currentColor" /><span aria-hidden className="nav-heart-ring" />
-          </Button>
+          <button type="button" onClick={onLogo} aria-label="Socialinių Valandų širdelė" title="Socialinių Valandų širdelė" className={`nav-logo nav-mark ${egg ? "logo-celebrate" : ""}`}>
+            <Heart className="nav-heart-icon h-4 w-4" fill="currentColor" /><span aria-hidden className="nav-heart-ring" />
+          </button>
           <Link to="/" className="brand-wordmark flex leading-none" aria-label="Socialinės Valandos — pradžia"><span className="brand-word">Socialinės</span><span className="brand-word brand-word-accent">Valandos</span></Link>
         </div>
-        <nav aria-label="Pagrindinis meniu" className="nav-dock ml-3 hidden min-w-0 items-center gap-1 lg:flex">
-          <div className="nav-fat flex items-center gap-1 rounded-2xl border border-border/70 bg-card/60 p-1.5 backdrop-blur-md">{[
+        <nav aria-label="Pagrindinis meniu" className="nav-center absolute left-1/2 hidden -translate-x-1/2 items-center lg:flex">
+          <div className="nav-pill flex items-center gap-1 rounded-full p-1.5">{[
             { to: "/", label: "Pradžia", Icon: Home },
             { to: "/tasks", label: "Veiklos", Icon: ListTodo },
             ...(activeRole && DASHBOARD_BY_ROLE[activeRole] ? [{ to: DASHBOARD_BY_ROLE[activeRole]!.to, label: "Mano sritis", Icon: LayoutDashboard }] : []),
             ...(activeRole && activeRole !== "admin" ? [{ to: activeRole === "school_admin" ? "/mokytojas/pokalbiai" : "/chat", label: "Pokalbiai", Icon: MessageCircle }] : []),
           ].map(({ to, label, Icon }, i) => {
             const active = isActive(to, to === "/");
-            return <Button key={to} asChild variant="ghost" className={`nav-link nav-pop relative h-12 gap-2.5 rounded-xl px-5 text-base font-bold ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{ animationDelay: `${i * 45}ms` }}><Link to={to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-xl bg-primary/15 ring-1 ring-primary/30" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}<Icon className="nav-link-icon relative h-5 w-5" /><span className="relative">{label}</span></Link></Button>;
+            return <Button key={to} asChild variant="ghost" className={`nav-link nav-pop relative h-11 gap-2 rounded-full px-5 text-[15px] font-semibold ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} style={{ animationDelay: `${i * 45}ms` }}><Link to={to} aria-current={active ? "page" : undefined}>{active && <motion.span layoutId="nav-active-pill" className="nav-active-pill absolute inset-0 rounded-full bg-primary/15 ring-1 ring-primary/30" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}<Icon className="nav-link-icon relative h-5 w-5" /><span className="relative">{label}</span></Link></Button>;
           })}</div>
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -156,7 +156,7 @@ export function Navbar() {
               {links.filter((l) => l.to !== "/" && l.to !== "/tasks").map((l) => <DropdownMenuItem key={l.to} asChild className="min-h-10"><Link to={l.to}>{l.to.includes("chat") || l.to.includes("pokalbiai") ? <MessageCircle /> : l.to.includes("checkin") || l.to.includes("scan") ? <QrCode /> : <LayoutDashboard />}{l.label}</Link></DropdownMenuItem>)}
               <DropdownMenuSeparator /><DropdownMenuItem onSelect={() => void handleSignOut()} className="min-h-10"><LogOut />Atsijungti</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button asChild className="nav-cta h-12 rounded-xl px-6 text-base font-bold"><Link to="/register">Registruotis</Link></Button></div>}
+          </DropdownMenu> : <div className="hidden items-center gap-1 sm:flex"><Button variant="ghost" size="sm" asChild><Link to="/login">Prisijungti</Link></Button><Button asChild className="nav-cta h-11 rounded-full px-6 text-[15px] font-semibold"><Link to="/register">Registruotis</Link></Button></div>}
           <Button variant="ghost" size="icon" className="h-11 w-11 lg:hidden" onClick={() => setOpen(!open)} aria-label="Meniu" aria-expanded={open}><Menu /></Button>
         </div>
       </div>
