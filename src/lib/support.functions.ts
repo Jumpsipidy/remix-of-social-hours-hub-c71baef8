@@ -204,7 +204,8 @@ export const sendSupportMessage = createServerFn({ method: "POST" })
     if (!ai) return { error: "Pagalbininkas laikinai nepasiekiamas. Rašyk pagalba@socialinesvalandos.dev." };
 
     // Reliable bug detection: open the report form even if the model forgets.
-    if (!ai.bug && /(neveikia|klaid|suged|nepavyk|nesiseka|neatsidaro|lūžt|luzt|strig|baltas ekranas|bug|error)/i.test(data.message)) ai.form = "bug";
+    if (/(neveikia|klaid|suged|nepavyk|nesiseka|neatsidaro|lūžt|luzt|strig|baltas ekranas|bug|error)/i.test(data.message)) { ai.form = "bug"; ai.bug = null; ai.escalate = false; ai.reply = ai.reply.split("\n\n")[0] ?? ai.reply; }
+    if (ai.form === "bug") ai.reply += "\n\nAtidariau trumpą pranešimo formą — atsakyk į kelis klausimus, ir perduosiu viską administratoriui. 🐞";
     let escalate = ai.escalate;
     let loginNeeded = false;
     if (escalate && !user) { escalate = false; loginNeeded = true; }
