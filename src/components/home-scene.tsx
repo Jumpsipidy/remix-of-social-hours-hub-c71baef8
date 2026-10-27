@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Living, code-drawn landscape behind the whole homepage.
@@ -8,6 +9,8 @@ import { useEffect, useRef } from "react";
  */
 export function HomeScene() {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -28,9 +31,10 @@ export function HomeScene() {
     window.addEventListener("resize", queue);
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => { cancelAnimationFrame(raf); window.removeEventListener("scroll", queue); window.removeEventListener("resize", queue); window.removeEventListener("pointermove", onMove); };
-  }, []);
+  }, [mounted]);
 
-  return <div ref={ref} className="home-scene" aria-hidden="true">
+  if (!mounted) return null;
+  return createPortal(<div ref={ref} className="home-scene" aria-hidden="true">
     <div className="scene-sky" />
     <div className="scene-stars" />
     <div className="scene-stars scene-stars-2" />
@@ -40,5 +44,5 @@ export function HomeScene() {
     <svg className="scene-layer scene-near" viewBox="0 0 1440 400" preserveAspectRatio="none"><path d="M0 330 Q120 280 240 320 T480 315 T720 335 T960 310 T1200 330 T1440 305 L1440 400 L0 400Z" /></svg>
     <div className="scene-lake"><span className="scene-glint" /></div>
     <div className="scene-fog" />
-  </div>;
+  </div>, document.body);
 }
