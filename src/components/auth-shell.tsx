@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SchoolEyesToggle } from "@/components/school-eyes-toggle";
 import { AuthLoadingContent } from "@/components/auth-loading-content";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
+import { HomeScene } from "@/components/home-scene";
 
 export type AuthMode = "login" | "register";
 type Provider = "google" | "discord" | "github";
@@ -66,6 +67,7 @@ const COPY: Record<AuthMode, Copy> = {
 };
 
 /**
+ * Brand panel shows the same theme-aware mountain scene as the homepage.
  * Bendras, nepersikraunantis prisijungimo / registracijos rėmas.
  * Mėlynas skydelis pirmą kartą įslysta iš savo pusės kartu su tekstu;
  * perjungiant režimą jis tik pervažiuoja į kitą pusę, o tekstas pasikeičia.
@@ -114,9 +116,7 @@ function BrandPanel({ mode, intro, ref }: { mode: AuthMode; intro: boolean; ref:
   const c = COPY[mode];
   return (
     <aside ref={ref} aria-label="Socialinės Valandos" className={`auth-brand ${intro ? "is-intro" : ""}`}>
-      <div aria-hidden className="auth-brand-grid" />
-      <div aria-hidden className="auth-brand-orb auth-brand-orb-a" />
-      <div aria-hidden className="auth-brand-orb auth-brand-orb-b" />
+      <HomeScene contained />
       <div className="auth-brand-inner relative flex h-full flex-col">
         <Link to="/" className="relative inline-flex h-11 items-center gap-2.5 self-start lg:gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary-foreground/15 ring-1 ring-primary-foreground/20 lg:h-11 lg:w-11 lg:rounded-2xl"><Heart className="h-4 w-4 lg:h-5 lg:w-5" fill="currentColor" /></span>

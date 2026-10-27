@@ -21,7 +21,7 @@ const NEAR = ridge(11, 320, 70, 40);
  * Living, code-drawn landscape behind the whole homepage.
  * Scroll (--p, --v) moves eclipse/mountains/lake as one scene; pointer adds parallax.
  */
-export function HomeScene() {
+export function HomeScene({ contained = false }: { contained?: boolean } = {}) {
   const ref = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -32,9 +32,11 @@ export function HomeScene() {
     let raf = 0, mx = 0, my = 0;
     const update = () => {
       raf = 0;
-      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-      el.style.setProperty("--p", String(Math.min(1, window.scrollY / max)));
-      el.style.setProperty("--v", String(Math.min(1, window.scrollY / window.innerHeight)));
+      if (!contained) {
+        const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        el.style.setProperty("--p", String(Math.min(1, window.scrollY / max)));
+        el.style.setProperty("--v", String(Math.min(1, window.scrollY / window.innerHeight)));
+      }
       if (!reduce) { el.style.setProperty("--mx", mx.toFixed(3)); el.style.setProperty("--my", my.toFixed(3)); }
     };
     const queue = () => { if (!raf) raf = requestAnimationFrame(update); };
@@ -47,7 +49,7 @@ export function HomeScene() {
   }, [mounted]);
 
   if (!mounted) return null;
-  return createPortal(<div ref={ref} className="home-scene" aria-hidden="true">
+  const scene = <div ref={ref} className={contained ? "home-scene is-contained" : "home-scene"} aria-hidden="true">
     <div className="scene-sky" />
     <div className="scene-stars" />
     <div className="scene-stars scene-stars-2" />
@@ -59,5 +61,6 @@ export function HomeScene() {
     <svg className="scene-layer scene-near" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMax slice"><path d={NEAR} fill="var(--sc-near)" /></svg>
     <div className="scene-lake"><span className="scene-glint" /><span className="scene-ripples" /></div>
     <div className="scene-fog" />
-  </div>, document.body);
+  </div>;
+  return contained ? scene : createPortal(scene, document.body);
 }

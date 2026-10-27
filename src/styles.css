@@ -1168,3 +1168,10 @@ body:has(.home-scene) .site-background-fx { display: none; }
 @keyframes scene-shimmer { 50% { width: 180px; opacity: .25; } }
 .scene-ripples { opacity: .5; }
 @media (max-width: 640px) { .scene-lake { height: calc(13.5vh + var(--v) * 48vh); } .scene-eclipse { top: 62%; width: 70vw; } }
+/* Auth brand panel uses the mountain scene instead of the blue gradient */
+.home-scene.is-contained { position: absolute; z-index: -1; }
+.home-scene.is-contained .scene-eclipse { top: 50%; width: clamp(180px, 22vw, 340px); }
+.home-scene.is-contained .scene-layer { height: 40%; bottom: 16%; } .home-scene.is-contained .scene-mid { bottom: 13%; } .home-scene.is-contained .scene-near { bottom: 10%; height: 24%; }
+.home-scene.is-contained .scene-lake { height: 11%; } .home-scene.is-contained .scene-haze-1 { bottom: 22%; } .home-scene.is-contained .scene-haze-2 { bottom: 14%; }
+.auth-brand { background: var(--sc-sky1); color: var(--foreground); --primary-foreground: var(--foreground); }
+.auth-brand-copy h1, .auth-brand-copy { text-shadow: 0 4px 24px color-mix(in oklab, var(--background) 70%, transparent); }
