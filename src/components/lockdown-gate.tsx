@@ -5,6 +5,7 @@ import { RefreshCw, X, Copy, Check, BookOpen, ChevronDown, ShieldAlert } from "l
 import { LOCKDOWN_CODES, getLockdownCode, type LockdownCode } from "@/lib/lockdown-codes";
 import { verifyBypassCode, verifyBypassToken, bypassStatus } from "@/lib/lockdown-bypass.functions";
 import { getPublicSiteSettings } from "@/lib/site-settings.functions";
+import { readPublicLockdown } from "@/lib/public-lockdown";
 
 import { IncidentScreen } from "@/components/incident-screen";
 import { appendAccessKey, lockdownBlocks, parseLockdownState } from "@/lib/lockdown-state";
@@ -55,7 +56,6 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
     // A session-free client avoids auth refresh locks or an expired visitor JWT
     // delaying the public status RPC. No user credentials are required here.
     try {
-      const { readPublicLockdown } = await import("@/lib/public-lockdown");
       const { data, error } = await readPublicLockdown();
       const state = parseLockdownState(data);
       if (!error && state) return state;
@@ -76,7 +76,7 @@ export function LockdownGate({ children }: { children?: ReactNode }) {
         let state = null;
         for (let attempt = 0; attempt < 3; attempt++) {
           try { state = await readStatus(); break; }
-          catch { if (attempt < 2) await new Promise((r) => setTimeout(r, 500)); }
+          catch { if (attempt < 2) await new Promise((r) => setTimeout(r, 250)); }
         }
         if (!mounted) return;
         if (!state) { setSettingsFailed(true); return; }
