@@ -350,17 +350,17 @@ function TeacherReservations() {
         )}
       </ul>
 
-      {/* Class invite dialog */}
+      {/* Class assign dialog */}
       <Dialog open={!!inviteFor} onOpenChange={(o) => { if (!o) { setInviteFor(null); setInviteClass(null); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Siųsti klasei</DialogTitle>
+            <DialogTitle>Priskirti klasei</DialogTitle>
             <DialogDescription>
-              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${String(inviteFor.start_time).slice(0, 5)} · ${studentName(inviteFor.student_id)}` : ""}
+              {inviteFor ? `${KIND_LT[inviteFor.kind ?? ""] ?? "Rezervacija"} — ${inviteFor.reservation_date} ${reservationTimeLabel(inviteFor.start_time, inviteFor.end_time)} · ${studentName(inviteFor.student_id)}` : ""}
             </DialogDescription>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Pasirink klasę — visi jos mokiniai gaus kvietimą į pokalbį. Rodomos tik tavo priskirtos klasės.
+            Pasirink klasę — visiems jos mokiniams bus sukurta tokia pati rezervacija, kurią jie matys savo paskyrose. Rodomos tik tavo priskirtos klasės.
           </p>
           <div className="max-h-64 space-y-1 overflow-y-auto">
             {classGroups.map(([key, list]) => (
@@ -380,7 +380,7 @@ function TeacherReservations() {
             )}
           </div>
           <Button onClick={() => void submitClassInvite()} disabled={busy || !inviteClass} className="w-full gap-2">
-            <Send className="h-4 w-4" /> {busy ? "Siunčiama…" : `Siųsti kvietimus${inviteClass ? ` (${inviteStudents.length})` : ""}`}
+            <Send className="h-4 w-4" /> {busy ? "Priskiriama…" : `Priskirti klasei${inviteClass ? ` (${inviteStudents.length})` : ""}`}
           </Button>
         </DialogContent>
       </Dialog>
