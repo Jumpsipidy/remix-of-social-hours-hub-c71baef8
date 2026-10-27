@@ -1,6 +1,7 @@
 # Užduotys
-- [ ] SV Pagalba: 48 valandų žinučių valymas ir tuščių pokalbių pašalinimas, išsaugant klaidų pranešimus.
-- [ ] Mokytojo rezervacijos: kūrimo, priskyrimo, užbaigimo ir mokinio matomumo bei klasių ribų testai.
+- [x] SV Pagalba: 48 valandų žinučių valymas ir tuščių pokalbių pašalinimas; bendras 15 min. darbas, 6 SQL patikros praėjo, klaidų pranešimai išlieka.
+- [x] Mokytojo rezervacijos: 6 nauji kūrimo / priskyrimo testai, mokinio būsenų testai ir 6 gyvos SQL taisyklių patikros; visi 367 testai praėjo.
+- [ ] Mokytojo → mokinio gyva rezervacijų kūrimo / matomumo / užbaigimo patikra — išorinio Supabase prisijungusios sesijos ir paskirtos testinės paskyros neprieinamos.
 - [x] Prisijungimo regresija: patvirtinta sesija atskirta nuo profilio klaidos, kartojama duomenų patikra nekartojant slaptažodžio; vieši skaičiai nepriklauso nuo sesijos. 39 testai, tikri 24 / 6 / 1 / 1 skaičiai ir neteisingo slaptažodžio klaida patikrinti; sėkmingas tikros paskyros prisijungimas čia neprieinamas.
 - [x] Greitis: sesijos užrakto kliūtis, dubliuotos profilio užklausos ir dirbtinis prisijungimo laukimas pašalinti; formų perėjimai sutrumpinti, laukimas apribotas.
 - [x] Pradžios puslapis: nauja perjungiama veiklos eiga ir auditorijų skiltis; tamsus ir šviesus 390 px vaizdas patikrinti.
