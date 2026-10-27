@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Bell, Building2, CalendarCheck, Clock, GraduationCap,
-  MessageCircle, Search, ShieldCheck, Sparkles, User as UserIcon, Users,
+  MessageCircle, Search, ShieldCheck, Sparkles, User as UserIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";

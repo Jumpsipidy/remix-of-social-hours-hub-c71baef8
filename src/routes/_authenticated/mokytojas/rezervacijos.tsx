@@ -11,7 +11,6 @@ import { useAuth } from "@/hooks/use-auth";
 import {
   teacherCreateReservations,
   teacherDeleteReservation,
-  teacherSendInvites,
   teacherUpdateReservation,
 } from "@/lib/teacher.functions";
 import type { SchoolReservation, SchoolStudent } from "@/lib/school-data.functions";
