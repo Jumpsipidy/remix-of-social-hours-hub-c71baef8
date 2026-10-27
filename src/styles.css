@@ -1175,3 +1175,4 @@ body:has(.home-scene) .site-background-fx { display: none; }
 .home-scene.is-contained .scene-lake { height: 11%; } .home-scene.is-contained .scene-haze-1 { bottom: 22%; } .home-scene.is-contained .scene-haze-2 { bottom: 14%; }
 .auth-brand { background: var(--sc-sky1); color: var(--foreground); --primary-foreground: var(--foreground); }
 .auth-brand-copy h1, .auth-brand-copy { text-shadow: 0 4px 24px color-mix(in oklab, var(--background) 70%, transparent); }
+.home-scene.is-contained .scene-eclipse { left: 68%; top: 42%; } .home-scene.is-contained .scene-glint { left: 68%; } @media (max-width: 1023px) { .home-scene.is-contained .scene-eclipse { left: 78%; top: 62%; width: 150px; } .home-scene.is-contained .scene-glint { left: 78%; } }
