@@ -1,4 +1,6 @@
 # Užduotys
+- [ ] SV Pagalba: 48 valandų žinučių valymas ir tuščių pokalbių pašalinimas, išsaugant klaidų pranešimus.
+- [ ] Mokytojo rezervacijos: kūrimo, priskyrimo, užbaigimo ir mokinio matomumo bei klasių ribų testai.
 - [x] Prisijungimo regresija: patvirtinta sesija atskirta nuo profilio klaidos, kartojama duomenų patikra nekartojant slaptažodžio; vieši skaičiai nepriklauso nuo sesijos. 39 testai, tikri 24 / 6 / 1 / 1 skaičiai ir neteisingo slaptažodžio klaida patikrinti; sėkmingas tikros paskyros prisijungimas čia neprieinamas.
 - [x] Greitis: sesijos užrakto kliūtis, dubliuotos profilio užklausos ir dirbtinis prisijungimo laukimas pašalinti; formų perėjimai sutrumpinti, laukimas apribotas.
 - [x] Pradžios puslapis: nauja perjungiama veiklos eiga ir auditorijų skiltis; tamsus ir šviesus 390 px vaizdas patikrinti.
