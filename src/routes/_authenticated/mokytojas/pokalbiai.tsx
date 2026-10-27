@@ -134,7 +134,6 @@ function TeacherChatPage() {
 
   const active = convs?.find((c) => c.room_id === activeId) ?? null;
   const titleFor = (c: Conv) => {
-    if (!c.organization_id) return c.student_name ?? "Mokinys"; // tiesioginis auklėtojas ↔ mokinys
     const schoolOnly = !c.student_id;
     return schoolOnly ? (c.organization_name ?? "Organizacija") : `${c.student_name ?? "Mokinys"} ↔ ${c.organization_name ?? "Organizacija"}`;
   };
@@ -160,16 +159,17 @@ function TeacherChatPage() {
 
   const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(activeId ? `room-${activeId}` : null, user?.id);
 
-  // „Rašyti mokiniui" – tik priskirtų klasių mokiniai iš mokyklos momentinės kopijos.
+  // „Rašyti organizacijai" – tiesioginis auklėtojas ↔ organizacija pokalbis.
+  // Su mokiniais auklėtojas bendrauja mokykloje, todėl čia jų nėra.
   const [picker, setPicker] = useState(false);
-  const [studentQ, setStudentQ] = useState("");
-  const students = school?.students ?? [];
-  const shownStudents = useMemo(
-    () => students.filter((s) => (s.full_name ?? "").toLowerCase().includes(studentQ.toLowerCase())),
-    [students, studentQ],
+  const [orgQ, setOrgQ] = useState("");
+  const orgs = school?.organizations ?? [];
+  const shownOrgs = useMemo(
+    () => orgs.filter((o) => `${o.organization_name ?? ""} ${o.full_name ?? ""}`.toLowerCase().includes(orgQ.toLowerCase())),
+    [orgs, orgQ],
   );
-  async function startWith(studentId: string) {
-    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: studentId });
+  async function startWithOrg(orgId: string) {
+    const { data, error } = await (supabase.rpc as any)("open_chat_with", { _other: orgId });
     if (error) { toast.error(userError(error)); return; }
     setPicker(false);
     await loadConvs();
