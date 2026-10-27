@@ -140,6 +140,25 @@ function TeacherOverview() {
         </section>
       </div>
 
+      {classGroups.length > 0 && (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <h2 className="flex items-center gap-2 font-bold"><Users className="h-4 w-4 text-primary" /> Klasių progresas</h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {classGroups.map((g) => (
+              <li key={g.key} className="rounded-xl bg-muted/60 p-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-semibold">{g.key} klasė</span>
+                  <span className="text-xs text-muted-foreground">{g.count} mok. · {g.avg}%</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${g.avg}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 font-bold"><Flame className="h-4 w-4 text-primary" /> Streak lyderiai</h2>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
