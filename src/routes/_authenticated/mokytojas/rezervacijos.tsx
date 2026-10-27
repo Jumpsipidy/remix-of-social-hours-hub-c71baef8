@@ -390,7 +390,7 @@ function TeacherReservations() {
         <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nauja rezervacija</DialogTitle>
-            <DialogDescription>Pasirink laiką, klasę ir mokinius — jie gaus kvietimą į pokalbį.</DialogDescription>
+            <DialogDescription>Pasirink laiką, klasę ir mokinius — rezervacijos iškart atsiras jų paskyrose.</DialogDescription>
           </DialogHeader>
           <div className="space-y-5">
             {formFields(form, setForm, true)}
