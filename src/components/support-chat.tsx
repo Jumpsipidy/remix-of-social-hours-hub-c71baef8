@@ -58,7 +58,7 @@ function Typewriter({ text, onDone }: { text: string; onDone: () => void }) {
     return () => clearTimeout(id);
   }, [n, words.length, onDone]);
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.scrollIntoView({ block: "end" }); }, [n]);
+  useEffect(() => { const sc = ref.current?.closest("[data-sv-scroll]"); if (sc) sc.scrollTop = sc.scrollHeight; }, [n]);
   return <div ref={ref}><Rich text={words.slice(0, n).join("")} /></div>;
 }
 
@@ -112,7 +112,7 @@ export function SupportChat() {
     return () => { alive = false; if (id) clearInterval(id); };
   }, [open, status, fetchThread]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [msgs, busy]);
+  useEffect(() => { const sc = endRef.current?.closest("[data-sv-scroll]"); if (sc) sc.scrollTop = sc.scrollHeight; }, [msgs, busy, options]);
 
   async function submit(message: string) {
     const token = getToken();
@@ -149,7 +149,7 @@ export function SupportChat() {
             </div>
             <button type="button" aria-label="Uždaryti" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm">
+          <div data-sv-scroll className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 text-sm">
             {msgs.length === 0 && (
               <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <p className="text-base font-semibold">Labas! 👋 Aš — SV Pagalba.</p>
