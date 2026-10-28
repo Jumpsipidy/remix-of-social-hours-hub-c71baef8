@@ -145,10 +145,12 @@ function OrgDashboard() {
     if (profile.role !== "organization") return;
     const org = profile as unknown as Record<string, unknown>;
     const missing = !org.organization_name || !org.address || !org.latitude || !org.longitude;
-    if (missing) {
-      navigate({ to: "/organization/welcome" });
-    }
-  }, [loading, profile, navigate]);
+    if (!missing) return;
+    // Atidedam perėjimą, kad nesikirstų su dar vykstančiu (view transition) perėjimu.
+    const t = window.setTimeout(() => navigate({ to: "/organization/welcome", replace: true }), 0);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, profile?.id, profile?.role]);
 
   useEffect(() => { if (user) refresh(user.id); }, [user, refresh]);
 
