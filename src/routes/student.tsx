@@ -354,7 +354,7 @@ function StudentDashboard() {
         <DashHero
           eyebrow="Mokinio sritis"
           icon={GraduationCap}
-          title={<>Sveika, {profile.full_name ?? "moksleivi"} 👋</>}
+          title={<>Sveikas, {profile.full_name ?? "moksleivi"} 👋</>}
           subtitle={
             <>
               Čia matai visas savo socialines valandas vienoje vietoje: kiek jau surinkai, kas suplanuota ir ką verta

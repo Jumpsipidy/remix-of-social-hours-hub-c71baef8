@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { MessageCircleQuestion, Send, X, ShieldCheck } from "lucide-react";
+import { MessageCircleQuestion, Send, X, ShieldCheck, Trash2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { clearSupportThread, getSupportThread, sendSupportMessage, submitSupportBug } from "@/lib/support.functions";
 import { supabase } from "@/integrations/supabase/client";
