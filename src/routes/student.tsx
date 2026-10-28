@@ -4,6 +4,7 @@ import { InviteFriendsDialog } from "@/components/invite-friends-dialog";
 import { Users } from "lucide-react";
 import { DmInbox } from "@/components/dm-inbox";
 import { KindBadge } from "@/components/school/school-hub";
+import { TeacherSuggestions } from "@/components/teacher-suggestions";
 import { WrongRole } from "@/components/wrong-role";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -560,6 +561,8 @@ function StudentDashboard() {
           </div>
         </div>
       </section>
+
+      <div className="order-3 w-full mx-auto mt-6 max-w-7xl px-4 sm:px-6"><TeacherSuggestions /></div>
 
       {/* Reservations list w/ filter */}
       <section id="mano-rezervacijos" className="order-3 w-full scroll-mt-20 mx-auto mt-6 max-w-7xl px-4 pb-6 sm:px-6">

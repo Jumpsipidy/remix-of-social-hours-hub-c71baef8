@@ -65,6 +65,8 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
   const [picked, setPicked] = useState<TaskRow | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [note, setNote] = useState(""); const [busy, setBusy] = useState(false);
+  const [myId, setMyId] = useState<string | null>(null);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setMyId(data.user?.id ?? null)); }, []);
 
   useEffect(() => {
     if (!open) return;
