@@ -6,7 +6,7 @@ import { openDmRoom, sendDmMessage } from "@/lib/dm";
 import type { SchoolReservation, SchoolStudent, SchoolOrg } from "@/lib/school-data.functions";
 
 export const KIND_LABEL: Record<string, string> = {
-  volunteer: "Dirbo",
+  volunteer: "Savanorystė",
   consultation: "Pasitarimo valandos",
   event: "Renginys",
   other: "Kita",
