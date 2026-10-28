@@ -5,6 +5,7 @@ import { Plus, Copy, Save, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CLASS_YEARS } from "@/lib/class-years";
 import { listClassCodes, saveClassCode } from "@/lib/class-codes.functions";
+import { BulkClassWizard } from "@/components/admin/bulk-class-wizard";
 import { userError } from "@/lib/user-error";
 
 const LOWER = ["5", "6", "7"];
