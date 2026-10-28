@@ -1426,6 +1426,44 @@ export type Database = {
         }
         Relationships: []
       }
+      task_suggestions: {
+        Row: {
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          note: string | null
+          student_id: string
+          task_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          note?: string | null
+          student_id: string
+          task_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          note?: string | null
+          student_id?: string
+          task_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_suggestions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           address: string | null
