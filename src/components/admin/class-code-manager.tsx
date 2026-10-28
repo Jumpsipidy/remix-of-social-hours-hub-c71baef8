@@ -46,7 +46,7 @@ export function ClassCodeManager({ schools }: { schools: { id: string; name: str
       <label className="text-sm">Privalomos valandos<input type="number" min={8} max={500} disabled={lower} value={lower ? 20 : hours} onChange={(event) => setHours(Number(event.target.value))} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3 disabled:opacity-60" />{lower && <span className="text-xs text-muted-foreground">5–7 klasėms visada 20 val.</span>}</label>
       <label className="text-sm">Kodas<input required minLength={8} maxLength={64} value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3 font-mono" /></label>
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-4"><Button variant="outline" type="button" onClick={() => { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; const pick = (n: number) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => chars[b % chars.length]).join(""); setCode(`MKC-${pick(5)}-${pick(1)}`); }}><Plus />Generuoti</Button><Button disabled={busy} type="submit"><Save />Išsaugoti</Button></div>
-    </form>
+    </form></div></details>
     <div className="divide-y divide-border">{rows.map((row) => {
       const rowLower = LOWER.includes(row.class_year);
       const draft = hoursDraft[row.id] ?? row.hours_needed ?? 20;
