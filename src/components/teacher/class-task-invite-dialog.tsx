@@ -104,7 +104,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
           note: note.trim(),
         },
       });
-      toast.success(`Veikla priskirta ${res.created} iš ${res.total} mokinių — jie ją mato savo paskyrose.`);
+      toast.success("suggested" in res && res.suggested ? `Rekomendacija išsiųsta ${res.created} mokiniams — jie patys užsiregistruos, o rezervaciją valdys organizacija.` : `Veikla priskirta ${res.created} iš ${res.total} mokinių — jie ją mato savo paskyrose.`);
       onOpenChange(false);
     } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko priskirti veiklos."); } finally { setBusy(false); }
   };
@@ -143,7 +143,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
         </div>
         {picked && <div className="flex items-center justify-between gap-3 border-t border-border p-4">
           <span className="text-sm text-muted-foreground">Pažymėta: <b className="text-foreground">{selected.size}</b></span>
-          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Priskirti mano klasei</Button>
+          <Button onClick={send} disabled={busy || selected.size === 0} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {picked.organization_id === myId ? "Priskirti mano klasei" : "Rekomenduoti klasei"}</Button>
         </div>}
       </DialogContent>
     </Dialog>
