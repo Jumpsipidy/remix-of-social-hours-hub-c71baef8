@@ -5,6 +5,7 @@ import { Plus, Copy, Save, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CLASS_YEARS } from "@/lib/class-years";
 import { listClassCodes, saveClassCode } from "@/lib/class-codes.functions";
+import { BulkClassWizard } from "@/components/admin/bulk-class-wizard";
 import { userError } from "@/lib/user-error";
 
 const LOWER = ["5", "6", "7"];
@@ -38,13 +39,15 @@ export function ClassCodeManager({ schools }: { schools: { id: string; name: str
       <h2 className="text-xl font-semibold">Klasių registracijos kodai</h2>
       <p className="text-sm text-muted-foreground">Kiekviena klasė (pvz. 5A ir 5B) turi savo kodą. Mokinys gauna klasę ir privalomas valandas tik iš kodo. Kodai sukuriami ir automatiškai, kai auklėtojui priskiri klasę.</p>
     </div>
+    <BulkClassWizard schools={schools} onDone={refresh} />
+    <details className="rounded-lg border border-border p-3"><summary className="cursor-pointer text-sm font-medium">Rankinis vieno kodo kūrimas</summary><div className="pt-3">
     <form onSubmit={create} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <label className="text-sm">Mokykla<select required aria-label="Kodo mokykla" value={school} onChange={(event) => setSchool(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3"><option value="">Pasirink mokyklą</option>{schools.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label className="text-sm">Klasė<select aria-label="Kodo klasė" value={`${year}|${letter}`} onChange={(event) => { const [grade, suffix] = event.target.value.split("|"); setYear(grade ?? "8"); setLetter(suffix === "B" ? "B" : "A"); }} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3">{CLASS_YEARS.flatMap((grade) => (["A", "B"] as const).map((suffix) => <option key={grade + suffix} value={`${grade}|${suffix}`}>{grade.split(" / ")[0]}{suffix}</option>))}</select></label>
       <label className="text-sm">Privalomos valandos<input type="number" min={8} max={500} disabled={lower} value={lower ? 20 : hours} onChange={(event) => setHours(Number(event.target.value))} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3 disabled:opacity-60" />{lower && <span className="text-xs text-muted-foreground">5–7 klasėms visada 20 val.</span>}</label>
       <label className="text-sm">Kodas<input required minLength={8} maxLength={64} value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3 font-mono" /></label>
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-4"><Button variant="outline" type="button" onClick={() => { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; const pick = (n: number) => Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => chars[b % chars.length]).join(""); setCode(`MKC-${pick(5)}-${pick(1)}`); }}><Plus />Generuoti</Button><Button disabled={busy} type="submit"><Save />Išsaugoti</Button></div>
-    </form>
+    </form></div></details>
     <div className="divide-y divide-border">{rows.map((row) => {
       const rowLower = LOWER.includes(row.class_year);
       const draft = hoursDraft[row.id] ?? row.hours_needed ?? 20;
