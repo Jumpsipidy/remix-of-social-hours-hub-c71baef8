@@ -38,6 +38,8 @@ export function ClassCodeManager({ schools }: { schools: { id: string; name: str
       <h2 className="text-xl font-semibold">Klasių registracijos kodai</h2>
       <p className="text-sm text-muted-foreground">Kiekviena klasė (pvz. 5A ir 5B) turi savo kodą. Mokinys gauna klasę ir privalomas valandas tik iš kodo. Kodai sukuriami ir automatiškai, kai auklėtojui priskiri klasę.</p>
     </div>
+    <BulkClassWizard schools={schools} onDone={refresh} />
+    <details className="rounded-lg border border-border p-3"><summary className="cursor-pointer text-sm font-medium">Rankinis vieno kodo kūrimas</summary><div className="pt-3">
     <form onSubmit={create} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <label className="text-sm">Mokykla<select required aria-label="Kodo mokykla" value={school} onChange={(event) => setSchool(event.target.value)} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3"><option value="">Pasirink mokyklą</option>{schools.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label className="text-sm">Klasė<select aria-label="Kodo klasė" value={`${year}|${letter}`} onChange={(event) => { const [grade, suffix] = event.target.value.split("|"); setYear(grade ?? "8"); setLetter(suffix === "B" ? "B" : "A"); }} className="mt-1 h-11 w-full rounded-md border border-input bg-background px-3">{CLASS_YEARS.flatMap((grade) => (["A", "B"] as const).map((suffix) => <option key={grade + suffix} value={`${grade}|${suffix}`}>{grade.split(" / ")[0]}{suffix}</option>))}</select></label>
