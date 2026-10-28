@@ -382,3 +382,15 @@ export const adminTestSupportAi = createServerFn({ method: "POST" })
     await run("OpenAI gpt-5-nano", process.env.OPENAI_API_KEY, "https://api.openai.com/v1/chat/completions", { model: "gpt-5-nano", reasoning_effort: "minimal", max_completion_tokens: 200 });
     return { results: out, host: process.env.VERCEL ? "Vercel" : "Lovable", at: new Date().toISOString() };
   });
+
+/** Lankytojas pats išvalo savo pagalbos pokalbį (žinutės ir gija ištrinamos). */
+export const clearSupportThread = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ token: z.string().min(20).max(100) }).parse(d))
+  .handler(async ({ data }) => {
+    const t = await findThread(data.token);
+    if (!t) return { ok: true };
+    const db = await admin();
+    await db.from("support_messages").delete().eq("thread_id", t.id);
+    await db.from("support_threads").delete().eq("id", t.id);
+    return { ok: true };
+  });

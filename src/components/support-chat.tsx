@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircleQuestion, Send, X, ShieldCheck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { getSupportThread, sendSupportMessage, submitSupportBug } from "@/lib/support.functions";
+import { clearSupportThread, getSupportThread, sendSupportMessage, submitSupportBug } from "@/lib/support.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SupportBugWizard, type BugAnswers } from "@/components/support-bug-wizard";
 
@@ -88,6 +88,14 @@ export function SupportChat() {
   const send = useServerFn(sendSupportMessage);
   const sendBug = useServerFn(submitSupportBug);
   const [wizard, setWizard] = useState(false);
+  const clearFn = useServerFn(clearSupportThread);
+  async function clearChat() {
+    const token = getToken();
+    if (!token || busy || !window.confirm("Ištrinti visą šį pokalbį?")) return;
+    try { await clearFn({ data: { token } }); } catch { /* ignore */ }
+    try { localStorage.removeItem(KEY); } catch { /* ignore */ }
+    setMsgs([]); setOptions([]); setStatus("ai"); setErr(null);
+  }
 
   async function submitBug(a: BugAnswers) {
     const token = getToken();
@@ -147,6 +155,7 @@ export function SupportChat() {
               <div className="text-sm font-semibold">SV Pagalba</div>
               <div className="text-xs text-muted-foreground">{status === "escalated" ? <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />Administratorius gali prisijungti</span> : "Atsako per kelias sekundes"}</div>
             </div>
+            {msgs.length > 0 && <button type="button" aria-label="Išvalyti pokalbį" title="Išvalyti pokalbį" onClick={() => void clearChat()} className="mr-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></button>}
             <button type="button" aria-label="Uždaryti" onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
           </div>
           <div data-sv-scroll className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3 text-sm">

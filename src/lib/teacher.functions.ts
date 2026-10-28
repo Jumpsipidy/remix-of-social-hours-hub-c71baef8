@@ -115,6 +115,23 @@ export const teacherAssignTask = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await requireTeacher(context.userId);
     const { data: task } = await supabaseAdmin.from("tasks").select("organization_id").eq("id", data.taskId).maybeSingle();
     if (!task) throw new Error("Veikla nerasta.");
+    // Organizacijos veikla: auklėtojas tik rekomenduoja — rezervaciją mokinys daro pats, ją valdo organizacija.
+    if ((task as { organization_id: string }).organization_id !== context.userId) {
+      const allowed: string[] = [];
+      for (const id of data.studentIds) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: ok } = await (context.supabase.rpc as any)("school_admin_can_manage", { _student: id });
+        if (ok) allowed.push(id);
+      }
+      if (!allowed.length) throw new Error("Šie mokiniai nepriklauso tavo klasėms.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabaseAdmin.from as any)("task_suggestions").upsert(
+        allowed.map((id) => ({ student_id: id, teacher_id: context.userId, task_id: data.taskId, note: data.note || null, dismissed_at: null })),
+        { onConflict: "student_id,task_id" },
+      );
+      if (error) throw new Error(error.message);
+      return { created: allowed.length, total: data.studentIds.length, suggested: true };
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error, data: created } = await (context.supabase.rpc as any)("school_create_reservations", {
       _student_ids: data.studentIds,
