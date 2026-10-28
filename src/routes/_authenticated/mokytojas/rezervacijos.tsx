@@ -72,6 +72,8 @@ function TeacherReservations() {
   const [editForm, setEditForm] = useState<FormState>(emptyForm());
 
   const [search, setSearch] = useState("");
+  const [statusF, setStatusF] = useState<"all" | "active" | "done" | "declined">("active");
+  const [limit, setLimit] = useState(30);
   const [inviteFor, setInviteFor] = useState<SchoolReservation | null>(null);
   const [inviteClass, setInviteClass] = useState<string | null>(null);
 
@@ -99,12 +101,23 @@ function TeacherReservations() {
 
   const filteredRes = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return schoolRes;
-    return schoolRes.filter((r) =>
+    const byStatus = schoolRes.filter((r) => statusF === "all" ? true
+      : statusF === "active" ? (r.status === "pending" || r.status === "approved")
+      : statusF === "done" ? (r.status === "completed" || r.status === "confirmed")
+      : r.status === "declined");
+    if (!q) return byStatus;
+    return byStatus.filter((r) =>
       studentName(r.student_id).toLowerCase().includes(q) ||
       r.reservation_date.includes(q) ||
       (r.note ?? "").toLowerCase().includes(q));
-  }, [schoolRes, search, students]);
+  }, [schoolRes, search, students, statusF]);
+
+  const declineRes = async (r: (typeof schoolRes)[number]) => {
+    if (!window.confirm(`Atmesti ${studentName(r.student_id)} rezervaciją? Valandos nebus įskaitytos.`)) return;
+    const { error } = await supabase.rpc("school_complete_reservation", { _reservation_id: r.id, _hours: 0, _decline: true });
+    if (error) { toast.error("Nepavyko atmesti. Bandyk dar kartą."); return; }
+    toast.success("Rezervacija atmesta"); await refresh();
+  };
 
   const inviteStudents = inviteClass ? (classGroups.find(([k]) => k === inviteClass)?.[1] ?? []) : [];
   // „Priskirti klasei“ – visiems klasės mokiniams sukuriamos tokios pačios mokyklos
@@ -306,8 +319,15 @@ function TeacherReservations() {
         />
       </div>
 
+      <div className="flex flex-wrap gap-1.5">
+        {([["active", "Laukia patvirtinimo"], ["done", "Užbaigtos"], ["declined", "Atmestos"], ["all", "Visos"]] as const).map(([k, l]) => (
+          <button key={k} type="button" onClick={() => { setStatusF(k); setLimit(30); }} className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${statusF === k ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted/50"}`}>{l}</button>
+        ))}
+        <span className="ml-auto self-center text-xs text-muted-foreground">Rasta: {filteredRes.length}</span>
+      </div>
+
       <ul className="space-y-2">
-        {filteredRes.map((r) => {
+        {filteredRes.slice(0, limit).map((r) => {
           const finished = r.status === "completed" || r.status === "confirmed";
           return (
             <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
@@ -326,6 +346,7 @@ function TeacherReservations() {
               {!finished && (
                 <div className="flex gap-1">
                   {r.status === "approved" && <Button size="sm" onClick={() => setVerifying(r)}>Patvirtinti valandas</Button>}
+                  {r.status === "approved" && <Button size="sm" variant="outline" className="text-destructive" onClick={() => void declineRes(r)}>Atmesti</Button>}
                   <Button variant="outline" size="sm" className="gap-1.5" aria-label="Priskirti klasei" onClick={() => { setInviteFor(r); setInviteClass(null); }}>
                     <Users className="h-4 w-4" /> Priskirti klasei
                   </Button>
@@ -340,6 +361,9 @@ function TeacherReservations() {
           <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             Mokyklos rezervacijų dar nėra. Sukurk pirmąją ir pakviesk mokinius.
           </li>
+        )}
+        {filteredRes.length > limit && (
+          <li><Button variant="outline" className="w-full" onClick={() => setLimit((n) => n + 30)}>Rodyti daugiau ({filteredRes.length - limit})</Button></li>
         )}
         {schoolRes.length > 0 && filteredRes.length === 0 && (
           <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
