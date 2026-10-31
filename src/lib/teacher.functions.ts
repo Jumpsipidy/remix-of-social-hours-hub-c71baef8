@@ -112,7 +112,7 @@ export const teacherAssignTask = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ context, data }) => {
-    const { supabaseAdmin } = await requireTeacher(context.userId);
+    const { supabaseAdmin, me } = await requireTeacher(context.userId);
     const { data: task } = await supabaseAdmin.from("tasks").select("organization_id").eq("id", data.taskId).maybeSingle();
     if (!task) throw new Error("Veikla nerasta.");
     // Organizacijos veikla: auklėtojas tik rekomenduoja — rezervaciją mokinys daro pats, ją valdo organizacija.
