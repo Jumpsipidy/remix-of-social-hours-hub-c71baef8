@@ -127,7 +127,7 @@ export const resendSignupVerification = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequest } = await import("@tanstack/react-start/server");
     const origin = getRequest().headers.get("origin");
-    if (!origin || !/^https?:\/\/(localhost(:\d+)?|([a-z0-9-]+\.)*socialinesvalandos\.dev|[a-z0-9-]+\.lovable\.app)$/i.test(origin)) throw new Error("Netinkamas puslapis.");
+    const origin = resolveTrustedOrigin(getRequest().headers.get("origin"));
     const email = data.email.toLowerCase();
     const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email));
     const emailHash = Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
@@ -153,8 +153,7 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequest } = await import("@tanstack/react-start/server");
-    const origin = getRequest().headers.get("origin");
-    if (!origin || !/^https?:\/\/(localhost(:\d+)?|([a-z0-9-]+\.)*socialinesvalandos\.dev|[a-z0-9-]+\.lovable\.app)$/i.test(origin)) throw new Error("Netinkamas puslapis.");
+    const origin = resolveTrustedOrigin(getRequest().headers.get("origin"));
     const email = data.email.toLowerCase();
     const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email));
     const emailHash = Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
