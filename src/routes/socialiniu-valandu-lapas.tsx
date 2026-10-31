@@ -167,7 +167,8 @@ function Page() {
   }
 
   function downloadCsv() {
-    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    // csvCell taip pat neutralizuoja formulės injekciją (=, +, -, @ ...).
+    const esc = csvCell;
     const csv = [
       ["Mokinys", name].map(esc).join(","),
       ["Mokykla", school].map(esc).join(","),
