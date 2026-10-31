@@ -168,7 +168,12 @@ export const submitCheckIn = createServerFn({ method: "POST" })
       const isParticipant = prefix === "SVCI-P";
       const payload = `${isParticipant ? "p" : "r"}:${targetId}:${studentId}:${window}`;
       const expected = (await hmacHex(secret, payload)).slice(0, 24);
-      if (expected !== sig) throw new Error("Neteisingas parašas — QR kodas suklastotas");
+      // Constant-time comparison: a plain !== leaks matching prefixes via timing.
+      let diff = expected.length ^ sig.length;
+      for (let i = 0; i < expected.length; i++) {
+        diff |= expected.charCodeAt(i) ^ (sig.charCodeAt(i) || 0);
+      }
+      if (diff !== 0) throw new Error("Neteisingas parašas — QR kodas suklastotas");
 
       // Look up the corresponding check_in_code and delegate to the RPC to enforce org ownership.
       let code: string | null = null;

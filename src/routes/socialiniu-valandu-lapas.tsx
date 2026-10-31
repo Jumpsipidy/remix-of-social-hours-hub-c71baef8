@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { PageShell } from "@/components/layout";
+import { csvCell } from "@/lib/csv-safe";
 
 const URL = "https://socialinesvalandos.dev/socialiniu-valandu-lapas";
 const TITLE = "Socialinių valandų lapas — atsisiųsk arba pildyk internetu (2026)";
@@ -167,7 +168,8 @@ function Page() {
   }
 
   function downloadCsv() {
-    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    // csvCell taip pat neutralizuoja formulės injekciją (=, +, -, @ ...).
+    const esc = csvCell;
     const csv = [
       ["Mokinys", name].map(esc).join(","),
       ["Mokykla", school].map(esc).join(","),

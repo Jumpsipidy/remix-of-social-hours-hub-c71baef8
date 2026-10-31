@@ -61,6 +61,7 @@ async function callModel(
   try {
     resp = await fetch(url, {
       method: "POST",
+      signal: AbortSignal.timeout(10000),
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ ...body, messages, response_format: { type: "json_object" } }),
     });

@@ -117,12 +117,25 @@ export const teacherAssignTask = createServerFn({ method: "POST" })
     if (!task) throw new Error("Veikla nerasta.");
     // Organizacijos veikla: auklėtojas tik rekomenduoja — rezervaciją mokinys daro pats, ją valdo organizacija.
     if ((task as { organization_id: string }).organization_id !== context.userId) {
-      const allowed: string[] = [];
-      for (const id of data.studentIds) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: ok } = await (context.supabase.rpc as any)("school_admin_can_manage", { _student: id });
-        if (ok) allowed.push(id);
-      }
+      // Viena paketinė užklausa vietoj RPC ciklo kiekvienam mokiniui.
+      const mySchool = me.school_id ?? me.associated_school_id ?? null;
+      const { data: candidates, error: checkError } = await supabaseAdmin
+        .from("profiles")
+        .select("id, class_year, class_letter, school_id")
+        .in("id", data.studentIds)
+        .eq("role", "student");
+      if (checkError) throw new Error(checkError.message);
+      const myClasses = (me.assigned_classes ?? []).map(String);
+      const myLetter = me.assigned_letter ?? null;
+      const allowed = ((candidates ?? []) as { id: string; class_year: string | null; class_letter: string | null; school_id?: string | null }[])
+        .filter((s) => {
+          if (me.role === "admin") return true;
+          if (!mySchool || (s as { school_id?: string | null }).school_id !== mySchool) return false;
+          if (myClasses.length && (!s.class_year || !myClasses.includes(String(s.class_year)))) return false;
+          if (myLetter && s.class_letter !== myLetter) return false;
+          return true;
+        })
+        .map((s) => s.id);
       if (!allowed.length) throw new Error("Šie mokiniai nepriklauso tavo klasėms.");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabaseAdmin.from as any)("task_suggestions").upsert(

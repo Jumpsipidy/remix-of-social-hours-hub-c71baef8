@@ -217,6 +217,11 @@ export const verifyCertificatePublic = createServerFn({ method: "POST" })
       };
       if (!await checkCertificateIntegrity(signedSnapshot, row.content_hash, row.signature, secrets)) return { valid: false, reason: "tampered" };
       result.signature_verified = true;
+      // The RPC summary omits the activity list; attach it so /verify can render it.
+      result.reservations = row.reservations_json;
+      result.generated_at = row.generated_at;
+      result.student_class = row.student_class;
+      result.school_name = row.school_name;
     }
     return result as {
       signature_verified?: boolean;

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { normalizeIncidentCode } from "@/lib/incident-code";
 
@@ -7,7 +8,9 @@ import { normalizeIncidentCode } from "@/lib/incident-code";
  * ("SC-123456") that a user reported.
  */
 export const lookupIncident = createServerFn({ method: "POST" })
-  .validator((input: { code: string }) => input)
+  .validator((input: unknown) =>
+    z.object({ code: z.string().trim().min(3).max(64) }).parse(input),
+  )
   .middleware([requireSupabaseAuth])
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

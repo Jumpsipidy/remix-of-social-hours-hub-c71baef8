@@ -138,26 +138,41 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
     let reservations: SchoolReservation[] = [];
     const ids = students.map((s) => s.id);
     if (ids.length) {
-      const idList = ids.join(",");
-      // Draugystės ir rezervacijos kraunamos lygiagrečiai – vienas raundtripas mažiau.
-      const [frRes, rsRes] = await Promise.all([
-        supabaseAdmin
-          .from("friendships")
-          .select("requester_id, addressee_id")
-          .eq("status", "accepted")
-          .or(`requester_id.in.(${idList}),addressee_id.in.(${idList})`),
+      // Draugystės kraunamos dalimis – ilgas ID sąrašas vienoje .or() užklausoje
+      // viršytų URL ilgio ribą (414) didesnėse mokyklose.
+      const CHUNK = 40;
+      const frPromises: PromiseLike<{ data: { requester_id: string; addressee_id: string }[] | null }>[] = [];
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const slice = ids.slice(i, i + CHUNK);
+        frPromises.push(
+          supabaseAdmin
+            .from("friendships")
+            .select("requester_id, addressee_id")
+            .eq("status", "accepted")
+            .in("requester_id", slice) as never,
+          supabaseAdmin
+            .from("friendships")
+            .select("requester_id, addressee_id")
+            .eq("status", "accepted")
+            .in("addressee_id", slice) as never,
+        );
+      }
+      const [rsRes, ...frResults] = await Promise.all([
         supabaseAdmin
           .from("reservations")
           .select(RES_COLUMNS)
           .in("student_id", ids)
           .order("reservation_date", { ascending: false })
           .limit(1000),
+        ...frPromises,
       ]);
       // Accepted friendships per student (count only, no names leaked).
       const counts: Record<string, number> = {};
-      for (const f of (frRes.data as { requester_id: string; addressee_id: string }[] | null) ?? []) {
-        counts[f.requester_id] = (counts[f.requester_id] ?? 0) + 1;
-        counts[f.addressee_id] = (counts[f.addressee_id] ?? 0) + 1;
+      for (const frRes of frResults) {
+        for (const f of frRes.data ?? []) {
+          counts[f.requester_id] = (counts[f.requester_id] ?? 0) + 1;
+          counts[f.addressee_id] = (counts[f.addressee_id] ?? 0) + 1;
+        }
       }
       for (const s of students) s.friends_count = counts[s.id] ?? 0;
       if (rsRes.error) throw new Error(rsRes.error.message);
