@@ -3,6 +3,27 @@
 
 const enc = new TextEncoder();
 
+// Only genuine Web Push service origins may receive a VAPID-signed request —
+// anything else would be SSRF with our private-key signature attached.
+const ALLOWED_PUSH_ORIGINS = [
+  /^https:\/\/[a-z0-9.-]+\.push\.apple\.com$/i,
+  /^https:\/\/[a-z0-9.-]+\.webpush\.apple\.com$/i,
+  /^https:\/\/fcm\.googleapis\.com$/i,
+  /^https:\/\/[a-z0-9.-]+\.notify\.windows\.com$/i,
+  /^https:\/\/[a-z0-9.-]+\.push\.services\.mozilla\.com$/i,
+];
+
+function isAllowedPushEndpoint(endpoint: string): boolean {
+  try {
+    const parsed = new URL(endpoint);
+    if (parsed.protocol !== "https:") return false;
+    const origin = `${parsed.protocol}//${parsed.host}`;
+    return ALLOWED_PUSH_ORIGINS.some((rx) => rx.test(origin));
+  } catch {
+    return false;
+  }
+}
+
 function b64urlEncode(buf: ArrayBuffer | Uint8Array): string {
   const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
   let s = "";
@@ -159,6 +180,14 @@ export async function sendWebPush(
   target: PushTarget,
   payload: Record<string, unknown>,
 ): Promise<PushResult> {
+  if (!isAllowedPushEndpoint(target.endpoint)) {
+    return {
+      endpoint: target.endpoint,
+      status: 400,
+      ok: false,
+      error: "Rejected endpoint: not an authorized Web Push service",
+    };
+  }
   try {
     const url = new URL(target.endpoint);
     const audience = `${url.protocol}//${url.host}`;
@@ -169,6 +198,7 @@ export async function sendWebPush(
 
     const res = await fetch(target.endpoint, {
       method: "POST",
+      signal: AbortSignal.timeout(8000),
       headers: {
         "Content-Encoding": "aes128gcm",
         "Content-Type": "application/octet-stream",

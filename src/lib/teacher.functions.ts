@@ -121,7 +121,7 @@ export const teacherAssignTask = createServerFn({ method: "POST" })
       const mySchool = me.school_id ?? me.associated_school_id ?? null;
       const { data: candidates, error: checkError } = await supabaseAdmin
         .from("profiles")
-        .select("id, class_year, class_letter")
+        .select("id, class_year, class_letter, school_id")
         .in("id", data.studentIds)
         .eq("role", "student");
       if (checkError) throw new Error(checkError.message);
