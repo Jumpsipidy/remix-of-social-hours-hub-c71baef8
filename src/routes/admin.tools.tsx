@@ -55,7 +55,13 @@ import { SentryTestButton } from "@/components/admin/sentry-test-button";
 
 export const sendOrgInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { email: string; orgName: string; variant: number }) => data)
+  .validator((data: unknown) =>
+    z.object({
+      email: z.string().trim().email().max(200),
+      orgName: z.string().trim().min(1).max(200),
+      variant: z.number().int().min(1).max(5),
+    }).parse(data),
+  )
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
     if (!isAdmin) throw new Error("Tik administratoriai gali siųsti kvietimus");
@@ -85,7 +91,12 @@ export const sendOrgInvite = createServerFn({ method: "POST" })
 
 export const getOrgInvitePreview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .validator((data: { orgName: string; variant: number }) => data)
+  .validator((data: unknown) =>
+    z.object({
+      orgName: z.string().trim().min(1).max(200),
+      variant: z.number().int().min(1).max(5),
+    }).parse(data),
+  )
   .handler(async ({ data }) => {
     return renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
   });
@@ -365,8 +376,13 @@ function AdminToolsPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="h-full overflow-auto">
-                <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              <div className="h-full overflow-hidden">
+                <iframe
+                  srcDoc={previewHtml}
+                  title="Kvietimo peržiūra"
+                  sandbox="allow-same-origin"
+                  className="h-full w-full border-0 bg-white"
+                />
               </div>
             </motion.div>
           </div>

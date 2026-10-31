@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { PageShell } from "@/components/layout";
+import { csvCell } from "@/lib/csv-safe";
 
 const URL = "https://socialinesvalandos.dev/socialiniu-valandu-lapas";
 const TITLE = "Socialinių valandų lapas — atsisiųsk arba pildyk internetu (2026)";
