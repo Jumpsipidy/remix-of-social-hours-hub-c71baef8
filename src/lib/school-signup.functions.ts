@@ -5,6 +5,21 @@ import { passwordProblem } from "@/lib/password-policy";
 import { userError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+/**
+ * Email links (password recovery, verification) must point at the canonical
+ * site — a caller-supplied Origin like https://attacker.lovable.app would send
+ * the victim's token to the attacker's server. Localhost / Lovable preview
+ * origins are trusted only outside production.
+ */
+function resolveTrustedOrigin(rawOrigin: string | null): string {
+  const canonical = "https://socialinesvalandos.dev";
+  if (process.env.NODE_ENV === "production") return canonical;
+  if (rawOrigin && /^https?:\/\/(localhost(:\d+)?|([a-z0-9-]+\.)*socialinesvalandos\.dev|[a-z0-9-]+\.lovable\.app)$/i.test(rawOrigin)) {
+    return rawOrigin;
+  }
+  return canonical;
+}
+
 const OAUTH_SETUP_SCHEMA = z.object({
   fullName: z.string().trim().min(3).max(120),
   schoolId: z.string().uuid(),
@@ -126,7 +141,6 @@ export const resendSignupVerification = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequest } = await import("@tanstack/react-start/server");
-    const origin = getRequest().headers.get("origin");
     const origin = resolveTrustedOrigin(getRequest().headers.get("origin"));
     const email = data.email.toLowerCase();
     const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email));
