@@ -47,6 +47,7 @@ async function sendResend(payload: SendPayload) {
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
+    signal: AbortSignal.timeout(8000),
     headers: { 
       "Content-Type": "application/json", 
       "Authorization": `Bearer ${key.trim()}` 

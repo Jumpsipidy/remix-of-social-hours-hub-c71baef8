@@ -146,6 +146,7 @@ export async function verifyRecaptchaToken(
   try {
     const r = await fetch("https://www.google.com/recaptcha/api/siteverify", {
       method: "POST",
+      signal: AbortSignal.timeout(8000),
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body,
     });
