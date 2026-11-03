@@ -1,4 +1,5 @@
 # Užduotys
+- [ ] Užbaigti audito pataisymus: sutikrinti abu QR FIX failus, pritaikyti saugų RPC ir paleisti regresijų testus.
 - [x] SV Pagalba: 48 valandų žinučių valymas ir tuščių pokalbių pašalinimas; bendras 15 min. darbas, 6 SQL patikros praėjo, klaidų pranešimai išlieka.
 - [x] Mokytojo rezervacijos: 6 nauji kūrimo / priskyrimo testai, mokinio būsenų testai ir 6 gyvos SQL taisyklių patikros; visi 367 testai praėjo.
 - [ ] Mokytojo → mokinio gyva rezervacijų kūrimo / matomumo / užbaigimo patikra — išorinio Supabase prisijungusios sesijos ir paskirtos testinės paskyros neprieinamos.
