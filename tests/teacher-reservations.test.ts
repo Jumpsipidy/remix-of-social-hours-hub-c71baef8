@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ rpc: vi.fn(), task: vi.fn(), profile: vi.fn() }));
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), task: vi.fn(), profile: vi.fn(), candidates: vi.fn(), upsert: vi.fn() }));
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => {
     let validate = (value: unknown) => value;
@@ -17,7 +17,11 @@ vi.mock("@tanstack/react-start", () => ({
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
 vi.mock("@/lib/school-data.server", () => ({ fetchAdminProfile: mocks.profile }));
 vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: {
-  from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.task }) }) }),
+  from: (table: string) => table === "tasks"
+    ? { select: () => ({ eq: () => ({ maybeSingle: mocks.task }) }) }
+    : table === "profiles"
+      ? { select: () => ({ in: () => ({ eq: mocks.candidates }) }) }
+      : { upsert: mocks.upsert },
 } }));
 
 import { teacherAssignTask, teacherCreateReservations } from "@/lib/teacher.functions";
@@ -31,8 +35,10 @@ const input = { studentIds: ["student-7A"], date: "2026-10-28", start: "", end: 
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.rpc.mockResolvedValue({ data: 1, error: null });
-  mocks.profile.mockResolvedValue({ role: "school_admin" });
+  mocks.profile.mockResolvedValue({ role: "school_admin", school_id: "school", assigned_classes: ["7"], assigned_letter: "A" });
   mocks.task.mockResolvedValue({ data: { organization_id: "test-org" } });
+  mocks.candidates.mockResolvedValue({ data: [{ id: "student-7A", school_id: "school", class_year: "7", class_letter: "A" }], error: null });
+  mocks.upsert.mockResolvedValue({ error: null });
 });
 
 describe("teacher reservation creation and assignment", () => {
@@ -52,11 +58,34 @@ describe("teacher reservation creation and assignment", () => {
     mocks.rpc.mockResolvedValue({ data: null, error: { message: "Mokinys nepriklauso jūsų klasei" } });
     await expect(create(input)).rejects.toThrow("Mokinys nepriklauso jūsų klasei");
   });
-  it("assigns the selected task and its organization to the chosen student", async () => {
+  it("creates reservations only for the teacher's own activity", async () => {
+    mocks.task.mockResolvedValue({ data: { organization_id: "test-teacher" } });
     expect(await assign({ ...input, taskId: "test-task" })).toEqual({ created: 1, total: 1 });
     expect(mocks.rpc).toHaveBeenCalledWith("school_create_reservations", expect.objectContaining({
-      _student_ids: ["student-7A"], _task_id: "test-task", _organization_id: "test-org", _hours: 3,
+      _student_ids: ["student-7A"], _task_id: "test-task", _organization_id: "test-teacher", _hours: 3,
     }));
+  });
+  it("suggests an organization activity without creating a reservation or awarding hours", async () => {
+    expect(await assign({ ...input, taskId: "test-task" })).toEqual({ created: 1, total: 1, suggested: true });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.upsert).toHaveBeenCalledWith([
+      { student_id: "student-7A", teacher_id: "test-teacher", task_id: "test-task", note: input.note, dismissed_at: null },
+    ], { onConflict: "student_id,task_id" });
+  });
+  it.each([
+    { school_id: "other-school", class_year: "7", class_letter: "A" },
+    { school_id: "school", class_year: "8", class_letter: "A" },
+    { school_id: "school", class_year: "7", class_letter: "B" },
+  ])("rejects students outside the assigned school/year/letter: %j", async (scope) => {
+    mocks.candidates.mockResolvedValue({ data: [{ id: "student-7A", ...scope }], error: null });
+    await expect(assign({ ...input, taskId: "test-task" })).rejects.toThrow("nepriklauso tavo klasėms");
+    expect(mocks.upsert).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("propagates batched student query errors", async () => {
+    mocks.candidates.mockResolvedValue({ data: null, error: { message: "Query failed" } });
+    await expect(assign({ ...input, taskId: "test-task" })).rejects.toThrow("Query failed");
+    expect(mocks.upsert).not.toHaveBeenCalled();
   });
   it("cannot assign a task as a student", async () => {
     mocks.profile.mockResolvedValue({ role: "student" });
