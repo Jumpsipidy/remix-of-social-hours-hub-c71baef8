@@ -4,6 +4,7 @@ import { classAssignment } from "@/lib/signup-rules";
 import { passwordProblem } from "@/lib/password-policy";
 import { userError } from "@/lib/user-error";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { trustedEmailOrigin } from "./trusted-email-origin";
 
 /**
  * Email links (password recovery, verification) must point at the canonical
@@ -12,12 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * origins are trusted only outside production.
  */
 function resolveTrustedOrigin(rawOrigin: string | null): string {
-  const canonical = "https://socialinesvalandos.dev";
-  if (process.env.NODE_ENV === "production") return canonical;
-  if (rawOrigin && /^https?:\/\/(localhost(:\d+)?|([a-z0-9-]+\.)*socialinesvalandos\.dev|[a-z0-9-]+\.lovable\.app)$/i.test(rawOrigin)) {
-    return rawOrigin;
-  }
-  return canonical;
+  return trustedEmailOrigin(rawOrigin, process.env.NODE_ENV === "production");
 }
 
 const OAUTH_SETUP_SCHEMA = z.object({

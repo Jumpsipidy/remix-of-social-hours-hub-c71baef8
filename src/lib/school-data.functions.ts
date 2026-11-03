@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { RES_COLUMNS, fetchAdminProfile, effectiveSchoolId } from "./school-data.server";
+import { friendshipCounts, type FriendshipPair } from "./friendship-counts";
 
 export type SchoolStudent = {
   id: string;
@@ -141,7 +142,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       // Draugystės kraunamos dalimis – ilgas ID sąrašas vienoje .or() užklausoje
       // viršytų URL ilgio ribą (414) didesnėse mokyklose.
       const CHUNK = 40;
-      const frPromises: PromiseLike<{ data: { requester_id: string; addressee_id: string }[] | null }>[] = [];
+      const frPromises: PromiseLike<{ data: FriendshipPair[] | null; error: { message: string } | null }>[] = [];
       for (let i = 0; i < ids.length; i += CHUNK) {
         const slice = ids.slice(i, i + CHUNK);
         frPromises.push(
@@ -167,13 +168,12 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
         ...frPromises,
       ]);
       // Accepted friendships per student (count only, no names leaked).
-      const counts: Record<string, number> = {};
+      const friendships: FriendshipPair[] = [];
       for (const frRes of frResults) {
-        for (const f of frRes.data ?? []) {
-          counts[f.requester_id] = (counts[f.requester_id] ?? 0) + 1;
-          counts[f.addressee_id] = (counts[f.addressee_id] ?? 0) + 1;
-        }
+        if (frRes.error) throw new Error(frRes.error.message);
+        friendships.push(...(frRes.data ?? []));
       }
+      const counts = friendshipCounts(friendships);
       for (const s of students) s.friends_count = counts[s.id] ?? 0;
       if (rsRes.error) throw new Error(rsRes.error.message);
       reservations = (rsRes.data as SchoolReservation[]) ?? [];

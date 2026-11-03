@@ -13,10 +13,10 @@ const ALLOWED_PUSH_ORIGINS = [
   /^https:\/\/[a-z0-9.-]+\.push\.services\.mozilla\.com$/i,
 ];
 
-function isAllowedPushEndpoint(endpoint: string): boolean {
+export function isAllowedPushEndpoint(endpoint: string): boolean {
   try {
     const parsed = new URL(endpoint);
-    if (parsed.protocol !== "https:") return false;
+    if (parsed.protocol !== "https:" || parsed.username || parsed.password) return false;
     const origin = `${parsed.protocol}//${parsed.host}`;
     return ALLOWED_PUSH_ORIGINS.some((rx) => rx.test(origin));
   } catch {
@@ -53,12 +53,15 @@ function concat(...arrs: Uint8Array[]): Uint8Array {
 }
 
 async function importVapidPrivateKey(): Promise<CryptoKey> {
-  const jwk = JSON.parse(process.env.VAPID_PRIVATE_JWK!);
+  const raw = process.env.VAPID_PRIVATE_JWK;
+  if (!raw) throw new Error("VAPID private key is missing");
+  const jwk = JSON.parse(raw);
   return crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
 }
 
 async function signVapid(audience: string): Promise<{ jwt: string; publicKey: string }> {
-  const publicKey = process.env.VAPID_PUBLIC_KEY!;
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  if (!publicKey) throw new Error("VAPID public key is missing");
   const subject = process.env.VAPID_SUBJECT || "mailto:admin@socialinesvalandos.dev";
   const header = { typ: "JWT", alg: "ES256" };
   const payload = {
@@ -198,6 +201,7 @@ export async function sendWebPush(
 
     const res = await fetch(target.endpoint, {
       method: "POST",
+      redirect: "error",
       signal: AbortSignal.timeout(8000),
       headers: {
         "Content-Encoding": "aes128gcm",
