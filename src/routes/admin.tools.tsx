@@ -97,13 +97,23 @@ export const getOrgInvitePreview = createServerFn({ method: "POST" })
       variant: z.number().int().min(1).max(5),
     }).parse(data),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (error || !isAdmin) throw new Error("Tik administratoriai gali peržiūrėti kvietimus");
     return renderOrgInviteEmail({ orgName: data.orgName, variant: data.variant as any });
   });
 
 /* ── page component ─────────────────────────────────────────────────────── */
 
 export const Route = createFileRoute("/admin/tools")({
+  head: () => ({ meta: [
+    { title: "Administratoriaus įrankiai | Socialinės Valandos" },
+    { name: "description", content: "Socialinių Valandų administravimo ir sistemos patikros įrankiai." },
+    { property: "og:title", content: "Administratoriaus įrankiai | Socialinės Valandos" },
+    { property: "og:description", content: "Socialinių Valandų administravimo ir sistemos patikros įrankiai." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   beforeLoad: () => requireAdmin(),
   component: AdminToolsPage,
 });
