@@ -1724,6 +1724,18 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_reservation_groups: {
+        Args: { _ids: string[] }
+        Returns: {
+          checked_in: boolean
+          class_year: string
+          full_name: string
+          is_owner: boolean
+          member_id: string
+          reservation_id: string
+          status: string
+        }[]
+      }
       get_school_streak_leaderboard: {
         Args: never
         Returns: {
@@ -1784,6 +1796,21 @@ export type Database = {
           student_id: string
           student_name: string
           unread: number
+        }[]
+      }
+      list_my_group_invites: {
+        Args: never
+        Returns: {
+          end_time: string
+          going: number
+          hours_to_earn: number
+          inviter_name: string
+          org_name: string
+          participant_id: string
+          reservation_date: string
+          reservation_id: string
+          start_time: string
+          task_title: string
         }[]
       }
       list_my_teachers: {

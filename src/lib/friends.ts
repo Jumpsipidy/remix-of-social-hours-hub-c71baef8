@@ -142,3 +142,44 @@ export async function listParticipants(reservationId: string): Promise<Participa
   if (error) throw error;
   return (data as ParticipantRow[]) ?? [];
 }
+
+export type GroupInvite = {
+  participant_id: string;
+  reservation_id: string;
+  inviter_name: string;
+  org_name: string;
+  task_title: string | null;
+  reservation_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  hours_to_earn: number;
+  going: number;
+};
+
+/** Pending group invites with inviter, organization and activity details (server-scoped to the caller). */
+export async function listMyGroupInvites(): Promise<GroupInvite[]> {
+  const { data, error } = await supabase.rpc("list_my_group_invites" as never);
+  if (error) throw error;
+  return (data as GroupInvite[] | null) ?? [];
+}
+
+export type GroupMemberRow = {
+  reservation_id: string;
+  member_id: string;
+  full_name: string | null;
+  class_year: string | null;
+  status: "owner" | "pending" | "accepted";
+  is_owner: boolean;
+  checked_in: boolean;
+};
+
+/** Group members for the given reservations; only groups the caller belongs to (or runs) are returned. */
+export async function getReservationGroups(ids: string[]): Promise<Record<string, GroupMemberRow[]>> {
+  const map: Record<string, GroupMemberRow[]> = {};
+  if (!ids.length) return map;
+  const { data, error } = await supabase.rpc("get_reservation_groups" as never, { _ids: ids } as never);
+  if (error) throw error;
+  ((data as GroupMemberRow[] | null) ?? []).forEach((m) => { (map[m.reservation_id] ??= []).push(m); });
+  Object.values(map).forEach((list) => list.sort((a, b) => Number(b.is_owner) - Number(a.is_owner)));
+  return map;
+}

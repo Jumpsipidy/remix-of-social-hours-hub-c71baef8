@@ -23,6 +23,8 @@ import { ChatDialog, type ChatReservation } from "@/components/chat-dialog";
 import { CustomReservationDialog } from "@/components/custom-reservation-dialog";
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
+import { ReservationGroupStrip } from "@/components/reservation-group-strip";
+import { getReservationGroups, type GroupMemberRow } from "@/lib/friends";
 import { PushToggle } from "@/components/push-toggle";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
@@ -85,6 +87,7 @@ function StudentDashboard() {
   const [orgMap, setOrgMap] = useState<Record<string, OrgLite>>({});
   const [chatRes, setChatRes] = useState<ChatReservation | null>(null);
   const [groupInvite, setGroupInvite] = useState<{ id: string; label: string } | null>(null);
+  const [groups, setGroups] = useState<Record<string, GroupMemberRow[]>>({});
   const [customOpen, setCustomOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "completed">("all");
 
@@ -127,6 +130,8 @@ function StudentDashboard() {
       );
       setReservations(rs);
     }
+    const groupIds = rs.filter((r) => !isSchoolReservation(r)).map((r) => r.id);
+    void getReservationGroups(groupIds).then(setGroups).catch(() => {});
 
     const ids = Array.from(new Set(rs.map((r) => r.organization_id).filter((v): v is string => !!v)));
     if (ids.length) {
@@ -548,7 +553,7 @@ function StudentDashboard() {
       <section id="draugai" className="order-4 lg:order-none mx-auto mt-6 max-w-7xl px-4 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div className="space-y-4">
-            <GroupInvitesInbox userId={user.id} />
+            <GroupInvitesInbox userId={user.id} onChanged={() => loadReservations(user.id)} />
             <DmInbox me={user.id} />
             <PushToggle />
           </div>
@@ -615,7 +620,7 @@ function StudentDashboard() {
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
                         <Icon className="h-3 w-3" /> {label}
                       </span>
-                      {!school && !isDone && r.status !== "declined" && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
+                      {!school && !isDone && r.status !== "declined" && r.student_id === user.id && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
                       {studentReservationNeedsQr(r) && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
                       {!school && <button
                         onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
@@ -625,6 +630,7 @@ function StudentDashboard() {
                       </button>}
                     </div>
                   </div>
+                  {!school && groups[r.id]?.length ? <ReservationGroupStrip members={groups[r.id]} meId={user.id} /> : null}
                   {(r.tags && r.tags.length > 0) || r.note ? (
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/60 pt-3">
                       {r.tags?.slice(0, 6).map((t) => (
@@ -651,7 +657,7 @@ function StudentDashboard() {
       </div>
       </div>
 
-      <InviteFriendsDialog open={!!groupInvite} reservationId={groupInvite?.id ?? null} inviterId={user.id} reservationLabel={groupInvite?.label} onClose={() => setGroupInvite(null)} />
+      <InviteFriendsDialog open={!!groupInvite} reservationId={groupInvite?.id ?? null} inviterId={user.id} reservationLabel={groupInvite?.label} excludeIds={groupInvite ? (groups[groupInvite.id] ?? []).map((m) => m.member_id) : []} onInvited={() => loadReservations(user.id)} onClose={() => setGroupInvite(null)} />
       <ChatDialog reservation={chatRes} onClose={() => setChatRes(null)} />
       <CustomReservationDialog
         open={customOpen}

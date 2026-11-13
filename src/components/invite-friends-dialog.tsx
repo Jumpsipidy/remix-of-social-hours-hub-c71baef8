@@ -9,10 +9,14 @@ type Props = {
   reservationId: string | null;
   inviterId: string;
   reservationLabel?: string;
+  /** Friends already in this group (invited or joined) — hidden from the picker. */
+  excludeIds?: string[];
+  onInvited?: () => void;
   onClose: () => void;
 };
 
-export function InviteFriendsDialog({ open, reservationId, inviterId, reservationLabel, onClose }: Props) {
+export function InviteFriendsDialog({ open, reservationId, inviterId, reservationLabel, excludeIds = [], onInvited, onClose }: Props) {
+  const excludeKey = excludeIds.join(",");
   const [friends, setFriends] = useState<FriendProfile[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -26,14 +30,15 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
       try {
         const rows = await listMyFriendships(inviterId);
         const accepted = rows.filter((r) => r.status === "accepted");
-        const ids = accepted.map((r) => (r.requester_id === inviterId ? r.addressee_id : r.requester_id));
+        const skip = new Set(excludeKey ? excludeKey.split(",") : []);
+        const ids = accepted.map((r) => (r.requester_id === inviterId ? r.addressee_id : r.requester_id)).filter((id) => !skip.has(id));
         const map = await fetchFriendProfiles(ids);
         setFriends(ids.map((id) => map[id]).filter(Boolean));
       } finally {
         setLoading(false);
       }
     })();
-  }, [open, inviterId]);
+  }, [open, inviterId, excludeKey]);
 
   const toggle = (id: string) => {
     setSelected((s) => {
@@ -48,7 +53,8 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
     setSending(true);
     try {
       await inviteFriendsToReservation(reservationId, inviterId, Array.from(selected));
-      toast.success(`Pakviesta draugų: ${selected.size}`);
+      toast.success(`Pakviesta draugų: ${selected.size}`, { description: "Kai jie priims kvietimą, kiekvienas gaus savo kodą." });
+      onInvited?.();
       onClose();
     } catch (e: any) {
       toast.error(e?.message ?? "Nepavyko pakviesti");
@@ -95,8 +101,8 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
               ) : friends.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border p-6 text-center">
                   <UserPlus className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-                  <p className="text-sm font-semibold">Kol kas neturi draugų</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Susirask klasiokų skiltyje „Draugai" ir vėl pakviesk.</p>
+                  <p className="text-sm font-semibold">{excludeIds.length > 1 ? "Visi draugai jau pakviesti" : "Kol kas neturi draugų"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{excludeIds.length > 1 ? "Jų atsakymus matysi prie rezervacijos." : "Susirask klasiokų skiltyje „Draugai“ ir vėl pakviesk."}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
