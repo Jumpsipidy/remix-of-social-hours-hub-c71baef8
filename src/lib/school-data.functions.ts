@@ -114,7 +114,7 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
       studentQuery,
       supabaseAdmin
         .from("profiles")
-        .select("id, full_name, email, organization_name")
+        .select("id, full_name, email, public_email, organization_name")
         .eq("role", "organization")
         .order("organization_name", { ascending: true }),
     ]);
@@ -181,7 +181,14 @@ export const getSchoolSnapshot = createServerFn({ method: "GET" })
 
     return {
       students,
-      organizations: (og as SchoolOrg[]) ?? [],
+      // Mokyklos administratoriai mato tik organizacijos viešą kontaktą,
+      // o ne prisijungimo el. paštą. Super Admin mato pilną.
+      organizations: (((og as (SchoolOrg & { public_email?: string | null })[]) ?? []).map((o) => ({
+        id: o.id,
+        full_name: o.full_name ?? null,
+        organization_name: o.organization_name ?? null,
+        email: meRow.role === "admin" ? (o.email ?? null) : (o.public_email ?? null),
+      }))),
       reservations,
       scope,
     };
