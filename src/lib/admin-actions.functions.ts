@@ -50,6 +50,15 @@ export const adminCreateAccount = createServerFn({ method: "POST" })
     }
     if (!["organization", "school_admin"].includes(data.role)) throw new Error("Netinkama rolė");
     if (data.role === "school_admin" && !data.school_id) throw new Error("Pasirink mokyklą mokyklos administratoriui");
+    // Mokyklos administratorius kuria paskyras tik savo mokyklai – kliento
+    // atsiųstas school_id ignoruojamas.
+    if (isSchoolAdmin) {
+      const ownSchool = ((me as any)?.school_id as string | null) ?? null;
+      if (data.school_id && data.school_id !== ownSchool) {
+        throw new Error("Galima kurti paskyras tik savo mokyklai");
+      }
+      data = { ...data, school_id: ownSchool, assigned_classes: [], assigned_letter: null };
+    }
 
     const normalizedEmail = data.email.trim().toLowerCase();
     const { data: usersPage, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
