@@ -1,4 +1,5 @@
 # Užduotys
+- [x] Grupinės rezervacijos: kvietime matosi kas kviečia / veikla / kiek eina, kortelėje — grupės nariai, kviesti gali tik savininkas, neleidžiama kviesti į mokyklos / užbaigtas rezervacijas. Prisijungusio mokinio gyva patikra neatlikta.
 - [ ] Užbaigti audito pataisymus: sutikrinti abu QR FIX failus, pritaikyti saugų RPC ir paleisti regresijų testus.
 - [x] SV Pagalba: 48 valandų žinučių valymas ir tuščių pokalbių pašalinimas; bendras 15 min. darbas, 6 SQL patikros praėjo, klaidų pranešimai išlieka.
 - [x] Mokytojo rezervacijos: 6 nauji kūrimo / priskyrimo testai, mokinio būsenų testai ir 6 gyvos SQL taisyklių patikros; visi 367 testai praėjo.
