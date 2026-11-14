@@ -8,7 +8,9 @@ export function VerifyCloseDialog({
   studentName,
   onCancel,
   onConfirm,
+  members = [],
 }: {
+  members?: { name: string; scanned: boolean }[];
   open: boolean;
   hours: number;
   studentName: string;
@@ -84,6 +86,21 @@ export function VerifyCloseDialog({
                   Tik sveikos valandos. Pasirink pagal atliktą darbą, o ne rezervacijos laiką. {chosen === planned ? "" : `Pakeista: ${planned} → ${chosen} val.`}
                 </p>
               </div>
+              {members.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-3 text-sm">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Kas gaus valandas</p>
+                  <ul className="space-y-1">
+                    {members.map((m, i) => (
+                      <li key={i} className="flex items-center justify-between gap-2">
+                        <span className="truncate">{m.name}</span>
+                        <span className={`shrink-0 text-xs font-semibold ${m.scanned ? "text-success" : "text-warning"}`}>
+                          {m.scanned ? `QR nuskenuotas · ${chosen} val.` : "Nenuskenavo · 0 val."}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm leading-relaxed text-foreground">
                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-destructive">Kritinis teisinis įspėjimas</p>
                 Spausdami „Patvirtinti“, jūs teisiškai patvirtinate pagal institucinę politiką, kad mokinys sėkmingai
