@@ -260,6 +260,9 @@ function OrgDashboard() {
     return { weekdayCounts: counts, maxWD: Math.max(max, 1), busiestIdx: counts.indexOf(max), hasWeekdayData: max > 0 };
   }, [completed]);
   const weekdays = ["Pr", "An", "Tr", "Kt", "Pn", "Št", "Sk"];
+  // Hours go only to people who scanned their own QR / code.
+  const attendees = (r: Reservation) => groupMembers(r).filter((m) => m.status === "owner" || m.status === "accepted");
+  const anyCheckedIn = (r: Reservation) => attendees(r).some((m) => !!m.checkedInAt);
   const groupMembers = (r: Reservation): GroupMember[] => [
     { id: r.student_id, name: students[r.student_id]?.full_name ?? "Mokinys", role: "owner", status: "owner", checkedInAt: r.checked_in_at ?? null },
     ...(participants[r.id] ?? []).map((p) => ({ id: p.id, name: students[p.student_id]?.full_name ?? "Draugas", role: "member" as const, status: p.status, checkedInAt: p.checked_in_at })),
@@ -364,8 +367,8 @@ function OrgDashboard() {
 
   const finalizeCompleted = async (r: Reservation, hrs?: number) => {
     if (busyId) return;
-    if (!r.checked_in_at) {
-      toast.error("Mokinys dar neįsiregistravo — nuskaityk jo QR arba 6 skaitmenų kodą");
+    if (!anyCheckedIn(r)) {
+      toast.error("Niekas dar nenuskenavo QR — kiekvienas mokinys turi parodyti savo QR arba 6 skaitmenų kodą");
       setVerifyRes(null);
       return;
     }
@@ -758,10 +761,16 @@ function OrgDashboard() {
                           </Link>
                         </div>
                       )}
+                      {attendees(r).length > 1 && (
+                        <div className="rounded-xl border border-border bg-card/60 px-3 py-2 text-[11px]">
+                          <p className="font-semibold">Grupė: nuskenavo {attendees(r).filter((m) => m.checkedInAt).length} iš {attendees(r).length}</p>
+                          <p className="mt-0.5 text-muted-foreground">Valandas gaus tik tie, kurie nuskenavo savo QR arba įvedė kodą.</p>
+                        </div>
+                      )}
                       <button
                         onClick={() => setVerifyRes(r)}
-                        disabled={!r.checked_in_at}
-                        title={r.checked_in_at ? undefined : "Pirma įregistruok mokinį QR arba 6 skaitmenų kodu"}
+                        disabled={!anyCheckedIn(r)}
+                        title={anyCheckedIn(r) ? undefined : "Pirma nuskenuok mokinio QR arba 6 skaitmenų kodą"}
                         className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                       >
                         <ShieldCheck className="h-4 w-4" /> Patvirtinti ir uždaryti užduotį
@@ -831,6 +840,7 @@ function OrgDashboard() {
         open={!!verifyRes}
         hours={Number(verifyRes?.hours_to_earn ?? 0)}
         studentName={verifyRes ? (students[verifyRes.student_id]?.full_name ?? "Mokinys") : ""}
+        members={verifyRes ? attendees(verifyRes).map((m) => ({ name: m.name, scanned: !!m.checkedInAt })) : []}
         onCancel={() => setVerifyRes(null)}
         onConfirm={async (h) => { if (verifyRes) await finalizeCompleted(verifyRes, h); }}
       />
