@@ -162,7 +162,7 @@ export function CustomReservationDialog({ open, onClose, onCreated }: Props) {
     if (inserted?.id) void startReservationChat({ reservationId: inserted.id as string, studentId: user.id, organizationId: orgId, message: note.trim() || `Sveiki! Siūlau savanorystę ${date} ${start}–${end} (${city}).` });
     toast.success("Pasiūlymas išsiųstas organizacijai. Pokalbis atidarytas skiltyje „Pokalbiai“.");
     if (inserted?.id && withFriends && friendIds.length) {
-      try { await inviteFriendsToReservation(inserted.id, user.id, friendIds); toast.success("Draugams išsiųsti kvietimai."); }
+      try { const res = await inviteFriendsToReservation(inserted.id, user.id, friendIds); if (res.invited) toast.success(`Draugams išsiųsti kvietimai: ${res.invited}`); }
       catch (error) { toast.error(userError(error, "Rezervacija sukurta, bet draugų pakviesti nepavyko. Pakviesk juos prie savo rezervacijos.")); }
     }
     onCreated?.();

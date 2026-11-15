@@ -71,7 +71,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   svietimas: "Švietimas",
 };
 
-const TASK_COLUMNS = "id, organization_id, title, description, task_date, start_time, end_time, available_hours, location, spots_total, is_open, is_event, event_host_name, created_by, city, address, latitude, longitude";
+const TASK_COLUMNS = "id, organization_id, title, description, task_date, start_time, end_time, available_hours, location, spots_total, is_open, is_event, event_host_name, created_by, city, address, latitude, longitude, tags";
 
 function guessCategory(t: Task): string {
   const text = `${t.title} ${t.description}`.toLowerCase();
@@ -235,10 +235,12 @@ function TasksPage() {
     logActivity("reservation.created", { entityType: "reservation", entityId: inserted?.id as string | undefined, meta: { hours: details.hours, org: active.target.name } });
     if (inserted?.id && details.friendIds.length) {
       try {
-        await inviteFriendsToReservation(inserted.id as string, user.id, details.friendIds);
-        toast.success(`Pakviesta draugų: ${details.friendIds.length}`, { description: "Kai jie priims kvietimą, kiekvienas gaus savo įsiregistravimo kodą." });
+        const res = await inviteFriendsToReservation(inserted.id as string, user.id, details.friendIds);
+        if (res.invited) toast.success(`Pakviesta draugų: ${res.invited}`, { description: res.skipped ? `${res.skipped} praleisti — jau užsiregistravę į šią veiklą.` : "Kai jie priims kvietimą, kiekvienas gaus savo QR kodą." });
+        else toast.info("Draugai nepakviesti", { description: "Jie jau užsiregistravę į šią veiklą." });
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Nepavyko pakviesti draugų");
+        const code = (e as { code?: string })?.code;
+        toast.error(code === "23514" ? "Laisvų vietų nebeužtenka visiems draugams" : e instanceof Error ? e.message : "Nepavyko pakviesti draugų");
       }
     }
     if (inserted?.id && !details.friendIds.length) setInvite({ id: inserted.id, label: active.task.title });
