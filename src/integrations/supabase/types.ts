@@ -1488,6 +1488,7 @@ export type Database = {
           recurrence_weekday: number | null
           spots_total: number
           start_time: string | null
+          tags: string[] | null
           task_date: string
           template_source_id: string | null
           title: string
@@ -1516,6 +1517,7 @@ export type Database = {
           recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
+          tags?: string[] | null
           task_date: string
           template_source_id?: string | null
           title: string
@@ -1544,6 +1546,7 @@ export type Database = {
           recurrence_weekday?: number | null
           spots_total?: number
           start_time?: string | null
+          tags?: string[] | null
           task_date?: string
           template_source_id?: string | null
           title?: string
