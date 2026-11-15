@@ -91,6 +91,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
       latitude: lat,
       longitude: lng,
       spots_total: spots,
+      tags: tags.length ? tags.slice(0, 5) : null,
       is_open: true,
       recurrence,
       recurrence_weekday: recurrence === "weekly" || recurrence === "biweekly" ? weekday : null,
