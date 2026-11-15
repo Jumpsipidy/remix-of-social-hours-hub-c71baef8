@@ -17,5 +17,6 @@ describe("school reservations in the student dashboard", () => {
     expect(studentReservationNeedsQr({ ...school, requires_checkin: true })).toBe(false);
     expect(studentReservationNeedsQr({ source: "student", requires_checkin: true, status: "approved" })).toBe(true);
     expect(studentReservationNeedsQr({ source: "student", requires_checkin: true, status: "pending" })).toBe(false);
+    expect(studentReservationNeedsQr({ source: "student", requires_checkin: true, status: "approved", checked_in_at: "2026-11-15T08:00:00Z" })).toBe(false);
   });
 });
