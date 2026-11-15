@@ -148,6 +148,18 @@ export async function respondToInvite(rowId: string, accept: boolean) {
   logActivity(accept ? "group.invite_accepted" : "group.invite_declined", { entityType: "reservation_participant", entityId: rowId });
 }
 
+/** A group member leaves a visit they accepted earlier (only before scanning in). */
+export async function leaveReservation(reservationId: string, userId: string) {
+  const { error } = await supabase
+    .from("reservation_participants")
+    .update({ status: "declined" } as any)
+    .eq("reservation_id", reservationId)
+    .eq("student_id", userId)
+    .is("checked_in_at", null);
+  if (error) throw error;
+  logActivity("group.left", { entityType: "reservation", entityId: reservationId });
+}
+
 export async function listParticipants(reservationId: string): Promise<ParticipantRow[]> {
   const { data, error } = await supabase
     .from("reservation_participants")

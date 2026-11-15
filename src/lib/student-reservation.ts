@@ -2,6 +2,7 @@ type ReservationState = {
   source?: string | null;
   requires_checkin?: boolean | null;
   status: string;
+  checked_in_at?: string | null;
 };
 
 export function isSchoolReservation(reservation: ReservationState) {
@@ -13,7 +14,7 @@ export function isActiveStudentReservation(reservation: ReservationState) {
 }
 
 export function studentReservationNeedsQr(reservation: ReservationState) {
-  return !isSchoolReservation(reservation) && reservation.requires_checkin !== false && reservation.status === "approved";
+  return !isSchoolReservation(reservation) && reservation.requires_checkin !== false && reservation.status === "approved" && !reservation.checked_in_at;
 }
 
 export function studentReservationStatus(reservation: ReservationState) {

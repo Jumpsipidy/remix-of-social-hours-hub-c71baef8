@@ -187,6 +187,17 @@ function StudentDashboard() {
     };
   }, [user]);
 
+  const leaveGroup = async (reservationId: string) => {
+    if (!user || !window.confirm("Išeiti iš šios grupės? Valandų už šią veiklą negausi.")) return;
+    try {
+      await leaveReservation(reservationId, user.id);
+      toast.success("Išėjai iš grupės");
+      await loadReservations(user.id);
+    } catch {
+      toast.error("Nepavyko išeiti iš grupės. Bandyk dar kartą.");
+    }
+  };
+
   const orgName = (id: string) => orgMap[id]?.organization_name ?? orgMap[id]?.full_name ?? "Organizacija";
   const orgInitial = (id: string) => (orgName(id) || "?").trim().charAt(0).toUpperCase();
 
