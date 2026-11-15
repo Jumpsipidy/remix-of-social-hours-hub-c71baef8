@@ -41,8 +41,10 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const secret = process.env.CERT_SIGNING_SECRET;
-    if (!secret) throw new Error("Server misconfigured: CERT_SIGNING_SECRET missing");
+    // Without the signing secret the rotating QR cannot be made, but the static
+    // 6-digit code must still reach the student so manual check-in keeps working.
+    const secret = process.env.CERT_SIGNING_SECRET ?? "";
+    if (!secret) console.error("[checkin] CERT_SIGNING_SECRET missing — returning 6-digit codes only");
 
     // Owner reservations (approved, not yet completed). Codes are generated on
     // demand when the DB trigger never fired (older rows / missing trigger).
@@ -84,8 +86,11 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
     // Context for each token (org, date, time) so the student can tell several same-day visits apart.
     const resIds = [...new Set([...owned.map((r) => r.id), ...parts.map((p) => p.reservation_id)])];
     const { data: resInfo } = resIds.length
-      ? await supabase.from("reservations").select("id, reservation_date, start_time, end_time, organization_id, task_id").in("id", resIds)
-      : { data: [] as { id: string; reservation_date: string; start_time: string; end_time: string; organization_id: string; task_id: string | null }[] };
+      ? await supabase.from("reservations").select("id, reservation_date, start_time, end_time, organization_id, task_id, status, requires_checkin").in("id", resIds)
+      : { data: [] as { id: string; reservation_date: string; start_time: string; end_time: string; organization_id: string; task_id: string | null; status: string; requires_checkin: boolean }[] };
+    // A group member's code only matters while the parent visit is approved and uses QR.
+    const liveParent = new Set((resInfo ?? []).filter((r) => r.status === "approved" && r.requires_checkin !== false).map((r) => r.id));
+    for (let i = parts.length - 1; i >= 0; i--) if (!liveParent.has(parts[i].reservation_id)) parts.splice(i, 1);
     const orgIds = [...new Set((resInfo ?? []).map((r) => r.organization_id))];
     const taskIds = [...new Set((resInfo ?? []).map((r) => r.task_id).filter(Boolean) as string[])];
     const [{ data: orgs }, { data: tasks }] = await Promise.all([
@@ -110,20 +115,20 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
     const tokens = await Promise.all([
       ...(owned ?? []).map(async (r) => {
         const payload = `r:${r.id}:${userId}:${window}`;
-        const sig = (await hmacHex(secret, payload)).slice(0, 24);
+        const sig = secret ? (await hmacHex(secret, payload)).slice(0, 24) : "";
         return {
           kind: "owner" as const,
           ...info(r.id),
           reservation_id: r.id,
           code: r.check_in_code as string,
           checked_in: !!r.checked_in_at,
-          qr: `SVCI|${r.id}|${userId}|${window}|${sig}`,
-          expires_at: (window + 1) * WINDOW_SECONDS * 1000,
+          qr: sig ? `SVCI|${r.id}|${userId}|${window}|${sig}` : "",
+          expires_at: sig ? (window + 1) * WINDOW_SECONDS * 1000 : 0,
         };
       }),
       ...(parts ?? []).map(async (p) => {
         const payload = `p:${p.id}:${userId}:${window}`;
-        const sig = (await hmacHex(secret, payload)).slice(0, 24);
+        const sig = secret ? (await hmacHex(secret, payload)).slice(0, 24) : "";
         return {
           kind: "participant" as const,
           ...info(p.reservation_id),
@@ -131,13 +136,13 @@ export const getMyCheckInTokens = createServerFn({ method: "GET" })
           participant_id: p.id,
           code: p.check_in_code as string,
           checked_in: !!p.checked_in_at,
-          qr: `SVCI-P|${p.id}|${userId}|${window}|${sig}`,
-          expires_at: (window + 1) * WINDOW_SECONDS * 1000,
+          qr: sig ? `SVCI-P|${p.id}|${userId}|${window}|${sig}` : "",
+          expires_at: sig ? (window + 1) * WINDOW_SECONDS * 1000 : 0,
         };
       }),
     ]);
 
-    return { tokens, window_seconds: WINDOW_SECONDS };
+    return { tokens, window_seconds: WINDOW_SECONDS, qr_available: !!secret };
   });
 
 /**
@@ -175,22 +180,24 @@ export const submitCheckIn = createServerFn({ method: "POST" })
       }
       if (diff !== 0) throw new Error("Neteisingas parašas — QR kodas suklastotas");
 
-      // Look up the corresponding check_in_code and delegate to the RPC to enforce org ownership.
+      // The signature is verified, so a privileged lookup of the code is safe;
+      // check_in_by_code (run as the caller) still enforces organization ownership.
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       let code: string | null = null;
       if (isParticipant) {
-        const { data: p } = await supabase
+        const { data: p } = await supabaseAdmin
           .from("reservation_participants")
-          .select("check_in_code")
+          .select("check_in_code, student_id")
           .eq("id", targetId)
           .maybeSingle();
-        code = p?.check_in_code ?? null;
+        code = p && p.student_id === studentId ? p.check_in_code ?? null : null;
       } else {
-        const { data: r } = await supabase
+        const { data: r } = await supabaseAdmin
           .from("reservations")
-          .select("check_in_code")
+          .select("check_in_code, student_id")
           .eq("id", targetId)
           .maybeSingle();
-        code = r?.check_in_code ?? null;
+        code = r && r.student_id === studentId ? r.check_in_code ?? null : null;
       }
       if (!code) throw new Error("Rezervacija nerasta");
       const { data: result, error } = await supabase.rpc("check_in_by_code", { _code: code });

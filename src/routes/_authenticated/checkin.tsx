@@ -21,9 +21,23 @@ export const Route = createFileRoute("/_authenticated/checkin")({
   component: CheckinPage,
 });
 type Token = Awaited<ReturnType<typeof getMyCheckInTokens>>["tokens"][number];
+// Only the static 6-digit codes and visit labels are cached for offline use —
+// the rotating QR payload is never written to browser storage.
+const OFFLINE_KEY = "sv_checkin_codes_v1";
+function readOfflineCodes(): Token[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_KEY);
+    const list = raw ? (JSON.parse(raw) as Token[]) : [];
+    return Array.isArray(list) ? list.map((t) => ({ ...t, qr: "", expires_at: 0 })) : [];
+  } catch { return []; }
+}
+function saveOfflineCodes(list: Token[]) {
+  try { localStorage.setItem(OFFLINE_KEY, JSON.stringify(list.filter((t) => !t.checked_in).map((t) => ({ ...t, qr: "", expires_at: 0 })))); } catch { /* storage unavailable */ }
+}
 function CheckinPage() {
   const fetchTokens = useServerFn(getMyCheckInTokens);
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [offline, setOffline] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
@@ -35,8 +49,13 @@ function CheckinPage() {
     if (inFlight.current) return;
     inFlight.current = true;
     setRefreshing(true);
-    try { const result = await fetchTokens(); if (mounted.current) { setTokens(result.tokens); setError(false); } }
-    catch { if (mounted.current) setError(true); }
+    try { const result = await fetchTokens(); saveOfflineCodes(result.tokens); if (mounted.current) { setTokens(result.tokens); setError(false); setOffline(false); } }
+    catch {
+      if (mounted.current) {
+        setError(true);
+        setTokens((prev) => { if (prev.length) return prev; const cached = readOfflineCodes(); if (cached.length) setOffline(true); return cached; });
+      }
+    }
     finally { inFlight.current = false; if (mounted.current) { setLoading(false); setRefreshing(false); } }
   }, [fetchTokens]);
   useEffect(() => {
@@ -58,7 +77,7 @@ function CheckinPage() {
     <header className="mb-6 border-b border-border pb-5"><p className="mb-2 text-xs font-semibold text-primary">ATVYKIMAS</p><h1 className="flex items-center gap-2 text-3xl font-bold"><ShieldCheck className="h-7 w-7 shrink-0 text-primary" /> Mano QR kodas</h1><p className="mt-2 text-sm text-muted-foreground">Organizacija pažymi atvykimą. Atlikus darbą, patvirtina suteikiamas valandas.</p></header>
     <CheckinSetupBanner />
     {loading && <CheckinSkeleton />}
-    {error && <div role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-card p-4"><p className="text-sm">Nepavyko atnaujinti kodų. Jei kodas jau įkeltas, gali parodyti 6 skaitmenis.</p><Button variant="outline" className="mt-3 h-11" disabled={refreshing} onClick={() => { void load(); }}>Bandyti dar kartą</Button></div>}
+    {error && <div role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-card p-4"><p className="text-sm">{offline ? "Nėra interneto — parodyk organizacijai 6 skaitmenų kodą žemiau." : "Nepavyko atnaujinti kodų. Jei kodas jau įkeltas, gali parodyti 6 skaitmenis."}</p><Button variant="outline" className="mt-3 h-11" disabled={refreshing} onClick={() => { void load(); }}>Bandyti dar kartą</Button></div>}
     {!loading && !error && active.length === 0 && <div className="border-y border-border py-8 text-center"><h2 className="text-lg font-semibold">Nėra aktyvių rezervacijų</h2><Button asChild className="mt-4 h-11"><Link to="/tasks">Rasti užduotį</Link></Button></div>}
     {active.length > 1 && <div className="mb-4"><label htmlFor="checkin-visit" className="mb-2 block text-sm font-semibold">Pasirink vizitą</label><select id="checkin-visit" value={current ? keyOf(current) : ""} onChange={(event) => setSel(event.target.value)} className="h-12 w-full min-w-0 rounded-lg border border-border bg-card px-3 text-foreground">{active.map((t) => <option key={keyOf(t)} value={keyOf(t)}>{t.org_name} · {t.date} {t.start}–{t.end}</option>)}</select></div>}
     {current && <CheckinTokenCard token={current} now={now} refreshing={refreshing} onRefresh={() => { void load(); }} />}
