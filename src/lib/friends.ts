@@ -62,6 +62,20 @@ export async function searchClassmates(_myId: string, mySchoolId: string, q: str
 }
 
 export async function sendFriendRequest(fromId: string, toId: string) {
+  // A previous request (either direction) would hit the unique constraint, so reuse it.
+  const { data: existing } = await supabase
+    .from("friendships")
+    .select("id, requester_id, addressee_id, status")
+    .or(`and(requester_id.eq.${fromId},addressee_id.eq.${toId}),and(requester_id.eq.${toId},addressee_id.eq.${fromId})`);
+  const rows = (existing as { id: string; requester_id: string; addressee_id: string; status: string }[] | null) ?? [];
+  if (rows.some((r) => r.status === "accepted")) return;
+  const incoming = rows.find((r) => r.requester_id === toId && r.status === "pending");
+  if (incoming) { await respondToRequest(incoming.id, true); return; }
+  if (rows.some((r) => r.requester_id === fromId && r.status === "pending")) return;
+  for (const r of rows) {
+    const { error } = await supabase.from("friendships").delete().eq("id", r.id);
+    if (error) throw error;
+  }
   const { error } = await supabase.from("friendships").insert({
     requester_id: fromId,
     addressee_id: toId,
@@ -98,21 +112,21 @@ export type ParticipantRow = {
   created_at: string;
 };
 
+export type InviteResult = { invited: number; skipped: number; spots_left: number | null };
+
+/** Server-checked invite: friendship, free spots, duplicates and re-inviting someone who declined earlier. */
 export async function inviteFriendsToReservation(
   reservationId: string,
-  inviterId: string,
+  _inviterId: string,
   friendIds: string[],
-) {
-  if (!friendIds.length) return;
-  const rows = friendIds.map((sid) => ({
-    reservation_id: reservationId,
-    student_id: sid,
-    invited_by: inviterId,
-    status: "pending" as const,
-  }));
-  const { error } = await supabase.from("reservation_participants").insert(rows as any);
+): Promise<InviteResult> {
+  if (!friendIds.length) return { invited: 0, skipped: 0, spots_left: null };
+  const { data, error } = await supabase.rpc("invite_friends_to_reservation" as never, { _reservation_id: reservationId, _friend_ids: friendIds } as never);
   if (error) throw error;
-  logActivity("group.invited", { entityType: "reservation", entityId: reservationId, meta: { count: friendIds.length } });
+  const row = (Array.isArray(data) ? data[0] : data) as InviteResult | undefined;
+  const result = row ?? { invited: 0, skipped: 0, spots_left: null };
+  logActivity("group.invited", { entityType: "reservation", entityId: reservationId, meta: { count: result.invited } });
+  return result;
 }
 
 export async function listMyInvites(userId: string): Promise<ParticipantRow[]> {
