@@ -1757,6 +1757,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_friends_to_reservation: {
+        Args: { _friend_ids: string[]; _reservation_id: string }
+        Returns: {
+          invited: number
+          skipped: number
+          spots_left: number
+        }[]
+      }
       is_chat_room_member: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
@@ -1779,6 +1787,15 @@ export type Database = {
           org_id: string
           org_name: string
           role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      list_dm_latest: {
+        Args: { _room_ids: string[] }
+        Returns: {
+          content: string
+          created_at: string
+          room_id: string
+          sender_id: string
         }[]
       }
       list_my_conversations: {

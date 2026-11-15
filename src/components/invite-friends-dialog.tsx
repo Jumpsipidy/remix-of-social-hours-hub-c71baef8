@@ -11,16 +11,20 @@ type Props = {
   reservationLabel?: string;
   /** Friends already in this group (invited or joined) — hidden from the picker. */
   excludeIds?: string[];
+  /** Free spots left on the activity (excluding the caller), when known. */
+  spotsLeft?: number | null;
   onInvited?: () => void;
   onClose: () => void;
 };
 
-export function InviteFriendsDialog({ open, reservationId, inviterId, reservationLabel, excludeIds = [], onInvited, onClose }: Props) {
+export function InviteFriendsDialog({ open, reservationId, inviterId, reservationLabel, excludeIds = [], spotsLeft = null, onInvited, onClose }: Props) {
   const excludeKey = excludeIds.join(",");
   const [friends, setFriends] = useState<FriendProfile[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [hasAnyFriends, setHasAnyFriends] = useState(false);
+  const maxPick = spotsLeft == null ? Infinity : Math.max(0, spotsLeft);
 
   useEffect(() => {
     if (!open) return;
@@ -30,6 +34,7 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
       try {
         const rows = await listMyFriendships(inviterId);
         const accepted = rows.filter((r) => r.status === "accepted");
+        setHasAnyFriends(accepted.length > 0);
         const skip = new Set(excludeKey ? excludeKey.split(",") : []);
         const ids = accepted.map((r) => (r.requester_id === inviterId ? r.addressee_id : r.requester_id)).filter((id) => !skip.has(id));
         const map = await fetchFriendProfiles(ids);
@@ -43,7 +48,9 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
   const toggle = (id: string) => {
     setSelected((s) => {
       const n = new Set(s);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else if (n.size < maxPick) n.add(id);
+      else toast.warning(maxPick === 0 ? "Laisvų vietų nebeliko" : `Gali pakviesti dar ${maxPick}`, { description: "Tiek vietų liko šioje veikloje." });
       return n;
     });
   };
@@ -52,12 +59,13 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
     if (!reservationId || selected.size === 0) return;
     setSending(true);
     try {
-      await inviteFriendsToReservation(reservationId, inviterId, Array.from(selected));
-      toast.success(`Pakviesta draugų: ${selected.size}`, { description: "Kai jie priims kvietimą, kiekvienas gaus savo kodą." });
+      const res = await inviteFriendsToReservation(reservationId, inviterId, Array.from(selected));
+      if (res.invited === 0) toast.info("Niekas naujas nepakviestas", { description: "Pasirinkti draugai jau grupėje arba patys užsiregistravo į šią veiklą." });
+      else toast.success(`Pakviesta draugų: ${res.invited}`, { description: res.skipped ? `${res.skipped} praleisti — jau grupėje ar užsiregistravę patys.` : "Kai jie priims kvietimą, kiekvienas gaus savo QR kodą." });
       onInvited?.();
       onClose();
     } catch (e: any) {
-      toast.error(e?.message ?? "Nepavyko pakviesti");
+      toast.error(e?.code === "23514" ? "Laisvų vietų nebeužtenka visiems pakviestiems" : e?.message ?? "Nepavyko pakviesti");
     } finally {
       setSending(false);
     }
@@ -94,15 +102,15 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
 
             <div className="max-h-[55vh] overflow-y-auto p-5">
               <p className="mb-3 text-xs text-muted-foreground">
-                Pakviesti draugai gaus tas pačias valandas, kai organizacija patvirtins užduotį. Kiekvienas privalo priimti kvietimą.
+                Kiekvienas draugas turi priimti kvietimą ir vietoje nuskenuoti savo QR kodą — tik tada gaus valandas.{spotsLeft != null && <> Laisvų vietų: <b>{Math.max(0, spotsLeft)}</b>.</>}
               </p>
               {loading ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Kraunama...</div>
               ) : friends.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border p-6 text-center">
                   <UserPlus className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-                  <p className="text-sm font-semibold">{excludeIds.length > 1 ? "Visi draugai jau pakviesti" : "Kol kas neturi draugų"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{excludeIds.length > 1 ? "Jų atsakymus matysi prie rezervacijos." : "Susirask klasiokų skiltyje „Draugai“ ir vėl pakviesk."}</p>
+                  <p className="text-sm font-semibold">{hasAnyFriends ? "Visi draugai jau pakviesti" : "Kol kas neturi draugų"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{hasAnyFriends ? "Jų atsakymus matysi prie rezervacijos." : "Susirask klasiokų skiltyje „Draugai“ ir vėl pakviesk."}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
