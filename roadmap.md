@@ -37,3 +37,8 @@
 - [x] Auklėtojas↔mokinys pokalbiai išjungti (DB + UI); lieka org↔mokinys ir auklėtojas↔org; klasės kvietimai pakeisti rezervacijų priskyrimu
 - [x] Auklėtojo skydelio taisyklės: „null“ laiko žymos, mokyklos priskyrimo vedlys, grįžimo nuorodos, klasių progreso suvestinė, greitieji veiksmai (329 testai, build OK)
 - [x] Auklėtojo skydelio „peak“ perdarymas: KPI kortelės, valandų dinamikos ir klasių grafikai (recharts), sąrašai su avatarų inicialais, pasisveikinimas, Edaca-stiliaus šoninis meniu (339 testai, DB apribojimai patvirtinti gyvai, RPC parašai sutikrinti)
+
+## 2026-11-15 (cezer)
+- [ ] Pradžios antraštė: gražesnis šriftas, suderintas visame pradžios puslapyje
+- [ ] Pranešimai: geresni iššokantys langai, svarbūs įvykiai (kvietimai, draugai, patvirtinimai, valandos), praleistų pranešimų pasivijimas
+- [ ] Klaidų sąrašas (33 punktai iš pasted.md): kritinės ir svarbios klaidos 1–12, greiti įspėjimai
