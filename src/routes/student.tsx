@@ -24,7 +24,7 @@ import { CustomReservationDialog } from "@/components/custom-reservation-dialog"
 import { FriendsPanel } from "@/components/friends-panel";
 import { GroupInvitesInbox } from "@/components/group-invites-inbox";
 import { ReservationGroupStrip } from "@/components/reservation-group-strip";
-import { getReservationGroups, type GroupMemberRow } from "@/lib/friends";
+import { getReservationGroups, leaveReservation, type GroupMemberRow } from "@/lib/friends";
 import { PushToggle } from "@/components/push-toggle";
 import { CertificateButton } from "@/components/certificate-button";
 import { verifySchoolSignupCode } from "@/lib/school-signup.functions";
@@ -54,6 +54,15 @@ export const Route = createFileRoute("/student")({
   }),
   component: StudentDashboard,
 });
+
+/** Hours a finished visit really gave this student (0 for no-shows and unfinished visits). */
+function earnedHours(r: { status: string; hours_to_earn: number | string | null }) {
+  return r.status === "completed" || r.status === "confirmed" ? Number(r.hours_to_earn || 0) : 0;
+}
+
+function vilniusToday() {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Vilnius" }).format(new Date());
+}
 
 type Reservation = {
   id: string;
@@ -110,7 +119,7 @@ function StudentDashboard() {
         .order("reservation_date", { ascending: false }),
       supabase
         .from("reservation_participants")
-        .select("reservation_id")
+        .select("reservation_id, hours_awarded, checked_in_at, check_in_code")
         .eq("student_id", uid)
         .eq("status", "accepted"),
     ]);
@@ -120,12 +129,24 @@ function StudentDashboard() {
     }
     let rs = (data as Reservation[]) ?? [];
     setReservations(rs);
-    const partIds = ((parts as { reservation_id: string }[] | null) ?? [])
-      .map((p) => p.reservation_id)
-      .filter((id) => !rs.some((r) => r.id === id));
+    type PartRow = { reservation_id: string; hours_awarded: number | null; checked_in_at: string | null; check_in_code: string | null };
+    const partRows = ((parts as PartRow[] | null) ?? []).filter((p) => !rs.some((r) => r.id === p.reservation_id));
+    const partIds = partRows.map((p) => p.reservation_id);
     if (partIds.length) {
       const { data: extra } = await supabase.from("reservations").select("*").in("id", partIds);
-      rs = [...rs, ...((extra as Reservation[]) ?? [])].sort((a, b) =>
+      const byId = new Map(partRows.map((p) => [p.reservation_id, p]));
+      // A group member's own scan and awarded hours decide what they earned,
+      // not the owner's row: a friend who never scanned gets 0.
+      const mine = ((extra as Reservation[]) ?? []).map((r) => {
+        const p = byId.get(r.id);
+        return {
+          ...r,
+          hours_to_earn: r.status === "completed" || r.status === "confirmed" ? Number(p?.hours_awarded ?? 0) : r.hours_to_earn,
+          checked_in_at: p?.checked_in_at ?? null,
+          check_in_code: p?.check_in_code ?? null,
+        } as Reservation;
+      });
+      rs = [...rs, ...mine].sort((a, b) =>
         a.reservation_date < b.reservation_date ? 1 : -1,
       );
       setReservations(rs);
@@ -156,6 +177,7 @@ function StudentDashboard() {
     window.addEventListener("focus", refresh);
     const channel = supabase.channel(`student-reservations-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `student_id=eq.${user.id}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants", filter: `student_id=eq.${user.id}` }, refresh)
       .subscribe();
     return () => {
       window.removeEventListener("focus", refresh);
@@ -175,8 +197,8 @@ function StudentDashboard() {
       const start = new Date(end); start.setDate(end.getDate() - 6);
       const label = `${start.getDate()}.${start.getMonth() + 1}`;
       const val = reservations
-        .filter((r) => (r.status === "completed" || r.status === "confirmed") && r.reservation_date >= start.toISOString().slice(0, 10) && r.reservation_date <= end.toISOString().slice(0, 10))
-        .reduce((a, r) => a + Number(r.hours_to_earn), 0);
+        .filter((r) => earnedHours(r) > 0 && r.reservation_date >= start.toISOString().slice(0, 10) && r.reservation_date <= end.toISOString().slice(0, 10))
+        .reduce((a, r) => a + earnedHours(r), 0);
       weeks.push({ label, val });
     }
     return weeks;
@@ -239,7 +261,7 @@ function StudentDashboard() {
         setLoginStreak(row.login_streak ?? 0);
         setLongestStreak(row.longest_login_streak ?? 0);
         setFreezeUsedAt(row.freeze_used_at ?? null);
-        setStreakActivated(row.last_login_day === new Date().toISOString().slice(0, 10));
+        setStreakActivated(row.last_login_day === vilniusToday());
       }
       setStreakLoading(false);
       await loadStreakBoard();
@@ -271,9 +293,9 @@ function StudentDashboard() {
   useEffect(() => {
     if (!user || !profile) return;
     const ctx: AchievementCtx = {
-      hoursEarned: reservations.filter((r) => r.status === "completed").reduce((a, r) => a + Number(r.hours_to_earn || 0), 0),
+      hoursEarned: reservations.reduce((a, r) => a + earnedHours(r), 0),
       hoursNeeded: Number(profile.hours_needed ?? 0),
-      completedCount: reservations.filter((r) => r.status === "completed" || r.status === "confirmed").length,
+      completedCount: reservations.filter((r) => earnedHours(r) > 0).length,
       uniqueOrgs,
       streakWeeks: streak,
       friendsCount,
@@ -316,12 +338,12 @@ function StudentDashboard() {
   }
 
   // Same source as the certificate: only finished visits count.
-  const completed = reservations.filter((r) => r.status === "completed").reduce((a, r) => a + Number(r.hours_to_earn || 0), 0);
+  const completed = reservations.reduce((a, r) => a + earnedHours(r), 0);
   const required = Number(profile.hours_needed ?? 0);
   const progress = required ? Math.min(100, Math.round((completed / required) * 100)) : 0;
   const remaining = Math.max(0, required - completed);
   const active = reservations.filter(isActiveStudentReservation);
-  const done = reservations.filter((r) => r.status === "completed" || r.status === "confirmed");
+  const done = reservations.filter((r) => earnedHours(r) > 0);
   const nextRes = active
     .slice()
     .sort((a, b) => (a.reservation_date + (a.start_time ?? "")).localeCompare(b.reservation_date + (b.start_time ?? "")))[0];
@@ -336,7 +358,7 @@ function StudentDashboard() {
 
   return (
     <PageShell>
-      <nav aria-label="Greitos nuorodos" className="sticky top-[72px] z-30 -mb-2 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 lg:hidden">
+      <nav aria-label="Greitos nuorodos" className="sticky top-16 z-30 -mb-2 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-2 lg:hidden">
         {[["#mano-rezervacijos","Mano rezervacijos"],["/tasks","Rasti užduotį"],["/chat","Pokalbiai"],["#draugai","Draugai"]].map(([href,label]) => (
           <a key={href} href={href} className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold active:scale-95">{label}</a>
         ))}
@@ -476,7 +498,7 @@ function StudentDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold flex items-center gap-2"><Trophy className="h-5 w-5 text-warning" /> Karščiausi streak'ai mokykloje</h2>
-                <p className="text-xs text-muted-foreground">Top 20 mokinių pagal dienų iš eilės.</p>
+                <p className="text-xs text-muted-foreground">Top 10 mokinių pagal dienų iš eilės.</p>
               </div>
             </div>
             <div className="mt-4 space-y-1.5 max-h-72 overflow-y-auto pr-1">
@@ -536,7 +558,7 @@ function StudentDashboard() {
                     contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
                     labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                   />
-                  <Area type="monotone" dataKey="val" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#hrs)" name="Valandos" />
+                  <Area type="monotone" dataKey="val" stroke="var(--primary)" strokeWidth={2} fill="url(#hrs)" name="Valandos" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -622,6 +644,8 @@ function StudentDashboard() {
                       </span>
                       {!school && !isDone && r.status !== "declined" && r.student_id === user.id && <Button variant="outline" size="sm" onClick={() => setGroupInvite({ id: r.id, label: orgName(r.organization_id) })}><Users />Pakviesti draugus</Button>}
                       {studentReservationNeedsQr(r) && <Button variant="outline" asChild className="h-11"><Link to="/checkin" preload="intent"><ShieldCheck /> QR kodas</Link></Button>}
+                      {studentReservationNeedsQr(r) && r.check_in_code && <span className="rounded-lg border border-dashed border-primary/40 px-2.5 py-1 font-mono text-xs font-bold tracking-widest text-primary" title="Šį kodą gali pasakyti organizacijai, jei nėra interneto">{r.check_in_code.replace(/^(\d{3})(\d{3})$/, "$1 $2")}</span>}
+                      {!school && r.student_id !== user.id && isActiveStudentReservation(r) && !r.checked_in_at && <Button variant="ghost" size="sm" onClick={() => void leaveGroup(r.id)}>Išeiti iš grupės</Button>}
                       {!school && <button
                         onClick={() => setChatRes({ id: r.id, student_id: r.student_id, organization_id: r.organization_id, organization_name: orgName(r.organization_id) })}
                         className="inline-flex items-center gap-1 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition hover:opacity-90"
@@ -675,10 +699,10 @@ function ProgressRing({ pct }: { pct: number }) {
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="hsl(var(--border))" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--border)" strokeWidth={stroke} fill="none" />
         <motion.circle
           cx={size / 2} cy={size / 2} r={r}
-          stroke="hsl(var(--primary))" strokeWidth={stroke} strokeLinecap="round"
+          stroke="var(--primary)" strokeWidth={stroke} strokeLinecap="round"
           fill="none" strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: off }}
