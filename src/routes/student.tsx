@@ -82,6 +82,8 @@ type Reservation = {
   location?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  checked_in_at?: string | null;
+  check_in_code?: string | null;
 };
 
 type OrgLite = { id: string; organization_name: string | null; full_name: string | null };
