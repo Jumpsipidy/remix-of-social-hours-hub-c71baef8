@@ -975,8 +975,10 @@ html.sv-elegant .page-shell::before {
 html.sv-elegant .page-shell { isolation: isolate; }
 html.sv-elegant .home-saas > :is(section,div), html.sv-elegant .product-demo-band { background-color: transparent; }
 .home-brand-title { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 20px; font-size: 76px; line-height: 1.08; letter-spacing: 0; }
-.home-title-first { font-family: "Sora", var(--font-sans); font-weight: 700; animation: home-letter-arrive 600ms cubic-bezier(.2,.8,.2,1) both; }
-.home-saas .home-title-second { font-family: "Fraunces", var(--font-display); font-style: italic; font-weight: 600; color: var(--primary); animation: home-letter-arrive 650ms 90ms cubic-bezier(.2,.8,.2,1) both; }
+.home-saas :is(h1,h2,h3).home-display { font-family: "Bricolage Grotesque", "Sora", var(--font-sans); font-variation-settings: "opsz" 96; font-weight: 750; letter-spacing: -0.035em; }
+.home-saas h1.home-display { font-weight: 800; letter-spacing: -0.045em; }
+.home-title-first { display: inline-block; animation: home-letter-arrive 600ms cubic-bezier(.2,.8,.2,1) both; }
+.home-saas .home-title-second { display: inline-block; font-family: "Instrument Serif", "Fraunces", var(--font-display); font-style: italic; font-weight: 400; letter-spacing: -0.01em; font-size: 1.12em; line-height: 0.95; color: var(--primary); animation: home-letter-arrive 650ms 90ms cubic-bezier(.2,.8,.2,1) both; }
 .home-title-dot { display: inline-block; transform-origin: bottom; animation: home-dot-pop 700ms 280ms both; }
 .home-brand-line { width: 48px; height: 1px; background: var(--border); }
 .home-brand-symbol { animation: home-letter-arrive 450ms ease-out both; }

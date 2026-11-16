@@ -66,6 +66,7 @@ export type ActivityAction =
   | "group.invited"
   | "group.invite_accepted"
   | "group.invite_declined"
+  | "group.left"
   | "profile.updated"
   | "certificate.generated"
   | "auth.signed_in"
@@ -161,6 +162,7 @@ export const ACTION_LABELS: Record<string, { label: string; tone: "info" | "ok" 
   "group.invited": { label: "Pakvietė į grupinę rezervaciją", tone: "info" },
   "group.invite_accepted": { label: "Prisijungė prie grupinės rezervacijos", tone: "ok" },
   "group.invite_declined": { label: "Atmetė grupinį kvietimą", tone: "warn" },
+  "group.left": { label: "Išėjo iš grupės", tone: "warn" },
   "profile.updated": { label: "Atnaujino profilį", tone: "info" },
   "certificate.generated": { label: "Sugeneravo sertifikatą", tone: "ok" },
   "auth.signed_in": { label: "Prisijungė", tone: "info" },
