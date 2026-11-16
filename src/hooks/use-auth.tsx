@@ -42,8 +42,8 @@ const MOCK_KEY = "sv_mock_session_v1";
 const ROLE_CACHE_KEY = "sv_last_role_v1";
 const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
 const AuthContext = createContext<AuthState | null>(null);
-const PROFILE_COLUMNS = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, assigned_classes";
-const PROFILE_COLUMNS_SAFE = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year";
+const PROFILE_COLUMNS = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, class_letter, assigned_classes";
+const PROFILE_COLUMNS_SAFE = "id, full_name, email, role, hours_needed, hours_earned, organization_name, school_id, class_year, class_letter";
 
 function isAssignedClassesSchemaError(error: unknown) {
   const message = String((error as { message?: string } | null)?.message ?? "");

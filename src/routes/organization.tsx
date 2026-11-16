@@ -139,16 +139,26 @@ function OrgDashboard() {
   const navigate = useNavigate();
   const orgSignOut = async () => { await signOut(); navigate({ to: "/" }); };
 
-  // Onboarding: redirect if org profile is incomplete
+  // Onboarding: redirect only when the organization has never been set up.
+  // Read the row fresh so a just-finished welcome form never bounces back.
   useEffect(() => {
     if (loading || !profile) return;
     if (profile.role !== "organization") return;
-    const org = profile as unknown as Record<string, unknown>;
-    const missing = !org.organization_name || !org.address || !org.latitude || !org.longitude;
-    if (!missing) return;
-    // Atidedam perėjimą, kad nesikirstų su dar vykstančiu (view transition) perėjimu.
-    const t = window.setTimeout(() => navigate({ to: "/organization/welcome", replace: true }), 0);
-    return () => window.clearTimeout(t);
+    let cancelled = false;
+    let t: number | undefined;
+    void supabase
+      .from("profiles")
+      .select("organization_name")
+      .eq("id", profile.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error) return;
+        const name = (data as { organization_name: string | null } | null)?.organization_name;
+        if (name && name.trim()) return;
+        // Atidedam perėjimą, kad nesikirstų su dar vykstančiu (view transition) perėjimu.
+        t = window.setTimeout(() => navigate({ to: "/organization/welcome", replace: true }), 0);
+      });
+    return () => { cancelled = true; if (t) window.clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, profile?.id, profile?.role]);
 
