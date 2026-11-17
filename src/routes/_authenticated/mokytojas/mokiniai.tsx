@@ -13,6 +13,8 @@ import {
 } from "@/lib/teacher-students";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { downloadStudentsCsv } from "@/components/teacher/students-csv";
 
 export const Route = createFileRoute("/_authenticated/mokytojas/mokiniai")({
   head: () => ({
@@ -48,12 +50,12 @@ function ProgressRing({ value, size = 48, stroke = 4, children }: { value: numbe
   return (
     <span className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="hsl(var(--muted))" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--muted)" strokeWidth={stroke} fill="none" />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
-          stroke="hsl(var(--primary))"
+          stroke="var(--primary)"
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={c}
@@ -100,9 +102,14 @@ function TeacherStudents() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold sm:text-2xl">Mokiniai</h1>
-        <p className="text-sm text-muted-foreground">Paspausk ant mokinio kortelės — pamatysi visą informaciją ir istoriją.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold sm:text-2xl">Mokiniai</h1>
+          <p className="text-sm text-muted-foreground">Paspausk ant mokinio kortelės — pamatysi visą informaciją ir istoriją.</p>
+        </div>
+        <Button type="button" variant="outline" onClick={() => downloadStudentsCsv(filtered)} disabled={filtered.length === 0}>
+          <Download className="h-4 w-4" /> Eksportuoti CSV
+        </Button>
       </div>
 
       {/* Suvestinės juosta */}
@@ -241,7 +248,7 @@ function StudentDetail({
               className="relative -mx-6 -mt-6 overflow-hidden px-6 pb-5 pt-8"
               style={{
                 background:
-                  "radial-gradient(400px 160px at 90% -20%, hsl(var(--primary) / .22), transparent 70%), hsl(var(--muted) / .5)",
+                  "radial-gradient(400px 160px at 90% -20%, color-mix(in oklch, var(--primary) 22%, transparent), transparent 70%), color-mix(in oklch, var(--muted) 50%, transparent)",
               }}
             >
               <SheetHeader>

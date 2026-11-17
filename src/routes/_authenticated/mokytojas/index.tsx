@@ -34,8 +34,8 @@ function initials(name: string | null | undefined) {
 }
 
 const tooltipStyle = {
-  background: "hsl(var(--background))",
-  border: "1px solid hsl(var(--border))",
+  background: "var(--background)",
+  border: "1px solid var(--border)",
   borderRadius: 12,
   fontSize: 12,
 } as const;
@@ -90,7 +90,7 @@ function TeacherOverview() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(620px 220px at 88% -30%, hsl(var(--primary) / 0.20), transparent 70%), radial-gradient(420px 200px at 8% 130%, hsl(var(--accent) / 0.40), transparent 70%)",
+              "radial-gradient(620px 220px at 88% -30%, color-mix(in oklch, var(--primary) 20%, transparent), transparent 70%), radial-gradient(420px 200px at 8% 130%, color-mix(in oklch, var(--accent) 40%, transparent), transparent 70%)",
           }}
         />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
@@ -170,14 +170,14 @@ function TeacherOverview() {
               <AreaChart data={monthly} margin={{ top: 8, right: 8, left: -22, bottom: 0 }}>
                 <defs>
                   <linearGradient id="tch-hrs" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Area type="monotone" dataKey="hrs" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#tch-hrs)" name="Valandos" />
+                <Area type="monotone" dataKey="hrs" stroke="var(--primary)" strokeWidth={2} fill="url(#tch-hrs)" name="Valandos" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -192,10 +192,10 @@ function TeacherOverview() {
                 <BarChart data={byClass} margin={{ top: 8, right: 8, left: -26, bottom: 0 }}>
                   <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--muted)", opacity: 0.4 }} />
                   <Bar dataKey="hrs" name="Valandos" radius={[6, 6, 0, 0]}>
                     {byClass.map((c, i) => (
-                      <Cell key={c.name} fill="hsl(var(--primary))" opacity={0.45 + (0.55 * (i + 1)) / byClass.length} />
+                      <Cell key={c.name} fill="var(--primary)" opacity={0.45 + (0.55 * (i + 1)) / byClass.length} />
                     ))}
                   </Bar>
                 </BarChart>

@@ -144,7 +144,7 @@ export function TeacherTour({ open, onDone }: { open: boolean; onDone: () => voi
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-3xl"
-            style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / .35), hsl(var(--primary)))" }}
+            style={{ background: "linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 35%, transparent), var(--primary))" }}
           />
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
             <GraduationCap className="h-6 w-6" />
@@ -176,7 +176,7 @@ export function TeacherTour({ open, onDone }: { open: boolean; onDone: () => voi
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-3xl"
-            style={{ background: "linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / .35), hsl(var(--primary)))" }}
+            style={{ background: "linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 35%, transparent), var(--primary))" }}
           />
           <div className="flex items-start justify-between gap-3">
             <div>

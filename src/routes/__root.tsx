@@ -24,6 +24,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SecurityGatewayProvider } from "@/components/security-gateway-provider";
 import { LockdownGate } from "@/components/lockdown-gate";
 import { ErrorMonitor } from "@/components/error-monitor";
+import { NotificationCenter } from "@/components/notification-center";
 import { SkeletonReveal } from "@/components/skeleton-reveal";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AdminAlertMonitor } from "@/components/admin-alert-monitor";
@@ -277,6 +278,7 @@ function RootComponent() {
           {import.meta.env.DEV && <Suspense fallback={null}><MockTesterPanel /></Suspense>}
 
           <ErrorMonitor />
+          <NotificationCenter />
           <SkeletonReveal />
           <AdminAlertMonitor />
           <Suspense fallback={null}><AdminErrorHud /></Suspense>
