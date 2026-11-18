@@ -51,3 +51,4 @@
 - Every outgoing email renders through renderShell in src/lib/email-templates/_shell.ts (light card, bulletproof button, fallback link); keeps all messages consistent and readable in every mail client.
 - Support chat (SV Pagalba) runs server-side only: Groq gpt-oss first, capped OpenAI fallback, knowledge in src/lib/support-knowledge.ts + support-ui-guide.ts (update when UI changes); bug reports go to bug_reports, human handoff requires a verified session; prevents spam, cost spikes and key exposure.
 - Support retention runs inside the existing chat cleanup job through purge_support_messages(); expired messages and empty inactive threads are removed without deleting independent bug reports or adding another polling job.
+- In-app notifications are collected only by the root NotificationCenter into a per-user store (src/lib/notifications.ts); the bell just reads it. One listener avoids duplicate popups and lets every shell show the same list.

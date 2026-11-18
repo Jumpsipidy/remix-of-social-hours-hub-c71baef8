@@ -160,7 +160,8 @@ function ChatPage() {
     if (id === active.organization_id) return active.organization_name ?? "Organizacija";
     if (id === active.school_admin_id) return active.school_admin_name ?? "Mokykla";
     if (id === active.student_id) return active.student_name ?? "Mokinys";
-    return "Mokyklos administratorius";
+    // Anyone else in a reservation chat is a friend from the same group visit.
+    return "Grupės narys";
   };
 
   // Role badge for every sender.
@@ -169,7 +170,7 @@ function ChatPage() {
     if (id === active.organization_id) return { label: "Organizacija", cls: "bg-amber-500/15 text-amber-600 dark:text-amber-300" };
     if (id === active.school_admin_id) return { label: "Mokyklos admin.", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300" };
     if (id === active.student_id) return { label: "Mokinys", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-300" };
-    return { label: "Mokyklos admin.", cls: "bg-violet-500/15 text-violet-600 dark:text-violet-300" };
+    return { label: "Grupės narys", cls: "bg-sky-500/15 text-sky-600 dark:text-sky-300" };
   };
 
   const { othersTyping, notifyTyping, notifyStop } = useTypingIndicator(activeId ? `room-${activeId}` : null, user?.id);

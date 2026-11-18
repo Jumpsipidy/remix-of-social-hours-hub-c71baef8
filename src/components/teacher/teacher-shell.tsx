@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TeacherTour } from "@/components/teacher/teacher-tour";
 import { tourCompleted } from "@/lib/teacher-tour";
+import { NotificationBell } from "@/components/notification-bell";
 
 const NAV = [
   { to: "/mokytojas", label: "Apžvalga", icon: LayoutDashboard, exact: true },
@@ -207,6 +208,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
                 ))}
               </PopoverContent>
             </Popover>
+            <NotificationBell />
             {profileChip}
           </div>
         </div>

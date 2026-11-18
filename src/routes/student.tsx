@@ -11,6 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { PageShell } from "../components/layout";
+import { registrationComplete } from "@/lib/signup-rules";
 import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -344,7 +345,7 @@ function StudentDashboard() {
   }
 
   if (profile.role !== "student" && profile.role !== "admin") return <WrongRole role={profile.role} />;
-  if (profile.role === "student" && (!profile.school_id || !profile.class_year || !profile.hours_needed)) {
+  if (profile.role === "student" && !registrationComplete(profile)) {
     // One setup flow only: /complete-profile asks for school, 5A/5B… class and the code.
     void StudentProfileSetup;
     return <Navigate to="/complete-profile" replace />;

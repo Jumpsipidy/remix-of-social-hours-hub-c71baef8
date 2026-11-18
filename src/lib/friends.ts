@@ -61,17 +61,19 @@ export async function searchClassmates(_myId: string, mySchoolId: string, q: str
   }));
 }
 
-export async function sendFriendRequest(fromId: string, toId: string) {
+export type FriendRequestOutcome = "sent" | "accepted" | "already_friends" | "already_sent";
+
+export async function sendFriendRequest(fromId: string, toId: string): Promise<FriendRequestOutcome> {
   // A previous request (either direction) would hit the unique constraint, so reuse it.
   const { data: existing } = await supabase
     .from("friendships")
     .select("id, requester_id, addressee_id, status")
     .or(`and(requester_id.eq.${fromId},addressee_id.eq.${toId}),and(requester_id.eq.${toId},addressee_id.eq.${fromId})`);
   const rows = (existing as { id: string; requester_id: string; addressee_id: string; status: string }[] | null) ?? [];
-  if (rows.some((r) => r.status === "accepted")) return;
+  if (rows.some((r) => r.status === "accepted")) return "already_friends";
   const incoming = rows.find((r) => r.requester_id === toId && r.status === "pending");
-  if (incoming) { await respondToRequest(incoming.id, true); return; }
-  if (rows.some((r) => r.requester_id === fromId && r.status === "pending")) return;
+  if (incoming) { await respondToRequest(incoming.id, true); return "accepted"; }
+  if (rows.some((r) => r.requester_id === fromId && r.status === "pending")) return "already_sent";
   for (const r of rows) {
     const { error } = await supabase.from("friendships").delete().eq("id", r.id);
     if (error) throw error;
@@ -83,6 +85,7 @@ export async function sendFriendRequest(fromId: string, toId: string) {
   } as any);
   if (error) throw error;
   logActivity("friend.request_sent", { entityType: "profile", entityId: toId });
+  return "sent";
 }
 
 export async function respondToRequest(rowId: string, accept: boolean) {

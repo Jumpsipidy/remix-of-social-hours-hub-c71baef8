@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Email the other conversation members about a new message. Throttled: a
- * recipient gets at most one email per room per 30 minutes. Respects
+ * recipient gets at most two emails per room per 30 minutes. Respects
  * email_preferences.new_message.
  */
 export const notifyNewMessage = createServerFn({ method: "POST" })
@@ -19,7 +19,9 @@ export const notifyNewMessage = createServerFn({ method: "POST" })
     const { data: recent } = await supabaseAdmin.from("messages").select("sender_id, created_at")
       .eq("chat_room_id", data.roomId).eq("sender_id", context.userId)
       .gte("created_at", new Date(Date.now() - 30 * 60_000).toISOString()).limit(3);
-    if ((recent?.length ?? 0) > 1) return { skipped: "throttled" };
+    // The booking note is saved as the student's first message, so allow one more
+    // before throttling — otherwise their first real message never emails anyone.
+    if ((recent?.length ?? 0) > 2) return { skipped: "throttled" };
 
     const ids = [room.student_id, room.organization_id, room.school_admin_id].filter((x): x is string => !!x && x !== context.userId);
     if (!ids.length) return { sent: 0 };

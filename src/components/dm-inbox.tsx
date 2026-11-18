@@ -16,13 +16,13 @@ export function DmInbox({ me }: { me: string }) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data: rooms } = await supabase.from("dm_rooms").select("id, user_a, user_b").or(`user_a.eq.${me},user_b.eq.${me}`).limit(30);
+      const { data: rooms } = await supabase.from("dm_rooms").select("id, user_a, user_b").or(`user_a.eq.${me},user_b.eq.${me}`).limit(100);
       const list = (rooms ?? []) as { id: string; user_a: string; user_b: string }[];
       if (!list.length) { if (alive) setRows([]); return; }
       const others = list.map((r) => (r.user_a === me ? r.user_b : r.user_a));
       const [{ data: profs }, { data: msgs }] = await Promise.all([
         supabase.from("profiles").select("id, full_name, role").in("id", others),
-        supabase.from("dm_messages").select("room_id, content, created_at").in("room_id", list.map((r) => r.id)).order("created_at", { ascending: false }).limit(200),
+        supabase.rpc("list_dm_latest", { _room_ids: list.map((r) => r.id) }),
       ]);
       const nameOf = Object.fromEntries(((profs ?? []) as { id: string; full_name: string | null; role: string }[]).map((p) => [p.id, `${p.full_name ?? "Naudotojas"}${p.role === "school_admin" ? " · auklėtoja" : ""}`]));
       const out: Row[] = [];

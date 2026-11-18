@@ -57,7 +57,7 @@ function StudentPicker({ students, selected, setSelected }: { students: SchoolSt
 }
 
 /** „Priskirti veiklą klasei“: visos svetainės veiklos su filtrais → mokiniai → rezervacijos jų paskyrose. */
-export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
+export function ClassTaskInviteDialog({ open, onOpenChange, students, onDone }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[]; onDone?: () => void }) {
   const assignFn = useServerFn(teacherAssignTask);
   const [tasks, setTasks] = useState<TaskRow[] | null>(null);
   const [orgNames, setOrgNames] = useState<Record<string, string>>({});
@@ -108,6 +108,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
       });
       toast.success("suggested" in res && res.suggested ? `Rekomendacija išsiųsta ${res.created} mokiniams — jie patys užsiregistruos, o rezervaciją valdys organizacija.` : `Veikla priskirta ${res.created} iš ${res.total} mokinių — jie ją mato savo paskyrose.`);
       onOpenChange(false);
+      onDone?.();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko priskirti veiklos."); } finally { setBusy(false); }
   };
 
@@ -153,7 +154,7 @@ export function ClassTaskInviteDialog({ open, onOpenChange, students }: { open: 
 }
 
 /** Auklėtojo veikla visiems /tasks puslapyje, su galimybe iškart pranešti klasei. */
-export function PublishTaskDialog({ open, onOpenChange, students }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[] }) {
+export function PublishTaskDialog({ open, onOpenChange, students, onDone }: { open: boolean; onOpenChange: (o: boolean) => void; students: SchoolStudent[]; onDone?: () => void }) {
   const publishFn = useServerFn(teacherPublishTask);
   const assignFn = useServerFn(teacherAssignTask);
   const [f, setF] = useState({ title: "", description: "", date: "", start: "", end: "", hours: 2, city: "Šeduva", location: "", spots: 20 });
@@ -174,6 +175,7 @@ export function PublishTaskDialog({ open, onOpenChange, students }: { open: bool
       }
       toast.success(assigned ? `Veikla paskelbta visiems ir priskirta ${assigned} mokiniams.` : "Veikla paskelbta — ją mato visi /tasks puslapyje.");
       onOpenChange(false);
+      onDone?.();
     } catch (e) { toast.error(e instanceof Error ? e.message : "Nepavyko paskelbti."); } finally { setBusy(false); }
   };
   const field = "mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-primary";

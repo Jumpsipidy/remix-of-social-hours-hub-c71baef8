@@ -10,9 +10,11 @@ function b64url(bytes: Uint8Array): string {
 }
 
 function makeCode(): string {
-  const rnd = new Uint8Array(9);
+  // Exactly 12 characters from an unambiguous alphabet (no 0/O, 1/I).
+  const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const rnd = new Uint8Array(12);
   crypto.getRandomValues(rnd);
-  const s = b64url(rnd).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  const s = Array.from(rnd, (n) => ALPHABET[n % ALPHABET.length]).join("");
   return `SV-${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8, 12)}`;
 }
 
@@ -120,7 +122,7 @@ export const generateCertificate = createServerFn({ method: "POST" })
       if (batch?.length) {
         const { data: visits, error: visitError } = await supabase.from("reservations").select("id,reservation_date,start_time,end_time,hours_to_earn,note,organization_id,source,hours_approved_by,hours_approved_at").in("id", batch.map(p => p.reservation_id)).eq("status", "completed");
         if (visitError) throw visitError;
-        for (const visit of visits ?? []) if (!rows.some(r => r.id === visit.id)) rows.push({ ...visit, hours_to_earn: Number(batch.find(p => p.reservation_id === visit.id)?.hours_awarded ?? 0) });
+        for (const visit of visits ?? []) if (!rows.some(r => r.id === visit.id) && Number(batch.find(p => p.reservation_id === visit.id)?.hours_awarded ?? 0) > 0) rows.push({ ...visit, hours_to_earn: Number(batch.find(p => p.reservation_id === visit.id)?.hours_awarded ?? 0) });
       }
       if (!batch || batch.length < 500) break;
     }

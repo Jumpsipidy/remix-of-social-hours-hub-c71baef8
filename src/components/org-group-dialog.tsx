@@ -7,6 +7,7 @@ export type OrgParticipant = {
   student_id: string;
   status: "pending" | "accepted" | "declined" | "removed";
   checked_in_at: string | null;
+  hours_awarded?: number | null;
 };
 
 export type GroupMember = { id: string; name: string; role: "owner" | "member"; status: OrgParticipant["status"] | "owner"; checkedInAt: string | null };

@@ -38,7 +38,8 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
         const skip = new Set(excludeKey ? excludeKey.split(",") : []);
         const ids = accepted.map((r) => (r.requester_id === inviterId ? r.addressee_id : r.requester_id)).filter((id) => !skip.has(id));
         const map = await fetchFriendProfiles(ids);
-        setFriends(ids.map((id) => map[id]).filter(Boolean));
+        // A hidden profile must not make an existing friend disappear from the list.
+        setFriends(ids.map((id) => map[id] ?? { id, full_name: null, email: null, class_year: null, hours_earned: null, school_id: null }));
       } finally {
         setLoading(false);
       }
@@ -129,7 +130,7 @@ export function InviteFriendsDialog({ open, reservationId, inviterId, reservatio
                             {(f.full_name ?? "?").trim().charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold">{f.full_name ?? "—"}</p>
+                            <p className="truncate text-sm font-semibold">{f.full_name ?? "Draugas"}</p>
                             <p className="truncate text-xs text-muted-foreground">{f.class_year ?? "—"} · {f.hours_earned ?? 0} val.</p>
                           </div>
                         </div>

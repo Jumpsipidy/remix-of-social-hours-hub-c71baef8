@@ -27,7 +27,7 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function CreateTaskPanel({ organizationId }: { organizationId: string }) {
+export function CreateTaskPanel({ organizationId, showList = true, onCreated }: { organizationId: string; showList?: boolean; onCreated?: () => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [busy, setBusy] = useState(false);
@@ -63,7 +63,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
     setTasks((data as Task[]) ?? []);
   };
 
-  useEffect(() => { refresh(); }, [organizationId]);
+  useEffect(() => { if (showList) void refresh(); }, [organizationId, showList]);
 
   const reset = () => {
     setTitle(""); setDescription(""); setDate(todayISO());
@@ -115,7 +115,8 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
     toast.success(recurrence === "none" ? "Užduotis paskelbta" : "Pasikartojanti užduotis paskelbta");
     reset();
     setOpen(false);
-    refresh();
+    if (showList) void refresh();
+    await onCreated?.();
   };
 
   const remove = async (id: string) => {
@@ -135,7 +136,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
     <div id="create-task-section" className="rounded-3xl border border-border bg-gradient-card p-6 shadow-md">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-bold">Mano užduotys</h2>
+          <h2 className="text-lg font-bold">{showList ? "Mano užduotys" : "Nauja užduotis"}</h2>
           <p className="text-xs text-muted-foreground">Skelbk savanorystės galimybes — mokiniai matys jas iškart.</p>
         </div>
         <button
@@ -276,7 +277,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
         </DialogContent>
       </Dialog>
 
-      <div className="mt-5 space-y-2">
+      {showList && <div className="mt-5 space-y-2">
         {tasks.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
             Dar nepaskelbtų užduočių.
@@ -325,7 +326,7 @@ export function CreateTaskPanel({ organizationId }: { organizationId: string }) 
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

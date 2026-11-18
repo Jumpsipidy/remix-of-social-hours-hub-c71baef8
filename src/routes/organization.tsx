@@ -101,7 +101,7 @@ function OrgDashboard() {
       if (rs.length) {
         const { data: pData } = await supabase
           .from("reservation_participants")
-          .select("id, reservation_id, student_id, status, checked_in_at")
+          .select("id, reservation_id, student_id, status, checked_in_at, hours_awarded")
           .in("reservation_id", rs.map((r) => r.id))
           .neq("status", "removed");
         ((pData as OrgParticipant[] | null) ?? []).forEach((p) => { (pMap[p.reservation_id] ??= []).push(p); });
@@ -187,13 +187,6 @@ function OrgDashboard() {
     if (user) refresh(user.id);
   };
 
-  const promoteTask = (t: TaskRow) => {
-    toast.success(`Užduotis „${t.title}“ iškelta į sąrašo viršų!`, {
-      icon: <Sparkles className="h-4 w-4 text-primary" />,
-      description: "Dabar mokiniai matys šį skelbimą pirmiau už kitus."
-    });
-  };
-
   const deleteTask = async (t: TaskRow) => {
     if (busyId) return;
     if (!confirm(`Ištrinti užduotį „${t.title}"?`)) return;
@@ -213,24 +206,39 @@ function OrgDashboard() {
     declined: reservations.filter((r) => r.status === "declined"),
   }), [reservations]);
 
+  // Every person who actually took part in a finished visit: the booking owner plus
+  // group members who scanned in (their own awarded hours).
+  const completedVisits = useMemo(() => {
+    const out: { student_id: string; hours: number; date: string }[] = [];
+    completed.forEach((r) => {
+      if (r.student_id) out.push({ student_id: r.student_id, hours: Number(r.hours_to_earn) || 0, date: String(r.reservation_date) });
+      (participants[r.id] ?? []).forEach((p) => {
+        if (p.status === "accepted" && p.checked_in_at) out.push({ student_id: p.student_id, hours: Number(p.hours_awarded) || 0, date: String(r.reservation_date) });
+      });
+    });
+    return out;
+  }, [completed, participants]);
   const hoursDelivered = useMemo(
-    () => Math.round(completed.reduce((a, r) => a + (Number(r.hours_to_earn) || 0), 0) * 10) / 10,
-    [completed],
+    () => Math.round(completedVisits.reduce((a, v) => a + v.hours, 0) * 10) / 10,
+    [completedVisits],
   );
   // Tikslu: savanoriai, kurie realiai atliko darbą (ne atmestos užklausos)
   const uniqueStudents = useMemo(
-    () => new Set(completed.map((r) => r.student_id).filter(Boolean)).size,
-    [completed],
+    () => new Set(completedVisits.map((v) => v.student_id)).size,
+    [completedVisits],
   );
   const engagedStudents = useMemo(
-    () => new Set(reservations.map((r) => r.student_id).filter(Boolean)).size,
-    [reservations],
+    () => new Set([
+      ...reservations.map((r) => r.student_id),
+      ...Object.values(participants).flat().filter((p) => p.status === "accepted" || p.status === "pending").map((p) => p.student_id),
+    ].filter(Boolean)).size,
+    [reservations, participants],
   );
   const returningStudents = useMemo(() => {
     const byS: Record<string, number> = {};
-    completed.forEach((r) => (byS[r.student_id] = (byS[r.student_id] ?? 0) + 1));
+    completedVisits.forEach((v) => (byS[v.student_id] = (byS[v.student_id] ?? 0) + 1));
     return Object.values(byS).filter((n) => n >= 2).length;
-  }, [completed]);
+  }, [completedVisits]);
   const totalHandled = completed.length + declined.length;
   const acceptanceRate = totalHandled ? Math.round((completed.length / totalHandled) * 100) : 0;
   const avgHours = completed.length ? hoursDelivered / completed.length : 0;
@@ -244,12 +252,12 @@ function OrgDashboard() {
       days.push({ iso, label: `${d.getDate()}.${d.getMonth() + 1}`, hrs: 0, count: 0 });
     }
     const idx: Record<string, number> = Object.fromEntries(days.map((d, i) => [d.iso, i]));
-    completed.forEach((r) => {
-      const i = idx[String(r.reservation_date).slice(0, 10)];
-      if (i !== undefined) { days[i].hrs += Number(r.hours_to_earn) || 0; days[i].count += 1; }
+    completedVisits.forEach((v) => {
+      const i = idx[v.date.slice(0, 10)];
+      if (i !== undefined) { days[i].hrs += v.hours; days[i].count += 1; }
     });
     return days.map((d) => ({ ...d, hrs: Math.round(d.hrs * 10) / 10 }));
-  }, [completed]);
+  }, [completedVisits]);
 
   const pieData = useMemo(() => [
     { name: "Užbaigtos", value: completed.length, color: STATUS_COLORS.completed },
@@ -289,10 +297,8 @@ function OrgDashboard() {
     );
   };
   const overviewParticipants = useMemo(() => {
-    const set = new Set(completed.map((r) => r.student_id));
-    completed.forEach((r) => (participants[r.id] ?? []).forEach((p) => { if (p.status === "accepted") set.add(p.student_id); }));
-    return set.size;
-  }, [completed, participants]);
+    return new Set(completedVisits.map((v) => v.student_id)).size;
+  }, [completedVisits]);
   const [bulkSel, setBulkSel] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
 
@@ -485,7 +491,7 @@ function OrgDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-[72px] z-20 -mx-4 mt-6 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0">
+        <div className="sticky top-16 z-20 -mx-4 mt-6 flex gap-1 overflow-x-auto border-b border-border bg-background/95 px-4 sm:mx-0 sm:px-0">
           {([["dashboard", "Ataskaita"], ["profile", "Mano profilis"]] as const).map(([id, label]) => (
             <button
               key={id}
@@ -503,7 +509,7 @@ function OrgDashboard() {
 
       {view === "profile" && (
         <section className="mx-auto mt-8 max-w-5xl px-4 pb-16 sm:px-6">
-          <OrgProfileEditor userId={user.id} />
+          <OrgProfileEditor userId={user.id} onSaved={() => refresh(user.id)} />
         </section>
       )}
 
@@ -606,9 +612,6 @@ function OrgDashboard() {
                   <button onClick={() => toggleTask(t)} disabled={busyId === t.id} className="flex-1 disabled:opacity-50 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold transition hover:bg-accent">
                     {t.is_open ? "Paslėpti" : "Vėl atidaryti"}
                   </button>
-                  <button onClick={() => promoteTask(t)} disabled={busyId === t.id} aria-label="Reklamuoti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-primary/20 bg-primary/5 text-primary transition hover:bg-primary/10">
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </button>
                   <button onClick={() => deleteTask(t)} disabled={busyId === t.id} aria-label="Ištrinti užduotį" className="disabled:opacity-50 grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -622,7 +625,7 @@ function OrgDashboard() {
       {/* Top volunteers */}
       {(() => {
         const totals: Record<string, number> = {};
-        completed.forEach((r) => { totals[r.student_id] = (totals[r.student_id] ?? 0) + Number(r.hours_to_earn); });
+        completedVisits.forEach((v) => { totals[v.student_id] = (totals[v.student_id] ?? 0) + v.hours; });
         const top = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5);
         if (top.length === 0) return null;
         return (
@@ -755,14 +758,16 @@ function OrgDashboard() {
                       </button>
                     </div>
                     <div className="mt-4 space-y-2">
-                      {r.checked_in_at ? (
+                      {anyCheckedIn(r) ? (
                         <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2 text-xs font-semibold text-success">
                           <UserCheck className="h-3.5 w-3.5" />
-                          Mokinys įsiregistravo {new Date(r.checked_in_at).toLocaleString("lt-LT")}
+                          {attendees(r).length > 1
+                            ? `Atvyko ${attendees(r).filter((m) => m.checkedInAt).length} iš ${attendees(r).length}`
+                            : `Mokinys įsiregistravo ${r.checked_in_at ? new Date(r.checked_in_at).toLocaleString("lt-LT") : ""}`}
                         </div>
                       ) : (
                         <div className="rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-                          <div className="flex items-center gap-2 font-semibold"><ScanLine className="h-3.5 w-3.5" /> Mokinys dar neįsiregistravo</div>
+                          <div className="flex items-center gap-2 font-semibold"><ScanLine className="h-3.5 w-3.5" /> {attendees(r).length > 1 ? "Dar niekas neįsiregistravo" : "Mokinys dar neįsiregistravo"}</div>
                           <p className="mt-1 text-[11px] text-muted-foreground">
                             Kai mokinys atvyks, paprašyk jo QR kodo arba 6 skaitmenų kodo iš jo telefono — tik tada galėsi uždaryti užduotį.
                           </p>
@@ -835,7 +840,7 @@ function OrgDashboard() {
       </section>
       
       <section id="create-task-btn" className="mx-auto mt-6 max-w-7xl px-4 pb-20 sm:px-6">
-        <CreateTaskPanel organizationId={user.id} />
+        <CreateTaskPanel organizationId={user.id} showList={false} onCreated={() => refresh(user.id)} />
       </section>
       </>}
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  ArrowDownWideNarrow, CalendarCheck, Clock, Flame, Mail, QrCode, Search, TrendingUp, Users,
+  ArrowDownWideNarrow, CalendarCheck, Clock, Download, Flame, Mail, QrCode, Search, TrendingUp, Users,
 } from "lucide-react";
 import { reservationTimeLabel } from "@/lib/reservation-time";
 import { useSchoolData } from "@/components/teacher/use-school-data";

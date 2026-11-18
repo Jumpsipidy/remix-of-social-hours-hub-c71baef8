@@ -58,7 +58,7 @@ async function uploadImage(bucket: "org-logos" | "org-photos", userId: string, f
   return data.signedUrl;
 }
 
-export function OrgProfileEditor({ userId }: { userId: string }) {
+export function OrgProfileEditor({ userId, onSaved }: { userId: string; onSaved?: () => void }) {
   const [p, setP] = useState<OrgProfile | null>(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -105,6 +105,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profilis išsaugotas ✨");
+    onSaved?.();
   };
 
   const handleUpload = async (
@@ -257,7 +258,7 @@ export function OrgProfileEditor({ userId }: { userId: string }) {
           <MapPin className="h-4 w-4" /> Vieta
         </h3>
         <AddressPicker
-          initial={{ address: p.address ?? undefined }}
+          initial={{ address: p.address ?? undefined, city: p.city ?? null, latitude: p.latitude ?? undefined, longitude: p.longitude ?? undefined }}
           onChange={(v) => update({ address: v.address, city: v.city, latitude: v.latitude, longitude: v.longitude })}
         />
         {p.latitude != null && p.longitude != null && (

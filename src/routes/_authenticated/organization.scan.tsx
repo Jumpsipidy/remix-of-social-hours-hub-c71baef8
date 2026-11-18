@@ -10,6 +10,7 @@ import { PageShell } from "@/components/layout";
 import { CheckinSetupBanner } from "@/components/checkin-setup-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { getReservationGroups, type GroupMemberRow } from "@/lib/friends";
 import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
 
 export const Route = createFileRoute("/_authenticated/organization/scan")({
@@ -327,6 +328,7 @@ function TodayList({ refreshKey }: { refreshKey: number }) {
   const { user } = useAuth();
   const [rows, setRows] = useState<TodayRow[] | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
+  const [groups, setGroups] = useState<Record<string, GroupMemberRow[]>>({});
   useEffect(() => {
     if (!user) return;
     let off = false;
@@ -339,6 +341,10 @@ function TodayList({ refreshKey }: { refreshKey: number }) {
       const list = (data as TodayRow[]) ?? [];
       if (off) return;
       setRows(list);
+      try {
+        const g = await getReservationGroups(list.map((r) => r.id));
+        if (!off) setGroups(g);
+      } catch { if (!off) setGroups({}); }
       const ids = [...new Set(list.map((r) => r.student_id))];
       if (ids.length) {
         const { data: ps } = await supabase.from("profiles").select("id, full_name").in("id", ids);
@@ -348,25 +354,38 @@ function TodayList({ refreshKey }: { refreshKey: number }) {
     void load();
     const ch = supabase.channel(`scan-today-${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "reservations", filter: `organization_id=eq.${user.id}` }, () => { void load(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "reservation_participants" }, () => { void load(); })
       .subscribe();
     return () => { off = true; void supabase.removeChannel(ch); };
   }, [user, refreshKey]);
   if (!rows || rows.length === 0) return null;
   const counts: Record<string, number> = {};
   rows.forEach((r) => { counts[r.student_id] = (counts[r.student_id] ?? 0) + 1; });
-  const done = rows.filter((r) => r.checked_in_at).length;
+  const members = (id: string) => (groups[id] ?? []).filter((m) => !m.is_owner && m.status === "accepted");
+  const total = rows.reduce((a, r) => a + 1 + members(r.id).length, 0);
+  const done = rows.reduce((a, r) => a + (r.checked_in_at ? 1 : 0) + members(r.id).filter((m) => m.checked_in).length, 0);
   return (
     <div className="mt-8">
-      <p className="mb-3 text-sm font-semibold">Šiandien laukiami · {done}/{rows.length} atvyko</p>
+      <p className="mb-3 text-sm font-semibold">Šiandien laukiami · {done}/{total} atvyko</p>
       <div className="space-y-2">
         {rows.map((r) => (
-          <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border p-3 text-sm sm:flex ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
+          <div key={r.id} className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border p-3 text-sm sm:flex sm:flex-wrap ${r.checked_in_at ? "border-primary/40 bg-primary/5" : "border-border bg-card"}`}>
             <span className="col-span-2 sm:w-24 shrink-0 font-mono text-xs tabular-nums">{reservationTimeLabel(r.start_time, r.end_time)}</span>
             <span className="min-w-0 flex-1 truncate font-semibold">
               {names[r.student_id] ?? "Mokinys"}
               {counts[r.student_id] > 1 && <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold">{counts[r.student_id]} vizitai šiandien</span>}
             </span>
             <span className="text-xs font-semibold">{r.checked_in_at ? `✓ ${new Date(r.checked_in_at).toLocaleTimeString("lt-LT", { hour: "2-digit", minute: "2-digit" })}` : "Laukiama"}</span>
+            {members(r.id).length > 0 && (
+              <ul className="col-span-2 mt-1 w-full space-y-1 border-t border-border/60 pt-2 sm:basis-full">
+                {members(r.id).map((m) => (
+                  <li key={m.member_id} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate">+ {m.full_name ?? "Draugas"}</span>
+                    <span className={m.checked_in ? "font-semibold text-primary" : "text-muted-foreground"}>{m.checked_in ? "✓ Nuskenuota" : "Laukiama"}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         ))}
       </div>

@@ -80,7 +80,7 @@ function TeacherReservations() {
   const students = data?.students ?? [];
   const orgs = data?.organizations ?? [];
   const schoolRes = useMemo(
-    () => (data?.reservations ?? []).filter((r) => r.source === "school")
+    () => (data?.reservations ?? []).slice()
       .sort((a, b) => b.reservation_date.localeCompare(a.reservation_date)),
     [data],
   );
@@ -292,8 +292,8 @@ function TeacherReservations() {
           <Button onClick={() => setCreateOpen(true)} className="gap-2"><CalendarPlus className="h-4 w-4" /> Tik mano klasei</Button>
         </div>
       </div>
-      <ClassTaskInviteDialog open={classInviteOpen} onOpenChange={setClassInviteOpen} students={students} />
-      <PublishTaskDialog open={publishOpen} onOpenChange={setPublishOpen} students={students} />
+      <ClassTaskInviteDialog open={classInviteOpen} onOpenChange={setClassInviteOpen} students={students} onDone={() => { void refresh(); }} />
+      <PublishTaskDialog open={publishOpen} onOpenChange={setPublishOpen} students={students} onDone={() => { void refresh(); }} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
@@ -333,6 +333,7 @@ function TeacherReservations() {
             <li key={r.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{studentName(r.student_id)}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{r.source === "school" ? "Mokyklos veikla" : "Organizacijos veikla · tik peržiūra"}</p>
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                   <Clock className="h-3.5 w-3.5" /> {r.reservation_date} · {reservationTimeLabel(r.start_time, r.end_time)} · {r.hours_to_earn} val. · {KIND_LT[r.kind ?? ""] ?? "Savanorystė"}
                 </p>
@@ -343,7 +344,7 @@ function TeacherReservations() {
                 : r.status === "declined" ? "bg-destructive/10 text-destructive"
                 : "bg-warning/15 text-warning-foreground"
               }`}>{STATUS_LT[r.status] ?? r.status}</span>
-              {!finished && (
+              {r.source === "school" && !finished && (
                 <div className="flex gap-1">
                   {r.status === "approved" && <Button size="sm" onClick={() => setVerifying(r)}>Patvirtinti valandas</Button>}
                   {r.status === "approved" && <Button size="sm" variant="outline" className="text-destructive" onClick={() => void declineRes(r)}>Atmesti</Button>}

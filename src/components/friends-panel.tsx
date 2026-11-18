@@ -238,7 +238,7 @@ export function FriendsPanel({ userId, schoolId }: Props) {
                     <button
                       onClick={() => setDmFriend({ id: otherId, name: p?.full_name ?? "Draugas" })}
                       className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-glow"
-                      title="Žinutės (auto-ištrinamos po 2 d.)"
+                      title="Žinutės (auto-ištrinamos po 12 d.)"
                     >
                       <MessageCircle className="h-3 w-3" /> Rašyti
                     </button>

@@ -39,6 +39,7 @@
 - [x] Auklėtojo skydelio „peak“ perdarymas: KPI kortelės, valandų dinamikos ir klasių grafikai (recharts), sąrašai su avatarų inicialais, pasisveikinimas, Edaca-stiliaus šoninis meniu (339 testai, DB apribojimai patvirtinti gyvai, RPC parašai sutikrinti)
 
 ## 2026-11-15 (cezer)
-- [ ] Pradžios antraštė: gražesnis šriftas, suderintas visame pradžios puslapyje
-- [ ] Pranešimai: geresni iššokantys langai, svarbūs įvykiai (kvietimai, draugai, patvirtinimai, valandos), praleistų pranešimų pasivijimas
-- [ ] Klaidų sąrašas (33 punktai iš pasted.md): kritinės ir svarbios klaidos 1–12, greiti įspėjimai
+- [x] Pradžios antraštė: Bricolage Grotesque + Instrument Serif kursyvas, visos pradžios antraštės suderintos (patikrinta naršyklėje)
+- [x] Pranešimai: bendras pranešimų centras visoje svetainėje, nauji iššokantys langai, draugai / grupės kvietimai / patvirtinimai / valandos / žinutės, pasivijimas po prisijungimo, naršyklės pranešimai, varpelis auklėtojo srityje (4 testai; prisijungusio naudotojo gyva patikra neprieinama)
+- [x] Klaidų sąrašas (33 punktai iš pasted.md) sutvarkytas kode; 411 testų praėjo. Gyva patikra su tikromis paskyromis neprieinama.
+- [ ] Capacitor Android programėlė — laukia naudotojo „set up Capacitor“
