@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { clearSupportThread, getSupportThread, sendSupportMessage, submitSupportBug } from "@/lib/support.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SupportBugWizard, type BugAnswers } from "@/components/support-bug-wizard";
+import { OPEN_SUPPORT_EVENT } from "@/lib/floating-help";
 
 async function accessToken() {
   try { return (await supabase.auth.getSession()).data.session?.access_token; } catch { return undefined; }
@@ -120,6 +121,12 @@ export function SupportChat() {
     return () => { alive = false; if (id) clearInterval(id); };
   }, [open, status, fetchThread]);
 
+  useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_SUPPORT_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_SUPPORT_EVENT, onOpen);
+  }, []);
+
   useEffect(() => { const sc = endRef.current?.closest("[data-sv-scroll]"); if (sc) sc.scrollTop = sc.scrollHeight; }, [msgs, busy, options]);
 
   async function submit(message: string) {
@@ -142,12 +149,13 @@ export function SupportChat() {
         type="button"
         aria-label="Pagalba"
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-16 right-3 z-40 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 sm:bottom-[4.5rem] sm:right-4"
+        aria-expanded={open}
+        className="sv-fab sv-support-fab fixed right-3 z-40 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 sm:right-4"
       >
         {open ? <X className="h-5 w-5" /> : <MessageCircleQuestion className="h-5 w-5" />}
       </button>
       {open && (
-        <div role="dialog" aria-label="SV Pagalba" className="fixed bottom-32 right-3 z-50 flex h-[min(520px,70vh)] w-[min(360px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-2 sm:right-4">
+        <div role="dialog" aria-label="SV Pagalba" className="sv-support-panel fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-2">
           {wizard && <SupportBugWizard busy={busy} initialWhere={typeof window !== "undefined" ? window.location.pathname : ""} onCancel={() => setWizard(false)} onSubmit={submitBug} />}
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary"><ShieldCheck className="h-4 w-4" /></div>

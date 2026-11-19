@@ -320,7 +320,7 @@ function AdminLayout() {
 
         {/* Mobile bottom nav */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+          className="sv-bottom-bar fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
           aria-label="Admin greitas meniu"
         >
           <div className="mx-auto grid max-w-7xl grid-cols-5 gap-1 px-2 py-1.5">

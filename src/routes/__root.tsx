@@ -264,7 +264,7 @@ function RootComponent() {
               atsiranda naujas ir matosi juodas blyksnis. */}
           <LockdownGate>
           <V25Banner />
-          <div className="flex-1 flex flex-col">
+          <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
             <Outlet />
           </div>
 

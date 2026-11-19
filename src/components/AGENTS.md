@@ -4,3 +4,5 @@
 - Fixed overlays rendered from the auth form side portal to document.body, because the moving form side uses a transform that would trap them.
 
 - Navbar uses bounded primary links and an account dropdown; secondary role links stay reachable in both dropdown and mobile Sheet to prevent overflow.
+- Floating help buttons share the `.sv-fab` stack (`--sv-fab-base`; bottom bars add `.sv-bottom-bar`); menus open them via `@/lib/floating-help` events so help stays reachable when buttons hide.
+- Root wrapper and TeacherShell clip horizontal overflow so phones never zoom out; still fix the wide element itself.

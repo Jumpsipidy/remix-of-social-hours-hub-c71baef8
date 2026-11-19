@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { OPEN_BUG_REPORT_EVENT } from "@/lib/floating-help";
 import { AlertCircle, ArrowLeft, Bug, Check, CheckCircle2, ChevronDown, ImagePlus, Loader2, Send, ShieldCheck, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { deviceMeta, sessionId } from "@/lib/device-meta";
@@ -56,6 +57,13 @@ export function BugReportWidget() {
     if (next) { setSent(false); setError(""); }
     else { captureId.current += 1; setCapturing(false); }
   }
+  const changeOpenRef = useRef(changeOpen);
+  changeOpenRef.current = changeOpen;
+  useEffect(() => {
+    const onOpen = () => changeOpenRef.current(true);
+    window.addEventListener(OPEN_BUG_REPORT_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_BUG_REPORT_EVENT, onOpen);
+  }, []);
 
   async function addScreenshot() {
     const id = ++captureId.current;
@@ -122,7 +130,7 @@ export function BugReportWidget() {
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" aria-label="Pranešti apie klaidą" title="Pranešti apie klaidą" data-tour="bug"
-          className="sv-bug-widget fixed bottom-3 right-3 z-40 h-11 w-11 rounded-full border-border bg-card text-muted-foreground shadow-md hover:text-foreground sm:bottom-4 sm:right-4 sm:w-auto sm:rounded-lg sm:px-3">
+          className="sv-fab sv-bug-widget fixed right-3 z-40 h-11 w-11 rounded-full border-border bg-card text-muted-foreground shadow-md hover:text-foreground sm:right-4 sm:w-auto sm:rounded-lg sm:px-3">
           <Bug aria-hidden="true" /><span className="hidden sm:inline">Pranešti apie klaidą</span>
         </Button>
       </DialogTrigger>

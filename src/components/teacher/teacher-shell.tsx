@@ -2,8 +2,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   CalendarCheck, CircleHelp, GraduationCap, Home, LayoutDashboard, LogOut,
-  Menu, MessageCircle, Sparkles, Users, X,
+  Menu, MessageCircle, Sparkles, Users, Bug, MessageCircleQuestion,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { openBugReport, openSupportChat } from "@/lib/floating-help";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -115,6 +117,23 @@ export function TeacherShell({ children }: { children: ReactNode }) {
         <CircleHelp className="h-4 w-4 shrink-0" />
         Sąsajos vedlys
       </button>
+      <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Pagalba</p>
+      <button
+        type="button"
+        onClick={() => { setMenuOpen(false); window.setTimeout(openSupportChat, 220); }}
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <MessageCircleQuestion className="h-4 w-4 shrink-0 text-primary" />
+        SV Pagalba
+      </button>
+      <button
+        type="button"
+        onClick={() => { setMenuOpen(false); window.setTimeout(openBugReport, 220); }}
+        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <Bug className="h-4 w-4 shrink-0 text-destructive" />
+        Pranešti apie klaidą
+      </button>
     </nav>
   );
 
@@ -146,7 +165,7 @@ export function TeacherShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-dvh bg-muted/30 text-foreground">
+    <div className="min-h-dvh min-w-0 overflow-x-clip bg-muted/30 text-foreground">
       {/* Viršutinė komandinė juosta */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-card/80 backdrop-blur-xl">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-2 px-3 sm:px-5">
@@ -185,13 +204,13 @@ export function TeacherShell({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-1 lg:ml-0">
-            <Button variant="ghost" size="icon" aria-label="Sąsajos vedlys" onClick={restartTour}>
+          <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0">
+            <Button variant="ghost" size="icon" aria-label="Sąsajos vedlys" className="hidden sm:inline-flex" onClick={restartTour}>
               <CircleHelp className="h-4.5 w-4.5" />
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Nuorodos">
+                <Button variant="ghost" size="icon" aria-label="Nuorodos" className="hidden sm:inline-flex">
                   <Sparkles className="h-4.5 w-4.5" />
                 </Button>
               </PopoverTrigger>
@@ -215,32 +234,30 @@ export function TeacherShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* Mobilioji šoninė skydas */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-foreground/30" onClick={() => setMenuOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-72 flex-col bg-card p-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <Brand />
-              <Button variant="ghost" size="icon" aria-label="Uždaryti" onClick={() => setMenuOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" className="flex w-[min(86vw,320px)] flex-col overflow-y-auto overscroll-contain border-border bg-card p-4 pt-[max(1rem,env(safe-area-inset-top))] lg:hidden">
+          <div className="flex min-w-0 items-center gap-2.5 pr-10">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm"><GraduationCap className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <SheetTitle className="truncate text-left text-sm font-extrabold tracking-tight">Auklėtojo sritis</SheetTitle>
+              <SheetDescription className="text-left text-[11px] font-medium">Socialinės Valandos</SheetDescription>
             </div>
-            {drawerNav}
-            <div className="mt-auto border-t border-border pt-3">
-              <p className="truncate px-3 text-sm font-semibold">{profile?.full_name ?? "Auklėtojas"}</p>
-              <p className="truncate px-3 text-xs text-muted-foreground">{profile?.email ?? ""}</p>
-              <Button
-                variant="ghost"
-                className="mt-2 w-full justify-start gap-2 text-destructive hover:text-destructive"
-                onClick={handleSignOut}
-                disabled={leaving}
-              >
-                <LogOut className="h-4 w-4" /> {leaving ? "Atsijungiama…" : "Atsijungti"}
-              </Button>
-            </div>
-          </aside>
-        </div>
-      )}
+          </div>
+          {drawerNav}
+          <div className="mt-auto border-t border-border pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <p className="truncate px-3 text-sm font-semibold">{profile?.full_name ?? "Auklėtojas"}</p>
+            <p className="truncate px-3 text-xs text-muted-foreground">{profile?.email ?? ""}</p>
+            <Button
+              variant="ghost"
+              className="mt-2 w-full justify-start gap-2 text-destructive hover:text-destructive"
+              onClick={handleSignOut}
+              disabled={leaving}
+            >
+              <LogOut className="h-4 w-4" /> {leaving ? "Atsijungiama…" : "Atsijungti"}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <main className="mx-auto w-full max-w-6xl px-3 py-5 sm:px-5 sm:py-6">{children}</main>
 

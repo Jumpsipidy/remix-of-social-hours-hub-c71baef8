@@ -1,7 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck } from "lucide-react";
+import { Heart, Menu, LogOut, Home, ListTodo, MessageCircle, LayoutDashboard, History, QrCode, ChevronDown, UserRound, ShieldCheck, MessageCircleQuestion, Bug, Moon, Sun, Settings2, LogIn, UserPlus } from "lucide-react";
+import { openBugReport, openSupportChat } from "@/lib/floating-help";
+import { useSchoolEyes } from "@/components/school-eyes-toggle";
+import { useSiteTheme } from "@/components/theme-provider";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { useAuth, type AppRole } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notification-bell";
@@ -26,6 +29,37 @@ export const DASHBOARD_BY_ROLE: Record<AppRole, { to: string; label: string } | 
 
 const ROLE_CACHE_KEY = "sv_last_role_v1";
 const ROLE_CACHE_UID_KEY = "sv_last_role_uid_v1";
+
+const ROLE_LABEL: Record<AppRole, string> = {
+  student: "Mokinys",
+  organization: "Organizacija",
+  school_admin: "Auklėtojas",
+  admin: "Administratorius",
+};
+
+function initialsOf(name: string | null | undefined) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? "S") + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+function iconFor(to: string) {
+  if (to.includes("chat") || to.includes("pokalbiai")) return MessageCircle;
+  if (to.includes("checkin") || to.includes("scan")) return QrCode;
+  return LayoutDashboard;
+}
+
+function MenuLink({ to, label, Icon, active, onGo }: { to: string; label: string; Icon: typeof Home; active: boolean; onGo: () => void }) {
+  return <Link to={to} onClick={onGo} aria-current={active ? "page" : undefined} className="msb-item"><span className="msb-icon"><Icon /></span><span className="min-w-0 flex-1 truncate">{label}</span></Link>;
+}
+
+function SidebarThemeRow() {
+  const { on, toggle } = useSchoolEyes();
+  const { openSettings } = useSiteTheme();
+  return <div className="grid grid-cols-2 gap-2">
+    <Button type="button" variant="secondary" className="h-12 justify-center gap-2" onClick={toggle} aria-pressed={on}>{on ? <Moon /> : <Sun />}{on ? "Tamsi tema" : "Šviesi tema"}</Button>
+    <Button type="button" variant="secondary" className="h-12 justify-center gap-2" onClick={openSettings}><Settings2 />Nustatymai</Button>
+  </div>;
+}
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -148,7 +182,7 @@ export function Navbar() {
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1">
           <NavCommand extra={links.filter((l) => l.to !== "/" && l.to !== "/tasks")} />
-          <SchoolEyesToggle compact />
+          <div className="hidden sm:block"><SchoolEyesToggle compact /></div>
           <NotificationBell />
           {isAuthenticated ? <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="secondary" className="hidden h-10 gap-2 px-2.5 sm:inline-flex" aria-label="Paskyros meniu"><UserRound /><span className="hidden max-w-24 truncate xl:inline">{profile?.full_name?.split(" ")[0] ?? "Paskyra"}</span><ChevronDown className="h-3 w-3" /></Button></DropdownMenuTrigger>
@@ -163,21 +197,46 @@ export function Navbar() {
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="mobile-sidebar flex w-[min(86vw,340px)] flex-col overflow-y-auto border-border bg-background px-4 pb-safe pt-12">
-          <SheetTitle className="text-left">Socialinės Valandos</SheetTitle>
-          <SheetDescription className="text-left">{profile?.full_name ?? "Tavo savanorystės erdvė"}</SheetDescription>
-          <nav aria-label="Šoninis meniu" className="mt-5 flex flex-1 flex-col gap-2">
-            {links.map((link) => {
-              const Icon = link.to === "/" ? Home : link.to === "/tasks" ? ListTodo : link.to === "/chat" ? MessageCircle : link.to === "/checkin" || link.to === "/organization/scan" ? QrCode : LayoutDashboard;
-              const active = isActive(link.to, link.to === "/");
-              return <Button key={link.to} variant={active ? "secondary" : "ghost"} asChild className="h-auto min-h-12 justify-start whitespace-normal px-3 py-3 text-left"><Link to={link.to} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}><Icon /><span className="min-w-0">{link.label}</span></Link></Button>;
-            })}
-            <Button variant="ghost" asChild className="h-12 justify-start"><Link to="/securityguard" onClick={() => setOpen(false)}><ShieldCheck /> SV Guard</Link></Button>
-            <Button variant="ghost" asChild className="h-12 justify-start"><Link to="/versijos" onClick={() => setOpen(false)}><History /> Kas naujo</Link></Button>
+        <SheetContent side="left" className="mobile-sidebar flex w-[min(88vw,340px)] flex-col overflow-y-auto overscroll-contain border-border bg-background">
+          <div className="msb-head">
+            <div className="flex min-w-0 items-center gap-3 pr-10">
+              <span className="nav-mark shrink-0" aria-hidden><Heart className="h-4 w-4" fill="currentColor" /></span>
+              <div className="min-w-0">
+                <SheetTitle className="truncate text-left text-base font-extrabold tracking-tight">Socialinės Valandos</SheetTitle>
+                <SheetDescription className="truncate text-left text-xs">{isAuthenticated ? "Tavo savanorystės erdvė" : "Socialinės valandos be popierių"}</SheetDescription>
+              </div>
+            </div>
+            {isAuthenticated && <div className="mt-4 flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card p-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-sm font-bold text-primary">{initialsOf(profile?.full_name)}</span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{profile?.full_name ?? "Tavo paskyra"}</p>
+                <p className="truncate text-xs text-muted-foreground">{activeRole ? ROLE_LABEL[activeRole] : "Paskyra"}</p>
+              </div>
+            </div>}
+          </div>
+          <nav aria-label="Šoninis meniu" className="flex flex-col pb-2">
+            <div className="msb-section">
+              <p className="msb-label">Naršyti</p>
+              <MenuLink to="/" label="Pradžia" Icon={Home} active={isActive("/", true)} onGo={() => setOpen(false)} />
+              <MenuLink to="/tasks" label="Veiklos ir organizacijos" Icon={ListTodo} active={isActive("/tasks", false)} onGo={() => setOpen(false)} />
+            </div>
+            {links.length > 2 && <div className="msb-section">
+              <p className="msb-label">Mano paskyra</p>
+              {links.slice(2).map((link) => <MenuLink key={link.to} to={link.to} label={link.label} Icon={iconFor(link.to)} active={isActive(link.to, false)} onGo={() => setOpen(false)} />)}
+            </div>}
+            <div className="msb-section">
+              <p className="msb-label">Pagalba</p>
+              <button type="button" className="msb-item msb-item-help" onClick={() => { setOpen(false); window.setTimeout(openSupportChat, 220); }}><span className="msb-icon"><MessageCircleQuestion /></span><span className="min-w-0 flex-1">SV Pagalba<span className="block text-xs font-normal text-muted-foreground">Klausk — atsako per kelias sekundes</span></span></button>
+              <button type="button" className="msb-item msb-item-bug" onClick={() => { setOpen(false); window.setTimeout(openBugReport, 220); }}><span className="msb-icon"><Bug /></span><span className="min-w-0 flex-1">Pranešti apie klaidą</span></button>
+              <MenuLink to="/securityguard" label="SV Guard" Icon={ShieldCheck} active={isActive("/securityguard", false)} onGo={() => setOpen(false)} />
+              <MenuLink to="/versijos" label="Kas naujo" Icon={History} active={isActive("/versijos", false)} onGo={() => setOpen(false)} />
+            </div>
           </nav>
-          <div className="mt-6 space-y-4 border-t border-border pt-4">
-            <SchoolEyesToggle className="w-full justify-start [&_span]:inline" />
-            {isAuthenticated ? <Button variant="outline" className="h-12 w-full" onClick={handleSignOut}><LogOut /> Atsijungti</Button> : <div className="grid grid-cols-2 gap-2"><Button variant="outline" asChild><Link to="/login" onClick={() => setOpen(false)}>Prisijungti</Link></Button><Button asChild><Link to="/register" onClick={() => setOpen(false)}>Registruotis</Link></Button></div>}
+          <div className="msb-foot space-y-2">
+            <SidebarThemeRow />
+            {isAuthenticated
+              ? <Button variant="outline" className="h-12 w-full justify-center gap-2 text-destructive hover:text-destructive" onClick={handleSignOut}><LogOut /> Atsijungti</Button>
+              : <div className="grid grid-cols-2 gap-2"><Button variant="outline" asChild className="h-12"><Link to="/login" onClick={() => setOpen(false)}><LogIn />Prisijungti</Link></Button><Button asChild className="h-12"><Link to="/register" onClick={() => setOpen(false)}><UserPlus />Registruotis</Link></Button></div>}
           </div>
         </SheetContent>
       </Sheet>

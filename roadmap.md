@@ -43,3 +43,6 @@
 - [x] Pranešimai: bendras pranešimų centras visoje svetainėje, nauji iššokantys langai, draugai / grupės kvietimai / patvirtinimai / valandos / žinutės, pasivijimas po prisijungimo, naršyklės pranešimai, varpelis auklėtojo srityje (4 testai; prisijungusio naudotojo gyva patikra neprieinama)
 - [x] Klaidų sąrašas (33 punktai iš pasted.md) sutvarkytas kode; 411 testų praėjo. Gyva patikra su tikromis paskyromis neprieinama.
 - [ ] Capacitor Android programėlė — laukia naudotojo „set up Capacitor“
+
+## 2026-11-19 (cezer)
+- [x] Telefono vaizdas: puslapis nebeslysta į šonus, nauji šoniniai meniu (svetainė + auklėtojas), SV Pagalba / klaidų mygtukai visada matomi ir pasiekiami per meniu (patikrinta 390 ir 360 px, tamsi ir šviesi tema; prisijungusių puslapių gyva patikra neprieinama)

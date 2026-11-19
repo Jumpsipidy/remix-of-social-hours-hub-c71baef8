@@ -116,14 +116,14 @@ function ScrollStory() {
       <p className="text-xs font-semibold tracking-widest text-primary">KAIP TAI VEIKIA</p>
       <h2 id="story-title" className="home-display mt-3 max-w-xl text-3xl font-bold leading-tight sm:text-4xl">Nuo paieškos iki patvirtintų valandų.</h2>
       <div className="mt-12 grid gap-10 lg:grid-cols-2">
-        <div className="glass rounded-3xl px-6">{STORY.map((s, i) => <div key={s.k} data-i={i} ref={(el) => { refs.current[i] = el; }} className={`flex min-h-[55vh] flex-col justify-center border-l-2 pl-6 transition-colors duration-300 lg:min-h-[70vh] ${step === i ? "border-primary" : "border-border"}`}>
+        <div className="glass min-w-0 rounded-3xl px-4 sm:px-6">{STORY.map((s, i) => <div key={s.k} data-i={i} ref={(el) => { refs.current[i] = el; }} className={`flex min-h-[55vh] min-w-0 flex-col justify-center border-l-2 pl-4 sm:pl-6 transition-colors duration-300 lg:min-h-[70vh] ${step === i ? "border-primary" : "border-border"}`}>
           <span className="font-mono text-sm text-primary">{s.k}</span>
           <h3 className={`mt-2 text-2xl font-bold transition-opacity duration-300 sm:text-3xl ${step === i ? "opacity-100" : "opacity-40"}`}>{s.title}</h3>
           <p className="mt-3 max-w-md text-muted-foreground">{s.body}</p>
           <Link to={s.to} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">{s.cta}<ArrowRight className="h-4 w-4" /></Link>
           <div className="mt-6 lg:hidden"><StoryPanel step={i} /></div>
         </div>)}</div>
-        <div className="hidden lg:block"><div className="glass sticky top-28 flex h-[70vh] items-center justify-center rounded-3xl"><StoryPanel step={step} /></div></div>
+        <div className="hidden min-w-0 lg:block"><div className="glass sticky top-28 flex h-[70vh] items-center justify-center rounded-3xl"><StoryPanel step={step} /></div></div>
       </div>
     </div>
   </section>;
