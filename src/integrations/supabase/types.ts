@@ -1012,14 +1012,47 @@ export type Database = {
           },
         ]
       }
+      push_delivery_log: {
+        Row: {
+          category: string
+          created_at: string
+          event_key: string
+          failed_count: number
+          id: string
+          recipient_id: string
+          sent_count: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          event_key: string
+          failed_count?: number
+          id?: string
+          recipient_id: string
+          sent_count?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          event_key?: string
+          failed_count?: number
+          id?: string
+          recipient_id?: string
+          sent_count?: number
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth_key: string
           created_at: string
           endpoint: string
+          failed_count: number
           id: string
           last_used_at: string | null
           p256dh: string
+          platform: string | null
+          updated_at: string
           user_agent: string | null
           user_id: string
         }
@@ -1027,9 +1060,12 @@ export type Database = {
           auth_key: string
           created_at?: string
           endpoint: string
+          failed_count?: number
           id?: string
           last_used_at?: string | null
           p256dh: string
+          platform?: string | null
+          updated_at?: string
           user_agent?: string | null
           user_id: string
         }
@@ -1037,9 +1073,12 @@ export type Database = {
           auth_key?: string
           created_at?: string
           endpoint?: string
+          failed_count?: number
           id?: string
           last_used_at?: string | null
           p256dh?: string
+          platform?: string | null
+          updated_at?: string
           user_agent?: string | null
           user_id?: string
         }
@@ -1852,6 +1891,7 @@ export type Database = {
       promote_class_years: { Args: never; Returns: Json }
       purge_dm_messages: { Args: never; Returns: undefined }
       purge_old_messages: { Args: never; Returns: undefined }
+      purge_push_delivery_log: { Args: never; Returns: number }
       purge_support_messages: { Args: never; Returns: undefined }
       resolve_chat_room: { Args: { _room: string }; Returns: string }
       revoke_certificate: {
